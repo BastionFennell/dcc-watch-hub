@@ -78,13 +78,42 @@ function clickFrame(crawlerId: string): void {
   fireEvent.click(frame(crawlerId));
 }
 
-/** One section of the open dossier, so "Door" in HISTORY never fools HOTLIST. */
+/** The rail's fixed-height glance card (US1). */
+function glance(): HTMLElement {
+  return screen.getByTestId('crawler-glance');
+}
+
+/** The modal full record (US2) — the only overlay allowed over the stage. */
+function record(): HTMLElement {
+  return screen.getByTestId('crawler-record');
+}
+
+/** The glance card's one control, which opens the record (FR-200/FR-203). */
+function openRecord(): void {
+  fireEvent.click(screen.getByTestId('open-record'));
+}
+
+/**
+ * One section of the open full record, so "Door" in HISTORY never fools HOTLIST.
+ * Since 003 the full lists live in the dialog, not the rail, so every caller
+ * opens the record first.
+ */
 function section(name: string): HTMLElement {
-  return screen.getByTestId(`dossier-${name}`);
+  return within(record()).getByTestId(`dossier-${name}`);
 }
 
 function pressEscape(): void {
   fireEvent.keyDown(document, { key: 'Escape' });
+}
+
+/**
+ * Escape the way a viewer produces one: from the focused element upward. The
+ * record listens in the capture phase on `document`, so a press dispatched *at*
+ * `document` would reach the panel's bubble-phase listener on the same node too
+ * and close both at once (contracts/dialog.md).
+ */
+function pressEscapeFrom(element: Element): void {
+  fireEvent.keyDown(element, { key: 'Escape' });
 }
 
 /** The feed sentence a given event produces, used for the never-early sweep. */
@@ -404,9 +433,9 @@ describe('EpisodePage', () => {
     expect(document.title).toBe(copy.pageTitle(makeShow().episodes[1].title));
   });
 
-  /* ------------------------------------------ v2 US1: the crawler dossier (T119) */
+  /* ---------------------------- v2 US1 / 003 US1: the rail's glance card (T119, T310) */
 
-  it('opens a crawler dossier in the rail and hides the feed', async () => {
+  it('opens a crawler glance card in the rail and hides the feed', async () => {
     const { seek } = await mountEpisode();
     seek(200);
 
@@ -414,11 +443,61 @@ describe('EpisodePage', () => {
 
     const panel = screen.getByRole('region', { name: copy.dossierTitle('Harry') });
     expect(panel).toHaveAttribute('id', 'rail-panel');
-    expect(within(panel).getByTestId('dossier-name')).toHaveTextContent('Harry');
-    expect(within(panel).getByText(copy.dossierKicker)).toBeInTheDocument();
+    expect(within(panel).getByTestId('glance-name')).toHaveTextContent('Harry');
+    expect(within(panel).getByText(copy.glanceKicker)).toBeInTheDocument();
     // The rail hosts exactly one thing: the feed is gone while a panel is open (FR-100).
     expect(screen.queryByTestId('feed-items')).not.toBeInTheDocument();
     expect(screen.getAllByTestId('rail-panel')).toHaveLength(1);
+
+    // A glance, not the sheet: one ledger line per list, never the lists
+    // themselves, so the card cannot grow with the episode (FR-200/FR-201).
+    expect(within(panel).getByTestId('glance-ledger')).toBeInTheDocument();
+    for (const kind of ['hotlist', 'skills', 'inventory', 'achievements']) {
+      expect(within(panel).getByTestId(`ledger-${kind}`)).toBeInTheDocument();
+      expect(within(panel).queryByTestId(`dossier-${kind}`)).not.toBeInTheDocument();
+    }
+    expect(within(panel).queryByTestId('dossier-identity')).not.toBeInTheDocument();
+    // …and nothing covers the stage until the viewer asks (constitution III).
+    expect(screen.queryByTestId('crawler-record')).not.toBeInTheDocument();
+    expect(document.body).not.toHaveClass('dialog-open');
+
+    // Counts and newest entries as of the playhead (FR-202).
+    const ledger = (kind: string) => within(within(panel).getByTestId(`ledger-${kind}`));
+    expect(ledger('hotlist').getByText(copy.ledgerCount(1))).toBeInTheDocument();
+    expect(ledger('hotlist').getByText('Crowbar')).toBeInTheDocument();
+    expect(ledger('inventory').getByText('Torch')).toBeInTheDocument();
+    expect(ledger('achievements').getByText('Gate Crasher')).toBeInTheDocument();
+    expect(ledger('achievements').getByText(formatTime(60))).toBeInTheDocument();
+
+    // Vitals: the ten-segment strip and the HP readout, in the card.
+    expect(within(panel).getAllByTestId('hp-segment')).toHaveLength(10);
+    expect(within(panel).getByTestId('glance-hp')).toHaveTextContent(copy.hpValue(20, 22));
+
+    // Exactly three history rows, always — the card's height is fixed (FR-201).
+    expect(within(panel).getAllByTestId('glance-history-row')).toHaveLength(3);
+
+    // The single control that leads deeper, and nothing else (FR-203).
+    expect(within(panel).getByTestId('open-record')).toHaveTextContent(copy.openRecord);
+  });
+
+  /* ------------------------------------------ 003 US2: the full record (T310) */
+
+  it('opens the full record from the glance card with every section in full', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+    clickFrame('harry');
+
+    openRecord();
+
+    const dialog = record();
+    expect(dialog).toHaveAttribute('role', 'dialog');
+    expect(dialog).toHaveAttribute('aria-modal', 'true');
+    expect(dialog).toHaveAccessibleName(copy.recordTitle('Harry'));
+    expect(within(dialog).getByText(copy.recordKicker)).toBeInTheDocument();
+    // The glance card is still behind it: the record covers the stage, it does
+    // not replace the rail (US2 scenario 3).
+    expect(glance()).toBeInTheDocument();
+    expect(document.body).toHaveClass('dialog-open');
 
     // Sheet identity, straight from the episode's initial state (FR-113).
     const identity = within(section('identity'));
@@ -427,19 +506,158 @@ describe('EpisodePage', () => {
     expect(identity.getByText('10,491,201')).toBeInTheDocument();
     expect(identity.getByText('Compensated Anarchist')).toBeInTheDocument(); // class at 95
 
-    // Vitals: the ten-segment strip and the HP readout.
+    // Vitals: the ten-segment strip, the HP readout, current and best rank.
     expect(within(section('vitals')).getAllByTestId('hp-segment')).toHaveLength(10);
-    expect(screen.getByTestId('dossier-hp')).toHaveTextContent(copy.hpValue(20, 22));
+    expect(within(dialog).getByTestId('dossier-hp')).toHaveTextContent(copy.hpValue(20, 22));
+    expect(within(dialog).getByTestId('rank-current')).toHaveTextContent(copy.rankValue(3550));
+    expect(within(dialog).getByTestId('rank-best')).toHaveTextContent(copy.rankValue(3012));
 
     // Stats only exist because this fixture crawler carries them.
     expect(within(section('stats')).getByText(copy.statLabels.dex)).toBeInTheDocument();
     expect(within(section('stats')).getByText('7')).toBeInTheDocument();
+
+    // Every list in full — this is the deep view the glance card summarizes (FR-211).
+    expect(within(section('hotlist')).getByText('Crowbar')).toBeInTheDocument();
+    expect(within(section('skills')).getByText('Powerful Strike')).toBeInTheDocument();
+    expect(within(section('inventory')).getByText('Torch')).toBeInTheDocument();
+    expect(within(section('achievements')).getByText('Gate Crasher')).toBeInTheDocument();
+    // …and History is not clipped to the card's three moments.
+    expect(
+      within(section('history')).getAllByTestId('dossier-history-item').length,
+    ).toBeGreaterThan(3);
+  });
+
+  it('closes the record on Escape, on the backdrop, and on its close control', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+    clickFrame('harry');
+
+    // Escape: only the record closes, the glance card stays, focus comes back
+    // to the button that opened it (US2 scenario 3, FR-210).
+    openRecord();
+    expect(document.activeElement).toBe(screen.getByTestId('record-close'));
+    pressEscapeFrom(document.body);
+    expect(screen.queryByTestId('crawler-record')).not.toBeInTheDocument();
+    expect(glance()).toBeInTheDocument();
+    expect(screen.getByTestId('rail-panel')).toBeInTheDocument();
+    expect(document.activeElement).toBe(screen.getByTestId('open-record'));
+    expect(document.body).not.toHaveClass('dialog-open');
+
+    // The dimmed backdrop (US2 scenario 4). A click inside it does nothing.
+    openRecord();
+    fireEvent.click(within(record()).getByTestId('record-body'));
+    expect(record()).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('record-backdrop'));
+    expect(screen.queryByTestId('crawler-record')).not.toBeInTheDocument();
+    expect(document.activeElement).toBe(screen.getByTestId('open-record'));
+
+    // The close control.
+    openRecord();
+    fireEvent.click(screen.getByTestId('record-close'));
+    expect(screen.queryByTestId('crawler-record')).not.toBeInTheDocument();
+    expect(document.activeElement).toBe(screen.getByTestId('open-record'));
+
+    // With no record open the next Escape belongs to the panel again — one
+    // press, one dismissal, menu first (spec edge case, FR-104).
+    pressEscapeFrom(document.body);
+    expect(screen.queryByTestId('rail-panel')).not.toBeInTheDocument();
+    expect(screen.getByTestId('feed-items')).toBeInTheDocument();
+    expect(document.activeElement).toBe(frame('harry'));
+  });
+
+  it('keeps the open record on the playhead, in both directions', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+    clickFrame('harry');
+    openRecord();
+
+    expect(within(section('inventory')).getByText('Torch')).toBeInTheDocument();
+    expect(within(section('inventory')).queryByText('Enchanted Crowbar')).not.toBeInTheDocument();
+
+    // The trade at 150 has not happened yet: the dialog stays open and restates
+    // itself rather than closing or remounting (US2 scenario 2, FR-212).
+    const before = record();
+    seek(110);
+    expect(record()).toBe(before);
+    expect(within(section('inventory')).getByText('Enchanted Crowbar')).toBeInTheDocument();
+    expect(within(section('inventory')).queryByText('Torch')).not.toBeInTheDocument();
+    expect(within(section('hotlist')).getByText('Door')).toBeInTheDocument();
+
+    // And the glance card behind it moves with it.
+    expect(
+      within(screen.getByTestId('ledger-inventory')).getByText('Enchanted Crowbar'),
+    ).toBeInTheDocument();
+
+    seek(20);
+    expect(within(section('achievements')).getByText(copy.dossierEmpty.achievements)).toBeInTheDocument();
+    expect(record()).toBe(before);
+  });
+
+  it('closes the record when the panel switches crawlers or closes', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+    clickFrame('harry');
+    openRecord();
+    expect(record()).toHaveAttribute('data-crawler', 'harry');
+
+    // Another frame switches the glance and drops the record: the record only
+    // ever exists for the crawler whose card opened it (FR-213).
+    clickFrame('xo');
+    expect(screen.queryByTestId('crawler-record')).not.toBeInTheDocument();
+    expect(glance()).toHaveAttribute('data-crawler', 'xo');
+    expect(document.body).not.toHaveClass('dialog-open');
+
+    // Closing the panel outright takes the record with it.
+    openRecord();
+    expect(record()).toHaveAttribute('data-crawler', 'xo');
+    fireEvent.click(screen.getByTestId('panel-close'));
+    expect(screen.queryByTestId('crawler-record')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('crawler-glance')).not.toBeInTheDocument();
+    expect(screen.getByTestId('feed-items')).toBeInTheDocument();
+    expect(document.activeElement).toBe(frame('xo'));
+  });
+
+  it('opens the record on load from the DEV `&record=1` flag', async () => {
+    await mountEpisode('/ep/1?fake=1&t=200&panel=dossier:harry&record=1');
+
+    // The flag waits for the panel it names: the record cannot open before the
+    // episode data behind it has landed (spec Edge Cases).
+    await waitFor(() => expect(screen.getByTestId('crawler-record')).toBeInTheDocument());
+    expect(glance()).toHaveAttribute('data-crawler', 'harry');
+    expect(within(section('inventory')).getByText('Torch')).toBeInTheDocument();
+
+    // Once dismissed the flag does not re-open it.
+    fireEvent.click(screen.getByTestId('record-close'));
+    expect(screen.queryByTestId('crawler-record')).not.toBeInTheDocument();
+  });
+
+  it('closes the record and the glance when the viewer changes episode', async () => {
+    const { seek } = await mountEpisode();
+    seek(100);
+    // The site header is a landmark the record's own header would collide with,
+    // so hold the link before the dialog exists.
+    const nextLink = within(screen.getByRole('banner')).getByRole('link', {
+      name: copy.nextEpisode,
+    });
+    clickFrame('harry');
+    openRecord();
+    expect(record()).toBeInTheDocument();
+
+    fireEvent.click(nextLink);
+
+    // A new episode always opens ambient (US2 scenario 7).
+    await waitFor(() => expect(screen.getByText(copy.feedHeader('0:00'))).toBeInTheDocument());
+    expect(screen.queryByTestId('crawler-record')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('crawler-glance')).not.toBeInTheDocument();
+    expect(screen.getByTestId('feed-items')).toBeInTheDocument();
+    expect(document.body).not.toHaveClass('dialog-open');
   });
 
   it('shows the hotlist as of the playhead, not as of the newest event', async () => {
     const { seek } = await mountEpisode();
     seek(200);
     clickFrame('harry');
+    openRecord();
 
     // 105 adds Door, 165 swaps it for Crowbar.
     expect(within(section('hotlist')).getByText('Crowbar')).toBeInTheDocument();
@@ -453,10 +671,11 @@ describe('EpisodePage', () => {
     expect(within(section('hotlist')).getByText(copy.dossierEmpty.hotlist)).toBeInTheDocument();
   });
 
-  it('upserts a skill rank while the dossier stays open', async () => {
+  it('upserts a skill rank while the record stays open', async () => {
     const { seek } = await mountEpisode();
     seek(160);
     clickFrame('xo');
+    openRecord();
 
     const skills = () => within(section('skills'));
     expect(skills().getByText('Understudy Strike')).toBeInTheDocument();
@@ -474,6 +693,7 @@ describe('EpisodePage', () => {
     const { seek } = await mountEpisode();
     seek(110);
     clickFrame('harry');
+    openRecord();
 
     // Looted at 30 …
     expect(within(section('inventory')).getByText('Enchanted Crowbar')).toBeInTheDocument();
@@ -493,6 +713,8 @@ describe('EpisodePage', () => {
     seek(200);
     clickFrame('harry');
 
+    openRecord();
+
     const achievements = within(section('achievements'));
     expect(achievements.getByText('Gate Crasher')).toBeInTheDocument();
     expect(achievements.getByText(formatTime(60))).toBeInTheDocument();
@@ -509,6 +731,8 @@ describe('EpisodePage', () => {
     const { seek } = await mountEpisode();
     seek(200);
     clickFrame('harry');
+
+    openRecord();
 
     const rows = within(section('history')).getAllByTestId('dossier-history-item');
     expect(rows.length).toBeGreaterThan(0);
@@ -531,7 +755,7 @@ describe('EpisodePage', () => {
     // A different frame switches without closing (US1 scenario 4).
     clickFrame('xo');
     expect(screen.getAllByTestId('rail-panel')).toHaveLength(1);
-    expect(screen.getByTestId('dossier-name')).toHaveTextContent('X.O.');
+    expect(screen.getByTestId('glance-name')).toHaveTextContent('X.O.');
     expect(frame('harry')).toHaveAttribute('aria-expanded', 'false');
     expect(frame('xo')).toHaveAttribute('aria-expanded', 'true');
 
@@ -584,7 +808,8 @@ describe('EpisodePage', () => {
     seek(200);
     clickFrame('harry');
 
-    const sparkline = screen.getByTestId('rank-sparkline');
+    // The sparkline is part of the glance card now; the record carries its own.
+    const sparkline = within(glance()).getByTestId('rank-sparkline');
     expect(sparkline).toHaveAttribute(
       'aria-label',
       copy.sparklineSummary(4188, 3550, 3, 3012),
@@ -592,17 +817,22 @@ describe('EpisodePage', () => {
     expect(sparkline.getAttribute('aria-label')).toContain('3 updates');
     expect(sparkline.getAttribute('aria-label')).toContain('#3012');
     expect(sparkline.querySelectorAll('polyline')).toHaveLength(1);
-    expect(screen.getByTestId('rank-current')).toHaveTextContent(copy.rankValue(3550));
-    expect(screen.getByTestId('rank-best')).toHaveTextContent(copy.rankValue(3012));
+    expect(screen.getByTestId('glance-rank-current')).toHaveTextContent(copy.rankValue(3550));
+    expect(screen.getByTestId('glance-rank-best')).toHaveTextContent(copy.rankValue(3012));
 
     // Before the second rank event: one point, current and best both #4188.
     seek(120);
-    const single = screen.getByTestId('rank-sparkline');
+    const single = within(glance()).getByTestId('rank-sparkline');
     expect(single.querySelectorAll('polyline')).toHaveLength(0);
     expect(single.querySelectorAll('circle')).toHaveLength(2); // best ring + current dot
     expect(single).toHaveAttribute('aria-label', copy.sparklineSummary(4188, 4188, 1, 4188));
-    expect(screen.getByTestId('rank-current')).toHaveTextContent(copy.rankValue(4188));
-    expect(screen.getByTestId('rank-best')).toHaveTextContent(copy.rankValue(4188));
+    expect(screen.getByTestId('glance-rank-current')).toHaveTextContent(copy.rankValue(4188));
+    expect(screen.getByTestId('glance-rank-best')).toHaveTextContent(copy.rankValue(4188));
+
+    // The record repeats it in the sheet's vitals band, at the same playhead.
+    openRecord();
+    expect(within(record()).getByTestId('rank-current')).toHaveTextContent(copy.rankValue(4188));
+    expect(within(record()).getByTestId('rank-best')).toHaveTextContent(copy.rankValue(4188));
   });
 
   it('reads "Unranked" and draws no chart without rank events', async () => {
@@ -610,6 +840,11 @@ describe('EpisodePage', () => {
     seek(200);
     clickFrame('xo');
 
+    expect(within(screen.getByTestId('glance-rank')).getByText(copy.unranked)).toBeInTheDocument();
+    expect(screen.queryByTestId('rank-sparkline')).not.toBeInTheDocument();
+
+    // …and the record says the same thing, with no chart either (edge case).
+    openRecord();
     expect(within(screen.getByTestId('dossier-rank')).getByText(copy.unranked)).toBeInTheDocument();
     expect(screen.queryByTestId('rank-sparkline')).not.toBeInTheDocument();
   });
@@ -674,7 +909,7 @@ describe('EpisodePage', () => {
 
     expect(screen.getAllByTestId('rail-panel')).toHaveLength(1);
     expect(screen.queryByTestId('floormap')).not.toBeInTheDocument();
-    expect(screen.getByTestId('dossier-name')).toHaveTextContent('Harry');
+    expect(screen.getByTestId('glance-name')).toHaveTextContent('Harry');
     expect(badge()).toHaveAttribute('aria-expanded', 'false');
     expect(frame('harry')).toHaveAttribute('aria-expanded', 'true');
   });

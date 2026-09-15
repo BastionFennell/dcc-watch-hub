@@ -78,8 +78,8 @@ achievement toast with a populated feed.
 | `src/engine/` | reducer, selectors, time formatting — pure, framework-free |
 | `src/data/` | schema types, guards/normalization, fetching, show ordering |
 | `src/playback/` | `TimeSource` interface, YouTube adapter, fake, `usePlayhead`, resume store + `useResume` |
-| `src/hooks/` | `usePanel` — the right rail's one-panel state machine |
-| `src/components/` | stage, party rail, event feed, timeline, toast, minimap, header, rail panel, dossier, floor map, resume card |
+| `src/hooks/` | `usePanel` — the right rail's one-panel state machine; `useModalDialog` — the full record's focus trap |
+| `src/components/` | stage, party rail, event feed, timeline, toast, minimap, header, rail panel, glance card, full record, dossier sections, floor map, resume card |
 | `src/pages/` | `EpisodePage`, `HubPage`, `NotFoundPage` |
 | `src/copy.ts` | **every** user-facing string, in the System's voice |
 | `src/styles/tokens.css` | the colour/spacing/type tokens from spec §6 |
@@ -92,28 +92,55 @@ achievement toast with a populated feed.
 
 The ambient view is unchanged: video, party rail, ticker. Everything below is **opt-in** — it
 opens on an explicit click or keypress and closes on an explicit action, and the right rail
-hosts exactly one of the feed (default), a dossier, or the map. Panel content is still a pure
-function of the playhead, so scrubbing in either direction updates it and never leaks an event
-whose `t` is ahead of the playhead.
+hosts exactly one of the feed (default), a crawler glance card, or the map. Exactly one thing
+may cover the stage, and only when asked for from the glance card: the full record. Panel and
+record content are still a pure function of the playhead, so scrubbing in either direction
+updates them and never leaks an event whose `t` is ahead of the playhead.
 
-### Crawler dossier
+### Crawler glance card
 
 Click (or focus and press Enter/Space) a crawler frame in the party rail. The rail swaps the
-feed for that crawler's System dossier, in the order the official crawler sheet uses:
+feed for that crawler's glance card — how they are doing *right now*, in a couple of seconds:
 
-1. **Header** — portrait, name, handle, player, race, pronouns, crawler number, level, class
-   (or "Unclassed"), floor.
-2. **Vitals** — a ten-segment HP bar with current/max, current rank with an inline sparkline of
-   every elapsed `rank` event (better rank drawn higher, current and best-so-far as numbers, a
-   text summary for assistive tech), and debuffs.
-3. **Stats** — STR / INT / CON / DEX / CHA, when the episode data carries them.
-4. **Hotlist**, **Skills** (name and rank), **Inventory**, **Achievements** (title, description,
-   time), then **History** — that crawler's elapsed events, newest first.
+1. **Header** — portrait, name, handle · player, class (or "Unclassed") · level.
+2. **Vitals** — a ten-segment HP bar with current/max, current and best rank with an inline
+   sparkline of every elapsed `rank` event (better rank drawn higher, a text summary for
+   assistive tech) or "Unranked", and debuff chips — two rows, then "+N".
+3. **Ledger** — one line per list (Hotlist, Skills, Inventory, Achievements) with its count and
+   its newest entry on a single ellipsized line; achievement rows carry the time as well. An
+   empty list reads 0 and the System's empty-state phrase. The rows are text, not controls.
+4. **Moments** — the last three entries of that crawler's history, with "—" placeholders when
+   they have fewer.
+5. **Open full record** — the card's only control.
 
+The card's height is fixed: every row is single-line and the lists never expand into it, so a
+crawler with forty achievements and a ten-entry hotlist renders exactly as tall as one with
+none, and it does not scroll on a laptop. Close with the panel's × control, <kbd>Escape</kbd>,
+or by clicking the same frame again; focus returns to the frame. Clicking a different frame
+switches cards without closing. At ≤ 900 px the panel is a full-viewport overlay and the page
+behind it does not scroll.
+
+### Full record
+
+**Open full record** opens the whole System sheet as a modal dialog over the page — the one
+overlay allowed to cover the stage. Desktop lays it out the way the official sheet does in
+landscape: a top band of identity (portrait, name, handle, player, race, pronouns, crawler
+number, level, class, floor), vitals and stats (STR / INT / CON / DEX / CHA, when the episode
+data carries them), then three columns — **Hotlist** + **Skills** | **Inventory** +
+**Achievements** | **History**, each list in full, each section under the sheet's black bar.
 Sections with nothing in them yet render a one-line System empty state rather than vanishing.
-Close with the panel's × control, <kbd>Escape</kbd>, or by clicking the same frame again; focus
-returns to the frame. Clicking a different frame switches dossiers without closing. At ≤ 900 px
-the panel is a full-viewport overlay and the page behind it does not scroll.
+
+- **Size**: `min(1200px, 94vw)` wide, at most 90 vh tall, scrolling inside itself over a dimmed
+  backdrop. At ≤ 900 px it fills the viewport and stacks the same sections in the same order.
+- **Modal**: focus moves to the close control on open and is trapped inside — <kbd>Tab</kbd> and
+  <kbd>Shift</kbd>+<kbd>Tab</kbd> wrap — and the page behind it is inert and does not scroll.
+- **Closing**: <kbd>Escape</kbd>, the dimmed backdrop, or the × control. Escape closes only the
+  record: the glance card stays open in the rail and focus returns to **Open full record**.
+- **Live**: it keeps updating with the playhead. Scrub while it is open and Inventory,
+  Achievements and History follow, without the dialog closing or moving. Opening it never
+  pauses playback and never touches the `TimeSource`.
+- It closes with the card that opened it: switching crawlers, closing the panel, or changing
+  episode all dismiss it.
 
 ### Floor map
 
@@ -320,8 +347,10 @@ Read in this order:
 3. `specs/001-watch-hub-v1/` — `spec.md` (requirements and success criteria), `plan.md`,
    `research.md` (the decisions and what was rejected), `data-model.md`, `contracts/`,
    `quickstart.md` (run + manual acceptance walkthrough + results), `tasks.md`.
-4. `specs/002-watch-hub-v2/` — the active feature: dossiers, the expanded map, resume and rank
-   sparklines. Same layout, plus `contracts/panels.md` and `contracts/resume-storage.md`.
+4. `specs/002-watch-hub-v2/` — dossiers, the expanded map, resume and rank sparklines. Same
+   layout, plus `contracts/panels.md` and `contracts/resume-storage.md`.
+5. `specs/003-crawler-record/` — the active feature: the rail's glance card and the modal full
+   record. Same layout, plus `contracts/dialog.md`.
 
 Three rules bite most often while editing:
 

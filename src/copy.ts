@@ -162,8 +162,10 @@ export const copy = {
   /** Panels (FR-100..FR-104). One rail slot, one close control. */
   panelClose: 'Close',
 
-  /** Crawler dossier (FR-110/111) — the System's copy of the crawler sheet. */
-  dossierKicker: 'CRAWLER DOSSIER',
+  /**
+   * Crawler sheet copy (FR-110/111). Since 003 the rail's kicker is
+   * `glanceKicker` and the dialog's is `recordKicker`; the title is shared.
+   */
   dossierTitle: (name: string) => `${name} — System record`,
   dossierSections: {
     vitals: 'VITALS',
