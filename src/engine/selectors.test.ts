@@ -309,7 +309,9 @@ describe('crawlerHistory', () => {
 
   it('returns only that crawler’s elapsed events, newest first and uncapped', () => {
     const history = crawlerHistory(episode.events, 200, 'harry', party);
-    expect(history.map((item) => item.t)).toEqual([200, 170, 165, 150, 150, 105, 100, 95, 60, 45, 30]);
+    expect(history.map((item) => item.t)).toEqual([
+      200, 170, 169, 168, 165, 153, 152, 150, 150, 105, 100, 95, 60, 45, 30,
+    ]);
     expect(history.length).toBeGreaterThan(8);
     expect(history.every((item) => item.actorName === 'Harry')).toBe(true);
   });
@@ -430,8 +432,10 @@ describe('crawlerDossier', () => {
     expect(dossierAt(110)?.hotlist).toEqual(['Door']);
     expect(dossierAt(200)?.hotlist).toEqual(['Crowbar']);
     expect(dossierAt(200)?.skills).toEqual([{ name: 'Powerful Strike', rank: 1 }]);
-    expect(dossierAt(200, 'xo')?.skills).toEqual([{ name: 'Understudy Strike', rank: 2 }]);
-    expect(dossierAt(100, 'xo')?.skills).toEqual([{ name: 'Understudy Strike', rank: 1 }]);
+    // X.O. logs nine skills by 200; the first one is upserted to rank 2 at 160.
+    expect(dossierAt(200, 'xo')?.skills).toHaveLength(9);
+    expect(dossierAt(200, 'xo')?.skills[0]).toEqual({ name: 'Understudy Strike', rank: 2 });
+    expect(dossierAt(100, 'xo')?.skills[0]).toEqual({ name: 'Understudy Strike', rank: 1 });
     expect(dossierAt(200)?.achievements).toEqual([
       { title: 'Gate Crasher', desc: 'Ten mobs, one door.', t: 60 },
     ]);
@@ -551,13 +555,14 @@ describe('crawlerGlance', () => {
   });
 
   it('suffixes a skill rank only when the entry carries one', () => {
+    // The ledger is deprecated (R2 wave 2 deletes it) but still derived here.
     expect(glanceAt(160, 'xo').ledger.skills).toEqual({
-      count: 1,
-      newest: { text: 'Understudy Strike · Rank 2' },
+      count: 9,
+      newest: { text: 'Swamp Step' },
     });
-    expect(glanceAt(100, 'xo').ledger.skills).toEqual({
-      count: 1,
-      newest: { text: 'Understudy Strike · Rank 1' },
+    expect(glanceAt(90, 'xo').ledger.skills).toEqual({
+      count: 3,
+      newest: { text: 'Tail Whip · Rank 4' },
     });
     expect(glanceAt(79, 'xo').ledger.skills).toEqual({ count: 0 });
   });
@@ -565,7 +570,7 @@ describe('crawlerGlance', () => {
   it('keeps at most the three newest history moments, newest first', () => {
     const history = glanceAt(200).recentHistory;
     expect(history).toHaveLength(3);
-    expect(history.map((item) => item.t)).toEqual([200, 170, 165]);
+    expect(history.map((item) => item.t)).toEqual([200, 170, 169]);
     expect(history[0].kind).toBe('rank');
     // Harry's first moment is the loot at 30; before that there is nothing.
     expect(glanceAt(40).recentHistory.map((item) => item.t)).toEqual([30]);

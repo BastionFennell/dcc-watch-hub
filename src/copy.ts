@@ -53,6 +53,8 @@ export const copy = {
     skill: 'Skill',
     class: 'Class',
     hotlist: 'Hotlist',
+    equip: 'Equip',
+    unequip: 'Unequip',
   } as const,
 
   // Stage
@@ -111,6 +113,12 @@ export const copy = {
       if (remove.length > 0) parts.push(`clears ${remove.join(', ')} from the Hotlist`);
       return `${actor} ${parts.length > 0 ? parts.join(' and ') : 'leaves the Hotlist alone'}`;
     },
+    /* --- 003 revision 2 event types (R2-FR-220) --- */
+    equip: (actor: string, slot: string, item: string) => `${actor} equips ${item} (${slot})`,
+    unequip: (actor: string, slot: string, item?: string) =>
+      item === undefined
+        ? `${actor} clears the ${slot} slot`
+        : `${actor} stows ${item} (${slot})`,
     markerLevelUp: (actor: string, level: number) => `${actor} reaches Lv ${level}`,
     stageCaption: (episodeId: number, floor: number, time: string) =>
       `Ep ${episodeId} · Floor ${floor} · ${time}`,
@@ -176,6 +184,10 @@ export const copy = {
     inventory: 'INVENTORY',
     achievements: 'ACHIEVEMENTS',
     history: 'HISTORY',
+    equipped: 'EQUIPPED',
+    gear: 'GEAR',
+    latestAchievement: 'LATEST ACHIEVEMENT',
+    recent: 'RECENT MOMENTS',
   } as const,
   sheetLabels: {
     race: 'Race',
@@ -203,6 +215,8 @@ export const copy = {
     inventory: 'Nothing carried.',
     achievements: 'No achievements yet.',
     history: 'No moments logged.',
+    equipped: 'Nothing equipped.',
+    gearSlot: '—',
   } as const,
   unranked: 'Unranked',
   unclassed: 'Unclassed',
@@ -258,6 +272,31 @@ export const copy = {
   recordTitle: (name: string) => `${name} — full record`,
   /** Debuff chips past the card's two-row cap. */
   debuffsMore: (n: number) => `+${n}`,
+
+  /* --- 003 revision 2 --- */
+
+  /** One row per worn slot on the sheet and on the glance card (R2-FR-220). */
+  gearSlotLabels: {
+    head: 'Head',
+    torso: 'Torso',
+    arms: 'Arms',
+    hands: 'Hands',
+    legs: 'Legs',
+    feet: 'Feet',
+    accessory: 'Accessory',
+  } as const,
+
+  /** The record's MMO hotbar: ten numbered slots, then the overflow marker (R2-FR-221). */
+  hotbarSlot: (n: number) => `${n}`,
+  hotbarOverflow: (n: number) => `+${n}`,
+
+  /** Tile grids cap at eight; the rest live behind a list view (R2-FR-222/223). */
+  viewAll: (n: number) => `View all (${n})`,
+  backToRecord: 'Back to record',
+  recordListTitle: (name: string, category: string) => `${name} — ${category}`,
+
+  /** The full-figure art column (R2-FR-224). */
+  artAlt: (name: string) => `${name}, full figure`,
 } as const;
 
 export type Copy = typeof copy;

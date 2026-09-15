@@ -4,9 +4,9 @@
  * Constitution I: no I/O, no clocks, no randomness, no component or DOM reads.
  * Unknown event types and unknown actors leave state untouched (FR-006, edge cases).
  */
-import type { AnyEvent, Cell, EpisodeData, SkillEntry } from '../data/types';
-import type { CrawlerState, OverlayState } from './state';
-import { cellKey, fromInitialState } from './state';
+import type { AnyEvent, Cell, EpisodeData, GearSlot, SkillEntry } from '../data/types';
+import type { CrawlerState, GearState, OverlayState } from './state';
+import { ACCESSORY_CAP, cellKey, fromInitialState } from './state';
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
@@ -45,6 +45,25 @@ function upsertSkill(existing: SkillEntry[], name: string, rank: number | undefi
   const skills = existing.slice();
   skills[index] = { ...skills[index], rank };
   return skills;
+}
+
+/**
+ * Worn gear after an `equip` (R2-FR-220): a single slot is replaced outright;
+ * accessories append, deduped by name and capped at ten.
+ */
+function equipGear(gear: GearState, slot: GearSlot, item: string): GearState {
+  if (slot !== 'accessory') return { ...gear, [slot]: item };
+  if (gear.accessories.includes(item) || gear.accessories.length >= ACCESSORY_CAP) return gear;
+  return { ...gear, accessories: [...gear.accessories, item] };
+}
+
+/** An `unequip` clears a slot; an accessory goes by name, or the last one. */
+function unequipGear(gear: GearState, slot: GearSlot, item: string | undefined): GearState {
+  if (slot !== 'accessory') return { ...gear, [slot]: null };
+  if (gear.accessories.length === 0) return gear;
+  if (item === undefined) return { ...gear, accessories: gear.accessories.slice(0, -1) };
+  if (!gear.accessories.includes(item)) return gear;
+  return { ...gear, accessories: gear.accessories.filter((worn) => worn !== item) };
 }
 
 export function applyEvent(state: OverlayState, event: AnyEvent): OverlayState {
@@ -101,6 +120,18 @@ export function applyEvent(state: OverlayState, event: AnyEvent): OverlayState {
       return withCrawler(state, event.actor, (crawler) => ({
         ...crawler,
         hotlist: union(crawler.hotlist, event.add, event.remove),
+      }));
+
+    case 'equip':
+      return withCrawler(state, event.actor, (crawler) => ({
+        ...crawler,
+        gear: equipGear(crawler.gear, event.slot, event.item),
+      }));
+
+    case 'unequip':
+      return withCrawler(state, event.actor, (crawler) => ({
+        ...crawler,
+        gear: unequipGear(crawler.gear, event.slot, event.item),
       }));
 
     case 'rank':

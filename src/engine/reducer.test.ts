@@ -303,9 +303,11 @@ describe('applyEvent — v2 event types', () => {
     expect(findCrawler(at170, 'harry')?.class).toBe('Compensated Anarchist');
     expect(findCrawler(at170, 'harry')?.hotlist).toEqual(['Crowbar']);
     expect(findCrawler(reduceTo(episode, 110), 'harry')?.hotlist).toEqual(['Door']);
-    expect(findCrawler(at170, 'xo')?.skills).toEqual([{ name: 'Understudy Strike', rank: 2 }]);
-    expect(findCrawler(reduceTo(episode, 100), 'xo')?.skills).toEqual([
-      { name: 'Understudy Strike', rank: 1 },
-    ]);
+    // X.O. keeps logging skills; the first one is upserted to rank 2 at 160.
+    expect(findCrawler(at170, 'xo')?.skills[0]).toEqual({ name: 'Understudy Strike', rank: 2 });
+    expect(findCrawler(reduceTo(episode, 100), 'xo')?.skills[0]).toEqual({
+      name: 'Understudy Strike',
+      rank: 1,
+    });
   });
 });
