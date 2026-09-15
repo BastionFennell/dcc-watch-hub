@@ -1,4 +1,5 @@
 import type { MapCellsView } from '../../engine/selectors';
+import { cellKey } from '../../engine/state';
 import { IconMap } from '../icons';
 import { copy } from '../../copy';
 import styles from './MiniMapBadge.module.css';
@@ -31,7 +32,7 @@ export function MiniMapBadge({ cells, recent }: MiniMapBadgeProps) {
         aria-hidden="true"
       >
         {Array.from({ length: total }, (_, index) => {
-          const key = `${Math.floor(index / cols)},${index % cols}`;
+          const key = cellKey(Math.floor(index / cols), index % cols);
           const state = recent.has(key) ? 'recent' : revealed.has(key) ? 'revealed' : 'hidden';
           return (
             <span key={key} className={styles.cell} data-state={state} data-testid="minimap-cell" />

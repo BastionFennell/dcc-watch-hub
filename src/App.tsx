@@ -12,9 +12,10 @@ import styles from './App.module.css';
 function AppShell() {
   const { show, error, reload } = useShow();
   const match = useMatch('/ep/:id');
-  const routeId = Number(match?.params.id);
+  const rawId = match?.params.id;
+  // Same rule as EpisodePage: digits only, so header and page agree on what is an episode.
   const current =
-    show && match && Number.isInteger(routeId) ? findEpisode(show, routeId) : undefined;
+    show && rawId !== undefined && /^\d+$/.test(rawId) ? findEpisode(show, Number(rawId)) : undefined;
 
   return (
     <div className={styles.shell}>

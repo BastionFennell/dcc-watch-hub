@@ -142,10 +142,8 @@ describe('EpisodePage', () => {
       expect(screen.queryAllByText(text)).toHaveLength(0);
 
       seek(event.t);
-      // The active sponsor is pinned AND listed, so count matches instead of one node.
-      expect(within(screen.getByTestId('feed-items')).getAllByText(text).length).toBeGreaterThan(
-        0,
-      );
+      // A sponsor inside its window is pinned rather than listed, so look page-wide.
+      expect(screen.getAllByText(text).length).toBeGreaterThan(0);
     });
   });
 
@@ -175,6 +173,7 @@ describe('EpisodePage', () => {
 
     seek(115);
     expect(screen.getByTestId('active-sponsor')).toBeInTheDocument();
+    expect(within(screen.getByTestId('feed-items')).queryByTestId('sponsor')).toBeNull();
 
     seek(135);
     expect(screen.queryByTestId('active-sponsor')).not.toBeInTheDocument();
@@ -222,7 +221,7 @@ describe('EpisodePage', () => {
 
     // Real buttons, named by their label, inside the labelled marker list.
     expect(screen.getByRole('list', { name: copy.timelineLabel })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'The Hoarder Fight' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: copy.markerUpcoming(copy.markerKinds.boss, '2:00') })).toBeInTheDocument();
   });
 
   it('fills the timeline up to the playhead', async () => {
@@ -237,7 +236,7 @@ describe('EpisodePage', () => {
     const { source } = await mountEpisode();
 
     expect(feedCount()).toBe(0);
-    fireEvent.click(screen.getByRole('button', { name: 'The Hoarder Fight' }));
+    fireEvent.click(screen.getByRole('button', { name: copy.markerUpcoming(copy.markerKinds.boss, '2:00') }));
 
     expect(source.getTime()).toBe(120);
     expect(screen.getByText(copy.feedHeader('2:00'))).toBeInTheDocument();

@@ -17,13 +17,13 @@ episode, one archive page, no backend, no accounts, no database.
 
 ```sh
 npm install
-npm run dev            # http://localhost:5173/
+npm run dev            # http://localhost:5180/
 npm run dev -- --open  # opens the archive
 ```
 
-- Archive: <http://localhost:5173/>
-- Episode with the real embed: <http://localhost:5173/ep/1>
-- Episode with the dev scrubber, no network: <http://localhost:5173/ep/1?fake=1>
+- Archive: <http://localhost:5180/>
+- Episode with the real embed: <http://localhost:5180/ep/1>
+- Episode with the dev scrubber, no network: <http://localhost:5180/ep/1?fake=1>
 
 ### Verify
 
@@ -66,6 +66,8 @@ Add `?fake=1` to an episode URL **in dev** and the stage is replaced by a black 
 range input and a play/pause button driving `FakeTimeSource`. It is the fastest way to scrub
 through an event log without the network, and it is compiled out of production builds
 (`import.meta.env.DEV` guard), so it can never reach a viewer.
+Add `&t=<seconds>` to open the scrubber mid-episode, e.g. `/ep/1?fake=1&t=63` lands on the first
+achievement toast with a populated feed.
 
 ### Layout of the source
 

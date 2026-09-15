@@ -26,7 +26,8 @@ export function usePlayhead(source: TimeSource | null): Playhead {
     setState({ t: source.getTime(), playing: false, ended: false });
 
     const offTick = source.onTick((t) => {
-      setState((prev) => (prev.t === t ? prev : { ...prev, t }));
+      // Any movement after the end (a marker click, a host scrub) leaves the ended state.
+      setState((prev) => (prev.t === t ? prev : { ...prev, t, ended: false }));
     });
     const offPlay = source.onPlay(() => {
       setState((prev) => ({ ...prev, playing: true, ended: false }));

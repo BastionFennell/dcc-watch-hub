@@ -15,6 +15,8 @@ export const __fakeSources: FakeTimeSource[] = [];
 
 export interface FakeStageProps {
   durationSec: number;
+  /** DEV-only starting playhead (from `?t=`), so a page can open mid-episode. */
+  initialT?: number;
   t: number;
   onSource: (source: TimeSource) => void;
 }
@@ -24,12 +26,12 @@ export interface FakeStageProps {
  * play/pause button driving a `FakeTimeSource` at 1×. Not a product feature —
  * it exists so the whole page can be driven without a network.
  */
-export function FakeStage({ durationSec, t, onSource }: FakeStageProps) {
+export function FakeStage({ durationSec, t, onSource, initialT = 0 }: FakeStageProps) {
   const sourceRef = useRef<FakeTimeSource | null>(null);
   const [playing, setPlaying] = useState(false);
 
   useEffect(() => {
-    const source = new FakeTimeSource(0, durationSec);
+    const source = new FakeTimeSource(Math.min(Math.max(initialT, 0), durationSec), durationSec);
     sourceRef.current = source;
     if (import.meta.env.DEV) __fakeSources.push(source);
     const offPlay = source.onPlay(() => setPlaying(true));
@@ -43,7 +45,7 @@ export function FakeStage({ durationSec, t, onSource }: FakeStageProps) {
       sourceRef.current = null;
       source.destroy();
     };
-  }, [durationSec, onSource]);
+  }, [durationSec, onSource, initialT]);
 
   return (
     <div className={styles.fake} data-testid="fake-stage">

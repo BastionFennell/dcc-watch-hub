@@ -3,6 +3,7 @@
  * order; the flat `episodes` list carries the metadata (data-model.md §1).
  */
 import type { EpisodeMeta, Show } from './types';
+import { copy } from '../copy';
 
 export interface FloorGroup {
   season: number;
@@ -11,7 +12,7 @@ export interface FloorGroup {
   episodes: EpisodeMeta[];
 }
 
-const UNSORTED_LABEL = 'Unfiled transmissions';
+const UNSORTED_LABEL = copy.unfiledFloor;
 
 let warnedUnsorted = false;
 

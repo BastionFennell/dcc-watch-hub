@@ -84,6 +84,8 @@ export function EpisodePage() {
   const frames = state && episode ? partyFrames(state, episode.events, t) : [];
   const items = episode ? feedItems(episode.events, t, 8, party) : [];
   const sponsor = episode ? activeSponsor(episode.events, t, party) : null;
+  // A pinned sponsor is not repeated in the list; it rejoins the feed when its window closes.
+  const listed = sponsor ? items.filter((item) => item.id !== sponsor.id) : items;
   const toast = episode ? activeToast(episode.events, t, party) : null;
   const markers = episode ? timelineMarkers(episode.events, meta.durationSec, party) : [];
   const cells = state ? mapCells(state) : null;
@@ -117,7 +119,7 @@ export function EpisodePage() {
 
         <aside className={styles.rail}>
           <EventFeed
-            items={items}
+            items={listed}
             sponsor={sponsor}
             t={t}
             notice={

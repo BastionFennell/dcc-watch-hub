@@ -127,6 +127,20 @@ export const copy = {
 
   /** The marker bar under the stage; each marker names itself (FR-040/041). */
   timelineLabel: 'Episode timeline',
+
+  /* --- polish pass (post-review) --- */
+
+  /** Markers keep their kind and time but hide their label until the playhead reaches them (time-truth). */
+  markerKinds: {
+    boss: 'Boss encounter',
+    loot: 'Loot drop',
+    achievement: 'Achievement',
+    levelup: 'Level up',
+    story: 'Story beat',
+  },
+  markerUpcoming: (kind: string, time: string) => `${kind} at ${time}`,
+  unfiledFloor: 'Unfiled transmissions',
+  broadcastUnavailable: 'The broadcast relay is unreachable. The System is recalibrating.',
 } as const;
 
 export type Copy = typeof copy;

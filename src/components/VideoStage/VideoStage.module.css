@@ -29,7 +29,7 @@
 .caption {
   position: absolute;
   left: var(--space-4);
-  bottom: var(--space-4);
+  bottom: var(--stage-overlay-bottom, var(--space-4));
   color: var(--text-2);
   font-size: var(--text-xs);
   font-variant-numeric: tabular-nums;
@@ -87,4 +87,27 @@
   color: var(--text-3);
   font-size: var(--text-xs);
   font-variant-numeric: tabular-nums;
+}
+
+/*
+ * The host player draws its own control bar along the bottom ~48 px of the
+ * iframe. Overlays sit above it so they never hide play / fullscreen controls.
+ */
+.stage[data-host='youtube'] {
+  --stage-overlay-bottom: 56px;
+}
+
+/* Shown inside the stage when the host API itself cannot be reached. */
+.hostError {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+  background: rgb(19 19 32 / 85%);
+}
+
+.hostError > * {
+  max-width: 420px;
 }

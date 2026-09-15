@@ -5,7 +5,7 @@
 .badge {
   position: absolute;
   right: var(--space-4);
-  bottom: var(--space-4);
+  bottom: var(--stage-overlay-bottom, var(--space-4));
   z-index: 2;
   width: 96px;
   min-height: 64px;
@@ -40,7 +40,7 @@
 .cell {
   height: 4px;
   border-radius: 1px;
-  background: var(--panel);
+  background: var(--panel-deep);
   transition: background-color 300ms ease;
 }
 

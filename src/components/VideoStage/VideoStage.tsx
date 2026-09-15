@@ -27,11 +27,12 @@ export interface VideoStageProps {
 export function VideoStage({ meta, t, onSource, children }: VideoStageProps) {
   const [searchParams] = useSearchParams();
   const fake = import.meta.env.DEV && searchParams.get('fake') === '1';
+  const initialT = Number(searchParams.get('t') ?? 0) || 0;
 
   return (
-    <div className={styles.stage} data-testid="video-stage">
+    <div className={styles.stage} data-testid="video-stage" data-host={fake ? 'fake' : 'youtube'}>
       {fake ? (
-        <FakeStage durationSec={meta.durationSec} t={t} onSource={onSource} />
+        <FakeStage durationSec={meta.durationSec} t={t} onSource={onSource} initialT={initialT} />
       ) : (
         <YouTubeStage videoId={meta.youtubeId} title={meta.title} onSource={onSource} />
       )}
