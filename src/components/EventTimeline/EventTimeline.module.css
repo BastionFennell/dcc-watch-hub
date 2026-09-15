@@ -1,7 +1,15 @@
 /*
  * Wireframe: an 18 px strip under the stage — a 3 px hairline track at 8 px with
- * a brand-2 elapsed fill, and 6×11 px rounded markers straddling it.
+ * a brand-2 elapsed fill, and 6×11 px rounded markers straddling it. Since T341
+ * the strip also carries a playhead tick and, below it, a colour legend.
  */
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
 .timeline {
   position: relative;
   height: 20px;
@@ -30,6 +38,21 @@
 .fill {
   background: var(--brand-2);
   max-width: 100%;
+}
+
+/*
+ * Where the broadcast is, as opposed to how much of it has run (review 1.1).
+ * A 2 px full-height tick in --text reads as a position, not as progress.
+ */
+.playhead {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--text);
+  border-radius: 1px;
+  pointer-events: none;
 }
 
 .markers {
@@ -62,4 +85,81 @@
 .marker:focus-visible {
   outline: 2px solid var(--brand-fg);
   outline-offset: 2px;
+}
+
+/*
+ * The marker's own tooltip (T341). Instant, styled, and reachable by keyboard —
+ * the native `title` waited a second, never appeared on touch, and could not be
+ * kept spoiler-safe in its own right.
+ */
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + 2px);
+  z-index: 4;
+  display: block;
+  max-width: 240px;
+  width: max-content;
+  padding: var(--space-2) var(--space-3);
+  background: var(--panel-deep);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: var(--text-2xs);
+  line-height: 1.35;
+  text-align: left;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 90ms ease;
+}
+
+.tooltip[data-anchor='center'] {
+  transform: translateX(-50%);
+}
+
+.tooltip[data-anchor='end'] {
+  transform: translateX(-100%);
+}
+
+.marker:hover ~ .tooltip,
+.marker:focus-visible ~ .tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* What the colours mean, once, under the strip (review 1.1). */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.legendSwatch {
+  width: 6px;
+  height: 10px;
+  border-radius: 2px;
+  flex: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marker,
+  .tooltip {
+    transition: none;
+  }
 }

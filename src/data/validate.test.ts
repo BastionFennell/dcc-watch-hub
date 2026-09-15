@@ -51,15 +51,33 @@ describe('normalizeEvent', () => {
     expect(clamped.t).toBe(0);
   });
 
-  it('accepts a crawler-scoped rank only with an actor', () => {
-    expect(normalizeEvent({ t: 1, type: 'rank', scope: 'crawler', rank: 5 }).type).toBe('unknown');
+  // DCC has individual rank only (T334).
+  it('accepts a rank only with an actor', () => {
+    expect(normalizeEvent({ t: 1, type: 'rank', rank: 5 }).type).toBe('unknown');
+    expect(normalizeEvent({ t: 1, type: 'rank', rank: 5, actor: 'xo' })).toEqual({
+      t: 1,
+      type: 'rank',
+      actor: 'xo',
+      rank: 5,
+    });
+  });
+
+  it('reads a legacy crawler-scoped rank row and drops the scope', () => {
     expect(normalizeEvent({ t: 1, type: 'rank', scope: 'crawler', rank: 5, actor: 'xo' })).toEqual({
       t: 1,
       type: 'rank',
-      scope: 'crawler',
-      rank: 5,
       actor: 'xo',
+      rank: 5,
     });
+  });
+
+  it('demotes a legacy party rank row to unknown', () => {
+    const legacy = normalizeEvent({ t: 1, type: 'rank', scope: 'party', rank: 61 });
+    expect(legacy.type).toBe('unknown');
+    // Even with an actor attached: a party rank is not a fact DCC has.
+    expect(normalizeEvent({ t: 1, type: 'rank', scope: 'party', rank: 61, actor: 'xo' }).type).toBe(
+      'unknown',
+    );
   });
 
   it('rejects a sponsor without a positive duration', () => {
@@ -96,6 +114,18 @@ describe('guards', () => {
     expect(isShow({})).toBe(false);
     expect(isEpisodeData({ episodeId: 1, events: [] })).toBe(false);
     expect(() => normalizeEpisode({ nope: true })).toThrow(DataError);
+  });
+
+  it('drops a legacy initialState.partyRank with a warning', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const episode = normalizeEpisode({
+      episodeId: 1,
+      initialState: { ...makeEpisode().initialState, partyRank: 61 },
+      events: [],
+    });
+    expect(episode.initialState).not.toHaveProperty('partyRank');
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
   });
 
   it('normalizeEpisode sorts and normalizes events', () => {

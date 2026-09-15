@@ -1,0 +1,15 @@
+/*
+ * The "HP" label that sits before the sheet's ten-segment strip (T344, UX
+ * review 1.3). It ships with `HpSegments` rather than with a caller's module so
+ * the glance card, the record's vitals and the stacked dossier all pick it up
+ * without any of their layout classes changing.
+ */
+.hpLabel {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}

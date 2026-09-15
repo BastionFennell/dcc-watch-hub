@@ -3,19 +3,19 @@ import { useSearchParams } from 'react-router';
 import type { EpisodeMeta } from '../../data/types';
 import type { TimeSource } from '../../playback/TimeSource';
 import { FakeStage } from './FakeStage';
-import { StageCaption } from './StageCaption';
 import { YouTubeStage } from './YouTubeStage';
 import styles from './VideoStage.module.css';
 
 export interface VideoStageProps {
   meta: EpisodeMeta;
-  /** The playhead, for the caption. */
+  /** The playhead, handed to the dev stage's scrubber. */
   t: number;
   /** Called once with the stage's `TimeSource`; the page holds it in state. */
   onSource: (source: TimeSource) => void;
   /**
-   * Overlay slot, drawn above the player and below the caption:
-   * `AchievementToast`, `MiniMapBadge`, `NextEpisodeCard` (US3/US4).
+   * Overlay slot, drawn above the player: `AchievementToast`, `MiniMapBadge`,
+   * `NextEpisodeCard` (US3/US4). The caption is no longer one of them — since
+   * T340 it lives in its own row under the stage.
    */
   children?: ReactNode;
 }
@@ -37,7 +37,6 @@ export function VideoStage({ meta, t, onSource, children }: VideoStageProps) {
         <YouTubeStage videoId={meta.youtubeId} title={meta.title} onSource={onSource} />
       )}
       {children}
-      <StageCaption meta={meta} t={t} />
     </div>
   );
 }

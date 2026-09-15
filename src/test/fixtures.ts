@@ -5,7 +5,7 @@
  * a 20 s sponsor, a chapter, a map reveal, and one unknown event type.
  *
  * v2 adds the facts data-model §5 pins down, at times that leave every v1
- * assertion true: Harry's crawler rank at 100/150/200 (4188 → 3012 → 3550),
+ * assertion true: Harry's rank at 100/150/200 (4188 → 3012 → 3550),
  * X.O.'s skill upsert at 80 and 160, Harry's class at 95, his hotlist at 105
  * and 165, a second labeled reveal at 175 ("The Rot Market"), and optional
  * sheet fields on the party (Harry carries the full set).
@@ -124,7 +124,6 @@ export function makeEpisodeRaw(episodeId = 1): unknown {
           art: '/img/crawlers/actress-art.svg',
         }),
       ],
-      partyRank: null,
       map: { floor: 1, grid: { cols: 12, rows: 8 }, revealed: [] },
     },
     events: [
@@ -135,14 +134,13 @@ export function makeEpisodeRaw(episodeId = 1): unknown {
       { t: 61, type: 'achievement', actor: 'xo', title: 'Understudy', desc: 'Survived the opener.' },
       { t: 62, type: 'achievement', actor: 'stuntman', title: 'Stunt Double', desc: 'Took the hit.' },
       { t: 70, type: 'level_up', actor: 'xo', level: 2 },
-      { t: 80, type: 'rank', scope: 'party', rank: 61 },
       { t: 80, type: 'skill', actor: 'xo', name: 'Understudy Strike', rank: 1 },
       { t: 85, type: 'skill', actor: 'xo', name: 'Cold Read', rank: 3 },
       { t: 90, type: 'skill', actor: 'xo', name: 'Tail Whip', rank: 4 },
       { t: 90, type: 'map_reveal', cells: [[3, 2], [4, 2]], label: 'The Meat District' },
       { t: 95, type: 'class', actor: 'harry', class: 'Compensated Anarchist' },
       { t: 100, type: 'future_type', payload: 'must never render' },
-      { t: 100, type: 'rank', scope: 'crawler', actor: 'harry', rank: 4188 },
+      { t: 100, type: 'rank', actor: 'harry', rank: 4188 },
       { t: 105, type: 'hotlist', actor: 'harry', add: ['Door'], remove: [] },
       { t: 110, type: 'sponsor', text: 'This death brought to you by Grull Industries.', durationSec: 20 },
       { t: 115, type: 'skill', actor: 'xo', name: 'Quartermaster Eye', rank: 5 },
@@ -155,7 +153,7 @@ export function makeEpisodeRaw(episodeId = 1): unknown {
       { t: 145, type: 'skill', actor: 'xo', name: 'Ledger Sense', rank: 9 },
       { t: 148, type: 'skill', actor: 'xo', name: 'Swamp Step' },
       { t: 150, type: 'inventory', actor: 'harry', add: ['Torch'], remove: ['Enchanted Crowbar'] },
-      { t: 150, type: 'rank', scope: 'crawler', actor: 'harry', rank: 3012 },
+      { t: 150, type: 'rank', actor: 'harry', rank: 3012 },
       { t: 152, type: 'equip', actor: 'harry', slot: 'torso', item: 'Patched Jacket' },
       { t: 153, type: 'equip', actor: 'harry', slot: 'accessory', item: 'Lucky Rabbit Foot' },
       { t: 160, type: 'note', text: 'The System declines to comment.' },
@@ -165,7 +163,7 @@ export function makeEpisodeRaw(episodeId = 1): unknown {
       { t: 169, type: 'equip', actor: 'harry', slot: 'hands', item: 'Torch' },
       { t: 170, type: 'hp', actor: 'harry', current: 20, max: 22 },
       { t: 175, type: 'map_reveal', cells: [[6, 5], [6, 6], [7, 5]], label: 'The Rot Market' },
-      { t: 200, type: 'rank', scope: 'crawler', actor: 'harry', rank: 3550 },
+      { t: 200, type: 'rank', actor: 'harry', rank: 3550 },
       {
         t: 210,
         type: 'hotlist',

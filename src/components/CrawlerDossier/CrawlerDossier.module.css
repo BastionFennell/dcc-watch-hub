@@ -324,3 +324,199 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* --- 003 revision 2: rank label + delta (UX review 1.4, T343) --- */
+
+/*
+ * The block's own name, distinct from the "Current" / "Best" cell labels: the
+ * numbers used to sit unlabeled beside the HP strip.
+ */
+.rankTitle {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+
+/* ↑ means the rank number fell, which is an improvement. */
+.rankDelta {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--text-3);
+}
+
+.rankDelta[data-direction='up'] {
+  color: var(--marker-levelup);
+}
+
+/* --- 003 revision 2: the record's hotbar (research R8, R2-FR-221) --- */
+
+.hotbar {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: var(--space-2);
+  align-items: stretch;
+}
+
+.hotbarSlot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  aspect-ratio: 1 / 1;
+  min-width: 0;
+  padding: var(--space-4) var(--space-2) var(--space-2);
+  border: 1px dashed var(--hairline);
+  border-radius: var(--radius-sm);
+  background: var(--panel-deep);
+  font-size: var(--text-2xs);
+  line-height: 1.25;
+  color: var(--text-3);
+  overflow: hidden;
+  /* An empty slot is a dim outline; a filled one is a lit key (research R8). */
+  opacity: 0.4;
+}
+
+.hotbarSlot[data-filled] {
+  opacity: 1;
+  border: var(--border-hairline-2);
+  border-style: solid;
+  background: var(--panel);
+  color: var(--text);
+}
+
+.hotbarNumber {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  /* Mono digits on the deep panel: the AA-passing muted step, not the decorative one. */
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.hotbarSlot .itemLabel {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.hotbarOverflow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--text-2);
+  padding: 0 var(--space-2);
+}
+
+/* --- 003 revision 2: gear rows (R2 US2 scenario 3) --- */
+
+.gearRows {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+}
+
+.gearRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  border-bottom: var(--border-hairline);
+  padding-bottom: var(--space-2);
+  min-width: 0;
+}
+
+.gearValue {
+  margin: 0;
+  font-size: var(--text-xs);
+  text-align: right;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.gearRow:not([data-filled]) .itemLabel {
+  color: var(--text-3);
+  font-weight: 400;
+}
+
+/* --- 003 revision 2: tile grids + "View all" (R2-FR-222) --- */
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--space-3);
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 72px;
+  min-width: 0;
+  padding: var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--text-2);
+  background: var(--panel-deep);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-sm);
+  overflow-wrap: anywhere;
+}
+
+.tileFooter {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.viewAll {
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  background: transparent;
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+
+.viewAll:hover {
+  color: var(--text);
+  border-color: var(--brand-2);
+}
+
+.viewAll:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+/* ≤ 900 px: the bar wraps to two rows of five (R2 US2 scenario 2). */
+@media (max-width: 900px) {
+  .hotbar {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+/*
+ * `stretch` (T333): the chart fills the row it was given instead of holding the
+ * 120×32 box's ratio. Only the glance card's own rank row asks for this.
+ */
+.sparklineStretch {
+  height: 100%;
+  max-width: none;
+}

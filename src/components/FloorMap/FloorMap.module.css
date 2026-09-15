@@ -89,6 +89,28 @@
   font-size: var(--text-xs);
 }
 
+/* The panel's header line: how many sectors are charted (T335). */
+.count {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-3);
+  margin: 0;
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+.empty {
+  color: var(--text-3);
+  text-transform: none;
+  letter-spacing: normal;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+}
+
 .svg {
   display: block;
   width: 100%;

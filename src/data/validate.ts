@@ -153,13 +153,15 @@ export function normalizeEvent(raw: unknown): AnyEvent {
       return { t, type: 'level_up', actor, level };
     }
     case 'rank': {
+      /*
+       * DCC has individual rank only (T334). A legacy `scope: 'crawler'` row is
+       * still read — the field is simply dropped — while a legacy party row has
+       * no crawler to belong to, so it is demoted to `unknown` and ignored.
+       */
+      if (raw.scope === 'party') return unknownEvent(t, raw);
       const rank = toNumber(raw.rank);
-      const scope = raw.scope === 'party' || raw.scope === 'crawler' ? raw.scope : null;
-      if (rank === null || scope === null) return unknownEvent(t, raw);
-      if (scope === 'crawler' && actor === null) return unknownEvent(t, raw);
-      return actor === null
-        ? { t, type: 'rank', scope, rank }
-        : { t, type: 'rank', scope, rank, actor };
+      if (rank === null || actor === null) return unknownEvent(t, raw);
+      return { t, type: 'rank', actor, rank };
     }
     case 'map_reveal': {
       const cells = toCells(raw.cells);
@@ -376,11 +378,7 @@ function isMapState(x: unknown): x is MapState {
 function isInitialState(x: unknown): x is InitialState {
   if (!isRecord(x)) return false;
   return (
-    Array.isArray(x.party) &&
-    x.party.length > 0 &&
-    x.party.every(isCrawler) &&
-    (x.partyRank === null || typeof x.partyRank === 'number') &&
-    isMapState(x.map)
+    Array.isArray(x.party) && x.party.length > 0 && x.party.every(isCrawler) && isMapState(x.map)
   );
 }
 
@@ -433,6 +431,12 @@ export function normalizeEpisode(raw: unknown): EpisodeData {
     ...raw.initialState,
     party: raw.initialState.party.map(normalizeCrawler),
   };
+  // A pre-T334 file may still carry `partyRank`. DCC has no party rank, so the
+  // field is dropped rather than allowed to reach the reducer (T334).
+  if ('partyRank' in initialState) {
+    delete (initialState as unknown as Record<string, unknown>).partyRank;
+    console.warn('Episode initialState: dropping "partyRank" (DCC has individual rank only).');
+  }
   return { episodeId: raw.episodeId, initialState, events };
 }
 

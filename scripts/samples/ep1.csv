@@ -21,7 +21,7 @@ timecode,type,actor,field1,field2,field3
 1:32,chapter,,The Bronze Box Run,loot,
 1:48,loot,actress,Understudy's Dagger,Silver Adventurer Box,
 1:56,hp,harry,4,22,
-2:04,rank,,party,61,
+2:04,rank,harry,8890,,
 2:18,note,,The System declines to comment on the smell.,,
 2:11,status,psychic,,Poisoned,
 0:02:26,chapter,,The Hoarder,boss,
@@ -31,7 +31,7 @@ timecode,type,actor,field1,field2,field3
 3:00,inventory,harry,Torch,Enchanted Crowbar,
 3:02,unequip,harry,hands,Enchanted Crowbar,
 3:04,equip,harry,hands,Torch,
-3:10,rank,xo,crawler,4188,
+3:10,rank,xo,4188,,
 3:14,skill,xo,Signal Discipline,2,Held the flare. Held the line.
 3:24,class,xo,Quartermaster,,
 3:36,hotlist,harry,Bronze Box Runner,The Hoarder,

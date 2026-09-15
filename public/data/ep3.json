@@ -211,7 +211,6 @@
         }
       }
     ],
-    "partyRank": 48,
     "map": {
       "floor": 2,
       "grid": {
@@ -346,7 +345,6 @@
     {
       "t": 250,
       "type": "rank",
-      "scope": "crawler",
       "actor": "stuntman",
       "rank": 690
     },
@@ -379,7 +377,6 @@
     {
       "t": 300,
       "type": "rank",
-      "scope": "crawler",
       "actor": "actress",
       "rank": 3120
     },
@@ -400,8 +397,8 @@
     {
       "t": 371,
       "type": "rank",
-      "scope": "party",
-      "rank": 29
+      "actor": "psychic",
+      "rank": 2210
     },
     {
       "t": 392,
@@ -427,7 +424,6 @@
     {
       "t": 430,
       "type": "rank",
-      "scope": "crawler",
       "actor": "stuntman",
       "rank": 520
     },
@@ -447,7 +443,6 @@
     {
       "t": 480,
       "type": "rank",
-      "scope": "crawler",
       "actor": "actress",
       "rank": 2755
     },
@@ -508,7 +503,6 @@
     {
       "t": 567,
       "type": "rank",
-      "scope": "crawler",
       "actor": "stuntman",
       "rank": 401
     },
@@ -551,7 +545,6 @@
     {
       "t": 660,
       "type": "rank",
-      "scope": "crawler",
       "actor": "actress",
       "rank": 2390
     },

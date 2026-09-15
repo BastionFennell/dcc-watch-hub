@@ -13,28 +13,38 @@ export interface EventFeedProps {
   sponsor: FeedItem | null;
   /** The playhead, for the synced header (FR-023). */
   t: number;
-  /** `rankSeries(events, t, 'party').current` — omitted entirely when null (FR-141). */
-  partyRank: number | null;
+  /** Seeks playback to a row's moment (T342). The page hands it the source. */
+  onSeek: (t: number) => void;
   /** Loading / failure copy from the page, shown above the list. */
   notice?: ReactNode;
 }
 
-/** The System's right-hand rail: header, pinned sponsor, events. */
-export function EventFeed({ items, sponsor, t, partyRank, notice }: EventFeedProps) {
+/**
+ * The System's right-hand rail: header, pinned sponsor, events.
+ *
+ * Every row is a seek control (review 1.6, T342): each carries the moment it
+ * happened, and clicking it moves the broadcast there. That makes the pointer
+ * cursor and the hover ring honest affordances rather than a tease
+ * (constitution III).
+ */
+export function EventFeed({ items, sponsor, t, onSeek, notice }: EventFeedProps) {
+  /** Nothing has elapsed and nothing is wrong: the System says so (T335). */
+  const standby = notice === null || notice === undefined;
+
   return (
     <section className={styles.feed} aria-label={copy.feedLabel}>
       <h2 className={styles.header}>{copy.feedHeader(formatTime(t))}</h2>
-      {partyRank === null ? null : (
-        <p className={styles.partyRank} data-testid="party-rank">
-          {copy.partyRankLine(partyRank)}
-        </p>
-      )}
       {notice}
-      {sponsor ? <SponsorSlot item={sponsor} pinned /> : null}
+      {sponsor ? <SponsorSlot item={sponsor} pinned onSeek={onSeek} /> : null}
+      {items.length === 0 && sponsor === null && standby ? (
+        <p className={styles.standby} data-testid="feed-standby">
+          {copy.feedStandby}
+        </p>
+      ) : null}
       <ul className={styles.items} data-testid="feed-items">
         {items.map((item) => (
           <li key={item.id} className={styles.row} data-testid="feed-item">
-            <FeedItemView item={item} />
+            <FeedItemView item={item} onSeek={onSeek} />
           </li>
         ))}
       </ul>

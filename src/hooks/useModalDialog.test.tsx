@@ -14,10 +14,12 @@ interface HarnessProps {
   returnFocusTo: HTMLElement | null;
   /** Drops the close control, to prove the "first focusable" fallback. */
   withClose?: boolean;
+  /** First refusal on Escape (T327): true means the dialog stays open. */
+  onEscape?: () => boolean;
 }
 
-function Harness({ open, onClose, returnFocusTo, withClose = true }: HarnessProps) {
-  const { dialogRef, onBackdropClick } = useModalDialog({ open, onClose, returnFocusTo });
+function Harness({ open, onClose, returnFocusTo, withClose = true, onEscape }: HarnessProps) {
+  const { dialogRef, onBackdropClick } = useModalDialog({ open, onClose, returnFocusTo, onEscape });
   if (!open) return null;
   return (
     <div data-testid="backdrop" onClick={onBackdropClick}>
@@ -123,6 +125,52 @@ describe('useModalDialog', () => {
     } finally {
       document.removeEventListener('keydown', page);
     }
+  });
+
+  it('lets the dialog consume Escape first, and closes once it stops (T327)', () => {
+    const onClose = vi.fn();
+    const page = vi.fn();
+    // The record's list views: the first Escape steps back to the sheet, the
+    // second closes (contracts/dialog.md Revision 2).
+    let consumed = true;
+    const onEscape = vi.fn(() => {
+      const answer = consumed;
+      consumed = false;
+      return answer;
+    });
+    document.addEventListener('keydown', page);
+    try {
+      render(
+        <Harness open onClose={onClose} returnFocusTo={null} onEscape={onEscape} />,
+      );
+
+      fireEvent.keyDown(screen.getByTestId('record-close'), { key: 'Escape' });
+      expect(onEscape).toHaveBeenCalledTimes(1);
+      expect(onClose).not.toHaveBeenCalled();
+      // Consumed or not, the page behind never sees the keypress.
+      expect(page).not.toHaveBeenCalled();
+
+      fireEvent.keyDown(screen.getByTestId('record-close'), { key: 'Escape' });
+      expect(onEscape).toHaveBeenCalledTimes(2);
+      expect(onClose).toHaveBeenCalledTimes(1);
+      expect(page).not.toHaveBeenCalled();
+    } finally {
+      document.removeEventListener('keydown', page);
+    }
+  });
+
+  it('closes on Escape when the dialog hands back a fresh interceptor each render', () => {
+    const onClose = vi.fn();
+    // A fresh closure every render (what a `view`-dependent callback is): the
+    // hook reads it through a ref, so it never registers a stale one.
+    function Live() {
+      return <Harness open onClose={onClose} returnFocusTo={null} onEscape={() => false} />;
+    }
+    const { rerender } = render(<Live />);
+    rerender(<Live />);
+
+    fireEvent.keyDown(screen.getByTestId('record-close'), { key: 'Escape' });
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it('ignores every key it does not own', () => {

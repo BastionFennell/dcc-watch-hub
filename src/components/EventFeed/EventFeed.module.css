@@ -1,6 +1,9 @@
 /*
  * Wireframe right rail: small rounded boxes, 11px text, colored category labels,
  * blue System boxes, purple sponsor slots. Text wraps; nothing scrolls sideways.
+ *
+ * Since T342 every box is a seek control, so the box rules live on `.box` and
+ * `.seek` adds the button reset plus the hover / focus affordances.
  */
 .feed {
   display: flex;
@@ -17,6 +20,14 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Nothing has elapsed yet and nothing is wrong — the System says so (T335). */
+.standby {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  line-height: 1.45;
+}
+
 .items {
   display: flex;
   flex-direction: column;
@@ -31,15 +42,58 @@
   min-width: 0;
 }
 
-.item,
-.system,
-.sponsor {
+.box {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  width: 100%;
   font-size: var(--text-xs);
   line-height: 1.45;
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   min-width: 0;
   overflow-wrap: anywhere;
+  text-align: left;
+}
+
+/* The time the row names — the thing that makes the seek predictable (T342). */
+.time {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-3);
+}
+
+.itemBody {
+  min-width: 0;
+}
+
+.systemBody,
+.sponsorBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+/* Button reset plus the affordances a real control has earned. */
+.seek {
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    border-color 200ms ease,
+    background-color 200ms ease;
+}
+
+.seek:hover {
+  border-color: var(--brand-2);
+}
+
+.seek:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-color: var(--brand-2);
 }
 
 .item {
@@ -54,10 +108,13 @@
 
 .system {
   background: var(--system-bg);
+  border: 1px solid transparent;
   color: var(--system-fg);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
+}
+
+/* Informational, so it keeps the box's full-contrast foreground. */
+.system .time {
+  color: var(--system-fg);
 }
 
 .systemTag {
@@ -72,13 +129,14 @@
   background: var(--brand-deep);
   border: 1px solid var(--brand-2);
   color: var(--brand-fg);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
 }
 
 .sponsor[data-pinned] {
   border-color: var(--brand-fg);
+}
+
+.sponsor .time {
+  color: var(--brand-fg-2);
 }
 
 .sponsorTag {
@@ -111,12 +169,8 @@
   min-width: 0;
 }
 
-/* The party's standing, under the feed header (FR-141). Absent until a party rank elapses. */
-.partyRank {
-  color: var(--label-rank);
-  font-family: var(--font-mono);
-  font-size: var(--text-2xs);
-  letter-spacing: 0.08em;
-  font-variant-numeric: tabular-nums;
-  margin-top: calc(-1 * var(--space-2));
+@media (prefers-reduced-motion: reduce) {
+  .seek {
+    transition: none;
+  }
 }

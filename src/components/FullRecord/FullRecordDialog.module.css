@@ -1,20 +1,35 @@
 /*
- * The full record (research R1/R5, FR-211/FR-212). Desktop: a centered sheet in
- * landscape — a top band of identity, vitals and stats, then three columns —
- * over a dimmed page. ≤ 900 px: the viewport, with the same sections stacked in
- * the sheet's order. The only overlay allowed to cover the stage (constitution
- * III, 1.2.0); `body.dialog-open` locks the page behind it.
+ * The full record (research R1/R9, FR-211/FR-212, R2-FR-222). Desktop: the
+ * crawler's full-figure art down the left at the sheet's height, identity /
+ * vitals / stats beside it, then the hotbar, the gear sheet and the bag-style
+ * tile grids under them. ≤ 900 px: the viewport, art as a banner above the
+ * identity, one column. The only overlay allowed to cover the stage
+ * (constitution III, 1.2.0); `body.dialog-open` locks the page behind it.
  */
 .backdrop {
   position: fixed;
   inset: 0;
   /* Above the rail panel's full-viewport overlay at ≤ 900 px. */
   z-index: calc(var(--panel-z) + 10);
-  display: grid;
-  place-items: center;
+  display: flex;
+  justify-content: center;
   padding: var(--space-7);
+  overflow: auto;
+  /*
+   * No animation here (UX review 0.6, T337): the dimming is at full strength on
+   * the first painted frame, so nothing behind the record is ever legible
+   * through it. Only `.enter` below moves.
+   */
   background: rgb(19 19 32 / 78%);
-  animation: recordIn 150ms ease-out;
+}
+
+/*
+ * A fixed top offset instead of vertical centering (T332): the record's height
+ * changes with the playhead, and a centered box would slide up and down under
+ * the reader every time a seek added or removed a row.
+ */
+.anchorTop {
+  align-items: flex-start;
 }
 
 .dialog {
@@ -23,11 +38,15 @@
   width: min(1200px, 94vw);
   max-height: 90vh;
   min-height: 0;
+  margin-top: 5vh;
   background: var(--panel);
   border: var(--border-hairline-2);
   border-radius: var(--radius-lg);
   /* The frame clips; `.body` is what scrolls (FR-212: 90 vh, internal scroll). */
   overflow: hidden;
+}
+
+.enter {
   animation: recordIn 150ms ease-out;
 }
 
@@ -91,73 +110,138 @@
   height: 16px;
 }
 
-/* --- the sheet's landscape grid (research R5) --- */
-
 .body {
-  display: grid;
-  grid-template-areas:
-    'top top top'
-    'a b c';
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-7);
   padding: var(--space-6);
   overflow: auto;
   min-height: 0;
 }
 
+/* --- the sheet: art column + everything else (research R9/R9a) --- */
+
+.sheet {
+  display: grid;
+  grid-template-columns: minmax(200px, 28%) minmax(0, 1fr);
+  gap: var(--space-7);
+  align-items: stretch;
+}
+
+/*
+ * The art column runs the sheet's whole height; `contain` keeps the figure
+ * whole, and `top center` hangs it from the column's top so a tall figure uses
+ * the height and a wide stance the width (research R9a).
+ */
+.artColumn {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+  background: var(--panel-deep);
+  border: var(--border-hairline);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.artFigure {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: top center;
+}
+
+/* No full-figure art in the data: the bust, centered in the same column. */
+.artBust {
+  align-self: center;
+  width: min(100%, 120px);
+  height: auto;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--brand-deep);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+  min-width: 0;
+}
+
 .top {
-  grid-area: top;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: var(--space-7);
   align-items: start;
 }
 
-.topCell,
-.column {
+.topCell {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
   min-width: 0;
 }
 
-.column {
+.sections {
+  display: flex;
+  flex-direction: column;
   gap: var(--space-7);
+  min-width: 0;
 }
 
-.colA {
-  grid-area: a;
+/* --- a category opened in full (contracts/dialog.md Revision 2) --- */
+
+.listView {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
 }
 
-.colB {
-  grid-area: b;
+.back {
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  background: transparent;
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease;
 }
 
-.colC {
-  grid-area: c;
+.back:hover {
+  color: var(--text);
+  border-color: var(--brand-2);
+}
+
+.back:focus-visible {
+  box-shadow: var(--focus-ring);
 }
 
 @keyframes recordIn {
   from {
     opacity: 0;
+    transform: translateY(-8px);
   }
 
   to {
     opacity: 1;
+    transform: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .backdrop,
-  .dialog {
+  .enter {
     animation: none;
   }
 }
 
-/* ≤ 900 px: the record is the page — same sections, sheet order, one column. */
+/* ≤ 900 px: the record is the page — art banner, then the sheet in one column. */
 @media (max-width: 900px) {
   .backdrop {
     padding: 0;
+    overflow: hidden;
   }
 
   .dialog {
@@ -166,6 +250,7 @@
     width: 100%;
     max-width: none;
     max-height: none;
+    margin-top: 0;
     border: 0;
     border-radius: 0;
     background: var(--canvas);
@@ -173,13 +258,16 @@
   }
 
   .body {
-    grid-template-areas:
-      'top'
-      'a'
-      'b'
-      'c';
-    grid-template-columns: minmax(0, 1fr);
     padding-bottom: calc(var(--space-8) + env(safe-area-inset-bottom));
+  }
+
+  .sheet {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* The art leads, as a banner (research R9), instead of a column. */
+  .artColumn {
+    height: 40vh;
   }
 
   .top {

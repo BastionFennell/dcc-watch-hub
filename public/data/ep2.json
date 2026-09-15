@@ -210,14 +210,46 @@
         }
       }
     ],
-    "partyRank": 61,
     "map": {
       "floor": 1,
       "grid": {
         "cols": 12,
         "rows": 8
       },
-      "revealed": []
+      "revealed": [
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          7,
+          9
+        ]
+      ]
     }
   },
   "events": [
@@ -347,7 +379,6 @@
     {
       "t": 300,
       "type": "rank",
-      "scope": "crawler",
       "actor": "harry",
       "rank": 1150
     },
@@ -369,7 +400,6 @@
     {
       "t": 350,
       "type": "rank",
-      "scope": "crawler",
       "actor": "xo",
       "rank": 5210
     },
@@ -410,8 +440,8 @@
     {
       "t": 437,
       "type": "rank",
-      "scope": "party",
-      "rank": 48
+      "actor": "psychic",
+      "rank": 3310
     },
     {
       "t": 462,
@@ -436,7 +466,6 @@
     {
       "t": 520,
       "type": "rank",
-      "scope": "crawler",
       "actor": "harry",
       "rank": 905
     },
@@ -450,7 +479,6 @@
     {
       "t": 560,
       "type": "rank",
-      "scope": "crawler",
       "actor": "xo",
       "rank": 4480
     },
@@ -513,7 +541,6 @@
     {
       "t": 671,
       "type": "rank",
-      "scope": "crawler",
       "actor": "harry",
       "rank": 740
     },
@@ -540,7 +567,6 @@
     {
       "t": 760,
       "type": "rank",
-      "scope": "crawler",
       "actor": "xo",
       "rank": 3990
     },

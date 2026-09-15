@@ -235,3 +235,42 @@ The dashes were placeholder rows keeping the card's height fixed; they are remov
 - **R2-SC-203**: Hotbar shows 10 slots with entries in order; tile grids cap at 8 and "View all"
   opens the list view and returns focus correctly; Escape order holds.
 - **R2-SC-204**: Lighthouse accessibility 100; no horizontal scroll at 360 px in any record view.
+
+## Revision 2 — amendments carried by the UX review triage
+
+Source: `specs/reviews/2026-09-15-ux-review-triage.md` (2026-09-15). Both items below change a
+decision made in an earlier spec, so they are recorded here rather than left implicit.
+
+### Revision 2 — party rank removed (author: DCC has individual rank only); supersedes v2 FR-141
+
+The author confirmed on 2026-09-15 that DCC has no party rank: a crawler's standing is the only
+rank the System keeps. **v2 FR-141** ("the feed header MUST show the party's current rank …") is
+superseded and no longer implemented.
+
+- `rank` events are `{ t, type: 'rank', actor, rank }`. There is no `scope` field, and `actor`
+  is required; `rankSeries(events, t, actorId)` takes the crawler id directly.
+- `initialState.partyRank` is gone from the types, the overlay state, and the episode schema
+  (whose `initialState` keeps `additionalProperties: false`, so a file that still carries the
+  field fails the contract).
+- Legacy data still loads, because the runtime normalizer is deliberately more forgiving than
+  the contract: `scope: 'crawler'` is accepted with the field dropped, `scope: 'party'` is
+  demoted to `unknown` and ignored like any unrecognized event, and a stray
+  `initialState.partyRank` is dropped with a `console.warn`.
+- The CSV `rank` row is `timecode,rank,<actor>,<rank>`: field1 is the rank itself. The legacy
+  form with `crawler` in field1 is converted with a WARN; `party` in field1 is an ERROR
+  ("party rank is not a thing in DCC") and nothing is written.
+- Copy removed: `feedText.rankParty`, `partyRankLine`. `EventFeed` no longer takes a
+  `partyRank` prop and the feed header carries no party line.
+
+### Revision 2 — the stage caption moved out of the stage; deviates from v1 §5
+
+v1 §5 places the caption "Ep {n} · Floor {n} · {time}" inside the stage, bottom-left. In a real
+YouTube embed the host's own control bar covers exactly that corner, so the caption was either
+hidden or illegible, and the episode title was never shown anywhere visible (review 0.11/0.13).
+
+The caption now sits in its own slim row between the stage and the timeline
+(`data-testid="stage-caption-row"`): `Ep N · Floor N — {title}` on the left, `formatTime(t)` on
+the right. The left half is the page's single `<h1>`, which retires the sr-only heading that
+duplicated the title. `stageCaption(meta, t)` and `copy.feedText.stageCaption` are removed with
+their last caller; `--stage-overlay-bottom` stays, because the minimap badge still needs to
+clear the host's control bar.

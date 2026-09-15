@@ -243,7 +243,6 @@
       "type": "object",
       "required": [
         "party",
-        "partyRank",
         "map"
       ],
       "additionalProperties": false,
@@ -254,12 +253,6 @@
             "$ref": "#/definitions/crawler"
           },
           "minItems": 1
-        },
-        "partyRank": {
-          "type": [
-            "integer",
-            "null"
-          ]
         },
         "map": {
           "type": "object",
@@ -395,18 +388,16 @@
                   "type": {
                     "const": "rank"
                   },
-                  "scope": {
-                    "enum": [
-                      "party",
-                      "crawler"
-                    ]
+                  "actor": {
+                    "type": "string",
+                    "minLength": 1
                   },
                   "rank": {
                     "type": "integer"
                   }
                 },
                 "required": [
-                  "scope",
+                  "actor",
                   "rank"
                 ]
               },

@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 /**
- * The rail's glance card (T304, FR-200..FR-203). Everything it shows comes from
- * a `Glance` built by the selector from the shared fixture, so the assertions
- * here and the selector's agree on the same event log.
+ * The rail's glance card after revision 2 (T322/T323, R2 US1). Everything it
+ * shows comes from a `Glance` built by the selector from the shared fixture, so
+ * the assertions here and the selector's agree on the same event log.
  */
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
@@ -28,105 +28,166 @@ function renderGlance(glance: Glance, onOpenRecord = vi.fn()) {
   return { ...view, onOpenRecord };
 }
 
-function ledger(kind: string): HTMLElement {
-  return screen.getByTestId(`ledger-${kind}`);
-}
+const equippedRows = () => screen.queryAllByTestId('glance-equipped-row');
+const historyRows = () => screen.queryAllByTestId('glance-history-row');
 
 describe('CrawlerGlance', () => {
-  it('shows the identity header, HP and rank as of the playhead', () => {
-    renderGlance(glanceAt(200));
+  it('shows the identity header with separators a screen reader can hear', () => {
+    const { container } = renderGlance(glanceAt(200));
     expect(screen.getByTestId('crawler-glance')).toHaveAttribute('data-crawler', 'harry');
     expect(screen.getByTestId('glance-name')).toHaveTextContent('Harry');
+
+    // The player is credited, not repeated as a bare name (UX review 0.8), and
+    // each half of the line is its own element with a real separator between
+    // them (0.7) — so the accessible text reads "Harry, played by Marcus".
+    expect(screen.getByText(copy.playedBy('Marcus'))).toBeInTheDocument();
     const header = screen.getByTestId('glance-header');
-    expect(header).toHaveTextContent('Harry · Marcus');
-    expect(header).toHaveTextContent(`Compensated Anarchist · ${copy.levelShort(2)}`);
+    expect(header).toHaveTextContent('Compensated Anarchist');
+    expect(header).toHaveTextContent(copy.levelShort(2));
+    expect(header.textContent).toContain(`Harry · ${copy.srSeparator}played by Marcus`);
+    const dots = container.querySelectorAll('[aria-hidden="true"]');
+    expect(dots.length).toBeGreaterThanOrEqual(2);
+    expect(header.querySelectorAll('.sr-only')).toHaveLength(2);
+  });
+
+  it('labels the HP strip and keeps the sheet’s ten segments (T344)', () => {
+    renderGlance(glanceAt(200));
+    expect(screen.getByText(copy.hpLabel)).toBeInTheDocument();
+    expect(screen.getByTestId('hp-segments')).toHaveAttribute('aria-label', copy.hpAria(20, 22));
+    expect(screen.getAllByTestId('hp-segment')).toHaveLength(10);
     expect(screen.getByTestId('glance-hp')).toHaveTextContent(copy.hpValue(20, 22));
-    expect(screen.getByTestId('glance-rank-current')).toHaveTextContent(copy.rankValue(3550));
-    expect(screen.getByTestId('glance-rank-best')).toHaveTextContent(copy.rankValue(3012));
-    expect(screen.getByTestId('rank-sparkline')).toBeInTheDocument();
   });
 
-  it('prints the System’s "Unranked" line and no sparkline before the first rank', () => {
-    renderGlance(glanceAt(90));
-    expect(within(screen.getByTestId('glance-rank')).getByText(copy.unranked)).toBeInTheDocument();
-    expect(screen.queryByTestId('rank-sparkline')).not.toBeInTheDocument();
-  });
-
-  it('gives the sparkline its own row, reserved whether or not there is a series (T313)', () => {
-    // Ranked: the numbers, then the chart on the row below — never beside them,
-    // where the rail squeezes it (T313 visual review).
+  it('labels the rank row and names the move since the previous rank point', () => {
+    // Harry's series is 4188 (100) → 3012 (150) → 3550 (200): the last step lost
+    // him 538 places, so the card points down (T343, UX review 1.4).
     const { rerender, onOpenRecord } = renderGlance(glanceAt(200));
     const rank = () => screen.getByTestId('glance-rank');
-    const spark = () => screen.getByTestId('glance-rank-spark');
-    expect(rank().children).toHaveLength(2);
-    expect(rank().children[1]).toBe(spark());
-    expect(within(spark()).getByTestId('rank-sparkline')).toBeInTheDocument();
+    expect(within(rank()).getByText(copy.rankLabel)).toBeInTheDocument();
+    expect(screen.getByTestId('glance-rank-current')).toHaveTextContent(copy.rankValue(3550));
+    expect(screen.getByTestId('glance-rank-best')).toHaveTextContent(copy.rankValue(3012));
+    expect(screen.getByTestId('glance-rank-delta')).toHaveTextContent('↓ 538');
+    expect(screen.getByTestId('glance-rank-delta')).toHaveAttribute('data-direction', 'down');
 
-    // Unranked: the same two rows, the second one empty — so the card is the
-    // same height for every crawler (FR-201, SC-201).
-    rerender(<CrawlerGlance glance={glanceAt(90)} onOpenRecord={onOpenRecord} />);
+    // One step earlier the same crawler had climbed 1,176 places.
+    rerender(<CrawlerGlance glance={glanceAt(150)} onOpenRecord={onOpenRecord} />);
+    expect(screen.getByTestId('glance-rank-delta')).toHaveTextContent('↑ 1,176');
+    expect(screen.getByTestId('glance-rank-delta')).toHaveAttribute('data-direction', 'up');
+
+    // The first point has nothing to compare against, so no delta is printed.
+    rerender(<CrawlerGlance glance={glanceAt(110)} onOpenRecord={onOpenRecord} />);
+    expect(screen.getByTestId('glance-rank-current')).toHaveTextContent(copy.rankValue(4188));
+    expect(screen.queryByTestId('glance-rank-delta')).not.toBeInTheDocument();
+  });
+
+  it('keeps the RANK label and the sparkline’s row when the crawler is unranked', () => {
+    const { rerender, onOpenRecord } = renderGlance(glanceAt(200, 'actress'));
+    const rank = () => screen.getByTestId('glance-rank');
+    const spark = () => screen.getByTestId('glance-rank-spark');
+    expect(within(rank()).getByText(copy.rankLabel)).toBeInTheDocument();
+    expect(within(rank()).getByText(copy.unranked)).toBeInTheDocument();
+    expect(screen.queryByTestId('rank-sparkline')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('glance-rank-delta')).not.toBeInTheDocument();
+    // Two rows either way — numbers, then the chart's reserved box (SC-201).
     expect(rank().children).toHaveLength(2);
     expect(spark()).toBeEmptyDOMElement();
+
+    rerender(<CrawlerGlance glance={glanceAt(200)} onOpenRecord={onOpenRecord} />);
+    expect(rank().children).toHaveLength(2);
+    expect(within(spark()).getByTestId('rank-sparkline')).toBeInTheDocument();
   });
 
-  it('gives each list one row with its count and newest entry', () => {
+  it('lists worn gear as slot · item in the sheet’s order', () => {
+    // Harry at 200: the starting crowbar was unequipped at 168 and the torch
+    // took the hands slot at 169, over the jacket (152) and charm (153).
     renderGlance(glanceAt(200));
-    expect(ledger('hotlist')).toHaveTextContent(copy.dossierSections.hotlist);
-    expect(ledger('hotlist')).toHaveTextContent(copy.ledgerCount(1));
-    expect(ledger('hotlist')).toHaveTextContent('Crowbar');
-    expect(ledger('skills')).toHaveTextContent('Powerful Strike · Rank 1');
-    expect(ledger('inventory')).toHaveTextContent('Torch');
-    // Achievement rows carry the time; the other rows do not.
-    expect(ledger('achievements')).toHaveTextContent('Gate Crasher');
-    expect(ledger('achievements')).toHaveTextContent(formatTime(60));
-    expect(ledger('inventory')).not.toHaveTextContent(formatTime(150));
+    const rows = equippedRows();
+    expect(rows).toHaveLength(3);
+    expect(rows.map((row) => row.dataset.slot)).toEqual(['torso', 'hands', 'accessory']);
+    expect(within(rows[0]).getByText(copy.gearSlotLabels.torso)).toBeInTheDocument();
+    expect(within(rows[0]).getByText('Patched Jacket')).toBeInTheDocument();
+    expect(within(rows[1]).getByText('Torch')).toBeInTheDocument();
+    expect(within(rows[2]).getByText(copy.gearSlotLabels.accessory)).toBeInTheDocument();
+    expect(within(rows[2]).getByText('Lucky Rabbit Foot')).toBeInTheDocument();
+    // The slot and the item are separated for the ear as well as the eye (0.7).
+    expect(rows[0].querySelector('.sr-only')).not.toBeNull();
   });
 
-  it('changes the newest entry on a backward seek', () => {
-    const { rerender, onOpenRecord } = renderGlance(glanceAt(200));
-    expect(ledger('hotlist')).toHaveTextContent('Crowbar');
-    rerender(<CrawlerGlance glance={glanceAt(110)} onOpenRecord={onOpenRecord} />);
-    expect(ledger('hotlist')).toHaveTextContent('Door');
-    expect(ledger('inventory')).toHaveTextContent('Enchanted Crowbar');
-    expect(ledger('achievements')).toHaveTextContent(copy.ledgerCount(1));
-  });
-
-  it('files an empty list with the System’s empty phrase and a zero count', () => {
+  it('follows the playhead back to the starting gear', () => {
     renderGlance(glanceAt(20));
-    expect(ledger('hotlist')).toHaveTextContent(copy.ledgerCount(0));
-    expect(ledger('hotlist')).toHaveTextContent(copy.dossierEmpty.hotlist);
-    expect(ledger('inventory')).toHaveTextContent(copy.dossierEmpty.inventory);
-    expect(ledger('achievements')).toHaveTextContent(copy.dossierEmpty.achievements);
-    expect(screen.getByTestId('glance-debuffs')).toHaveTextContent(copy.dossierEmpty.debuffs);
+    const rows = equippedRows();
+    expect(rows).toHaveLength(1);
+    expect(rows[0].dataset.slot).toBe('hands');
+    expect(within(rows[0]).getByText('Enchanted Crowbar')).toBeInTheDocument();
   });
 
-  it('always renders exactly three history rows, padding with the placeholder', () => {
-    const { rerender, onOpenRecord } = renderGlance(glanceAt(200));
-    const rows = () => within(screen.getByTestId('glance-history')).getAllByRole('listitem');
-    expect(rows()).toHaveLength(3);
-    expect(rows().some((row) => row.dataset.placeholder === 'true')).toBe(false);
-    expect(rows()[0]).toHaveTextContent(formatTime(200));
+  it('files an unequipped crawler with the System’s empty phrase', () => {
+    renderGlance(glanceAt(200, 'actress'));
+    expect(equippedRows()).toHaveLength(0);
+    expect(screen.getByTestId('glance-equipped')).toHaveTextContent(copy.dossierEmpty.equipped);
+  });
 
-    rerender(<CrawlerGlance glance={glanceAt(40)} onOpenRecord={onOpenRecord} />);
-    expect(rows()).toHaveLength(3);
-    expect(rows().filter((row) => row.dataset.placeholder === 'true')).toHaveLength(2);
-    expect(screen.getByTestId('glance-history')).toHaveTextContent(copy.historyPlaceholder);
+  it('shows at most the seven slot rows and counts the rest', () => {
+    const many: Glance = {
+      ...glanceAt(200),
+      equipped: [
+        { slot: 'head', item: 'Hard Hat' },
+        { slot: 'torso', item: 'Patched Jacket' },
+        { slot: 'arms', item: 'Bracers' },
+        { slot: 'hands', item: 'Torch' },
+        { slot: 'legs', item: 'Work Trousers' },
+        { slot: 'feet', item: 'Steel Toes' },
+        { slot: 'accessory', item: 'Lucky Rabbit Foot' },
+        { slot: 'accessory', item: 'Bronze Token' },
+        { slot: 'accessory', item: 'Cracked Lens' },
+      ],
+    };
+    renderGlance(many);
+    expect(equippedRows()).toHaveLength(7);
+    expect(screen.getByTestId('glance-equipped-more')).toHaveTextContent(copy.equippedMore(2));
+    expect(screen.queryByText('Cracked Lens')).not.toBeInTheDocument();
+  });
+
+  it('shows the latest achievement with its description and time', () => {
+    const { rerender, onOpenRecord } = renderGlance(glanceAt(200));
+    const block = () => screen.getByTestId('glance-latest-achievement');
+    expect(block()).toHaveTextContent(copy.dossierSections.latestAchievement);
+    expect(block()).toHaveTextContent('Gate Crasher');
+    expect(block()).toHaveTextContent('Ten mobs, one door.');
+    expect(block()).toHaveTextContent(formatTime(60));
+
+    // Before the award, the System files the section as empty — no dash row.
+    rerender(<CrawlerGlance glance={glanceAt(20)} onOpenRecord={onOpenRecord} />);
+    expect(block()).toHaveTextContent(copy.dossierEmpty.achievements);
+    expect(block()).not.toHaveTextContent('Gate Crasher');
+  });
+
+  it('renders only the moments that happened, and reserves the other rows', () => {
+    const { rerender, onOpenRecord } = renderGlance(glanceAt(200));
+    expect(historyRows()).toHaveLength(3);
+    expect(historyRows()[0]).toHaveTextContent(formatTime(200));
+
+    // Two moments by 50 (the loot at 30, the HP drop at 45): two rows, and the
+    // block keeps its three-row height in CSS instead of padding with "—".
+    rerender(<CrawlerGlance glance={glanceAt(50)} onOpenRecord={onOpenRecord} />);
+    expect(historyRows()).toHaveLength(2);
 
     rerender(<CrawlerGlance glance={glanceAt(20)} onOpenRecord={onOpenRecord} />);
-    expect(rows()).toHaveLength(3);
-    expect(rows().filter((row) => row.dataset.placeholder === 'true')).toHaveLength(3);
+    expect(historyRows()).toHaveLength(0);
+    expect(screen.getByTestId('glance-history')).not.toHaveTextContent('—');
+    expect(screen.getByTestId('glance-history-list').className).toMatch(/historyRows/);
   });
 
-  it('never renders a full list: the ledger is four single-entry rows', () => {
+  it('has no ledger left: no counts, no newest-entry rows, no full lists', () => {
     const { container } = renderGlance(glanceAt(200));
-    // Harry has no debuffs at 200, so history is the card's only list.
-    const lists = container.querySelectorAll('ul');
-    expect(lists).toHaveLength(1);
-    expect(lists[0].querySelectorAll('li')).toHaveLength(3);
-    expect(screen.getByTestId('glance-ledger').querySelectorAll('dt')).toHaveLength(4);
-    expect(screen.getByTestId('glance-ledger').querySelectorAll('dd')).toHaveLength(4);
-    // The skill's name appears once — in its ledger row, not in a list as well.
-    expect(screen.getAllByText('Powerful Strike · Rank 1')).toHaveLength(1);
+    expect(screen.queryByTestId('glance-ledger')).not.toBeInTheDocument();
+    for (const kind of ['hotlist', 'skills', 'inventory', 'achievements']) {
+      expect(screen.queryByTestId(`ledger-${kind}`)).not.toBeInTheDocument();
+    }
+    expect(container.querySelectorAll('dt, dd')).toHaveLength(0);
+    // The hotlist and skills the author cut are nowhere on the card.
+    expect(screen.queryByText('Crowbar')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Powerful Strike/)).not.toBeInTheDocument();
   });
 
   it('caps debuff chips at two rows and counts the rest', () => {

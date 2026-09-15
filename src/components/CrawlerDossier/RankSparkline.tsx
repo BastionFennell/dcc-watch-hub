@@ -5,6 +5,12 @@ import styles from './CrawlerDossier.module.css';
 export interface RankSparklineProps {
   /** `rankSeries(events, t, scope)` — elapsed points only (FR-140). */
   series: RankSeries;
+  /**
+   * Fill the caller's row instead of keeping the 120×32 box's ratio (T333): the
+   * glance card gives the chart a row of its own, so it may stretch to it.
+   * Default off — the dossier's vitals keep the v2 proportions.
+   */
+  stretch?: boolean;
 }
 
 const WIDTH = 120;
@@ -16,7 +22,7 @@ const PAD = 4;
  * of updates stays readable, and y is inverted because a lower rank number is a
  * better rank. Zero points renders nothing — the dossier prints "Unranked".
  */
-export function RankSparkline({ series }: RankSparklineProps) {
+export function RankSparkline({ series, stretch = false }: RankSparklineProps) {
   const { points, current, best } = series;
   if (points.length === 0 || current === null || best === null) return null;
 
@@ -36,9 +42,10 @@ export function RankSparkline({ series }: RankSparklineProps) {
 
   return (
     <svg
-      className={styles.sparkline}
+      className={stretch ? `${styles.sparkline} ${styles.sparklineStretch}` : styles.sparkline}
       viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
       width="100%"
+      preserveAspectRatio={stretch ? 'none' : undefined}
       role="img"
       aria-label={copy.sparklineSummary(points[0].rank, current, points.length, best)}
       data-testid="rank-sparkline"

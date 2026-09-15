@@ -179,10 +179,35 @@ Per episode, on this device only — no accounts, no server.
 Opening the dev scrubber at `?t=` starts the fake source past that 5 s grace window, so the
 offer is answered by the playhead itself and no card appears. That is expected.
 
-### Party rank
+### Under the stage
 
-Once a party-scoped `rank` event has elapsed, the feed header carries a "Party rank #…" line.
-Before that it is omitted.
+Between the player and the timeline sits a slim caption row: `Ep 1 · Floor 1 — <title>` on the
+left (the page's one `<h1>`, so the episode title is finally visible) and the playhead on the
+right. It used to sit *inside* the stage, where the host's own control bar covered it; that is a
+deliberate deviation from v1 §5, recorded in `specs/003-crawler-record/spec.md`.
+
+The timeline below it carries a colour legend, a playhead tick distinct from the elapsed fill,
+and its own tooltip per marker — instant, touch-friendly, and still spoiler-safe: a marker the
+playhead has not reached names only its kind and time.
+
+Every feed row is a seek control: it shows the moment it happened and clicking it moves the
+broadcast there (the pinned sponsor too). Before the first event has elapsed the feed reads
+"Standing by. The System reports when the broadcast begins."
+
+The party rail wraps to 3 + 2 between 900 and 1100 px, where five frames next to the feed
+column started truncating names, and becomes a horizontal snap strip at 480 px and below. Every
+frame reserves its debuff-pip row whether or not it has one, so a seek never changes the rail's
+height.
+
+### Rank
+
+DCC has **individual rank only** — there is no party rank. A `rank` event names one crawler and
+their new standing; the glance card and the record show the current value, the best reached so
+far, and a sparkline of every elapsed point. A crawler nobody has ranked yet reads "Unranked".
+
+Legacy data is read, not rejected: a pre-revision-2 row with `scope: "crawler"` loads with the
+field dropped, a row with `scope: "party"` is ignored like any unknown event, and an
+`initialState.partyRank` is dropped with a console warning.
 
 ---
 
@@ -204,7 +229,7 @@ required; columns are `timecode,type,actor,field1,field2,field3`
 | `loot` | item | source | – |
 | `hp` | current | max | – |
 | `level_up` | level | – | – |
-| `rank` | scope (`party`/`crawler`) | rank | – |
+| `rank` | rank | – | – |
 | `map_reveal` | cells `r,c;r,c` | label | – |
 | `sponsor` | text | durationSec | – |
 | `chapter` | label | kind (`boss`/`loot`/`achievement`/`levelup`/`story`) | – |
@@ -226,7 +251,7 @@ npm run sheet-to-json -- path/to/ep4.csv \
   --out public/data/ep4.json
 ```
 
-`--initial-state` is a JSON file holding the episode's `initialState` (party, `partyRank`, map).
+`--initial-state` is a JSON file holding the episode's `initialState` (`party` and `map`).
 Each crawler there may carry the optional sheet fields the dossier renders — `race`, `pronouns`,
 `crawlerNumber`, `stats` (`{ str, int, con, dex, cha }`), `hotlist[]`, `skills[]`
 (`{ name, rank? }`), `gear` (`{ head?, torso?, arms?, hands?, legs?, feet?, accessories[]? }`)
@@ -235,9 +260,19 @@ dossier simply omits what it does not know.
 The converter sorts events by `t`, normalizes them, and prints a summary such as
 `wrote public/data/ep4.json (42 events, 2 warnings)`. **Warnings still produce output** (unknown
 actor, impossible HP, timecode past `--duration`, unknown type, bad `chapter.kind`, an
-accessory `unequip` with no item — the last one worn comes off); **errors write nothing and
+accessory `unequip` with no item — the last one worn comes off, a legacy `rank` row with
+`crawler` in field1 — the rank is read out of field2); **errors write nothing and
 exit 1** (unparseable timecode, missing header column, non-numeric numeric field, empty required
-field, an `equip`/`unequip` slot that is not one of the seven).
+field, an `equip`/`unequip` slot that is not one of the seven, a `rank` row with `party` in
+field1 — DCC has no party rank).
+
+### Carrying the map across episodes
+
+Each episode file is self-contained: the overlay never reads another episode's log. So when two
+episodes share a floor, **the later one's `initialState.map.revealed` must already list every
+cell the earlier ones revealed on that floor** — that is what `initialState` is for. `ep2.json`
+seeds the eight cells `ep1.json` ends with; a viewer who starts at ep2 sees the floor as the
+party left it, and a viewer who skipped ahead learns nothing they should not.
 
 Try it against the samples:
 

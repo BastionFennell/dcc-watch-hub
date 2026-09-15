@@ -145,6 +145,15 @@ describe('convert(scripts/samples/ep1.csv)', () => {
     }
   });
 
+  // Individual rank only, and the rank itself lives in field1 (T334).
+  it('maps a rank row to one crawler, with no scope', () => {
+    const ranks = result.episode?.events.filter((event) => event.type === 'rank') ?? [];
+    expect(ranks).toHaveLength(2);
+    expect(ranks[0]).toEqual({ t: 124, type: 'rank', actor: 'harry', rank: 8890 });
+    expect(ranks[1]).toEqual({ t: 190, type: 'rank', actor: 'xo', rank: 4188 });
+    for (const rank of ranks) expect(rank).not.toHaveProperty('scope');
+  });
+
   it('maps the v2 rows: skill, class and hotlist', () => {
     const skill = result.episode?.events.find(
       (event) => event.type === 'skill' && event.actor === 'harry',
@@ -259,8 +268,15 @@ describe('convert(scripts/samples/ep1-broken.csv)', () => {
     ).toBeDefined();
   });
 
-  it('warns exactly five times', () => {
-    expect(result.warnings).toHaveLength(5);
+  it('names the legacy rank row and still reads the rank out of field2', () => {
+    expect(warningFor(result.warnings, dataRow(csv, ',crawler,'), 'legacy rank row')).toBeDefined();
+    const rank = result.episode?.events.find((event) => event.type === 'rank');
+    expect(rank).toMatchObject({ type: 'rank', actor: 'xo', rank: 4188 });
+    expect(rank).not.toHaveProperty('scope');
+  });
+
+  it('warns exactly six times', () => {
+    expect(result.warnings).toHaveLength(6);
   });
 });
 
@@ -277,7 +293,7 @@ describe('convert(scripts/samples/ep1-error.csv)', () => {
   });
 
   it('reports the non-integer skill rank as the second error', () => {
-    expect(result.errors).toHaveLength(3);
+    expect(result.errors).toHaveLength(4);
     expect(result.errors[1]).toBe(
       `row ${dataRow(csv, ',high,')}: skill rank (field2) must be a non-negative integer, got "high"`,
     );
@@ -286,6 +302,13 @@ describe('convert(scripts/samples/ep1-error.csv)', () => {
   it('reports the unknown gear slot as the third error', () => {
     expect(result.errors[2]).toBe(
       `row ${dataRow(csv, ',cape,')}: equip slot (field1) must be one of head, torso, arms, hands, legs, feet, accessory, got "cape"`,
+    );
+  });
+
+  // DCC has individual rank only (T334): a party rank row is malformed input.
+  it('reports a party rank row as the fourth error', () => {
+    expect(result.errors[3]).toBe(
+      `row ${dataRow(csv, ',party,')}: party rank is not a thing in DCC: a rank row names one crawler and their rank (field1)`,
     );
   });
 });

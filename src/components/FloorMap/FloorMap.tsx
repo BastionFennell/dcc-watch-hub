@@ -263,6 +263,20 @@ export function FloorMap({ cells, recent, labels, floor }: FloorMapProps) {
 
   return (
     <div className={styles.map} data-floor={floor} data-testid="floormap">
+      {/*
+        How much of the floor the System has charted so far (review 0.4, T335).
+        Visible, not only in the SVG's accessible name, and it says so plainly
+        when the answer is "none yet".
+      */}
+      <p className={styles.count} data-testid="floormap-count">
+        {copy.sectorsRevealed(revealed.size, total)}
+        {revealed.size === 0 ? (
+          <span className={styles.empty} data-testid="floormap-empty">
+            {copy.mapEmpty}
+          </span>
+        ) : null}
+      </p>
+
       <div className={styles.controls}>
         <button
           type="button"

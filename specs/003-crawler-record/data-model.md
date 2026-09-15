@@ -45,6 +45,9 @@ seeded from `Crawler.gear`. Reducer: `equip` sets the slot (accessory appends, c
   equipped: { slot: GearSlot; item: string }[] (accessories expanded, sheet order), latestAchievement?: { title, desc?, t },
   recentHistory: FeedItem[] (≤ 3) }`. `ledger` is removed.
 - `hotbarSlots(hotlist, n = 10): (string | null)[]` + `overflow: number`.
+- `rankSeries(events, t, actorId: string)` — party rank is gone (T334): the `rank` event is
+  `{ t, type: 'rank', actor, rank }` with no `scope`, and `InitialState` has no `partyRank`.
+  Converter row: `rank` field1 = the rank (legacy `crawler` in field1 → WARN, `party` → ERROR).
 - Record view state (component-local): `view: 'sheet' | 'skills' | 'inventory' | 'achievements' | 'history'`.
 
 ### Fixture facts to add (episode 1)

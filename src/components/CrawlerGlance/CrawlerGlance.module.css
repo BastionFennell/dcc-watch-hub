@@ -1,8 +1,8 @@
 /*
- * The rail's glance card (FR-200..FR-203, research R4). Same sheet vocabulary as
- * the dossier — System-blue header, mono caps labels, black-bar sections — but
- * every row is single-line and the history block is a fixed three rows, so the
- * card's height never grows with the episode (FR-201).
+ * The rail's glance card (FR-200..FR-203, R2-FR-201, research R4). Same sheet
+ * vocabulary as the dossier — System-blue header, mono caps labels — but every
+ * row is single-line and the two list blocks reserve their rows in CSS, so the
+ * card's height never grows with the episode (FR-201, R2-SC-201).
  */
 .glance {
   display: flex;
@@ -24,8 +24,8 @@
 }
 
 .portrait {
-  width: 48px;
-  height: 48px;
+  width: var(--portrait-size);
+  height: var(--portrait-size);
   flex: none;
   border-radius: 50%;
   background: var(--brand-deep);
@@ -59,9 +59,9 @@
   opacity: 0.6;
 }
 
-/* --- vitals: HpSegments and RankSparkline carry the dossier module's styles --- */
+/* --- HP: the label ships inside HpSegments (T344), the numbers follow --- */
 
-.vitals {
+.hpRow {
   display: flex;
   align-items: center;
   gap: var(--space-4);
@@ -86,8 +86,7 @@
   min-width: 0;
 }
 
-.rankNumbers,
-.unranked {
+.rankNumbers {
   display: flex;
   align-items: baseline;
   gap: var(--space-2) var(--space-3);
@@ -109,15 +108,17 @@
   min-width: 0;
 }
 
+/* T333 gave the chart a `stretch` mode; the glance row uses the whole width. */
 .rankSpark > svg {
   width: 100%;
   height: 32px;
-  max-width: 120px;
 }
 
 .rankLabel {
+  flex: none;
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
+  font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-3);
@@ -130,10 +131,46 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Best trails the current rank: smaller, quieter, and pushed to the right. */
+.rankBestLabel {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.rankBestValue {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Movement since the previous rank point (UX review 1.4). Up is a climb, in the
+ * same mint as the rank value; down borrows the debuff amber. Direction is
+ * carried by the arrow glyph as well as the colour.
+ */
+.rankDelta {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rankDelta[data-direction='up'] {
+  color: var(--label-rank);
+}
+
+.rankDelta[data-direction='down'] {
+  color: var(--amber-fg);
+}
+
 .unranked {
   font-size: var(--text-xs);
   color: var(--text-3);
-  align-items: center;
 }
 
 /* --- labelled blocks --- */
@@ -192,84 +229,82 @@
   font-family: var(--font-mono);
 }
 
-/* --- ledger: one line per list --- */
+/* --- equipped: one line per worn slot, in the sheet's order --- */
 
-.ledger {
+.equipped {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  margin: 0;
+  gap: var(--space-1);
   min-width: 0;
+  /* Three rows reserved, seven allowed: Harry wearing three and a crawler
+     wearing none are the same height (R2-SC-201), and a fully kitted crawler
+     adds at most four rows (R2 US1 scenario 2). */
+  min-height: calc(3 * var(--text-xs) * 1.5 + 2 * var(--space-1));
 }
 
-.ledgerRow {
-  display: grid;
-  grid-template-columns: minmax(0, 6.5em) minmax(0, 1fr);
+.equippedRow {
+  display: flex;
   align-items: baseline;
-  gap: var(--space-3);
-  padding: var(--space-2) var(--space-4);
-  border-bottom: var(--border-hairline);
+  gap: 0;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--text);
   min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
-.ledgerRow:first-child {
-  border-top: var(--border-hairline);
-}
-
-.ledgerLabel {
+.equippedSlot {
+  flex: none;
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-3);
-  white-space: nowrap;
+}
+
+.equippedItem {
+  flex: 0 1 auto;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.ledgerValue {
+.equippedMore {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--text-3);
+}
+
+/* --- latest achievement: one award, title first --- */
+
+.achievement {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.achievementHead {
   display: flex;
   align-items: baseline;
   gap: var(--space-3);
-  margin: 0;
   min-width: 0;
-  font-size: var(--text-xs);
-  /* One line, always: the full text lives in the record (spec, edge cases). */
   white-space: nowrap;
   overflow: hidden;
 }
 
-.count {
-  flex: none;
-  font-family: var(--font-mono);
-  font-size: var(--text-2xs);
-  color: var(--text-2);
-  font-variant-numeric: tabular-nums;
-  background: var(--panel-deep);
-  border-radius: var(--radius-sm);
-  padding: 0 6px;
-  min-width: 2.2em;
-  text-align: center;
-}
-
-.newest {
+.achievementTitle {
   flex: 0 1 auto;
   min-width: 0;
+  font-size: var(--text-xs);
+  font-weight: 600;
   color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.newestEmpty {
-  flex: 0 1 auto;
-  min-width: 0;
-  color: var(--text-3);
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.newestTime {
+.achievementTime {
   flex: none;
   margin-left: auto;
   font-family: var(--font-mono);
@@ -278,13 +313,25 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* --- history: exactly three single-line rows --- */
+.achievementDesc {
+  font-size: var(--text-2xs);
+  color: var(--text-2);
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-.history {
+/* --- recent moments: up to three single-line rows, never padded --- */
+
+.historyRows {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
   min-width: 0;
+  /* The rows the crawler has not earned yet are simply absent (revision 2: the
+     "—" placeholders are gone), so the block reserves their height instead. */
+  min-height: calc(3 * var(--text-xs) * 1.5 + 2 * var(--space-1));
 }
 
 .historyRow {
@@ -292,12 +339,8 @@
   align-items: baseline;
   gap: var(--space-3);
   font-size: var(--text-xs);
-  /* A moment and a "—" placeholder are the same line box, so three moments and
-     one are the same block (FR-201, SC-201: the placeholder's smaller mono type
-     used to leave the card 3 px shorter). */
-  min-height: calc(var(--text-xs) * 1.5);
-  color: var(--text-2);
   line-height: 1.5;
+  color: var(--text-2);
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -316,12 +359,6 @@
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.historyPlaceholder {
-  color: var(--text-3);
-  font-family: var(--font-mono);
-  font-size: var(--text-2xs);
 }
 
 /* --- the card's one control (FR-203) --- */

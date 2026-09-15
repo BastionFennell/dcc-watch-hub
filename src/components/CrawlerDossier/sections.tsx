@@ -1,6 +1,8 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 import type { CrawlerStats, EpisodeMeta, SkillEntry } from '../../data/types';
-import type { Dossier, DossierAchievement, FeedItem } from '../../engine/selectors';
+import type { Dossier, DossierAchievement, FeedItem, RankPoint } from '../../engine/selectors';
+import { GEAR_SLOT_ORDER, hotbarSlots } from '../../engine/selectors';
+import type { GearState } from '../../engine/state';
 import { formatTime } from '../../engine/time';
 import { copy } from '../../copy';
 import { FeedItemView } from '../EventFeed/FeedItem';
@@ -22,12 +24,62 @@ import styles from './CrawlerDossier.module.css';
 
 const STAT_KEYS = ['str', 'int', 'con', 'dex', 'cha'] as const;
 
-function Section({ name, title, children }: { name: string; title: string; children: ReactNode }) {
+/**
+ * A section heading the record's list views can focus on entry
+ * (contracts/dialog.md Revision 2). `tabIndex={-1}` only when a ref asks for
+ * it, so the stacked dossier keeps exactly the tab order it had.
+ */
+export interface SectionHeadingProps {
+  headingRef?: Ref<HTMLHeadingElement>;
+}
+
+function Section({
+  name,
+  title,
+  headingRef,
+  children,
+}: { name: string; title: string; children: ReactNode } & SectionHeadingProps) {
   return (
     <section className={styles.section} data-testid={`dossier-${name}`}>
-      <h3 className={styles.sectionBar}>{title}</h3>
+      <h3
+        className={styles.sectionBar}
+        ref={headingRef}
+        tabIndex={headingRef === undefined ? undefined : -1}
+      >
+        {title}
+      </h3>
       {children}
     </section>
+  );
+}
+
+/**
+ * The "View all (N)" control under a capped tile grid or history list
+ * (R2-FR-222). It is rendered only when the section is actually cut short, so
+ * the sheet never offers a view that would show the same rows again.
+ */
+function ViewAll({
+  kind,
+  count,
+  onViewAll,
+  viewAllRef,
+}: {
+  kind: string;
+  count: number;
+  onViewAll: () => void;
+  viewAllRef?: Ref<HTMLButtonElement>;
+}) {
+  return (
+    <button
+      type="button"
+      ref={viewAllRef}
+      className={styles.viewAll}
+      onClick={onViewAll}
+      aria-controls="crawler-record-body"
+      data-testid={`view-all-${kind}`}
+    >
+      {copy.viewAll(count)}
+    </button>
   );
 }
 
@@ -65,10 +117,19 @@ export function DossierHeader({ dossier, meta }: DossierHeaderProps) {
           <h3 className={styles.name} data-testid="dossier-name">
             {dossier.name}
           </h3>
+          {/*
+            A real separator, not a CSS-only one (UX review 0.7): the dot is
+            decorative and hidden, and the comma beside it is what an accessible
+            name reads, so this is "Harry, played by Marcus" and never
+            "Harryplayed by Marcus" (T338).
+          */}
           <p className={styles.handle}>
             {dossier.handle}
-            <span className={styles.dot}> · </span>
-            {dossier.player}
+            <span className={styles.dot} aria-hidden="true">
+              {' · '}
+            </span>
+            <span className="sr-only">{copy.srSeparator}</span>
+            {copy.playedBy(dossier.player)}
           </p>
         </div>
       </header>
@@ -95,9 +156,21 @@ export interface DossierVitalsProps {
   dossier: Dossier;
 }
 
+/**
+ * Movement since the previous elapsed rank point (T343, UX review 1.4).
+ * `previous - current`, so a positive number means the rank number fell, which
+ * is an improvement. Null with fewer than two points: there is nothing to
+ * compare against yet, and the sheet simply shows the current rank.
+ */
+function rankDelta(points: readonly RankPoint[]): number | null {
+  if (points.length < 2) return null;
+  return points[points.length - 2].rank - points[points.length - 1].rank;
+}
+
 /** VITALS + DEBUFFS: how the crawler is doing right now (FR-110). */
 export function DossierVitals({ dossier }: DossierVitalsProps) {
   const { rank } = dossier;
+  const delta = rankDelta(rank.points);
   return (
     <>
       <Section name="vitals" title={copy.dossierSections.vitals}>
@@ -116,6 +189,8 @@ export function DossierVitals({ dossier }: DossierVitalsProps) {
             ) : (
               <>
                 <div className={styles.rankNumbers}>
+                  {/* The numbers were unlabeled (UX review 1.4): say what they are. */}
+                  <span className={styles.rankTitle}>{copy.rankLabel}</span>
                   <span className={styles.rankLabel}>{copy.rankCurrent}</span>
                   <span className={styles.rankValue} data-testid="rank-current">
                     {copy.rankValue(rank.current)}
@@ -124,6 +199,15 @@ export function DossierVitals({ dossier }: DossierVitalsProps) {
                   <span className={styles.rankValue} data-testid="rank-best">
                     {copy.rankValue(rank.best)}
                   </span>
+                  {delta === null ? null : (
+                    <span
+                      className={styles.rankDelta}
+                      data-testid="rank-delta"
+                      data-direction={delta > 0 ? 'up' : 'down'}
+                    >
+                      {copy.rankDelta(delta)}
+                    </span>
+                  )}
                 </div>
                 <RankSparkline series={rank} />
               </>
@@ -170,24 +254,26 @@ export function DossierStats({ stats }: DossierStatsProps) {
   );
 }
 
-export type DossierListProps =
+export type DossierListProps = (
   | { kind: 'hotlist'; items: readonly string[] }
   | { kind: 'inventory'; items: readonly string[] }
-  | { kind: 'skills'; items: readonly SkillEntry[] };
+  | { kind: 'skills'; items: readonly SkillEntry[] }
+) &
+  SectionHeadingProps;
 
 /** HOTLIST / SKILLS / INVENTORY — the three plain-name lists. */
 export function DossierList(props: DossierListProps) {
-  const { kind } = props;
+  const { kind, headingRef } = props;
   if (props.items.length === 0) {
     return (
-      <Section name={kind} title={copy.dossierSections[kind]}>
+      <Section name={kind} title={copy.dossierSections[kind]} headingRef={headingRef}>
         <Empty>{copy.dossierEmpty[kind]}</Empty>
       </Section>
     );
   }
 
   return (
-    <Section name={kind} title={copy.dossierSections[kind]}>
+    <Section name={kind} title={copy.dossierSections[kind]} headingRef={headingRef}>
       <ul className={styles.list}>
         {props.kind === 'skills'
           ? props.items.map((skill) => (
@@ -213,13 +299,17 @@ export function DossierList(props: DossierListProps) {
   );
 }
 
-export interface DossierAchievementsProps {
+export interface DossierAchievementsProps extends SectionHeadingProps {
   items: readonly DossierAchievement[];
 }
 
-export function DossierAchievements({ items }: DossierAchievementsProps) {
+export function DossierAchievements({ items, headingRef }: DossierAchievementsProps) {
   return (
-    <Section name="achievements" title={copy.dossierSections.achievements}>
+    <Section
+      name="achievements"
+      title={copy.dossierSections.achievements}
+      headingRef={headingRef}
+    >
       {items.length === 0 ? (
         <Empty>{copy.dossierEmpty.achievements}</Empty>
       ) : (
@@ -244,19 +334,32 @@ export function DossierAchievements({ items }: DossierAchievementsProps) {
   );
 }
 
-export interface DossierHistoryProps {
+export interface DossierHistoryProps extends SectionHeadingProps {
   items: readonly FeedItem[];
+  /** The record's sheet shows the latest eight and offers the rest (R2-FR-222). */
+  max?: number;
+  onViewAll?: () => void;
+  viewAllRef?: Ref<HTMLButtonElement>;
 }
 
 /** This crawler's elapsed moments, newest first (FR-111). */
-export function DossierHistory({ items }: DossierHistoryProps) {
+export function DossierHistory({
+  items,
+  max,
+  onViewAll,
+  viewAllRef,
+  headingRef,
+}: DossierHistoryProps) {
+  const shown = max === undefined ? items : items.slice(0, max);
+  const cut = shown.length < items.length && onViewAll !== undefined;
+
   return (
-    <Section name="history" title={copy.dossierSections.history}>
+    <Section name="history" title={copy.dossierSections.history} headingRef={headingRef}>
       {items.length === 0 ? (
         <Empty>{copy.dossierEmpty.history}</Empty>
       ) : (
         <ul className={styles.history} data-testid="dossier-history-items">
-          {items.map((item) => (
+          {shown.map((item) => (
             <li
               key={item.id}
               className={styles.historyRow}
@@ -269,6 +372,179 @@ export function DossierHistory({ items }: DossierHistoryProps) {
           ))}
         </ul>
       )}
+      {cut ? (
+        <ViewAll
+          kind="history"
+          count={items.length}
+          onViewAll={onViewAll}
+          viewAllRef={viewAllRef}
+        />
+      ) : null}
+    </Section>
+  );
+}
+
+/* --- 003 revision 2: the record's MMO-shaped sections (research R8) --- */
+
+export interface DossierHotbarProps extends SectionHeadingProps {
+  hotlist: readonly string[];
+}
+
+/**
+ * HOTLIST as an MMO hotbar (R2-FR-221): ten fixed square slots, entries filling
+ * them in order, empty ones drawn dim, and a `+N` marker when the crawler is
+ * tracking more than the bar can hold. The slot count never changes with the
+ * playhead, so the sheet does not reflow as the hotlist grows.
+ */
+export function DossierHotbar({ hotlist, headingRef }: DossierHotbarProps) {
+  const { slots, overflow } = hotbarSlots(hotlist);
+  return (
+    <Section name="hotlist" title={copy.dossierSections.hotlist} headingRef={headingRef}>
+      <ul className={styles.hotbar}>
+        {slots.map((entry, index) => (
+          <li
+            key={index}
+            className={styles.hotbarSlot}
+            data-testid="hotbar-slot"
+            data-filled={entry === null ? undefined : 'true'}
+            data-item={entry === null ? undefined : 'hotlist'}
+            data-name={entry ?? undefined}
+          >
+            <span className={styles.hotbarNumber}>{copy.hotbarSlot(index + 1)}</span>
+            {entry === null ? null : <span className={styles.itemLabel}>{entry}</span>}
+          </li>
+        ))}
+        {overflow === 0 ? null : (
+          <li className={styles.hotbarOverflow} data-testid="hotbar-overflow">
+            {copy.hotbarOverflow(overflow)}
+          </li>
+        )}
+      </ul>
+    </Section>
+  );
+}
+
+export interface DossierGearProps extends SectionHeadingProps {
+  gear: GearState;
+}
+
+/**
+ * GEAR: every slot on the official sheet, in sheet order, with what is worn in
+ * it or "—" (R2 US2 scenario 3). Accessories are one row holding the whole
+ * list, because the sheet has one accessory line.
+ */
+export function DossierGear({ gear, headingRef }: DossierGearProps) {
+  return (
+    <Section name="gear" title={copy.dossierSections.gear} headingRef={headingRef}>
+      <dl className={styles.gearRows}>
+        {GEAR_SLOT_ORDER.map((slot) => {
+          const worn =
+            slot === 'accessory'
+              ? gear.accessories.length === 0
+                ? null
+                : gear.accessories.join(', ')
+              : gear[slot];
+          const label =
+            slot === 'accessory' ? copy.gearAccessoriesLabel : copy.gearSlotLabels[slot];
+          return (
+            <div
+              key={slot}
+              className={styles.gearRow}
+              data-testid="gear-row"
+              data-item="gear"
+              data-slot={slot}
+              data-name={worn ?? undefined}
+              data-filled={worn === null ? undefined : 'true'}
+            >
+              <dt className={styles.rowLabel}>{label}</dt>
+              <dd className={styles.gearValue}>
+                <span className={styles.itemLabel}>{worn ?? copy.dossierEmpty.gearSlot}</span>
+              </dd>
+            </div>
+          );
+        })}
+      </dl>
+    </Section>
+  );
+}
+
+export type DossierTilesKind = 'skills' | 'inventory' | 'achievements';
+
+export type DossierTilesProps = (
+  | { kind: 'skills'; items: readonly SkillEntry[] }
+  | { kind: 'inventory'; items: readonly string[] }
+  | { kind: 'achievements'; items: readonly DossierAchievement[] }
+) & {
+  /** Tiles shown before "View all" takes over (R2 US2 scenario 4). */
+  max?: number;
+  onViewAll?: () => void;
+  viewAllRef?: Ref<HTMLButtonElement>;
+} & SectionHeadingProps;
+
+/** One tile: the name, then rank or time as a mono caps footer (research R8). */
+function Tile({
+  item,
+  name,
+  footer,
+}: {
+  item: string;
+  name: string;
+  footer?: string;
+}) {
+  return (
+    <li className={styles.tile} data-testid="tile" data-item={item} data-name={name}>
+      <span className={styles.itemLabel}>{name}</span>
+      {footer === undefined ? null : <span className={styles.tileFooter}>{footer}</span>}
+    </li>
+  );
+}
+
+/**
+ * SKILLS / INVENTORY / ACHIEVEMENTS as a bag-style tile grid, capped at `max`
+ * with a "View all (N)" control for the rest (R2-FR-222). The cap is a display
+ * rule only: the list view behind the button renders the same elapsed items.
+ */
+export function DossierTiles(props: DossierTilesProps) {
+  const { kind, max = 8, onViewAll, viewAllRef, headingRef } = props;
+  const total = props.items.length;
+  const cut = total > max && onViewAll !== undefined;
+
+  return (
+    <Section name={kind} title={copy.dossierSections[kind]} headingRef={headingRef}>
+      {total === 0 ? (
+        <Empty>{copy.dossierEmpty[kind]}</Empty>
+      ) : (
+        <ul className={styles.tiles}>
+          {props.kind === 'skills'
+            ? props.items
+                .slice(0, max)
+                .map((skill) => (
+                  <Tile
+                    key={skill.name}
+                    item="skill"
+                    name={skill.name}
+                    footer={skill.rank === undefined ? undefined : copy.skillRank(skill.rank)}
+                  />
+                ))
+            : props.kind === 'achievements'
+              ? props.items
+                  .slice(0, max)
+                  .map((achievement) => (
+                    <Tile
+                      key={`${achievement.t}-${achievement.title}`}
+                      item="achievement"
+                      name={achievement.title}
+                      footer={formatTime(achievement.t)}
+                    />
+                  ))
+              : props.items
+                  .slice(0, max)
+                  .map((entry) => <Tile key={entry} item="inventory" name={entry} />)}
+        </ul>
+      )}
+      {cut ? (
+        <ViewAll kind={kind} count={total} onViewAll={onViewAll} viewAllRef={viewAllRef} />
+      ) : null}
     </Section>
   );
 }

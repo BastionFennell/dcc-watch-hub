@@ -206,3 +206,28 @@ describe('FloorMap', () => {
     expect(transform()).toBe('translate(0 0) scale(1)');
   });
 });
+
+describe('FloorMap header count (T335)', () => {
+  it('says how many sectors are charted, visibly', () => {
+    renderMap();
+    expect(screen.getByTestId('floormap-count')).toHaveTextContent(
+      copy.sectorsRevealed(5, COLS * ROWS),
+    );
+    expect(screen.queryByTestId('floormap-empty')).not.toBeInTheDocument();
+  });
+
+  it('says so plainly when nothing has been charted yet', () => {
+    render(
+      <FloorMap
+        cells={{ ...cells, revealed: new Set<string>() }}
+        recent={new Set<string>()}
+        labels={[]}
+        floor={6}
+      />,
+    );
+    expect(screen.getByTestId('floormap-count')).toHaveTextContent(
+      copy.sectorsRevealed(0, COLS * ROWS),
+    );
+    expect(screen.getByTestId('floormap-empty')).toHaveTextContent(copy.mapEmpty);
+  });
+});

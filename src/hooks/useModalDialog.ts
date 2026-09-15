@@ -7,6 +7,13 @@ export interface ModalDialogOptions {
   onClose(): void;
   /** The control that opened the dialog; focused again on close (FR-210). */
   returnFocusTo: HTMLElement | null;
+  /**
+   * First refusal on Escape (contracts/dialog.md Revision 2). Return true to
+   * consume it — the record's list views step back to the sheet and stay open;
+   * a second Escape then finds them on the sheet and closes. Either way the
+   * keypress is stopped here and never reaches the page's panel listener.
+   */
+  onEscape?: () => boolean;
 }
 
 export interface ModalDialogApi {
@@ -49,15 +56,28 @@ function focusables(dialog: HTMLElement): HTMLElement[] {
  *
  * It never touches the `TimeSource`: opening the record does not pause anything.
  */
-export function useModalDialog({ open, onClose, returnFocusTo }: ModalDialogOptions): ModalDialogApi {
+export function useModalDialog({
+  open,
+  onClose,
+  returnFocusTo,
+  onEscape,
+}: ModalDialogOptions): ModalDialogApi {
   const dialogRef = useRef<HTMLDivElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(returnFocusTo);
+  // In a ref, not the effect's deps: the interceptor closes over view state and
+  // changes identity on every step, and re-registering the capture listener
+  // mid-interaction is exactly what we do not want.
+  const escapeRef = useRef(onEscape);
 
   // Held in a ref so a trigger that re-renders mid-flight cannot re-run the open
   // effect (which would re-apply `inert` and pull focus back to the close button).
   useEffect(() => {
     returnFocusRef.current = returnFocusTo;
   }, [returnFocusTo]);
+
+  useEffect(() => {
+    escapeRef.current = onEscape;
+  }, [onEscape]);
 
   useEffect(() => {
     if (!open) return;
@@ -97,8 +117,10 @@ export function useModalDialog({ open, onClose, returnFocusTo }: ModalDialogOpti
       if (event.key === 'Escape') {
         if (event.repeat) return;
         // Capture phase on `document`, so the page's bubble-phase listeners
-        // (the panel hook's) never see the keypress that closed the dialog.
+        // (the panel hook's) never see the keypress that closed the dialog —
+        // nor the one an inner view consumed.
         event.stopPropagation();
+        if (escapeRef.current?.() === true) return;
         onClose();
         return;
       }

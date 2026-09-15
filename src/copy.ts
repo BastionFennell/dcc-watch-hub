@@ -82,7 +82,6 @@ export const copy = {
     hp: (actor: string, current: number, max: number) =>
       `${actor} holding at ${current}/${max} HP`,
     levelUp: (actor: string, level: number) => `${actor} reaches Lv ${level}`,
-    rankParty: (rank: number) => `Party climbs to #${rank} overall`,
     rankCrawler: (actor: string, rank: number) => `${actor} climbs to #${rank} overall`,
     mapReveal: (count: number, label?: string) =>
       label
@@ -120,8 +119,6 @@ export const copy = {
         ? `${actor} clears the ${slot} slot`
         : `${actor} stows ${item} (${slot})`,
     markerLevelUp: (actor: string, level: number) => `${actor} reaches Lv ${level}`,
-    stageCaption: (episodeId: number, floor: number, time: string) =>
-      `Ep ${episodeId} · Floor ${floor} · ${time}`,
   },
 
   /* --- appended by T025–T029 (archive navigation) --- */
@@ -253,19 +250,11 @@ export const copy = {
   resumeRejoin: 'Rejoin the broadcast',
   resumeStartOver: 'Start from the beginning',
 
-  /** Party rank line in the feed header (FR-141). */
-  partyRankLine: (rank: number) => `Party rank #${rank}`,
-
   /* --- 003 crawler record --- */
 
   /** The rail card (FR-200): a glance, not the whole sheet. */
   glanceKicker: 'CRAWLER GLANCE',
   openRecord: 'Open full record',
-  /** Ledger cells are plain values today; they stay in copy so the voice can change. */
-  ledgerCount: (n: number) => `${n}`,
-  ledgerNewest: (text: string) => text,
-  /** Stands in for a history row the crawler has not earned yet (research R4). */
-  historyPlaceholder: '—',
 
   /** The full record dialog (FR-210). */
   recordKicker: 'CRAWLER RECORD',
@@ -297,6 +286,58 @@ export const copy = {
 
   /** The full-figure art column (R2-FR-224). */
   artAlt: (name: string) => `${name}, full figure`,
+
+  /* --- 003 revision 2, wave 3 (glance card polish: T338, T343, T344) --- */
+
+  /**
+   * The player behind the crawler, spelled out (review 0.8): "Harry · played by
+   * Marcus" reads as a credit instead of two names that look like a duplicate.
+   */
+  playedBy: (player: string) => `played by ${player}`,
+  /**
+   * The screen-reader half of a "·" separator (review 0.7): the dot itself is
+   * aria-hidden, and this sits beside it so the accessible name is "Harry,
+   * played by Marcus" and not "Harryplayed by Marcus".
+   */
+  srSeparator: ', ',
+
+  /** Mono caps label before the sheet's ten-segment strip (review 1.3, T344). */
+  hpLabel: 'HP',
+  /** Mono caps label before the rank numbers (review 1.4, T343). */
+  rankLabel: 'RANK',
+  /**
+   * Movement since the previous rank point (T343). A positive delta means the
+   * rank number fell, which is an improvement, so it points up.
+   */
+  rankDelta: (delta: number) =>
+    `${delta > 0 ? '↑' : '↓'} ${Math.abs(delta).toLocaleString('en-US')}`,
+  /** Worn slots past the glance card's seven-row cap. */
+  equippedMore: (n: number) => `+${n}`,
+
+  /* --- 003 revision 2, wave 3 (record: T324) --- */
+
+  /**
+   * The gear section's last row holds a list, so the sheet spells it plural;
+   * `gearSlotLabels.accessory` stays singular for one worn item (R2 US2.3).
+   */
+  gearAccessoriesLabel: 'Accessories',
+
+  /* --- 003 revision 2, wave 3 (empty states, caption row, feed seek: T335/T340/T342) --- */
+
+  /** The feed before the first event has elapsed (review 0.3, T335). */
+  feedStandby: 'Standing by. The System reports when the broadcast begins.',
+  /** The floor map before the first reveal (review 0.4, T335). */
+  mapEmpty: 'No sectors charted yet.',
+
+  /**
+   * The caption row between the stage and the timeline (review 0.11/0.13, T340).
+   * The episode title is finally visible, so this line is the page's `<h1>`.
+   */
+  captionLeft: (episodeId: number, floor: number, title: string) =>
+    `Ep ${episodeId} · Floor ${floor} — ${title}`,
+
+  /** A feed row is a seek control; its accessible name leads with the moment (T342). */
+  feedSeek: (time: string, text: string) => `${time} — ${text}`,
 } as const;
 
 export type Copy = typeof copy;

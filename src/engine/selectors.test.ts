@@ -15,7 +15,6 @@ import {
   partyFrames,
   rankSeries,
   recentlyRevealed,
-  stageCaption,
   timelineMarkers,
 } from './selectors';
 import { reduceTo } from './reducer';
@@ -23,11 +22,10 @@ import { copy } from '../copy';
 import { formatTime } from './time';
 import { normalizeEpisode } from '../data/validate';
 import type { EpisodeData } from '../data/types';
-import { makeEpisode, makeEpisodeRaw, makeShow } from '../test/fixtures';
+import { makeEpisode, makeEpisodeRaw } from '../test/fixtures';
 
 const episode = makeEpisode();
 const party = episode.initialState.party;
-const meta = makeShow().episodes[0];
 
 function withEvents(events: unknown[]): EpisodeData {
   const raw = makeEpisodeRaw() as { events: unknown[] };
@@ -235,12 +233,6 @@ describe('mapCells', () => {
   });
 });
 
-describe('stageCaption', () => {
-  it('reads Ep n · Floor n · time', () => {
-    expect(stageCaption(meta, 2482)).toBe('Ep 1 · Floor 1 · 41:22');
-  });
-});
-
 describe('recentlyRevealed', () => {
   it('is empty before the reveal and inside a backward seek', () => {
     expect(recentlyRevealed(episode.events, 0).size).toBe(0);
@@ -339,7 +331,7 @@ describe('crawlerHistory', () => {
 
 describe('rankSeries', () => {
   it('has no points, current or best before the first rank event', () => {
-    expect(rankSeries(episode.events, 99, { actor: 'harry' })).toEqual({
+    expect(rankSeries(episode.events, 99, 'harry')).toEqual({
       points: [],
       current: null,
       best: null,
@@ -347,7 +339,7 @@ describe('rankSeries', () => {
   });
 
   it('plots one point per elapsed crawler rank event, with current and best', () => {
-    const at200 = rankSeries(episode.events, 200, { actor: 'harry' });
+    const at200 = rankSeries(episode.events, 200, 'harry');
     expect(at200.points).toEqual([
       { t: 100, rank: 4188 },
       { t: 150, rank: 3012 },
@@ -358,20 +350,28 @@ describe('rankSeries', () => {
   });
 
   it('rewinds with the playhead', () => {
-    const at120 = rankSeries(episode.events, 120, { actor: 'harry' });
+    const at120 = rankSeries(episode.events, 120, 'harry');
     expect(at120.points).toHaveLength(1);
     expect(at120.current).toBe(4188);
     expect(at120.best).toBe(4188);
   });
 
-  it('reads party-scoped events under the party scope only', () => {
-    expect(rankSeries(episode.events, 200, 'party')).toEqual({
-      points: [{ t: 80, rank: 61 }],
-      current: 61,
-      best: 61,
-    });
-    expect(rankSeries(episode.events, 79, 'party').current).toBeNull();
-    expect(rankSeries(episode.events, 200, { actor: 'xo' }).points).toEqual([]);
+  // DCC has individual rank only (T334): one crawler's events never leak into
+  // another's series, and a crawler nobody ranked has none.
+  it('keeps each crawler\'s series to their own events', () => {
+    expect(rankSeries(episode.events, 200, 'xo').points).toEqual([]);
+    expect(rankSeries(episode.events, 200, 'xo').current).toBeNull();
+    expect(rankSeries(episode.events, 200, 'harry').points).toHaveLength(3);
+  });
+
+  // A legacy party row normalizes to `unknown`, so it reaches no series at all.
+  it('ignores a legacy party-scoped rank row', () => {
+    const legacy = withEvents([
+      { t: 10, type: 'rank', scope: 'party', rank: 61 },
+      { t: 20, type: 'rank', actor: 'harry', rank: 4188 },
+    ]);
+    expect(legacy.events[0].type).toBe('unknown');
+    expect(rankSeries(legacy.events, 100, 'harry').points).toEqual([{ t: 20, rank: 4188 }]);
   });
 });
 
@@ -523,50 +523,11 @@ describe('crawlerGlance', () => {
     expect(glance.rank.best).toBe(3012);
   });
 
-  it('reduces each list to a count and its newest entry', () => {
-    // Harry at 200: hotlist ['Crowbar'] (Door cleared at 165), inventory
-    // ['Torch'] (the crowbar traded at 150), one skill, one achievement.
-    expect(glanceAt(200).ledger).toEqual({
-      hotlist: { count: 1, newest: { text: 'Crowbar' } },
-      skills: { count: 1, newest: { text: 'Powerful Strike · Rank 1' } },
-      inventory: { count: 1, newest: { text: 'Torch' } },
-      achievements: { count: 1, newest: { text: 'Gate Crasher', t: 60 } },
-    });
-  });
-
-  it('follows a backward seek: the hotlist is the Door again at 110', () => {
-    expect(glanceAt(110).ledger.hotlist).toEqual({ count: 1, newest: { text: 'Door' } });
-    expect(glanceAt(110).ledger.inventory).toEqual({
-      count: 1,
-      newest: { text: 'Enchanted Crowbar' },
-    });
-  });
-
-  it('omits `newest` for a list nothing has landed in yet', () => {
-    const glance = glanceAt(20);
-    expect(glance.ledger.hotlist).toEqual({ count: 0 });
-    expect(glance.ledger.inventory).toEqual({ count: 0 });
-    expect(glance.ledger.achievements).toEqual({ count: 0 });
-    expect(glance.ledger.hotlist.newest).toBeUndefined();
-    // The sheet's initial skills are not events; they are there from t=0.
-    expect(glance.ledger.skills).toEqual({
-      count: 1,
-      newest: { text: 'Powerful Strike · Rank 1' },
-    });
-    expect(glance.recentHistory).toEqual([]);
-  });
-
-  it('suffixes a skill rank only when the entry carries one', () => {
-    // The ledger is deprecated (R2 wave 2 deletes it) but still derived here.
-    expect(glanceAt(160, 'xo').ledger.skills).toEqual({
-      count: 9,
-      newest: { text: 'Swamp Step' },
-    });
-    expect(glanceAt(90, 'xo').ledger.skills).toEqual({
-      count: 3,
-      newest: { text: 'Tail Whip · Rank 4' },
-    });
-    expect(glanceAt(79, 'xo').ledger.skills).toEqual({ count: 0 });
+  // The ledger rows are gone in revision 2 (T318/T334): the card carries the
+  // worn kit and the latest achievement instead of a count per list.
+  it('carries no ledger at all', () => {
+    expect(glanceAt(200)).not.toHaveProperty('ledger');
+    expect(glanceAt(20)).not.toHaveProperty('ledger');
   });
 
   it('keeps at most the three newest history moments, newest first', () => {

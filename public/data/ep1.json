@@ -202,7 +202,6 @@
         "art": "/img/crawlers/actress-art.svg"
       }
     ],
-    "partyRank": null,
     "map": {
       "floor": 1,
       "grid": {
@@ -345,7 +344,6 @@
     {
       "t": 200,
       "type": "rank",
-      "scope": "crawler",
       "actor": "xo",
       "rank": 6120
     },
@@ -397,7 +395,6 @@
     {
       "t": 260,
       "type": "rank",
-      "scope": "crawler",
       "actor": "harry",
       "rank": 8890
     },
@@ -448,8 +445,8 @@
     {
       "t": 317,
       "type": "rank",
-      "scope": "party",
-      "rank": 61
+      "actor": "stuntman",
+      "rank": 7480
     },
     {
       "t": 330,
@@ -471,7 +468,6 @@
     {
       "t": 350,
       "type": "rank",
-      "scope": "crawler",
       "actor": "xo",
       "rank": 5004
     },
@@ -496,7 +492,6 @@
     {
       "t": 410,
       "type": "rank",
-      "scope": "crawler",
       "actor": "harry",
       "rank": 7215
     },
@@ -559,7 +554,6 @@
     {
       "t": 486,
       "type": "rank",
-      "scope": "crawler",
       "actor": "xo",
       "rank": 4188
     },
@@ -580,7 +574,6 @@
     {
       "t": 520,
       "type": "rank",
-      "scope": "crawler",
       "actor": "harry",
       "rank": 6402
     },

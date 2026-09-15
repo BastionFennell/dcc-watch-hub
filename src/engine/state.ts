@@ -52,7 +52,6 @@ export interface CrawlerState extends Omit<Crawler, 'gear'> {
 export interface OverlayState {
   /** Same order as `initialState.party`. */
   party: CrawlerState[];
-  partyRank: number | null;
   map: MapState;
 }
 
@@ -68,7 +67,6 @@ export function fromInitialState(init: InitialState): OverlayState {
       hotlist: [...(crawler.hotlist ?? [])],
       gear: gearFrom(crawler.gear),
     })),
-    partyRank: init.partyRank,
     map: {
       floor: init.map.floor,
       grid: { ...init.map.grid },

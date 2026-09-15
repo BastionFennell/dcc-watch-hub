@@ -135,9 +135,7 @@ export function applyEvent(state: OverlayState, event: AnyEvent): OverlayState {
       }));
 
     case 'rank':
-      if (event.scope === 'party') {
-        return { ...state, partyRank: event.rank };
-      }
+      // Individual rank only — DCC has no party rank (T334).
       return withCrawler(state, event.actor, (crawler) => ({ ...crawler, rank: event.rank }));
 
     case 'map_reveal': {

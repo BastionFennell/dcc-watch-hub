@@ -109,9 +109,14 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 0 var(--space-3);
   color: var(--text-3);
   font-size: var(--text-xs);
+}
+
+/* The separator carries the spacing now that it is real text (T338). */
+.dot {
+  color: var(--text-4);
+  white-space: pre;
 }
 
 .hpValue {
@@ -140,11 +145,19 @@
   background: var(--danger);
 }
 
+/*
+ * Reserved on every frame whether or not the crawler carries a debuff (review
+ * 0.10, T339): the pip row is a function of the playhead, and a row that
+ * appears and disappears made the whole rail jump on every seek.
+ */
 .pips {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-1);
   margin-top: var(--space-2);
+  /* One pip line: --text-2xs at 1.4 line-height, rounded up. */
+  min-height: 16px;
+  align-content: flex-start;
 }
 
 .pip {
@@ -193,6 +206,18 @@
   }
 }
 
+/*
+ * Five across next to the feed column starts truncating names around 1050px
+ * (review 0.9, T339). Between 901 and 1100px — the band where the desktop grid
+ * is still two columns — the rail wraps to 3 + 2 instead. At or below 900px the
+ * page has already stacked, so the rules below own that range.
+ */
+@media (min-width: 901px) and (max-width: 1100px) {
+  .rail {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 /* Five across is unreadable on a phone: wrap to 3 + 2. */
 @media (max-width: 640px) {
   .rail {
@@ -202,5 +227,28 @@
   .portrait {
     width: 32px;
     height: 32px;
+  }
+}
+
+/*
+ * At phone width a 3 + 2 grid leaves a ragged half-row (review 2.4, T339), so
+ * the rail becomes a single scroll strip with snap points: every frame keeps
+ * its full width, and the page still never scrolls sideways.
+ */
+@media (max-width: 480px) {
+  .rail {
+    display: flex;
+    grid-template-columns: none;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: var(--space-1);
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: var(--space-2);
+  }
+
+  .frameItem {
+    flex: 0 0 60%;
+    max-width: 220px;
+    scroll-snap-align: start;
   }
 }

@@ -14,11 +14,11 @@ import {
   mapCells,
   mapLabels,
   partyFrames,
-  rankSeries,
   recentlyRevealed,
   timelineMarkers,
 } from '../engine/selectors';
 import type { TimeSource } from '../playback/TimeSource';
+import { formatTime } from '../engine/time';
 import { usePlayhead } from '../playback/usePlayhead';
 import { useResume } from '../playback/useResume';
 import { usePanel } from '../hooks/usePanel';
@@ -147,7 +147,6 @@ export function EpisodePage() {
   const markers = episode ? timelineMarkers(episode.events, meta.durationSec, party) : [];
   const cells = state ? mapCells(state) : null;
   const recent = episode ? recentlyRevealed(episode.events, t) : EMPTY_CELLS;
-  const partyRank = episode ? rankSeries(episode.events, t, 'party').current : null;
   const { next } = prevNext(show, meta.id);
 
   // The dossier, like everything else, is derived at render time — a seek in
@@ -162,7 +161,7 @@ export function EpisodePage() {
       items={listed}
       sponsor={sponsor}
       t={t}
-      partyRank={partyRank}
+      onSeek={(sec) => source?.seek(sec)}
       notice={
         failed ? (
           <SystemNotice tone="error">{copy.feedUnavailable}</SystemNotice>
@@ -220,7 +219,6 @@ export function EpisodePage() {
 
   return (
     <div className={styles.page} data-ended={ended ? 'true' : undefined}>
-      <h1 className="sr-only">{meta.title}</h1>
       <div className={styles.grid}>
         <div className={styles.main}>
           <VideoStage key={meta.id} meta={meta} t={t} onSource={setSource}>
@@ -246,6 +244,24 @@ export function EpisodePage() {
               </div>
             ) : null}
           </VideoStage>
+
+          {/*
+            The caption row (review 0.11/0.13, T340). It used to sit inside the
+            stage, where the host's own control bar covered it and the episode
+            title never appeared at all. Out here it is legible at every width,
+            and its left half is the page's one `<h1>`.
+          */}
+          <div className={styles.captionRow} data-testid="stage-caption-row">
+            <h1 className={styles.captionTitle}>
+              {copy.captionLeft(meta.id, meta.floor, meta.title)}
+            </h1>
+            <span
+              className={styles.captionTime}
+              data-testid="stage-caption-time"
+            >
+              {formatTime(t)}
+            </span>
+          </div>
 
           <EventTimeline
             markers={markers}

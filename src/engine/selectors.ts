@@ -8,7 +8,6 @@ import type {
   ChapterKind,
   Crawler,
   CrawlerStats,
-  EpisodeMeta,
   Event,
   EventType,
   GearSlot,
@@ -19,7 +18,6 @@ import { isKnownEvent } from '../data/types';
 import { copy } from '../copy';
 import type { GearState, OverlayState } from './state';
 import { cellKey } from './state';
-import { formatTime } from './time';
 
 /* ------------------------------------------------------------------ types */
 
@@ -88,7 +86,7 @@ export interface RankPoint {
   rank: number;
 }
 
-/** A crawler's or the party's rank over the elapsed log (FR-140/141). */
+/** One crawler's rank over the elapsed log (FR-140; DCC has no party rank). */
 export interface RankSeries {
   points: RankPoint[];
   /** The most recent elapsed rank, or null with no points. */
@@ -96,9 +94,6 @@ export interface RankSeries {
   /** The best (lowest) rank reached so far, or null with no points. */
   best: number | null;
 }
-
-/** `'party'` reads party-scoped rank events; `{ actor }` reads one crawler's. */
-export type RankScopeSelector = 'party' | { actor: string };
 
 /** The ten-segment HP strip from the official sheet (FR-110). */
 export interface HpSegments {
@@ -239,14 +234,7 @@ function toFeedItem(
     case 'level_up':
       return { ...base, actorName, text: copy.feedText.levelUp(who, event.level) };
     case 'rank':
-      return {
-        ...base,
-        actorName,
-        text:
-          event.scope === 'party'
-            ? copy.feedText.rankParty(event.rank)
-            : copy.feedText.rankCrawler(who, event.rank),
-      };
+      return { ...base, actorName, text: copy.feedText.rankCrawler(who, event.rank) };
     case 'map_reveal':
       return { ...base, text: copy.feedText.mapReveal(event.cells.length, event.label) };
     case 'sponsor':
@@ -393,10 +381,6 @@ export function mapCells(state: OverlayState): MapCellsView {
   };
 }
 
-export function stageCaption(meta: EpisodeMeta, t: number): string {
-  return copy.feedText.stageCaption(meta.id, meta.floor, formatTime(t));
-}
-
 /**
  * Cells whose `map_reveal` landed within the last `windowSec` seconds
  * (`t_e <= t < t_e + windowSec`). The minimap uses it to tint just-revealed
@@ -442,20 +426,16 @@ export function crawlerHistory(
   return items.reverse();
 }
 
-/** Elapsed rank events for one crawler or for the party, oldest first (FR-140/141). */
+/** Elapsed rank events for one crawler, oldest first (FR-140; T334). */
 export function rankSeries(
   events: readonly AnyEvent[],
   t: number,
-  scope: RankScopeSelector,
+  actorId: string,
 ): RankSeries {
   const points: RankPoint[] = [];
   for (const event of events) {
     if (event.type !== 'rank' || event.t > t) continue;
-    if (scope === 'party') {
-      if (event.scope !== 'party') continue;
-    } else if (event.scope !== 'crawler' || event.actor !== scope.actor) {
-      continue;
-    }
+    if (event.actor !== actorId) continue;
     points.push({ t: event.t, rank: event.rank });
   }
   if (points.length === 0) return { points, current: null, best: null };
@@ -517,7 +497,7 @@ export function crawlerDossier(
     class: crawler.class,
     floor: state.map.floor,
     hp: { current, max: crawler.hp.max, ...hpSegments(crawler.hp) },
-    rank: rankSeries(events, t, { actor: actorId }),
+    rank: rankSeries(events, t, actorId),
     debuffs: crawler.statuses,
     ...(crawler.stats === undefined ? {} : { stats: crawler.stats }),
     ...(crawler.art === undefined ? {} : { art: crawler.art }),
@@ -567,13 +547,6 @@ export function mapLabels(events: readonly AnyEvent[], t: number): MapLabel[] {
 
 /* ------------------------------------------------------- 003 glance card */
 
-/** One ledger line on the glance card: how many, and what landed last (FR-200). */
-export interface LedgerRow {
-  count: number;
-  /** Absent when the list is empty — the card prints the System's empty phrase. */
-  newest?: { text: string; t?: number };
-}
-
 /**
  * The fixed-height rail card's view model (FR-200..FR-203): the same facts the
  * dossier holds, reduced to one line per list so the card cannot grow with the
@@ -596,16 +569,6 @@ export interface Glance {
   latestAchievement?: DossierAchievement;
   /** At most three, newest first. */
   recentHistory: FeedItem[];
-  /**
-   * @deprecated removed in R2 wave 2 — the card no longer shows ledger rows
-   * (R2-FR-201). Kept only so `CrawlerGlance` still compiles this wave.
-   */
-  ledger: {
-    hotlist: LedgerRow;
-    skills: LedgerRow;
-    inventory: LedgerRow;
-    achievements: LedgerRow;
-  };
 }
 
 /** One worn item on the glance card: which slot, and what is in it. */
@@ -658,13 +621,6 @@ export function equippedItems(gear: GearState): EquippedItem[] {
 /** The number of history rows the glance card always shows (research R4). */
 export const GLANCE_HISTORY_ROWS = 3;
 
-/** `{ count }` plus the last element, which the reducer appends in event order. */
-function ledgerRow(items: readonly string[]): LedgerRow {
-  const count = items.length;
-  if (count === 0) return { count };
-  return { count, newest: { text: items[count - 1] } };
-}
-
 /**
  * The glance card's view model, derived from an already-elapsed `Dossier`, so it
  * inherits time-truth for free (constitution I, FR-202). "Newest" is the last
@@ -672,8 +628,6 @@ function ledgerRow(items: readonly string[]): LedgerRow {
  * gained item still held (research R3).
  */
 export function crawlerGlance(dossier: Dossier): Glance {
-  const skills = dossier.skills;
-  const lastSkill = skills.length === 0 ? undefined : skills[skills.length - 1];
   const achievements = dossier.achievements;
   const lastAchievement =
     achievements.length === 0 ? undefined : achievements[achievements.length - 1];
@@ -692,28 +646,5 @@ export function crawlerGlance(dossier: Dossier): Glance {
     equipped: equippedItems(dossier.gear),
     ...(lastAchievement === undefined ? {} : { latestAchievement: lastAchievement }),
     recentHistory: dossier.history.slice(0, GLANCE_HISTORY_ROWS),
-    ledger: {
-      hotlist: ledgerRow(dossier.hotlist),
-      skills:
-        lastSkill === undefined
-          ? { count: skills.length }
-          : {
-              count: skills.length,
-              newest: {
-                text:
-                  lastSkill.rank === undefined
-                    ? lastSkill.name
-                    : `${lastSkill.name} · ${copy.skillRank(lastSkill.rank)}`,
-              },
-            },
-      inventory: ledgerRow(dossier.inventory),
-      achievements:
-        lastAchievement === undefined
-          ? { count: achievements.length }
-          : {
-              count: achievements.length,
-              newest: { text: lastAchievement.title, t: lastAchievement.t },
-            },
-    },
   };
 }

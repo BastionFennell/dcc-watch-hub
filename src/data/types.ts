@@ -132,7 +132,6 @@ export interface MapState {
 
 export interface InitialState {
   party: Crawler[];
-  partyRank: number | null;
   map: MapState;
 }
 
@@ -181,13 +180,14 @@ export interface LevelUpEvent extends EventBase {
   level: number;
 }
 
-export type RankScope = 'party' | 'crawler';
-
+/**
+ * One crawler's standing on the leaderboard. DCC has individual rank only —
+ * there is no party rank (003 revision 2, T334; supersedes v1/v2 FR-141).
+ */
 export interface RankEvent extends EventBase {
   type: 'rank';
-  scope: RankScope;
+  actor: string;
   rank: number;
-  actor?: string;
 }
 
 export interface MapRevealEvent extends EventBase {

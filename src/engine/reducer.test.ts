@@ -44,17 +44,16 @@ describe('applyEvent — one case per event type', () => {
     expect(findCrawler(after, 'xo')?.level).toBe(2);
   });
 
-  it('rank scope party sets partyRank; scope crawler sets the crawler rank', () => {
-    expect(applyEvent(init(), { t: 1, type: 'rank', scope: 'party', rank: 61 }).partyRank).toBe(61);
-    const after = applyEvent(init(), {
-      t: 1,
-      type: 'rank',
-      scope: 'crawler',
-      rank: 9,
-      actor: 'xo',
-    });
+  // DCC has individual rank only (T334): a rank event names its crawler.
+  it('rank sets that crawler\'s rank and touches nobody else', () => {
+    const after = applyEvent(init(), { t: 1, type: 'rank', rank: 9, actor: 'xo' });
     expect(findCrawler(after, 'xo')?.rank).toBe(9);
-    expect(after.partyRank).toBeNull();
+    expect(findCrawler(after, 'harry')?.rank).toBeNull();
+  });
+
+  it('rank for an unknown actor is a no-op', () => {
+    const before = init();
+    expect(applyEvent(before, { t: 1, type: 'rank', rank: 9, actor: 'ghost' })).toBe(before);
   });
 
   it('map_reveal unions cells and never duplicates', () => {
@@ -180,10 +179,8 @@ describe('reduceTo', () => {
           expect(findCrawler(at, event.actor)?.achievements).toContain(event.title);
           break;
         case 'rank':
-          if (event.scope === 'party') {
-            expect(before.partyRank).not.toBe(event.rank);
-            expect(at.partyRank).toBe(event.rank);
-          }
+          expect(findCrawler(before, event.actor)?.rank).not.toBe(event.rank);
+          expect(findCrawler(at, event.actor)?.rank).toBe(event.rank);
           break;
         case 'map_reveal':
           expect(before.map.revealed.length).toBeLessThan(at.map.revealed.length);

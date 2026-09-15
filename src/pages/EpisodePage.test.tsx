@@ -449,11 +449,12 @@ describe('EpisodePage', () => {
     expect(screen.queryByTestId('feed-items')).not.toBeInTheDocument();
     expect(screen.getAllByTestId('rail-panel')).toHaveLength(1);
 
-    // A glance, not the sheet: one ledger line per list, never the lists
-    // themselves, so the card cannot grow with the episode (FR-200/FR-201).
-    expect(within(panel).getByTestId('glance-ledger')).toBeInTheDocument();
+    // A glance, not the sheet: the worn kit and the newest award, never the
+    // full lists, so the card cannot grow with the episode (R2-FR-201). The
+    // ledger rows the card used to carry are gone with revision 2.
+    expect(within(panel).queryByTestId('glance-ledger')).not.toBeInTheDocument();
     for (const kind of ['hotlist', 'skills', 'inventory', 'achievements']) {
-      expect(within(panel).getByTestId(`ledger-${kind}`)).toBeInTheDocument();
+      expect(within(panel).queryByTestId(`ledger-${kind}`)).not.toBeInTheDocument();
       expect(within(panel).queryByTestId(`dossier-${kind}`)).not.toBeInTheDocument();
     }
     expect(within(panel).queryByTestId('dossier-identity')).not.toBeInTheDocument();
@@ -461,20 +462,31 @@ describe('EpisodePage', () => {
     expect(screen.queryByTestId('crawler-record')).not.toBeInTheDocument();
     expect(document.body).not.toHaveClass('dialog-open');
 
-    // Counts and newest entries as of the playhead (FR-202).
-    const ledger = (kind: string) => within(within(panel).getByTestId(`ledger-${kind}`));
-    expect(ledger('hotlist').getByText(copy.ledgerCount(1))).toBeInTheDocument();
-    expect(ledger('hotlist').getByText('Crowbar')).toBeInTheDocument();
-    expect(ledger('inventory').getByText('Torch')).toBeInTheDocument();
-    expect(ledger('achievements').getByText('Gate Crasher')).toBeInTheDocument();
-    expect(ledger('achievements').getByText(formatTime(60))).toBeInTheDocument();
+    // Worn gear as of the playhead, in sheet order: Harry took the jacket at
+    // 152, the charm at 153, dropped the crowbar at 168 and took the torch at
+    // 169 (R2-FR-201/FR-202).
+    const equipped = within(panel).getByTestId('glance-equipped');
+    const worn = within(equipped).getAllByTestId('glance-equipped-row');
+    expect(worn.map((row) => row.getAttribute('data-slot'))).toEqual([
+      'torso',
+      'hands',
+      'accessory',
+    ]);
+    expect(worn[1]).toHaveTextContent('Torch');
+
+    // The newest award, with its time — one line, not the whole list.
+    const latest = within(panel).getByTestId('glance-latest-achievement');
+    expect(within(latest).getByText('Gate Crasher')).toBeInTheDocument();
+    expect(within(latest).getByText(formatTime(60))).toBeInTheDocument();
 
     // Vitals: the ten-segment strip and the HP readout, in the card.
     expect(within(panel).getAllByTestId('hp-segment')).toHaveLength(10);
     expect(within(panel).getByTestId('glance-hp')).toHaveTextContent(copy.hpValue(20, 22));
 
-    // Exactly three history rows, always — the card's height is fixed (FR-201).
+    // Three history rows here, and never a placeholder dash: the card holds its
+    // height in CSS instead (review 0.1, R2-FR-201).
     expect(within(panel).getAllByTestId('glance-history-row')).toHaveLength(3);
+    expect(within(panel).queryByText(/^—$/)).not.toBeInTheDocument();
 
     // The single control that leads deeper, and nothing else (FR-203).
     expect(within(panel).getByTestId('open-record')).toHaveTextContent(copy.openRecord);
@@ -583,9 +595,10 @@ describe('EpisodePage', () => {
     expect(within(section('inventory')).queryByText('Torch')).not.toBeInTheDocument();
     expect(within(section('hotlist')).getByText('Door')).toBeInTheDocument();
 
-    // And the glance card behind it moves with it.
+    // And the glance card behind it moves with it: at 110 the crowbar is still
+    // in Harry's hands, because he trades it for the torch at 169.
     expect(
-      within(screen.getByTestId('ledger-inventory')).getByText('Enchanted Crowbar'),
+      within(screen.getByTestId('glance-equipped')).getByText('Enchanted Crowbar'),
     ).toBeInTheDocument();
 
     seek(20);
@@ -686,7 +699,8 @@ describe('EpisodePage', () => {
     expect(within(section('hotlist')).queryByText('Crowbar')).not.toBeInTheDocument();
 
     seek(20);
-    expect(within(section('hotlist')).getByText(copy.dossierEmpty.hotlist)).toBeInTheDocument();
+    // The sheet's ten-slot hotbar keeps its shape; only the marks rewind (T324).
+    expect(section('hotlist').querySelectorAll('[data-item="hotlist"]')).toHaveLength(0);
   });
 
   it('upserts a skill rank while the record stays open', async () => {
@@ -756,9 +770,10 @@ describe('EpisodePage', () => {
     expect(rows.length).toBeGreaterThan(0);
     // Newest first: Harry's rank at 200.
     expect(within(rows[0]).getByText(copy.feedText.rankCrawler('Harry', 3550))).toBeInTheDocument();
-    // The party rank at 80 belongs to nobody's dossier.
+    // X.O.'s moments are X.O.'s: rank is individual, and there is no party rank
+    // for a dossier to inherit (T334).
     expect(
-      within(section('history')).queryByText(copy.feedText.rankParty(61)),
+      within(section('history')).queryByText(copy.feedText.rankCrawler('X.O.', 3550)),
     ).not.toBeInTheDocument();
   });
 
@@ -819,6 +834,103 @@ describe('EpisodePage', () => {
     expect(screen.queryByTestId('rail-panel')).not.toBeInTheDocument();
   });
 
+
+  /* ------------------------ revision 2 polish: T335 / T340 / T341 / T342 */
+
+  it('stands by until the first event has elapsed (T335)', async () => {
+    const { seek } = await mountEpisode();
+
+    expect(screen.getByTestId('feed-standby')).toHaveTextContent(copy.feedStandby);
+
+    seek(12);
+    expect(screen.queryByTestId('feed-standby')).not.toBeInTheDocument();
+
+    // It is a function of the playhead like everything else, so it comes back.
+    seek(0);
+    expect(screen.getByTestId('feed-standby')).toBeInTheDocument();
+  });
+
+  it('names the episode in a caption row under the stage, with the playhead (T340)', async () => {
+    const { seek } = await mountEpisode();
+
+    const row = screen.getByTestId('stage-caption-row');
+    const heading = within(row).getByRole('heading', { level: 1 });
+    expect(heading).toHaveTextContent(copy.captionLeft(1, 1, makeShow().episodes[0].title));
+    expect(screen.getByTestId('stage-caption-time')).toHaveTextContent(formatTime(0));
+
+    seek(125);
+    expect(screen.getByTestId('stage-caption-time')).toHaveTextContent(formatTime(125));
+
+    // It no longer sits over the player, where the host's own chrome covered it.
+    expect(within(screen.getByTestId('video-stage')).queryByTestId('stage-caption')).toBeNull();
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+  });
+
+  it('legends the marker colours and marks the playhead apart from the fill (T341)', async () => {
+    const { seek } = await mountEpisode();
+
+    const legend = screen.getByTestId('timeline-legend');
+    expect(within(legend).getAllByRole('listitem')).toHaveLength(5);
+    for (const kind of ['story', 'boss', 'loot', 'achievement', 'levelup'] as const) {
+      expect(within(legend).getByText(copy.markerKinds[kind])).toBeInTheDocument();
+    }
+
+    seek(60);
+    const playhead = screen.getByTestId('timeline-playhead');
+    expect(parseFloat(playhead.style.left)).toBeCloseTo(25, 3);
+    expect(playhead).not.toBe(screen.getByTestId('timeline-fill'));
+  });
+
+  it('gives every marker its own tooltip rather than a native title (T341)', async () => {
+    const { seek } = await mountEpisode();
+
+    const markers = screen.getAllByTestId('timeline-marker');
+    expect(markers[0]).not.toHaveAttribute('title');
+    expect(screen.getByTestId('event-timeline')).not.toHaveAttribute('title');
+
+    const tips = screen.getAllByRole('tooltip');
+    expect(tips).toHaveLength(markers.length);
+    // Spoiler-safe: before the playhead reaches it, a marker names only its kind.
+    expect(tips[0]).toHaveTextContent(
+      copy.markerUpcoming(copy.markerKinds.achievement, formatTime(60)),
+    );
+
+    seek(60);
+    expect(screen.getAllByRole('tooltip')[0]).toHaveTextContent('Gate Crasher');
+  });
+
+  it('seeks the broadcast when a feed row is clicked (T342)', async () => {
+    const { source, seek } = await mountEpisode();
+    seek(60);
+
+    const rows = screen.getAllByTestId('feed-item');
+    expect(rows).toHaveLength(4); // 12, 30, 45, 60
+
+    // Newest first, so the last row is the System's opener at t = 12.
+    const oldest = within(rows[3]).getByRole('button');
+    expect(within(rows[3]).getByTestId('feed-time')).toHaveTextContent(formatTime(12));
+    expect(oldest).toHaveAccessibleName(
+      copy.feedSeek(formatTime(12), 'Attention crawlers. The broadcast is live.'),
+    );
+
+    fireEvent.click(oldest);
+    expect(source.getTime()).toBe(12);
+    expect(feedCount()).toBe(1);
+    expect(screen.getByText(copy.feedHeader(formatTime(12)))).toBeInTheDocument();
+  });
+
+  it('seeks from the pinned sponsor too (T342)', async () => {
+    const { source, seek } = await mountEpisode();
+    seek(115);
+
+    const pinned = screen.getByTestId('active-sponsor');
+    expect(pinned.tagName).toBe('BUTTON');
+    expect(within(pinned).getByTestId('feed-time')).toHaveTextContent(formatTime(110));
+
+    fireEvent.click(pinned);
+    expect(source.getTime()).toBe(110);
+  });
+
   /* ------------------------------------------- v2 US4: rank sparklines (T121) */
 
   it('plots every elapsed rank event and summarizes it for assistive tech', async () => {
@@ -867,14 +979,19 @@ describe('EpisodePage', () => {
     expect(screen.queryByTestId('rank-sparkline')).not.toBeInTheDocument();
   });
 
-  it('shows the party rank in the feed header only once it has elapsed', async () => {
+  // DCC has individual rank only (T334): the feed header never carried a party
+  // standing, and a rank event names the crawler who climbed.
+  it('narrates a rank as one crawler climbing, and never a party line', async () => {
     const { seek } = await mountEpisode();
 
-    seek(79);
-    expect(screen.queryByTestId('party-rank')).not.toBeInTheDocument();
+    seek(99);
+    expect(
+      screen.queryByText(copy.feedText.rankCrawler('Harry', 4188)),
+    ).not.toBeInTheDocument();
 
-    seek(80);
-    expect(screen.getByTestId('party-rank')).toHaveTextContent(copy.partyRankLine(61));
+    seek(100);
+    expect(screen.getByText(copy.feedText.rankCrawler('Harry', 4188))).toBeInTheDocument();
+    expect(screen.queryByTestId('party-rank')).not.toBeInTheDocument();
   });
 
   /* ------------------------------------------- v2 US2: the expanded floor map (T125) */
