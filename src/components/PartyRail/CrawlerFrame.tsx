@@ -54,7 +54,7 @@ export function CrawlerFrame({ frame, expanded, onActivate }: CrawlerFrameProps)
             <span className={styles.stats}>
               <span className={styles.level}>{copy.levelShort(frame.level)}</span>
               <span className={styles.dot} aria-hidden="true">
-                {' · '}
+                {'·'}
               </span>
               <span className="sr-only">{copy.srSeparator}</span>
               <span className={styles.hpValue}>{copy.hpValue(frame.hp.current, frame.hp.max)}</span>

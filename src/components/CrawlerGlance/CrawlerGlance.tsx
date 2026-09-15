@@ -28,7 +28,7 @@ function Separator() {
   return (
     <>
       <span className={styles.dot} aria-hidden="true">
-        {' · '}
+        {'·'}
       </span>
       <span className="sr-only">{copy.srSeparator}</span>
     </>

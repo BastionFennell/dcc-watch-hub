@@ -83,10 +83,10 @@ description: "Task list for the Crawler Record feature (glance card + full recor
 
 ## Phase R2-3: Wiring, docs, polish
 
-- [ ] T328 `src/pages/EpisodePage.test.tsx`: update glance assertions (equipped, latest achievement, no ledger), record assertions (hotbar, gear, tiles, view all → list view → back), sweep for equipped/latest achievement at fixture boundaries.
-- [ ] T329 README + quickstart: glance/record descriptions, new events and CSV rows, `gear`/`art` fields, placeholder art list, `?t=` values re-verified against `public/data/ep1.json`.
-- [ ] T330 [P] Visual/a11y/responsive pass (headless Chrome 1440×900 + 500 px): card heights equal Harry vs Actress (px), no dashes; record with art at 1440; list view; 360 px no horizontal scroll in sheet and list views; Lighthouse a11y 100 (preview ambient + dev record); contrast of hotbar numbers/tiles ≥ 4.5:1.
-- [ ] T331 Final: gates green; R2-SC-201..204 recorded under quickstart `## Results (revision 2)`; all tasks `[X]`.
+- [X] T328 `src/pages/EpisodePage.test.tsx`: update glance assertions (equipped, latest achievement, no ledger), record assertions (hotbar, gear, tiles, view all → list view → back), sweep for equipped/latest achievement at fixture boundaries.
+- [X] T329 README + quickstart: glance/record descriptions, new events and CSV rows, `gear`/`art` fields, placeholder art list, `?t=` values re-verified against `public/data/ep1.json`.
+- [X] T330 [P] Visual/a11y/responsive pass (headless Chrome 1440×900 + 500 px): card heights equal Harry vs Actress (px), no dashes; record with art at 1440; list view; 360 px no horizontal scroll in sheet and list views; Lighthouse a11y 100 (preview ambient + dev record); contrast of hotbar numbers/tiles ≥ 4.5:1.
+- [X] T331 Final: gates green; R2-SC-201..204 recorded under quickstart `## Results (revision 2)`; all tasks `[X]`.
 
 ## Carry-overs from the revision 1 polish (fold into R2-2b / R2-3)
 
@@ -99,10 +99,10 @@ description: "Task list for the Crawler Record feature (glance card + full recor
 - [X] T335 [P] Empty states: feed at zero events (`copy.feedStandby` "Standing by. The System reports when the broadcast begins."); map panel header shows `sectorsRevealed` count and an empty line when zero.
 - [X] T336 [P] Sample data: ep2 `initialState.map.revealed` seeded with ep1's reveals (same floor); README authoring rule "an episode's initial map includes every prior reveal on that floor".
 - [X] T337 [P] Record backdrop opaque from the first frame (fade only the dialog box).
-- [X] T338 [P] Accessible names: real separators between handle/player and class/level in frames, glance, and dossier header (aria-hidden "·" + sr-only ", "); relabel player as "played by {player}" (`copy.playedBy(player)`). — done in three halves: `CrawlerFrame` stats line (aria-hidden "·" + sr-only `copy.srSeparator` between level and HP) by the engine/page agent; the glance card and the dossier header, plus `copy.playedBy`, by the glance and record agents.
+- [X] T338 [P] Accessible names: real separators between handle/player and class/level in frames, glance, and dossier header (aria-hidden "·" + sr-only ", "); relabel player as "played by {player}" (`copy.playedBy(player)`). — done in three halves: `CrawlerFrame` stats line (aria-hidden "·" + sr-only `copy.srSeparator` between level and HP) by the engine/page agent; the glance card and the dossier header, plus `copy.playedBy`, by the glance and record agents. All three halves verified at T330: `CrawlerFrame`, `CrawlerGlance` and `DossierHeader` each render an aria-hidden "·" beside an sr-only `copy.srSeparator`, and all three now take their spacing from the same `margin: 0 0.35em` (measured 4.55 px either side).
 - [X] T339 [P] Party rail: wrap 3 + 2 below 1100 px when the feed column is present; fixed-height pips row on every frame (no jitter); horizontal scroll strip at ≤ 480 px instead of a ragged 3 + 2.
 - [X] T340 Stage caption row: move the caption out of the player into a slim row above the timeline — left `Ep N · Floor N — {title}` (title visible at last), right `formatTime(t)`; remove `StageCaption` from the stage; update tests and the v1 §5 deviation note in the 003 spec.
 - [X] T341 [P] Timeline: custom hover/focus tooltip (instant, touch-friendly) replacing `title`, a compact legend under the strip (chapter/boss/loot/achievement/level-up/story), and a distinct playhead marker separate from the fill.
 - [X] T342 [P] Feed items click-to-seek with a visible `formatTime(t)` on each row (`onSeek` prop threaded from the page; items become buttons; the pinned sponsor too).
-- [ ] T343 [P] Rank label + delta: glance and record show "RANK" label, current value, and ↑/↓ delta since the previous rank event (from `rankSeries.points`), "Unranked" keeps its label.
+- [X] T343 [P] Rank label + delta: glance and record show "RANK" label, current value, and ↑/↓ delta since the previous rank event (from `rankSeries.points`), "Unranked" keeps its label. — both halves verified in a browser at T330: glance reads `RANK #6402 ↑ 813 Best #6402`, the record's vitals read `RANK CURRENT #6402 BEST #6402 ↑ 813`, and The Actress keeps `RANK Unranked`.
 - [X] T344 [P] HP label: keep the sheet-faithful ten-segment strip; add a mono caps "HP" label (`copy.hpLabel`) before the strip wherever `HpSegments` renders (glance, record vitals, stacked dossier), with the numbers after it as today.

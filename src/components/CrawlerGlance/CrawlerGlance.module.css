@@ -55,8 +55,14 @@
   text-overflow: ellipsis;
 }
 
+/*
+ * The separator carries its own spacing (T330 visual review): these rows are
+ * flex containers, which trim the literal spaces around the glyph, so the
+ * equipped rows read "HANDS·Torch". A margin survives flex.
+ */
 .dot {
   opacity: 0.6;
+  margin: 0 0.35em;
 }
 
 /* --- HP: the label ships inside HpSegments (T344), the numbers follow --- */

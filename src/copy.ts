@@ -338,6 +338,17 @@ export const copy = {
 
   /** A feed row is a seek control; its accessible name leads with the moment (T342). */
   feedSeek: (time: string, text: string) => `${time} — ${text}`,
+
+  /* --- 003 revision 2, wave 3 (record polish: T330) --- */
+
+  /**
+   * A hotbar slot names itself (T330). The visible name is clamped to two
+   * lines inside a ~80 px key, so the slot carries the whole thing for
+   * assistive tech — and an empty key says it is empty instead of reading as a
+   * stray digit.
+   */
+  hotbarSlotAria: (n: number, name: string) => `Slot ${n}, ${name}`,
+  hotbarSlotEmptyAria: (n: number) => `Slot ${n}, empty`,
 } as const;
 
 export type Copy = typeof copy;

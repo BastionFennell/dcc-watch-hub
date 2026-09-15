@@ -44,7 +44,9 @@ describe('CrawlerGlance', () => {
     const header = screen.getByTestId('glance-header');
     expect(header).toHaveTextContent('Compensated Anarchist');
     expect(header).toHaveTextContent(copy.levelShort(2));
-    expect(header.textContent).toContain(`Harry · ${copy.srSeparator}played by Marcus`);
+    // The "·" carries no literal spaces any more — the rows around it are flex
+    // containers, which trimmed them, so the spacing is a margin now (T330).
+    expect(header.textContent).toContain(`Harry·${copy.srSeparator}played by Marcus`);
     const dots = container.querySelectorAll('[aria-hidden="true"]');
     expect(dots.length).toBeGreaterThanOrEqual(2);
     expect(header.querySelectorAll('.sr-only')).toHaveLength(2);

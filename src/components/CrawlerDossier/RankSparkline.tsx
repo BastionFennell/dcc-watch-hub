@@ -45,6 +45,14 @@ export function RankSparkline({ series, stretch = false }: RankSparklineProps) {
       className={stretch ? `${styles.sparkline} ${styles.sparklineStretch}` : styles.sparkline}
       viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
       width="100%"
+      /*
+       * An SVG root clips to its viewBox, and the end dot sits PAD from the
+       * right edge with a radius that outgrows PAD as soon as `stretch` scales
+       * the box up — so the current-rank dot rendered sliced (T330 visual
+       * review). Painting outside the box keeps every dot whole and leaves the
+       * record's unstretched chart exactly as it was.
+       */
+      overflow="visible"
       preserveAspectRatio={stretch ? 'none' : undefined}
       role="img"
       aria-label={copy.sparklineSummary(points[0].rank, current, points.length, best)}

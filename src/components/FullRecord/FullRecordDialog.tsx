@@ -211,7 +211,7 @@ export function FullRecordDialog({
                     <DossierVitals dossier={dossier} />
                   </div>
                   {dossier.stats === undefined ? null : (
-                    <div className={styles.topCell}>
+                    <div className={`${styles.topCell} ${styles.statsCell}`}>
                       <DossierStats stats={dossier.stats} />
                     </div>
                   )}

@@ -644,6 +644,224 @@ describe('EpisodePage', () => {
     expect(screen.queryByTestId('crawler-record')).not.toBeInTheDocument();
   });
 
+  /* ------------------- 003 revision 2: the record as a crawler sheet (T328) */
+
+  it('lays the hotlist out as a ten-slot hotbar with a "+N" overflow marker', async () => {
+    const { seek } = await mountEpisode();
+    seek(210);
+    clickFrame('harry');
+    openRecord();
+
+    // 105 adds Door, 165 swaps it for Crowbar, 210 adds ten more names: the bar
+    // is always ten keys, filled in hotlist order, and the eleventh entry
+    // becomes the marker rather than a row of its own (R2-FR-221).
+    const slots = within(section('hotlist')).getAllByTestId('hotbar-slot');
+    expect(slots).toHaveLength(10);
+    expect(slots.map((slot) => slot.getAttribute('data-name'))).toEqual([
+      'Crowbar',
+      'The Hoarder',
+      'Bronze Box Runner',
+      'The Doorway',
+      'Quadrant C',
+      'The Rot Market',
+      'Signal Tower',
+      'The Meat District',
+      'Grull Industries',
+      'The Understudy',
+    ]);
+    expect(within(section('hotlist')).getByTestId('hotbar-overflow')).toHaveTextContent(
+      copy.hotbarOverflow(1),
+    );
+
+    // Each key says which key it is and what is on it, because the visible name
+    // is clamped to two lines inside the square (T330).
+    expect(slots[0]).toHaveAttribute('aria-label', copy.hotbarSlotAria(1, 'Crowbar'));
+    expect(slots[9]).toHaveAttribute('aria-label', copy.hotbarSlotAria(10, 'The Understudy'));
+
+    // A second before the bulk add: the same ten keys, one lit, no marker — the
+    // bar never reflows with the playhead (R2 US2 scenario 2).
+    seek(200);
+    const earlier = within(section('hotlist')).getAllByTestId('hotbar-slot');
+    expect(earlier).toHaveLength(10);
+    expect(earlier.filter((slot) => slot.hasAttribute('data-filled'))).toHaveLength(1);
+    expect(earlier[1]).toHaveAttribute('aria-label', copy.hotbarSlotEmptyAria(2));
+    expect(within(section('hotlist')).queryByTestId('hotbar-overflow')).not.toBeInTheDocument();
+  });
+
+  it('files worn gear by slot on the record, and empty slots as "—"', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+    clickFrame('harry');
+    openRecord();
+
+    // Every slot on the official sheet, in sheet order (R2 US2 scenario 3).
+    const rows = within(section('gear')).getAllByTestId('gear-row');
+    expect(rows.map((row) => row.getAttribute('data-slot'))).toEqual([
+      'head',
+      'torso',
+      'arms',
+      'hands',
+      'legs',
+      'feet',
+      'accessory',
+    ]);
+    const bySlot = new Map(rows.map((row) => [row.getAttribute('data-slot'), row]));
+    // Jacket at 152, charm at 153, crowbar dropped at 168, torch taken at 169.
+    expect(bySlot.get('torso')).toHaveTextContent('Patched Jacket');
+    expect(bySlot.get('hands')).toHaveTextContent('Torch');
+    expect(bySlot.get('accessory')).toHaveTextContent('Lucky Rabbit Foot');
+    expect(bySlot.get('head')).toHaveTextContent(copy.dossierEmpty.gearSlot);
+    expect(bySlot.get('head')).not.toHaveAttribute('data-filled');
+
+    // Back before the swap the crowbar is in his hands again, and the jacket is
+    // not on his back (constitution I, through the gear reducer).
+    seek(160);
+    const at160 = new Map(
+      within(section('gear'))
+        .getAllByTestId('gear-row')
+        .map((row) => [row.getAttribute('data-slot'), row]),
+    );
+    expect(at160.get('hands')).toHaveTextContent('Enchanted Crowbar');
+    expect(at160.get('torso')).toHaveTextContent('Patched Jacket');
+
+    seek(140);
+    const at140 = new Map(
+      within(section('gear'))
+        .getAllByTestId('gear-row')
+        .map((row) => [row.getAttribute('data-slot'), row]),
+    );
+    expect(at140.get('torso')).toHaveTextContent(copy.dossierEmpty.gearSlot);
+    expect(at140.get('accessory')).toHaveTextContent(copy.dossierEmpty.gearSlot);
+  });
+
+  it('follows the playhead across every equip boundary on the glance card', async () => {
+    const { seek } = await mountEpisode();
+    clickFrame('harry');
+
+    const worn = () =>
+      within(screen.getByTestId('glance-equipped'))
+        .getAllByTestId('glance-equipped-row')
+        .map((row) => `${row.getAttribute('data-slot')}:${row.textContent}`);
+
+    // Only the crowbar he starts with.
+    seek(140);
+    expect(worn().map((row) => row.split(':')[0])).toEqual(['hands']);
+
+    // 152 jacket, 153 charm — the crowbar is still in hand until 168.
+    seek(160);
+    expect(worn().map((row) => row.split(':')[0])).toEqual(['torso', 'hands', 'accessory']);
+    expect(worn()[1]).toContain('Enchanted Crowbar');
+
+    // 168 clears the slot: the row disappears rather than going blank.
+    seek(168);
+    expect(worn().map((row) => row.split(':')[0])).toEqual(['torso', 'accessory']);
+
+    // 169 fills it again with the torch.
+    seek(169);
+    expect(worn()[1]).toContain('Torch');
+
+    // And at the very start nothing has been logged but the starting kit.
+    seek(0);
+    expect(worn().map((row) => row.split(':')[0])).toEqual(['hands']);
+  });
+
+  it('caps the record’s tile grids at eight and opens the rest in a list view', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+    clickFrame('xo');
+    openRecord();
+
+    // Nine skills logged by 200; the sheet shows eight tiles and offers the
+    // whole list behind one control (R2 US2 scenario 4).
+    expect(within(section('skills')).getAllByTestId('tile')).toHaveLength(8);
+    const viewAll = within(section('skills')).getByTestId('view-all-skills');
+    expect(viewAll).toHaveTextContent(copy.viewAll(9));
+    expect(viewAll).toHaveAttribute('aria-controls', 'crawler-record-body');
+
+    fireEvent.click(viewAll);
+
+    // The body swaps to the full list; the dialog itself is the same element,
+    // so nothing about the modal is torn down (R2-FR-223).
+    const dialog = record();
+    expect(dialog).toHaveAttribute('data-view', 'skills');
+    expect(dialog).toHaveAccessibleName(
+      copy.recordListTitle('X.O.', copy.dossierSections.skills),
+    );
+    expect(within(dialog).queryByTestId('record-art')).not.toBeInTheDocument();
+    expect(within(section('skills')).getAllByRole('listitem')).toHaveLength(9);
+    // Focus lands on the list's heading (contracts/dialog.md Revision 2).
+    expect(document.activeElement).toBe(
+      within(section('skills')).getByRole('heading', { name: copy.dossierSections.skills }),
+    );
+
+    // Live updating holds inside the list view (R2 US2 scenario 6): at 100
+    // X.O. has logged three of the nine.
+    seek(100);
+    expect(within(section('skills')).getAllByRole('listitem')).toHaveLength(3);
+    expect(within(section('skills')).queryByText('Death Roll')).not.toBeInTheDocument();
+
+    seek(200);
+    fireEvent.click(within(record()).getByTestId('record-back'));
+
+    // Back on the sheet, with the title and the focus the viewer left behind.
+    expect(record()).toHaveAttribute('data-view', 'sheet');
+    expect(record()).toHaveAccessibleName(copy.recordTitle('X.O.'));
+    expect(within(section('skills')).getAllByTestId('tile')).toHaveLength(8);
+    expect(document.activeElement).toBe(
+      within(section('skills')).getByTestId('view-all-skills'),
+    );
+  });
+
+  it('lets Escape step out of a list view before it closes the record', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+    clickFrame('xo');
+    openRecord();
+    fireEvent.click(within(section('skills')).getByTestId('view-all-skills'));
+    expect(record()).toHaveAttribute('data-view', 'skills');
+
+    // First Escape: back to the sheet, record still open (R2 US2 scenario 5).
+    pressEscapeFrom(document.body);
+    expect(record()).toHaveAttribute('data-view', 'sheet');
+    expect(glance()).toBeInTheDocument();
+    expect(document.body).toHaveClass('dialog-open');
+
+    // Second Escape: the record closes and nothing else does — the glance card
+    // and its panel survive, and focus returns to the trigger (FR-210).
+    pressEscapeFrom(document.body);
+    expect(screen.queryByTestId('crawler-record')).not.toBeInTheDocument();
+    expect(glance()).toBeInTheDocument();
+    expect(screen.getByTestId('rail-panel')).toBeInTheDocument();
+    expect(document.activeElement).toBe(screen.getByTestId('open-record'));
+    expect(document.body).not.toHaveClass('dialog-open');
+
+    // Reopening always lands on the sheet, never mid-navigation (R2-FR-223).
+    openRecord();
+    expect(record()).toHaveAttribute('data-view', 'sheet');
+  });
+
+  it('draws the crawler’s full-figure art, and falls back to the bust', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+    clickFrame('harry');
+    openRecord();
+
+    const art = within(record()).getByTestId('record-art-image');
+    expect(art).toHaveAttribute('src', '/img/crawlers/harry-art.svg');
+    expect(art).not.toHaveAttribute('data-fallback');
+    expect(art).toHaveAccessibleName(copy.artAlt('Harry'));
+
+    // X.O. has no `art` in the data, so the same column carries the bust
+    // instead — the record never opens with a hole in it (R2 US2 scenario 1).
+    fireEvent.click(screen.getByTestId('record-close'));
+    clickFrame('xo');
+    openRecord();
+    const bust = within(record()).getByTestId('record-art-image');
+    expect(bust).toHaveAttribute('src', '/img/crawlers/xo.svg');
+    expect(bust).toHaveAttribute('data-fallback', 'bust');
+    expect(bust).toHaveAccessibleName(copy.artAlt('X.O.'));
+  });
+
   it('adds no second banner landmark when the record opens (T313)', async () => {
     const { seek } = await mountEpisode();
     seek(100);

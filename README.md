@@ -24,15 +24,18 @@ npm run dev -- --open  # opens the archive
 - Archive: <http://localhost:5180/>
 - Episode with the real embed: <http://localhost:5180/ep/1>
 - Episode with the dev scrubber, no network: <http://localhost:5180/ep/1?fake=1>
-- The v2 panels mid-episode: <http://localhost:5180/ep/1?fake=1&t=560> (click a crawler, then
+- The panels mid-episode: <http://localhost:5180/ep/1?fake=1&t=580> (click a crawler, then
   the floor-map badge)
+- Straight to a full record: <http://localhost:5180/ep/1?fake=1&t=580&panel=dossier:harry&record=1>
+  (Harry's hotbar overflows at 9:32) and `…&panel=dossier:xo&record=1` (X.O.'s skills fill the
+  eight-tile grid and offer "View all (10)"). The `panel` / `record` flags are DEV-only.
 
 ### Verify
 
 ```sh
 npm run typecheck      # tsc --noEmit
 npm run lint           # eslint .
-npm test               # vitest run  (322 tests)
+npm test               # vitest run  (444 tests)
 npm run build          # vite build + copies dist/index.html → dist/404.html
 npm run preview        # serves dist/ at http://localhost:4173/
 ```
@@ -102,43 +105,72 @@ updates them and never leaks an event whose `t` is ahead of the playhead.
 Click (or focus and press Enter/Space) a crawler frame in the party rail. The rail swaps the
 feed for that crawler's glance card — how they are doing *right now*, in a couple of seconds:
 
-1. **Header** — portrait, name, handle · player, class (or "Unclassed") · level.
-2. **Vitals** — a ten-segment HP bar with current/max, current and best rank with an inline
-   sparkline of every elapsed `rank` event (better rank drawn higher, a text summary for
-   assistive tech) or "Unranked", and debuff chips — two rows, then "+N".
-3. **Ledger** — one line per list (Hotlist, Skills, Inventory, Achievements) with its count and
-   its newest entry on a single ellipsized line; achievement rows carry the time as well. An
-   empty list reads 0 and the System's empty-state phrase. The rows are text, not controls.
-4. **Moments** — the last three entries of that crawler's history, with "—" placeholders when
-   they have fewer.
-5. **Open full record** — the card's only control.
+1. **Header** — portrait, name, handle · played by {player}, class (or "Unclassed") · level. The
+   "·" is decorative and hidden; a comma beside it is what a screen reader hears.
+2. **Vitals** — an `HP` label, the sheet's ten-segment strip and current/max.
+3. **Rank** — a `RANK` label, the current rank, a ↑/↓ delta against the previous elapsed `rank`
+   event (↑ means the number fell, which is a climb), then `BEST`; a full-width sparkline of
+   every elapsed rank point sits on its own row under them, with a text summary for assistive
+   tech. An unranked crawler keeps the label and reads "Unranked".
+4. **Debuffs** — chips, two rows, then "+N".
+5. **Equipped** — one line per worn slot, `Slot · Item`, in the sheet's order (head, torso,
+   arms, hands, legs, feet, then each accessory). "Nothing equipped." when the crawler is bare.
+6. **Latest achievement** — the newest award only: title, time, and its description.
+7. **Recent moments** — up to three entries of that crawler's history, each with its time.
 
-The card's height is fixed: every row is single-line and the lists never expand into it, so a
-crawler with forty achievements and a ten-entry hotlist renders exactly as tall as one with
-none, and it does not scroll on a laptop. Close with the panel's × control, <kbd>Escape</kbd>,
-or by clicking the same frame again; focus returns to the frame. Clicking a different frame
-switches cards without closing. At ≤ 900 px the panel is a full-viewport overlay and the page
-behind it does not scroll.
+Then **Open full record**, the card's only control.
+
+Revision 2 removed the four ledger rows (count + newest per list) and the "—" placeholder rows
+under Moments: a crawler's skill and inventory lists grow without limit, and the author only
+ever wanted what they are *wearing* and the *last* thing they were awarded. The card's height is
+still fixed — every row is single-line, Equipped is bounded by the sheet's seven slots, and the
+sparkline row and the three-moment block reserve their height in CSS — so a crawler with forty
+achievements renders exactly as tall as one with none and the card does not scroll on a laptop.
+
+Close with the panel's × control, <kbd>Escape</kbd>, or by clicking the same frame again; focus
+returns to the frame. Clicking a different frame switches cards without closing. At ≤ 900 px the
+panel is a full-viewport overlay and the page behind it does not scroll.
 
 ### Full record
 
 **Open full record** opens the whole System sheet as a modal dialog over the page — the one
-overlay allowed to cover the stage. Desktop lays it out the way the official sheet does in
-landscape: a top band of identity (portrait, name, handle, player, race, pronouns, crawler
-number, level, class, floor), vitals and stats (STR / INT / CON / DEX / CHA, when the episode
-data carries them), then three columns — **Hotlist** + **Skills** | **Inventory** +
-**Achievements** | **History**, each list in full, each section under the sheet's black bar.
+overlay allowed to cover the stage. Revision 2 lays it out as a character sheet in an MMO:
+
+- **Art column** — the crawler's full-figure art (`art` in the episode data) down the left at
+  the sheet's height, contained rather than cropped, hung from the top so a tall figure uses the
+  height and a wide stance the width. A crawler with no `art` gets their bust in the same
+  column instead. At ≤ 900 px the art becomes a banner above the identity.
+- **Top band** — identity (portrait, name, handle, played by, race, pronouns, crawler number,
+  level, class, floor) and vitals side by side, with the **STATS** strip (STR / INT / CON / DEX
+  / CHA, when the data carries them) full width beneath them.
+- **Hotbar** — the Hotlist as ten numbered square keys filled in order, empty keys dashed and
+  unlit, and a `+N` marker after key ten when the crawler is tracking more than ten. Each key
+  names itself for assistive tech ("Slot 3, The Rot Market" / "Slot 4, empty"). On a phone the
+  bar wraps to two rows of five with the marker right-aligned beneath.
+- **Gear** — every slot on the official sheet (Head, Torso, Arms, Hands, Legs, Feet,
+  Accessories) with what is worn in it or "—". Accessories share one row.
+- **Tile grids** — Skills, Inventory and Achievements as bag-style tiles (name, then rank or
+  time in a mono footer), at most **eight**, with a **View all (N)** control when there are
+  more. History shows its latest eight rows the same way.
+- **List views** — **View all** replaces the dialog body with that category in full, under a
+  **Back to record** control, and the dialog's title becomes `{name} — {CATEGORY}`. Focus moves
+  to the list's heading on entry and back to the **View all** button on return. The list view is
+  dialog-internal state: it resets to the sheet whenever the record closes.
+
 Sections with nothing in them yet render a one-line System empty state rather than vanishing.
 
-- **Size**: `min(1200px, 94vw)` wide, at most 90 vh tall, scrolling inside itself over a dimmed
-  backdrop. At ≤ 900 px it fills the viewport and stacks the same sections in the same order.
+- **Size**: `min(1200px, 94vw)` wide, at most 90 vh tall, anchored to a fixed top offset so a
+  seek that shortens it cannot re-centre it, scrolling inside itself over a backdrop that is
+  opaque from the first painted frame. At ≤ 900 px it fills the viewport and stacks.
 - **Modal**: focus moves to the close control on open and is trapped inside — <kbd>Tab</kbd> and
   <kbd>Shift</kbd>+<kbd>Tab</kbd> wrap — and the page behind it is inert and does not scroll.
-- **Closing**: <kbd>Escape</kbd>, the dimmed backdrop, or the × control. Escape closes only the
-  record: the glance card stays open in the rail and focus returns to **Open full record**.
-- **Live**: it keeps updating with the playhead. Scrub while it is open and Inventory,
-  Achievements and History follow, without the dialog closing or moving. Opening it never
-  pauses playback and never touches the `TimeSource`.
+- **Keys**: <kbd>Escape</kbd> steps back before it closes — in a list view it returns to the
+  sheet, and only a second press closes the record. Closing leaves the glance card open in the
+  rail and returns focus to **Open full record**. The dimmed backdrop and the × control close it
+  outright.
+- **Live**: it keeps updating with the playhead, in the sheet *and* in a list view. Scrub while
+  it is open and gear, tiles, hotbar and history follow, without the dialog closing or moving.
+  Opening it never pauses playback and never touches the `TimeSource`.
 - It closes with the card that opened it: switching crawlers, closing the panel, or changing
   episode all dismiss it.
 
@@ -367,8 +399,8 @@ Measured on the production build (`npm run build`, Node 20.9.0):
 
 | Asset | Raw | Gzipped |
 |-------|-----|---------|
-| `dist/assets/index-*.js` | 337.5 kB | **106.7 kB** |
-| `dist/assets/index-*.css` | 38.9 kB | 7.5 kB |
+| `dist/assets/index-*.js` | 350.0 kB | **110.1 kB** |
+| `dist/assets/index-*.css` | 47.6 kB | 8.8 kB |
 | `dist/index.html` | 0.7 kB | 0.4 kB |
 
 That is React 19 + react-router 7 + the whole app — v1 plus the v2 panels, dossier, floor map

@@ -87,9 +87,14 @@ function Empty({ children }: { children: string }) {
   return <p className={styles.empty}>{children}</p>;
 }
 
-function Row({ label, value }: { label: string; value: ReactNode }) {
+/**
+ * One definition row of the identity grid. `field` is a styling hook only: the
+ * crawler number is a long digit group that must never be split across lines
+ * (T330 visual review — it was rendering as "10,491,2 / 01").
+ */
+function Row({ label, value, field }: { label: string; value: ReactNode; field?: string }) {
   return (
-    <div className={styles.row}>
+    <div className={styles.row} data-field={field}>
       <dt className={styles.rowLabel}>{label}</dt>
       <dd className={styles.rowValue}>{value}</dd>
     </div>
@@ -126,7 +131,7 @@ export function DossierHeader({ dossier, meta }: DossierHeaderProps) {
           <p className={styles.handle}>
             {dossier.handle}
             <span className={styles.dot} aria-hidden="true">
-              {' · '}
+              {'·'}
             </span>
             <span className="sr-only">{copy.srSeparator}</span>
             {copy.playedBy(dossier.player)}
@@ -142,7 +147,11 @@ export function DossierHeader({ dossier, meta }: DossierHeaderProps) {
           <Row label={copy.sheetLabels.pronouns} value={dossier.pronouns} />
         )}
         {dossier.crawlerNumber === undefined ? null : (
-          <Row label={copy.sheetLabels.crawlerNumber} value={String(dossier.crawlerNumber)} />
+          <Row
+            label={copy.sheetLabels.crawlerNumber}
+            value={String(dossier.crawlerNumber)}
+            field="crawlerNumber"
+          />
         )}
         <Row label={copy.sheetLabels.level} value={copy.levelShort(dossier.level)} />
         <Row label={copy.sheetLabels.class} value={dossier.class ?? copy.unclassed} />
@@ -400,7 +409,7 @@ export function DossierHotbar({ hotlist, headingRef }: DossierHotbarProps) {
   const { slots, overflow } = hotbarSlots(hotlist);
   return (
     <Section name="hotlist" title={copy.dossierSections.hotlist} headingRef={headingRef}>
-      <ul className={styles.hotbar}>
+      <ul className={styles.hotbar} data-overflow={overflow === 0 ? undefined : 'true'}>
         {slots.map((entry, index) => (
           <li
             key={index}
@@ -409,6 +418,17 @@ export function DossierHotbar({ hotlist, headingRef }: DossierHotbarProps) {
             data-filled={entry === null ? undefined : 'true'}
             data-item={entry === null ? undefined : 'hotlist'}
             data-name={entry ?? undefined}
+            /*
+             * The visible name is clamped to two lines, so the slot states its
+             * own name instead of leaving a reader with a truncated line and a
+             * bare digit (T330). No `title`: a native tooltip on a slot that
+             * does nothing is exactly what constitution III forbids.
+             */
+            aria-label={
+              entry === null
+                ? copy.hotbarSlotEmptyAria(index + 1)
+                : copy.hotbarSlotAria(index + 1, entry)
+            }
           >
             <span className={styles.hotbarNumber}>{copy.hotbarSlot(index + 1)}</span>
             {entry === null ? null : <span className={styles.itemLabel}>{entry}</span>}

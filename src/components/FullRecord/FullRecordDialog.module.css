@@ -134,6 +134,11 @@
   display: flex;
   justify-content: center;
   min-width: 0;
+  /* Sticky inside the scrolling body so the figure stays in view while the sheet scrolls. */
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: calc(90vh - 128px);
   background: var(--panel-deep);
   border: var(--border-hairline);
   border-radius: var(--radius-md);
@@ -147,9 +152,16 @@
   object-position: top center;
 }
 
-/* No full-figure art in the data: the bust, centered in the same column. */
+/*
+ * No full-figure art in the data: the bust, hung from the top of the same
+ * column. Centering it (T325) put it halfway down a column as tall as the whole
+ * sheet — a thousand pixels of empty panel above a portrait the viewer had to
+ * scroll to find (T330 visual review). It now hangs where the full-figure art
+ * hangs.
+ */
 .artBust {
-  align-self: center;
+  align-self: flex-start;
+  margin: var(--space-7) auto 0;
   width: min(100%, 120px);
   height: auto;
   aspect-ratio: 1 / 1;
@@ -165,9 +177,16 @@
   min-width: 0;
 }
 
+/*
+ * Two columns, not three (T330 visual review). Three tracks beside the art
+ * column left every cell under ~300 px, which is what drove the identity values
+ * to break mid-word, and the five-box STATS strip left a column of dead space
+ * under itself. Identity and vitals now share the band and STATS runs full
+ * width beneath them, where it fills the row it is given.
+ */
 .top {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-7);
   align-items: start;
 }
@@ -177,6 +196,11 @@
   flex-direction: column;
   gap: var(--space-5);
   min-width: 0;
+}
+
+/* The stat boxes are a strip, so they take the whole band's width. */
+.statsCell {
+  grid-column: 1 / -1;
 }
 
 .sections {
@@ -267,6 +291,7 @@
 
   /* The art leads, as a banner (research R9), instead of a column. */
   .artColumn {
+    position: static;
     height: 40vh;
   }
 

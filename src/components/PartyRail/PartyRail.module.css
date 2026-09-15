@@ -113,10 +113,14 @@
   font-size: var(--text-xs);
 }
 
-/* The separator carries the spacing now that it is real text (T338). */
+/*
+ * The separator carries the spacing now that it is real text (T338), as a
+ * margin rather than literal spaces so every "·" in the feature — frame,
+ * glance, dossier header — is spaced identically (T330).
+ */
 .dot {
   color: var(--text-4);
-  white-space: pre;
+  margin: 0 0.35em;
 }
 
 .hpValue {
@@ -240,6 +244,16 @@
     display: flex;
     grid-template-columns: none;
     overflow-x: auto;
+    /*
+     * Without this the strip's own overflow still reached the root box: at
+     * 360 px the page scrolled 535 px sideways into empty space even though
+     * every painted node sat inside the viewport (T330 measurement). `contain:
+     * paint` is the only declaration that stops it — `overflow-x: clip`,
+     * clipping an ancestor, and `body { overflow-x: hidden }` all leave the
+     * root scrollable. The strip already clips, so nothing about it looks
+     * different; the page simply stops scrolling sideways (R2-SC-204).
+     */
+    contain: paint;
     scroll-snap-type: x mandatory;
     scroll-padding-left: var(--space-1);
     -webkit-overflow-scrolling: touch;
