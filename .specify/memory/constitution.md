@@ -1,5 +1,8 @@
 <!--
 Sync Impact Report
+- Version change: 1.2.0 → 1.2.1 (2026-09-15): PATCH — active-feature pointer moved to 004; no principle changes
+
+Previous report (1.2.0):
 - Version change: 1.1.0 → 1.2.0 (2026-09-15)
 - Modified principles: III. Ambient & Diegetic — a modal "full record" dialog MAY cover the stage when the
   viewer explicitly asks for it from an already-open panel; it is the only overlay allowed to do so;
@@ -94,8 +97,8 @@ to a single-page broadcast overlay.
 ### V. Scope Discipline
 - The active feature spec (`.specify/feature.json` → `specs/<feature>/spec.md`) defines scope.
   Items the handoff spec parks beyond the active feature MUST NOT be built, stubbed, or partially
-  wired, even "for later." As of 1.2.0 the active feature is 003 (`specs/003-crawler-record`): the crawler glance card
-  and the full-record dialog. v1 and v2 are merged. Still parked: stinger sounds, roster page,
+  wired, even "for later." As of 2026-09-15 (late) the active feature is 004 (`specs/004-deep-links`): production deep links
+  to a moment and a share action. v1, v2, and 003 are merged. Still parked: stinger sounds, roster page,
   tooltips/explanations inside the record, and all v3 items.
 - Optimizations not required to meet an acceptance item (memoization, virtualization, caching)
   MUST NOT be added. The spec explicitly says recompute from `initialState` on seek.
@@ -153,4 +156,4 @@ Compliance is reviewed at every plan (Constitution Check gate) and at implementa
 (acceptance checklist). Use `CLAUDE.md` for runtime development guidance and pointers to the
 active plan.
 
-**Version**: 1.2.0 | **Ratified**: 2026-09-14 | **Last Amended**: 2026-09-15
+**Version**: 1.2.1 | **Ratified**: 2026-09-14 | **Last Amended**: 2026-09-15
