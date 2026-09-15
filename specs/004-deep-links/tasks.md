@@ -22,6 +22,6 @@ description: "Task list for deep links + share"
 - [X] T408 Page tests: deep link with fake source (2:36, no resume card with a saved record; card still on a plain visit; invalid `t` ignored; new episode starts at 0); caption share copies the expected URL (stub `navigator.clipboard.writeText`) and shows the notice; feed-row share copies the row's `t` without seeking; shared URLs never contain `fake`/`panel`/`record`.
 
 ## Phase 3: Polish
-- [ ] T409 README + quickstart (deep links, share, mobile share sheet); note the dev `?t=` flag is now a real feature.
-- [ ] T410 Visual/a11y: caption row with the share control at 1440/500 px; feed rows with share icons (hover/focus, contrast ≥ 3:1 for the icon); notice placement; Lighthouse a11y 100 on `/ep/1` and `/ep/1?t=156` (preview build).
-- [ ] T411 Final: gates green; SC-301..304 recorded under quickstart `## Results`; all tasks `[X]`.
+- [X] T409 README + quickstart (deep links, share, mobile share sheet); note the dev `?t=` flag is now a real feature.
+- [X] T410 Visual/a11y: caption row with the share control at 1440/500 px; feed rows with share icons (hover/focus, contrast ≥ 3:1 for the icon); notice placement; Lighthouse a11y 100 on `/ep/1` and `/ep/1?t=156` (preview build).
+- [X] T411 Final: gates green; SC-301..304 recorded under quickstart `## Results`; all tasks `[X]`.

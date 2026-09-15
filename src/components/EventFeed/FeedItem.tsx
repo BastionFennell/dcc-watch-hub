@@ -103,7 +103,7 @@ export function FeedItemView({ item, onSeek, onShare }: FeedItemViewProps) {
       className={`${box} ${styles.seek}`}
       data-kind={item.kind}
       data-note={item.kind === 'note' || undefined}
-      aria-label={copy.feedSeek(time, item.text)}
+      aria-label={copy.feedSeek(time, `${item.label} · ${item.text}`)}
       onClick={() => onSeek(item.t)}
     >
       {inner}

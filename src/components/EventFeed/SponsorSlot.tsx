@@ -48,7 +48,7 @@ export function SponsorSlot({ item, pinned = false, onSeek, onShare }: SponsorSl
       className={`${styles.box} ${styles.sponsor} ${styles.seek}`}
       data-testid={testid}
       data-pinned={pinned ? 'true' : undefined}
-      aria-label={copy.feedSeek(time, item.text)}
+      aria-label={copy.feedSeek(time, `${copy.sponsoredTag} · ${item.text}`)}
       onClick={() => onSeek(item.t)}
     >
       {inner}

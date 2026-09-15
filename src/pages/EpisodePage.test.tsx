@@ -1127,11 +1127,11 @@ describe('EpisodePage', () => {
     // Newest first, so the last row is the System's opener at t = 12. Since 004
     // the row holds two controls, so the seek half is named explicitly.
     const oldest = within(rows[3]).getByRole('button', {
-      name: copy.feedSeek(formatTime(12), 'Attention crawlers. The broadcast is live.'),
+      name: copy.feedSeek(formatTime(12), `${copy.labels.system_message} · Attention crawlers. The broadcast is live.`),
     });
     expect(within(rows[3]).getByTestId('feed-time')).toHaveTextContent(formatTime(12));
     expect(oldest).toHaveAccessibleName(
-      copy.feedSeek(formatTime(12), 'Attention crawlers. The broadcast is live.'),
+      copy.feedSeek(formatTime(12), `${copy.labels.system_message} · Attention crawlers. The broadcast is live.`),
     );
 
     fireEvent.click(oldest);
