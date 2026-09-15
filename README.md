@@ -124,9 +124,9 @@ the centroid of its cells. Nothing unrevealed at the playhead is drawn or labele
 
 | Control | Buttons | Keys |
 |---------|---------|------|
-| Zoom in / out | **Zoom in** / **Zoom out** (×1.5 steps, disabled at the limits) | <kbd>+</kbd> / <kbd>-</kbd> |
+| Zoom in / out | **Zoom in** / **Zoom out** (×1.5 steps toward the center, disabled at the limits); scroll wheel or trackpad pinch zooms toward the pointer; double-click zooms in at the pointer | <kbd>+</kbd> / <kbd>-</kbd> |
 | Reset to fit | **Fit** | <kbd>0</kbd> |
-| Pan | drag the map when it is zoomed past the panel | — |
+| Pan | drag the map at any zoom (it stops once half the view would be empty) | arrow keys |
 
 Zoom and pan are viewer state, not overlay state: they reset when the panel closes.
 <kbd>Escape</kbd> or the × closes it and returns focus to the badge.

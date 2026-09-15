@@ -118,17 +118,33 @@ describe('FloorMap', () => {
     expect(button(copy.mapZoomIn)).toBeEnabled();
   });
 
-  it('scales by 1.5 per zoom-in step and stops at the ceiling', () => {
+  it('scales by 1.5 per zoom-in step toward the center and stops at the ceiling', () => {
     renderMap();
     fireEvent.click(button(copy.mapZoomIn));
     fireEvent.click(button(copy.mapZoomIn));
-    expect(transform()).toBe('translate(0 0) scale(2.25)');
+    // Anchored at the grid center (6, 4): pan = c − (c − 0)·zoom.
+    expect(transform()).toBe('translate(-7.5 -5) scale(2.25)');
     expect(button(copy.mapZoomOut)).toBeEnabled();
+    expect(screen.getByTestId('floormap-zoom')).toHaveTextContent('225%');
 
     fireEvent.click(button(copy.mapZoomIn));
     fireEvent.click(button(copy.mapZoomIn));
-    expect(transform()).toBe('translate(0 0) scale(5)');
+    expect(transform()).toContain('scale(5)');
     expect(button(copy.mapZoomIn)).toBeDisabled();
+  });
+
+  it('zooms toward the pointer on wheel and double-click', () => {
+    renderMap();
+    stubViewportBox(480, 320); // 40 px per unit
+    // Wheel at the top-left corner keeps that corner fixed: pan stays 0.
+    fireEvent.wheel(viewport(), { deltaY: -100, clientX: 0, clientY: 0 });
+    const expectedZoom = Math.round(Math.exp(0.15) * 1000) / 1000;
+    expect(transform()).toBe(`translate(0 0) scale(${expectedZoom})`);
+
+    fireEvent.click(button(copy.mapFit));
+    // Double-click at the center (240, 160) → unit (6, 4): zoom ×1.5 around it.
+    fireEvent.doubleClick(viewport(), { clientX: 240, clientY: 160 });
+    expect(transform()).toBe('translate(-3 -2) scale(1.5)');
   });
 
   it('returns to a fitted, unpanned view on Fit', () => {
@@ -148,40 +164,45 @@ describe('FloorMap', () => {
   it('zooms with + and refits with 0 from the keyboard', () => {
     renderMap();
     fireEvent.keyDown(viewport(), { key: '+' });
-    expect(transform()).toBe('translate(0 0) scale(1.5)');
+    expect(transform()).toBe('translate(-3 -2) scale(1.5)');
     fireEvent.keyDown(viewport(), { key: '=' });
-    expect(transform()).toBe('translate(0 0) scale(2.25)');
+    expect(transform()).toBe('translate(-7.5 -5) scale(2.25)');
     fireEvent.keyDown(viewport(), { key: '-' });
-    expect(transform()).toBe('translate(0 0) scale(1.5)');
+    expect(transform()).toBe('translate(-3 -2) scale(1.5)');
+    fireEvent.keyDown(viewport(), { key: 'ArrowLeft' });
+    expect(transform()).toBe('translate(-2 -2) scale(1.5)');
     fireEvent.keyDown(viewport(), { key: '0' });
     expect(transform()).toBe('translate(0 0) scale(1)');
   });
 
-  it('pans by the dragged distance in SVG units and clamps at the edges', () => {
+  it('pans by the dragged distance in SVG units and soft-clamps at half a view', () => {
     renderMap();
     stubViewportBox(480, 320); // 40 px per SVG unit on both axes
-    fireEvent.click(button(copy.mapZoomIn));
-    fireEvent.click(button(copy.mapZoomIn));
+    fireEvent.click(button(copy.mapFit)); // start from a known pan of 0 at zoom 1
+    fireEvent.keyDown(viewport(), { key: '+' }); // 1.5, pan (-3, -2)
 
     firePointer('pointerdown', 200, 200);
     firePointer('pointermove', 120, 140); // −80 px, −60 px → −2, −1.5 units
-    expect(transform()).toBe('translate(-2 -1.5) scale(2.25)');
+    expect(transform()).toBe('translate(-5 -3.5) scale(1.5)');
 
-    // Dragging back past the origin clamps: pan never goes positive.
-    firePointer('pointermove', 400, 400);
-    expect(transform()).toBe('translate(0 0) scale(2.25)');
-    firePointer('pointerup', 400, 400);
+    // Dragging far past the origin stops once half the view would be empty: (+6, +4).
+    firePointer('pointermove', 900, 900);
+    expect(transform()).toBe('translate(6 4) scale(1.5)');
+    firePointer('pointerup', 900, 900);
 
     // With the drag released, further movement does nothing.
     firePointer('pointermove', 100, 100);
-    expect(transform()).toBe('translate(0 0) scale(2.25)');
+    expect(transform()).toBe('translate(6 4) scale(1.5)');
   });
 
-  it('does not pan while the map is fitted', () => {
+  it('pans even while fitted, so a drag always answers', () => {
     renderMap();
     stubViewportBox(480, 320);
     firePointer('pointerdown', 200, 200);
-    firePointer('pointermove', 100, 100);
+    firePointer('pointermove', 100, 100); // −100 px → −2.5 units on both axes
+    expect(transform()).toBe('translate(-2.5 -2.5) scale(1)');
+    firePointer('pointerup', 100, 100);
+    fireEvent.click(button(copy.mapFit));
     expect(transform()).toBe('translate(0 0) scale(1)');
   });
 });

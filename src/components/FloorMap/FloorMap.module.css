@@ -49,7 +49,7 @@
 .viewport {
   position: relative;
   width: 100%;
-  max-height: min(56vh, 420px);
+  max-height: min(70vh, 640px);
   overflow: hidden;
   background: var(--canvas);
   border: var(--border-hairline);
@@ -63,12 +63,28 @@
   box-shadow: var(--focus-ring);
 }
 
-.viewport[data-pannable='true'] {
+.viewport {
   cursor: grab;
 }
 
-.viewport[data-pannable='true'][data-dragging='true'] {
+.viewport[data-dragging='true'] {
   cursor: grabbing;
+}
+
+.zoomReadout {
+  align-self: center;
+  margin-left: auto;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+}
+
+.hint {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--text-xs);
 }
 
 .svg {

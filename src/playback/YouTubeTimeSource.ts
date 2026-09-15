@@ -15,6 +15,9 @@ import { createEmitter } from './TimeSource';
 import { loadYouTubeApi } from './loadYouTubeApi';
 
 const POLL_MS = 250;
+// While paused, cued, or ended the host can still be scrubbed with its own bar without
+// any state change, so keep watching the clock at a gentler cadence (contract §1).
+const IDLE_POLL_MS = 500;
 
 export interface YouTubeTimeSourceOptions {
   /** Fired once the player is ready to accept commands. */
@@ -27,6 +30,7 @@ export class YouTubeTimeSource implements TimeSource {
   private t = 0;
   private player: YT.Player | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
+  private timerMs = 0;
   private destroyed = false;
   private ready = false;
   /** Only the most recent seek requested before `onReady` is kept (contract §6). */
@@ -65,6 +69,7 @@ export class YouTubeTimeSource implements TimeSource {
             onReady: () => {
               if (this.destroyed) return;
               this.ready = true;
+              this.startPolling(IDLE_POLL_MS);
               this.applyPendingSeek();
               this.opts.onReady?.();
             },
@@ -169,19 +174,19 @@ export class YouTubeTimeSource implements TimeSource {
         this.startPolling();
         break;
       case 0 /* ENDED */:
-        this.stopPolling();
+        this.startPolling(IDLE_POLL_MS);
         this.emitTime(this.readTime());
         this.ends.emit();
         break;
       case 2 /* PAUSED */:
-        this.stopPolling();
+        this.startPolling(IDLE_POLL_MS);
         // One tick so a scrub made while paused still moves the overlay.
         this.emitTime(this.readTime());
         this.pauses.emit();
         break;
       case 3 /* BUFFERING */:
       case 5 /* CUED */:
-        this.stopPolling();
+        this.startPolling(IDLE_POLL_MS);
         this.emitTime(this.readTime());
         break;
       default:
@@ -189,9 +194,12 @@ export class YouTubeTimeSource implements TimeSource {
     }
   }
 
-  private startPolling(): void {
-    if (this.timer !== null || this.destroyed) return;
-    this.timer = setInterval(() => this.emitTime(this.readTime()), POLL_MS);
+  private startPolling(ms: number = POLL_MS): void {
+    if (this.destroyed) return;
+    if (this.timer !== null && this.timerMs === ms) return;
+    this.stopPolling();
+    this.timerMs = ms;
+    this.timer = setInterval(() => this.emitTime(this.readTime()), ms);
   }
 
   private stopPolling(): void {

@@ -1,34 +1,50 @@
 /*
- * Wireframe: System blue box, 8 px inset from the stage's top-left, 11 px text,
- * never wider than 65% of the stage. Fade-in only; it is removed, not animated out.
+ * Wireframe: System blue box at the stage's top-left. Grown for a full-width
+ * stage (a 2000 px monitor made the original 11 px box a footnote): larger type,
+ * an achievement-amber accent edge, the crawler's name in the tag row. Fade-in
+ * only; it is removed, not animated out, exactly when `activeToast` returns null.
  */
 .region {
   position: absolute;
-  top: var(--space-4);
-  left: var(--space-4);
+  top: var(--space-6);
+  left: var(--space-6);
   z-index: 2;
-  max-width: 65%;
+  max-width: min(60%, 560px);
   pointer-events: none;
 }
 
 .toast {
   background: var(--system-bg);
   color: var(--system-fg);
-  border-radius: var(--radius-sm);
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--text-xs);
-  line-height: 1.4;
+  border-left: 4px solid var(--amber-fg);
+  border-radius: var(--radius-md);
+  padding: var(--space-5) var(--space-7);
+  font-size: var(--text-md);
+  line-height: 1.45;
   overflow-wrap: anywhere;
-  box-shadow: 0 1px 6px rgb(0 0 0 / 45%);
+  box-shadow: 0 2px 12px rgb(0 0 0 / 55%);
   animation: toastIn 200ms ease-out;
 }
 
+.tagRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
 .tag {
-  display: block;
   font-family: var(--font-mono);
-  font-size: var(--text-2xs);
+  font-size: var(--text-xs);
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  color: var(--amber-fg);
+}
+
+.actor {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
   color: var(--system-pill-fg);
 }
 
@@ -37,7 +53,8 @@
 }
 
 .title {
-  font-weight: 600;
+  font-size: var(--text-lg);
+  font-weight: 700;
   color: var(--brand-fg-2);
 }
 
@@ -45,10 +62,21 @@
   color: var(--system-fg);
 }
 
+@media (min-width: 1400px) {
+  .region {
+    top: var(--space-7);
+    left: var(--space-7);
+  }
+
+  .toast {
+    padding: var(--space-6) var(--space-8);
+  }
+}
+
 @keyframes toastIn {
   from {
     opacity: 0;
-    transform: translateY(-4px);
+    transform: translateY(-6px);
   }
 
   to {

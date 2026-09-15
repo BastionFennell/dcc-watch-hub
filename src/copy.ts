@@ -224,7 +224,9 @@ export const copy = {
    */
   mapTriggerLabel: (floor: number) => `Floor ${floor} — open the floor map`,
   /** Names the focusable map viewport and states its keys (T131). */
-  mapViewportLabel: 'Floor map — zoom with + and −, reset with 0, drag to pan',
+  mapViewportLabel: 'Floor map — drag or arrow keys to pan, + and − or scroll to zoom, 0 to fit',
+  mapPointerHint: 'Drag to pan · scroll or double-click to zoom · Fit resets',
+  mapZoomReadout: (zoom: number) => `${Math.round(zoom * 100)}%`,
   mapSummary: (revealed: number, total: number, labels: number) =>
     `${revealed} of ${total} sectors revealed, ${labels} neighborhood${labels === 1 ? '' : 's'} named`,
 
