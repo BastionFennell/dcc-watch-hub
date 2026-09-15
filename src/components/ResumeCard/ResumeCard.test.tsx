@@ -41,23 +41,22 @@ describe('ResumeCard', () => {
   it('treats Escape as starting over', () => {
     const { onRejoin, onStartOver } = setup();
 
-    fireEvent.keyDown(window, { key: 'Escape' });
+    fireEvent.keyDown(document.body, { key: 'Escape' });
     expect(onStartOver).toHaveBeenCalledTimes(1);
     expect(onRejoin).not.toHaveBeenCalled();
   });
 
-  it('answers Escape exactly once, whatever else is listening (T131)', () => {
-    // `usePanel` listens on `document`, which the bubble phase reaches before
-    // `window`, so the card can only ever add to that keypress — never replace
-    // it. Asserted here so a future move to the capture phase is a deliberate,
-    // failing-test decision rather than a silent change of Escape's meaning.
+  it('owns Escape outright: bubble-phase listeners never see it', () => {
+    // The card listens in the capture phase on `document`, so `usePanel`'s
+    // bubble-phase listener (same node) is skipped: one keypress answers the
+    // card and cannot also close a panel or the episodes menu.
     const documentListener = vi.fn();
     document.addEventListener('keydown', documentListener);
     const { onStartOver } = setup();
 
     fireEvent.keyDown(screen.getByRole('button', { name: copy.resumeRejoin }), { key: 'Escape' });
     expect(onStartOver).toHaveBeenCalledTimes(1);
-    expect(documentListener).toHaveBeenCalledTimes(1);
+    expect(documentListener).not.toHaveBeenCalled();
 
     document.removeEventListener('keydown', documentListener);
   });
