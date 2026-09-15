@@ -1,0 +1,77 @@
+/*
+ * Wireframe layout: two columns, stage on the left, feed on the right. The page
+ * fills the viewport: the stage column grows until either the width runs out or
+ * the stage would push the timeline and party rail below the fold (16:9 from
+ * the height left under the header), and the feed takes what remains.
+ * Under 900px everything stacks: stage, timeline, rail, feed — no horizontal scroll.
+ */
+.page {
+  /* Header + page padding + timeline + party rail, roughly. */
+  --below-stage: 230px;
+  --stage-max: calc((100vh - var(--below-stage)) * 16 / 9);
+  max-width: 2200px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-7);
+  min-width: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, var(--stage-max)) minmax(320px, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+  justify-content: center;
+  min-width: 0;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.rail {
+  min-width: 0;
+}
+
+.loading {
+  color: var(--text-3);
+  font-size: var(--text-xs);
+}
+
+@media (min-width: 1400px) {
+  .page {
+    --below-stage: 260px;
+  }
+
+  .grid {
+    gap: var(--space-7);
+  }
+
+  .main {
+    gap: var(--space-5);
+  }
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: var(--space-5);
+  }
+}
+
+/*
+ * The ended card sits above the toast and the minimap badge (both z-index 2) and
+ * above the stage caption, which it is allowed to cover (T030).
+ */
+.endedOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+}

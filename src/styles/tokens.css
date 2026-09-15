@@ -1,0 +1,125 @@
+/*
+ * Design tokens — handoff spec §6 and specs/001-watch-hub-v1/wireframe.html.
+ * These colors are requirements, not suggestions (constitution: Technical Constraints).
+ */
+:root {
+  /* Surfaces */
+  --canvas: #131320;
+  --panel: #1d1d28;
+  --panel-deep: #0d0d16;
+  --hairline: #2c2c2a;
+  --hairline-2: #444441;
+
+  /* Text */
+  --text: #eeedfe;
+  --text-2: #b4b2a9;
+  --text-3: #888780;
+  /* Bumped from #5f5e5a (T040): 2.57:1 on --panel failed WCAG AA for the
+     HP readout, note items and the feed footer. 4.51:1 on --panel, 4.97:1 on --canvas. */
+  --text-4: #5F5E5A; /* decorative only (separators, dev chrome): fails AA, never for informational text */
+
+  /* System blue */
+  --system-bg: #0c447c;
+  --system-fg: #b5d4f4;
+  --system-pill-fg: #85b7eb;
+  --system-pill-border: #185fa5;
+
+  /* Brand purple */
+  --brand: #3c3489;
+  --brand-2: #534ab7;
+  --brand-deep: #26215c;
+  --brand-fg: #cecbf6;
+  --brand-fg-2: #eeedfe;
+
+  /* Accents */
+  --amber-bg: #633806;
+  --amber-fg: #fac775;
+  --danger: #e24b4a;
+  --hp: #639922;
+
+  /* Timeline markers */
+  --marker-loot: #ef9f27;
+  --marker-achievement: #378add;
+  --marker-boss: #d4537e;
+  --marker-levelup: #5dcaa5;
+  --marker-story: #888780;
+
+  /* Feed category labels */
+  --label-loot: #fac775;
+  --label-rank: #9fe1cb;
+  --label-map: #f0997b;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-pill: 999px;
+
+  /* Spacing scale */
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 6px;
+  --space-4: 8px;
+  --space-5: 10px;
+  --space-6: 12px;
+  --space-7: 16px;
+  --space-8: 24px;
+  --space-9: 32px;
+
+  /* Typography — no webfonts: nothing may block first render */
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --text-2xs: 10px;
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-md: 13px;
+  --text-lg: 15px;
+  --text-xl: 19px;
+
+  /* Component scale hooks (bumped on large screens below) */
+  --portrait-size: 40px;
+  --minimap-width: 96px;
+  --minimap-cell: 4px;
+  --hp-bar: 4px;
+
+  /* Chrome */
+  --header-h: 48px;
+  --header-h-compact: 36px;
+  --border-hairline: 1px solid var(--hairline);
+  --border-hairline-2: 1px solid var(--hairline-2);
+}
+
+/*
+ * The wireframe's 11 px text is right for a laptop; on a big monitor the stage
+ * fills the viewport, so the chrome scales up with it (two steps, no zoom).
+ */
+@media (min-width: 1400px) {
+  :root {
+    --text-2xs: 11px;
+    --text-xs: 13px;
+    --text-sm: 14px;
+    --text-md: 15px;
+    --text-lg: 17px;
+    --text-xl: 22px;
+    --portrait-size: 48px;
+    --minimap-width: 128px;
+    --minimap-cell: 6px;
+    --hp-bar: 5px;
+  }
+}
+
+@media (min-width: 1900px) {
+  :root {
+    --text-2xs: 12px;
+    --text-xs: 14px;
+    --text-sm: 15px;
+    --text-md: 16px;
+    --text-lg: 19px;
+    --text-xl: 24px;
+    --portrait-size: 56px;
+    --minimap-width: 160px;
+    --minimap-cell: 8px;
+    --hp-bar: 6px;
+  }
+}

@@ -1,0 +1,65 @@
+/*
+ * Wireframe: an 18 px strip under the stage — a 3 px hairline track at 8 px with
+ * a brand-2 elapsed fill, and 6×11 px rounded markers straddling it.
+ */
+.timeline {
+  position: relative;
+  height: 20px;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.timeline:hover .track {
+  background: var(--hairline-2);
+}
+
+.track,
+.fill {
+  position: absolute;
+  top: 9px;
+  left: 0;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.track {
+  right: 0;
+  background: var(--hairline);
+}
+
+.fill {
+  background: var(--brand-2);
+  max-width: 100%;
+}
+
+.markers {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.markerItem {
+  display: block;
+}
+
+.marker {
+  position: absolute;
+  top: 5px;
+  width: 6px;
+  height: 11px;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  transform: translateX(-50%);
+  cursor: pointer;
+  transition: transform 120ms ease;
+}
+
+.marker:hover {
+  transform: translateX(-50%) scaleY(1.18);
+}
+
+.marker:focus-visible {
+  outline: 2px solid var(--brand-fg);
+  outline-offset: 2px;
+}

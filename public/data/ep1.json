@@ -1,0 +1,333 @@
+{
+  "episodeId": 1,
+  "initialState": {
+    "party": [
+      {
+        "id": "stuntman",
+        "name": "The Stuntman",
+        "handle": "Dungeon Crawler Danny",
+        "player": "Danny",
+        "level": 1,
+        "hp": {
+          "current": 22,
+          "max": 22
+        },
+        "portrait": "/img/crawlers/stuntman.svg",
+        "class": null,
+        "inventory": [
+          "Utility Harness"
+        ],
+        "rank": null
+      },
+      {
+        "id": "psychic",
+        "name": "The Psychic",
+        "handle": "Static Bloom",
+        "player": "Rae",
+        "level": 1,
+        "hp": {
+          "current": 18,
+          "max": 18
+        },
+        "portrait": "/img/crawlers/psychic.svg",
+        "class": null,
+        "inventory": [
+          "Cracked Visor"
+        ],
+        "rank": null
+      },
+      {
+        "id": "harry",
+        "name": "Harry",
+        "handle": "Harold the Unhoused",
+        "player": "Marcus",
+        "level": 1,
+        "hp": {
+          "current": 22,
+          "max": 22
+        },
+        "portrait": "/img/crawlers/harry.svg",
+        "class": null,
+        "inventory": [
+          "Bent Pry Bar"
+        ],
+        "rank": null
+      },
+      {
+        "id": "xo",
+        "name": "X.O.",
+        "handle": "Executive Officer",
+        "player": "Jules",
+        "level": 1,
+        "hp": {
+          "current": 20,
+          "max": 20
+        },
+        "portrait": "/img/crawlers/xo.svg",
+        "class": null,
+        "inventory": [
+          "Signal Flare"
+        ],
+        "rank": null
+      },
+      {
+        "id": "actress",
+        "name": "The Actress",
+        "handle": "Second Billing",
+        "player": "Nia",
+        "level": 1,
+        "hp": {
+          "current": 19,
+          "max": 19
+        },
+        "portrait": "/img/crawlers/actress.svg",
+        "class": null,
+        "inventory": [
+          "Stage Blood (x3)"
+        ],
+        "rank": null
+      }
+    ],
+    "partyRank": null,
+    "map": {
+      "floor": 1,
+      "grid": {
+        "cols": 12,
+        "rows": 8
+      },
+      "revealed": []
+    }
+  },
+  "events": [
+    {
+      "t": 15,
+      "type": "system_message",
+      "text": "Welcome, crawlers. Floor One is open to the galactic feed. Do try to be watchable."
+    },
+    {
+      "t": 36,
+      "type": "chapter",
+      "label": "Cold Open — The Doorway",
+      "kind": "story"
+    },
+    {
+      "t": 56,
+      "type": "note",
+      "text": "Danny maintains the door was not load-bearing. The ceiling disagreed."
+    },
+    {
+      "t": 72,
+      "type": "loot",
+      "actor": "harry",
+      "item": "Enchanted Crowbar",
+      "source": "Bronze Adventurer Box"
+    },
+    {
+      "t": 90,
+      "type": "inventory",
+      "actor": "stuntman",
+      "add": [
+        "Duct Tape"
+      ],
+      "remove": []
+    },
+    {
+      "t": 105,
+      "type": "hp",
+      "actor": "harry",
+      "current": 12,
+      "max": 22
+    },
+    {
+      "t": 123,
+      "type": "map_reveal",
+      "cells": [
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          2
+        ]
+      ],
+      "label": "The Meat District"
+    },
+    {
+      "t": 138,
+      "type": "status",
+      "actor": "psychic",
+      "add": [
+        "Poisoned"
+      ],
+      "remove": []
+    },
+    {
+      "t": 154,
+      "type": "achievement",
+      "actor": "harry",
+      "title": "Gate Crasher",
+      "desc": "Killed 10 mobs with a door."
+    },
+    {
+      "t": 156,
+      "type": "achievement",
+      "actor": "stuntman",
+      "title": "Unpaid Stunt Double",
+      "desc": "Broke the fall. And the arm."
+    },
+    {
+      "t": 159,
+      "type": "achievement",
+      "actor": "xo",
+      "title": "First Blood",
+      "desc": "Opened the account early."
+    },
+    {
+      "t": 179,
+      "type": "level_up",
+      "actor": "harry",
+      "level": 2
+    },
+    {
+      "t": 195,
+      "type": "sponsor",
+      "text": "This doorway brought to you by Grull Industries. We make the hole.",
+      "durationSec": 20
+    },
+    {
+      "t": 215,
+      "type": "system_message",
+      "text": "Attention crawlers. Quadrant C is now an active hunting ground. Enjoy."
+    },
+    {
+      "t": 236,
+      "type": "chapter",
+      "label": "The Bronze Box Run",
+      "kind": "loot"
+    },
+    {
+      "t": 256,
+      "type": "future_type",
+      "headline": "A schema that does not exist yet",
+      "tier": 3
+    },
+    {
+      "t": 276,
+      "type": "loot",
+      "actor": "actress",
+      "item": "Understudy's Dagger",
+      "source": "Silver Adventurer Box"
+    },
+    {
+      "t": 297,
+      "type": "hp",
+      "actor": "harry",
+      "current": 4,
+      "max": 22
+    },
+    {
+      "t": 317,
+      "type": "rank",
+      "scope": "party",
+      "rank": 61
+    },
+    {
+      "t": 335,
+      "type": "status",
+      "actor": "psychic",
+      "add": [],
+      "remove": [
+        "Poisoned"
+      ]
+    },
+    {
+      "t": 353,
+      "type": "note",
+      "text": "The System declines to comment on the smell."
+    },
+    {
+      "t": 374,
+      "type": "chapter",
+      "label": "The Hoarder",
+      "kind": "boss"
+    },
+    {
+      "t": 394,
+      "type": "hp",
+      "actor": "harry",
+      "current": 18,
+      "max": 22
+    },
+    {
+      "t": 417,
+      "type": "level_up",
+      "actor": "xo",
+      "level": 2
+    },
+    {
+      "t": 440,
+      "type": "map_reveal",
+      "cells": [
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ]
+      ],
+      "label": "The Rot Market"
+    },
+    {
+      "t": 461,
+      "type": "inventory",
+      "actor": "harry",
+      "add": [
+        "Torch"
+      ],
+      "remove": [
+        "Enchanted Crowbar"
+      ]
+    },
+    {
+      "t": 486,
+      "type": "rank",
+      "scope": "crawler",
+      "actor": "xo",
+      "rank": 4188
+    },
+    {
+      "t": 509,
+      "type": "sponsor",
+      "text": "Crawler life insurance from Ghaza Provisioners. Terms apply posthumously.",
+      "durationSec": 20
+    },
+    {
+      "t": 538,
+      "type": "achievement",
+      "actor": "actress",
+      "title": "Scene Stealer",
+      "desc": "Held the room for a full minute."
+    },
+    {
+      "t": 568,
+      "type": "system_message",
+      "text": "Floor One remains open. The System is, for now, entertained."
+    },
+    {
+      "t": 594,
+      "type": "note",
+      "text": "Recap ends. Vitals logged. Sponsors paid."
+    }
+  ]
+}

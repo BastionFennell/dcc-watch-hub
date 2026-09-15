@@ -1,0 +1,293 @@
+/*
+ * Slim broadcast chrome: <= 48px tall, canvas bg, hairline bottom border,
+ * shrinking to --header-h-compact once the page scrolls (FR-050, FR-051).
+ * Reduced motion is honoured globally in styles/global.css.
+ */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: minmax(0, auto) 1fr minmax(0, auto);
+  align-items: center;
+  gap: var(--space-4);
+  height: var(--header-h);
+  padding: 0 var(--space-6);
+  background: var(--canvas);
+  border-bottom: var(--border-hairline);
+  transition: height 200ms ease;
+}
+
+.header[data-scrolled] {
+  height: var(--header-h-compact);
+}
+
+/* ------------------------------------------------------------------- left */
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+  color: var(--brand-fg);
+}
+
+.mark {
+  width: 22px;
+  height: 22px;
+  flex: none;
+}
+
+.title {
+  font-size: var(--text-md);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
+  color: var(--system-pill-fg);
+  font-size: var(--text-xs);
+  border: 1px solid var(--system-pill-border);
+  border-radius: var(--radius-pill);
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+/* ----------------------------------------------------------------- center */
+
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.episodeLabel {
+  color: var(--text-2);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  font-size: 16px;
+}
+
+.arrow:hover {
+  color: var(--brand-fg-2);
+  background: var(--panel);
+}
+
+/* ------------------------------------------------------------------ right */
+
+.right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.link {
+  color: var(--text-2);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+.link:hover {
+  color: var(--brand-fg-2);
+}
+
+/* --------------------------------------------------------- episodes menu */
+
+.menu {
+  position: relative;
+}
+
+.summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 2px 8px;
+  border: var(--border-hairline);
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  list-style: none;
+  white-space: nowrap;
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+.summary:hover {
+  color: var(--brand-fg-2);
+  border-color: var(--hairline-2);
+}
+
+.summaryIcon {
+  display: none;
+  font-size: 16px;
+}
+
+.panel {
+  position: absolute;
+  top: calc(100% + var(--space-3));
+  right: 0;
+  z-index: 30;
+  width: 260px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  background: var(--panel);
+  border: var(--border-hairline);
+  border-radius: var(--radius-lg);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.groupLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+.item:hover {
+  background: var(--panel-deep);
+  color: var(--brand-fg-2);
+}
+
+.item[aria-current='page'] {
+  background: var(--brand-deep);
+  color: var(--brand-fg);
+}
+
+.itemId {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--text-3);
+}
+
+.item[aria-current='page'] .itemId {
+  color: var(--brand-fg);
+}
+
+.itemTitle {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The show links live in the panel only at phone widths. */
+.menuLinks {
+  display: none;
+  gap: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: var(--border-hairline);
+}
+
+/* ------------------------------------------------------------------ phone */
+
+@media (max-width: 640px) {
+  .header {
+    padding: 0 var(--space-5);
+    gap: var(--space-3);
+  }
+
+  .pill {
+    display: none;
+  }
+
+  /*
+   * The mark alone would leave the archive link nameless, so the title stays in
+   * the accessibility tree and only leaves the layout (T040).
+   */
+  .title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .links {
+    display: none;
+  }
+
+  .menuLinks {
+    display: flex;
+  }
+
+  /* Keep the accessible name while the glyph carries the visual weight. */
+  .summaryText {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .summaryIcon {
+    display: inline-flex;
+  }
+
+  .summary {
+    padding: 4px 6px;
+  }
+
+  .panel {
+    width: min(260px, calc(100vw - var(--space-8)));
+  }
+}
