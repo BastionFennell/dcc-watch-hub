@@ -216,3 +216,96 @@ describe('reduceTo', () => {
     expect(() => reduceTo(episode, 1_000)).not.toThrow();
   });
 });
+
+/* ------------------------------------------------- v2: skill, class, hotlist */
+
+describe('applyEvent — v2 event types', () => {
+  it('seeds skills and hotlist from the crawler sheet fields', () => {
+    const harry = findCrawler(init(), 'harry');
+    expect(harry?.skills).toEqual([{ name: 'Powerful Strike', rank: 1 }]);
+    expect(harry?.hotlist).toEqual([]);
+    // A crawler with no sheet fields still gets empty lists, never undefined.
+    expect(findCrawler(init(), 'xo')?.skills).toEqual([]);
+    expect(findCrawler(init(), 'xo')?.hotlist).toEqual([]);
+  });
+
+  it('skill appends a new skill and keeps the seeded ones', () => {
+    const after = applyEvent(init(), {
+      t: 1,
+      type: 'skill',
+      actor: 'harry',
+      name: 'Crowbar Work',
+      rank: 1,
+    });
+    expect(findCrawler(after, 'harry')?.skills).toEqual([
+      { name: 'Powerful Strike', rank: 1 },
+      { name: 'Crowbar Work', rank: 1 },
+    ]);
+  });
+
+  it('skill upserts by name: the rank is replaced, the slot is kept', () => {
+    const first = applyEvent(init(), { t: 1, type: 'skill', actor: 'xo', name: 'Strike', rank: 1 });
+    const second = applyEvent(first, { t: 2, type: 'skill', actor: 'xo', name: 'Sprint' });
+    const third = applyEvent(second, { t: 3, type: 'skill', actor: 'xo', name: 'Strike', rank: 2 });
+    expect(findCrawler(third, 'xo')?.skills).toEqual([{ name: 'Strike', rank: 2 }, { name: 'Sprint' }]);
+  });
+
+  it('skill without a rank leaves an existing rank alone', () => {
+    const first = applyEvent(init(), { t: 1, type: 'skill', actor: 'xo', name: 'Strike', rank: 3 });
+    const second = applyEvent(first, { t: 2, type: 'skill', actor: 'xo', name: 'Strike' });
+    expect(findCrawler(second, 'xo')?.skills).toEqual([{ name: 'Strike', rank: 3 }]);
+  });
+
+  it('class sets the crawler class', () => {
+    const after = applyEvent(init(), {
+      t: 1,
+      type: 'class',
+      actor: 'harry',
+      class: 'Compensated Anarchist',
+    });
+    expect(findCrawler(after, 'harry')?.class).toBe('Compensated Anarchist');
+    expect(findCrawler(after, 'xo')?.class).toBeNull();
+  });
+
+  it('hotlist adds, removes, and never duplicates', () => {
+    const added = applyEvent(init(), {
+      t: 1,
+      type: 'hotlist',
+      actor: 'harry',
+      add: ['Door', 'The Hoarder'],
+      remove: [],
+    });
+    expect(findCrawler(added, 'harry')?.hotlist).toEqual(['Door', 'The Hoarder']);
+
+    const again = applyEvent(added, {
+      t: 2,
+      type: 'hotlist',
+      actor: 'harry',
+      add: ['Door', 'Crowbar'],
+      remove: ['The Hoarder'],
+    });
+    expect(findCrawler(again, 'harry')?.hotlist).toEqual(['Door', 'Crowbar']);
+  });
+
+  it('ignores all three for an unknown actor', () => {
+    const before = init();
+    expect(applyEvent(before, { t: 1, type: 'skill', actor: 'ghost', name: 'Haunt' })).toBe(before);
+    expect(applyEvent(before, { t: 1, type: 'class', actor: 'ghost', class: 'Spectre' })).toBe(before);
+    expect(
+      applyEvent(before, { t: 1, type: 'hotlist', actor: 'ghost', add: ['x'], remove: [] }),
+    ).toBe(before);
+  });
+
+  it('reduceTo replays them purely in both directions', () => {
+    const at94 = reduceTo(episode, 94);
+    const at170 = reduceTo(episode, 170);
+    expect(findCrawler(at94, 'harry')?.class).toBeNull();
+    expect(findCrawler(at170, 'harry')?.class).toBe('Compensated Anarchist');
+    expect(findCrawler(at170, 'harry')?.hotlist).toEqual(['Crowbar']);
+    expect(findCrawler(reduceTo(episode, 110), 'harry')?.hotlist).toEqual(['Door']);
+    expect(findCrawler(at170, 'xo')?.skills).toEqual([{ name: 'Understudy Strike', rank: 2 }]);
+    expect(findCrawler(reduceTo(episode, 100), 'xo')?.skills).toEqual([
+      { name: 'Understudy Strike', rank: 1 },
+    ]);
+  });
+});

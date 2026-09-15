@@ -17,7 +17,26 @@
         "inventory": [
           "Utility Harness"
         ],
-        "rank": null
+        "rank": null,
+        "race": "Human",
+        "pronouns": "he/him",
+        "crawlerNumber": "4,102,116",
+        "stats": {
+          "str": 7,
+          "int": 4,
+          "con": 7,
+          "dex": 6,
+          "cha": 5
+        },
+        "hotlist": [
+          "The Doorway"
+        ],
+        "skills": [
+          {
+            "name": "Reckless Tumble",
+            "rank": 1
+          }
+        ]
       },
       {
         "id": "psychic",
@@ -34,7 +53,24 @@
         "inventory": [
           "Cracked Visor"
         ],
-        "rank": null
+        "rank": null,
+        "race": "Human",
+        "pronouns": "she/her",
+        "crawlerNumber": "9,338,470",
+        "stats": {
+          "str": 3,
+          "int": 8,
+          "con": 4,
+          "dex": 5,
+          "cha": 7
+        },
+        "hotlist": [],
+        "skills": [
+          {
+            "name": "Static Read",
+            "rank": 1
+          }
+        ]
       },
       {
         "id": "harry",
@@ -51,7 +87,24 @@
         "inventory": [
           "Bent Pry Bar"
         ],
-        "rank": null
+        "rank": null,
+        "race": "Human",
+        "pronouns": "he/him",
+        "crawlerNumber": "10,491,201",
+        "stats": {
+          "str": 5,
+          "int": 6,
+          "con": 6,
+          "dex": 7,
+          "cha": 4
+        },
+        "hotlist": [],
+        "skills": [
+          {
+            "name": "Powerful Strike",
+            "rank": 1
+          }
+        ]
       },
       {
         "id": "xo",
@@ -68,7 +121,26 @@
         "inventory": [
           "Signal Flare"
         ],
-        "rank": null
+        "rank": null,
+        "race": "Crocodilian",
+        "pronouns": "they/them",
+        "crawlerNumber": "2,776,845",
+        "stats": {
+          "str": 6,
+          "int": 5,
+          "con": 8,
+          "dex": 4,
+          "cha": 3
+        },
+        "hotlist": [
+          "The Quartermaster"
+        ],
+        "skills": [
+          {
+            "name": "Signal Discipline",
+            "rank": 1
+          }
+        ]
       },
       {
         "id": "actress",
@@ -85,7 +157,24 @@
         "inventory": [
           "Stage Blood (x3)"
         ],
-        "rank": null
+        "rank": null,
+        "race": "Human",
+        "pronouns": "she/her",
+        "crawlerNumber": "6,204,998",
+        "stats": {
+          "str": 4,
+          "int": 6,
+          "con": 5,
+          "dex": 8,
+          "cha": 9
+        },
+        "hotlist": [],
+        "skills": [
+          {
+            "name": "Stage Presence",
+            "rank": 1
+          }
+        ]
       }
     ],
     "partyRank": null,
@@ -200,6 +289,21 @@
       "durationSec": 20
     },
     {
+      "t": 200,
+      "type": "rank",
+      "scope": "crawler",
+      "actor": "xo",
+      "rank": 6120
+    },
+    {
+      "t": 210,
+      "type": "skill",
+      "actor": "xo",
+      "name": "Signal Discipline",
+      "rank": 2,
+      "desc": "Flare held, nerve held."
+    },
+    {
       "t": 215,
       "type": "system_message",
       "text": "Attention crawlers. Quadrant C is now an active hunting ground. Enjoy."
@@ -211,10 +315,23 @@
       "kind": "loot"
     },
     {
+      "t": 240,
+      "type": "class",
+      "actor": "harry",
+      "class": "Compensated Anarchist"
+    },
+    {
       "t": 256,
       "type": "future_type",
       "headline": "A schema that does not exist yet",
       "tier": 3
+    },
+    {
+      "t": 260,
+      "type": "rank",
+      "scope": "crawler",
+      "actor": "harry",
+      "rank": 8890
     },
     {
       "t": 276,
@@ -222,6 +339,15 @@
       "actor": "actress",
       "item": "Understudy's Dagger",
       "source": "Silver Adventurer Box"
+    },
+    {
+      "t": 290,
+      "type": "hotlist",
+      "actor": "harry",
+      "add": [
+        "The Hoarder"
+      ],
+      "remove": []
     },
     {
       "t": 297,
@@ -246,6 +372,13 @@
       ]
     },
     {
+      "t": 350,
+      "type": "rank",
+      "scope": "crawler",
+      "actor": "xo",
+      "rank": 5004
+    },
+    {
       "t": 353,
       "type": "note",
       "text": "The System declines to comment on the smell."
@@ -262,6 +395,13 @@
       "actor": "harry",
       "current": 18,
       "max": 22
+    },
+    {
+      "t": 410,
+      "type": "rank",
+      "scope": "crawler",
+      "actor": "harry",
+      "rank": 7215
     },
     {
       "t": 417,
@@ -300,6 +440,12 @@
       ]
     },
     {
+      "t": 470,
+      "type": "class",
+      "actor": "xo",
+      "class": "Quartermaster"
+    },
+    {
       "t": 486,
       "type": "rank",
       "scope": "crawler",
@@ -307,10 +453,25 @@
       "rank": 4188
     },
     {
+      "t": 505,
+      "type": "skill",
+      "actor": "xo",
+      "name": "Breach Charge",
+      "rank": 1,
+      "desc": "Learned from the wreckage."
+    },
+    {
       "t": 509,
       "type": "sponsor",
       "text": "Crawler life insurance from Ghaza Provisioners. Terms apply posthumously.",
       "durationSec": 20
+    },
+    {
+      "t": 520,
+      "type": "rank",
+      "scope": "crawler",
+      "actor": "harry",
+      "rank": 6402
     },
     {
       "t": 538,
@@ -320,9 +481,35 @@
       "desc": "Held the room for a full minute."
     },
     {
+      "t": 550,
+      "type": "hotlist",
+      "actor": "harry",
+      "add": [
+        "Bronze Box Runner"
+      ],
+      "remove": [
+        "The Hoarder"
+      ]
+    },
+    {
       "t": 568,
       "type": "system_message",
       "text": "Floor One remains open. The System is, for now, entertained."
+    },
+    {
+      "t": 580,
+      "type": "map_reveal",
+      "cells": [
+        [
+          7,
+          8
+        ],
+        [
+          7,
+          9
+        ]
+      ],
+      "label": "The Gutter Stair"
     },
     {
       "t": 594,

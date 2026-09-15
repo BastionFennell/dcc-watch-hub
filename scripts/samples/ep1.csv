@@ -11,6 +11,9 @@ timecode,type,actor,field1,field2,field3
 01:01,achievement,stuntman,Unpaid Stunt Double,Broke the fall. And the arm.,
 1:02,achievement,xo,First Blood,Opened the account early.,
 00:01:10,level_up,harry,2,,
+1:22,skill,harry,Powerful Strike,1,Learned on a doorframe.
+1:26,class,harry,Compensated Anarchist,,
+1:38,hotlist,harry,The Hoarder,,
 1:16,sponsor,,This doorway brought to you by Grull Industries. We make the hole.,20,
 84,system_message,,Attention crawlers. Quadrant C is now an active hunting ground. Enjoy.,,
 1:32,chapter,,The Bronze Box Run,loot,
@@ -25,6 +28,9 @@ timecode,type,actor,field1,field2,field3
 2:52,map_reveal,,"5,4;5,5;6,5",The Rot Market,
 3:00,inventory,harry,Torch,Enchanted Crowbar,
 3:10,rank,xo,crawler,4188,
+3:14,skill,xo,Signal Discipline,2,Held the flare. Held the line.
+3:24,class,xo,Quartermaster,,
+3:36,hotlist,harry,Bronze Box Runner,The Hoarder,
 3:19,sponsor,,Crawler life insurance from Ghaza Provisioners. Terms apply posthumously.,20,
 3:30,achievement,actress,Scene Stealer,Held the room for a full minute.,
 3:42,hp,psychic,14,18,

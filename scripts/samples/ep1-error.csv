@@ -3,5 +3,6 @@ timecode,type,actor,field1,field2,field3
 00:14,chapter,,Cold Open — The Doorway,story,
 28,loot,harry,Enchanted Crowbar,Bronze Adventurer Box,
 abc,hp,harry,12,22,
+1:10,skill,harry,Powerful Strike,high,
 1:00,achievement,harry,Gate Crasher,Killed 10 mobs with a door.,
 3:58,note,,Recap ends. Vitals logged. Sponsors paid.,,

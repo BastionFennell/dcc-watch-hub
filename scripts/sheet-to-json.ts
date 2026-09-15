@@ -1,7 +1,8 @@
 /**
  * Editor sheet CSV → `ep{N}.json` (constitution: Author-Friendly Data Pipeline).
  *
- * Contract: specs/001-watch-hub-v1/contracts/sheet-csv.md
+ * Contract: specs/001-watch-hub-v1/contracts/sheet-csv.md, extended by
+ * specs/002-watch-hub-v2/contracts/sheet-csv.md (skill / class / hotlist rows).
  *
  *   npm run sheet-to-json -- scripts/samples/ep1.csv --episode 1 --duration 240 \
  *     --initial-state scripts/samples/ep1.initial.json --out public/data/ep1.json
@@ -81,6 +82,9 @@ const ACTOR_EVENT_TYPES = new Set([
   'level_up',
   'status',
   'inventory',
+  'skill',
+  'class',
+  'hotlist',
 ]);
 
 /* -------------------------------------------------------------- timecodes */
@@ -295,8 +299,39 @@ export function rowToEvent(row: SheetRow, ctx: RowContext): RowResult {
       break;
     }
     case 'status':
-    case 'inventory': {
+    case 'inventory':
+    case 'hotlist': {
       event = { t, type, actor, add: splitList(field1), remove: splitList(field2) };
+      break;
+    }
+    case 'skill': {
+      if (field1 === '') {
+        errors.push('empty required field: name (field1) on skill');
+        break;
+      }
+      let rank: number | null = null;
+      if (field2 !== '') {
+        rank = toNumber(field2);
+        if (rank === null || !Number.isInteger(rank) || rank < 0) {
+          errors.push(
+            `skill rank (field2) must be a non-negative integer, got ${JSON.stringify(field2)}`,
+          );
+          break;
+        }
+      }
+      event = {
+        t,
+        type,
+        actor,
+        name: field1,
+        ...(rank === null ? {} : { rank }),
+        ...(field3 === '' ? {} : { desc: field3 }),
+      };
+      break;
+    }
+    case 'class': {
+      if (field1 === '') errors.push('empty required field: class (field1) on class');
+      else event = { t, type, actor, class: field1 };
       break;
     }
     default: {

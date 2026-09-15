@@ -4,13 +4,17 @@
  *
  * Framework-free by rule: no React, no DOM, no clocks, no randomness.
  */
-import type { Crawler, InitialState, MapState } from '../data/types';
+import type { Crawler, InitialState, MapState, SkillEntry } from '../data/types';
 
 export interface CrawlerState extends Crawler {
   /** Derived; empty at t = 0 (the initial-state schema has no status field). */
   statuses: string[];
   /** Achievement titles earned so far, in order. */
   achievements: string[];
+  /** Seeded from `Crawler.skills`; `skill` events upsert by name (v2). */
+  skills: SkillEntry[];
+  /** Seeded from `Crawler.hotlist`; `hotlist` events add and remove (v2). */
+  hotlist: string[];
 }
 
 export interface OverlayState {
@@ -28,6 +32,8 @@ export function fromInitialState(init: InitialState): OverlayState {
       inventory: [...crawler.inventory],
       statuses: [],
       achievements: [],
+      skills: (crawler.skills ?? []).map((skill) => ({ ...skill })),
+      hotlist: [...(crawler.hotlist ?? [])],
     })),
     partyRank: init.partyRank,
     map: {

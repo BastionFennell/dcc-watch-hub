@@ -1,15 +1,16 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   DataError,
   isEpisodeData,
   isShow,
+  normalizeCrawler,
   normalizeEpisode,
   normalizeEvent,
   sortEvents,
   toNumber,
 } from './validate';
 import type { AnyEvent } from './types';
-import { makeShow, makeEpisode } from '../test/fixtures';
+import { makeShow, makeEpisode, makeEpisodeRaw } from '../test/fixtures';
 
 describe('normalizeEvent', () => {
   it('keeps a well-formed known event', () => {
@@ -119,5 +120,138 @@ describe('toNumber', () => {
     expect(toNumber('')).toBeNull();
     expect(toNumber(undefined)).toBeNull();
     expect(toNumber(Number.NaN)).toBeNull();
+  });
+});
+
+/* --------------------------------------------------- v2: new events + fields */
+
+describe('normalizeEvent — v2 event types', () => {
+  it('keeps a skill event with and without its optional fields', () => {
+    expect(normalizeEvent({ t: 80, type: 'skill', actor: 'xo', name: 'Understudy Strike' })).toEqual(
+      { t: 80, type: 'skill', actor: 'xo', name: 'Understudy Strike' },
+    );
+    expect(
+      normalizeEvent({
+        t: 80,
+        type: 'skill',
+        actor: 'xo',
+        name: 'Understudy Strike',
+        rank: '2',
+        desc: 'Second run at it.',
+      }),
+    ).toEqual({
+      t: 80,
+      type: 'skill',
+      actor: 'xo',
+      name: 'Understudy Strike',
+      rank: 2,
+      desc: 'Second run at it.',
+    });
+  });
+
+  it('drops a malformed skill rank instead of the whole event', () => {
+    expect(
+      normalizeEvent({ t: 80, type: 'skill', actor: 'xo', name: 'Strike', rank: 'high' }),
+    ).toEqual({ t: 80, type: 'skill', actor: 'xo', name: 'Strike' });
+    expect(
+      normalizeEvent({ t: 80, type: 'skill', actor: 'xo', name: 'Strike', rank: 1.5 }),
+    ).toEqual({ t: 80, type: 'skill', actor: 'xo', name: 'Strike' });
+  });
+
+  it('demotes a skill event with no actor or no name', () => {
+    expect(normalizeEvent({ t: 80, type: 'skill', name: 'Strike' }).type).toBe('unknown');
+    expect(normalizeEvent({ t: 80, type: 'skill', actor: 'xo', name: '' }).type).toBe('unknown');
+  });
+
+  it('keeps a class event and demotes an empty one', () => {
+    expect(normalizeEvent({ t: 95, type: 'class', actor: 'harry', class: 'Compensated Anarchist' })).toEqual(
+      { t: 95, type: 'class', actor: 'harry', class: 'Compensated Anarchist' },
+    );
+    expect(normalizeEvent({ t: 95, type: 'class', actor: 'harry', class: '' }).type).toBe('unknown');
+    expect(normalizeEvent({ t: 95, type: 'class', class: 'Anarchist' }).type).toBe('unknown');
+  });
+
+  it('keeps a hotlist event and demotes one with a non-list', () => {
+    expect(
+      normalizeEvent({ t: 105, type: 'hotlist', actor: 'harry', add: ['Door'], remove: [] }),
+    ).toEqual({ t: 105, type: 'hotlist', actor: 'harry', add: ['Door'], remove: [] });
+    expect(
+      normalizeEvent({ t: 105, type: 'hotlist', actor: 'harry', add: 'Door', remove: [] }).type,
+    ).toBe('unknown');
+  });
+});
+
+describe('normalizeCrawler — optional sheet fields', () => {
+  const base = {
+    id: 'harry',
+    name: 'Harry',
+    handle: 'Harry',
+    player: 'Marcus',
+    level: 2,
+    hp: { current: 22, max: 22 },
+    portrait: '/img/crawlers/harry.svg',
+    class: null,
+    inventory: [],
+    rank: null,
+  };
+
+  it('keeps well-formed sheet fields', () => {
+    const crawler = normalizeCrawler({
+      ...base,
+      race: 'Human',
+      pronouns: 'he/him',
+      crawlerNumber: '10,491,201',
+      stats: { str: 5, int: 6, con: 6, dex: 7, cha: 4 },
+      hotlist: ['Door'],
+      skills: [{ name: 'Powerful Strike', rank: 1 }, { name: 'Crowbar Work' }],
+    });
+    expect(crawler).toMatchObject({
+      race: 'Human',
+      pronouns: 'he/him',
+      crawlerNumber: '10,491,201',
+      stats: { str: 5, int: 6, con: 6, dex: 7, cha: 4 },
+      hotlist: ['Door'],
+      skills: [{ name: 'Powerful Strike', rank: 1 }, { name: 'Crowbar Work' }],
+    });
+  });
+
+  it('keeps a v1 crawler exactly as it is', () => {
+    expect(normalizeCrawler(base as never)).toEqual(base);
+  });
+
+  it('drops each malformed optional field with a warning, never throwing', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const crawler = normalizeCrawler({
+      ...base,
+      race: 7,
+      pronouns: {},
+      crawlerNumber: null,
+      stats: { str: 5 },
+      hotlist: 'Door',
+      skills: [{ rank: 2 }],
+    } as never);
+
+    expect(crawler.race).toBeUndefined();
+    expect(crawler.pronouns).toBeUndefined();
+    expect(crawler.crawlerNumber).toBeUndefined();
+    expect(crawler.stats).toBeUndefined();
+    expect(crawler.hotlist).toBeUndefined();
+    expect(crawler.skills).toBeUndefined();
+    expect(warn).toHaveBeenCalledTimes(6);
+    warn.mockRestore();
+  });
+
+  it('normalizeEpisode runs every crawler through it', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const raw = makeEpisodeRaw() as { initialState: { party: unknown[] } };
+    const broken = { ...(raw.initialState.party[2] as object), stats: 'unfiled' };
+    const episode = normalizeEpisode({
+      ...raw,
+      initialState: { ...raw.initialState, party: [...raw.initialState.party.slice(0, 2), broken] },
+    });
+    expect(episode.initialState.party[2].stats).toBeUndefined();
+    expect(episode.initialState.party[2].skills).toEqual([{ name: 'Powerful Strike', rank: 1 }]);
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
   });
 });

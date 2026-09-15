@@ -7,9 +7,12 @@ import type {
   AnyEvent,
   ChapterKind,
   Crawler,
+  CrawlerStats,
   EpisodeMeta,
   Event,
   EventType,
+  Hp,
+  SkillEntry,
 } from '../data/types';
 import { isKnownEvent } from '../data/types';
 import { copy } from '../copy';
@@ -75,6 +78,73 @@ export interface MapCellsView {
   rows: number;
   revealed: Set<string>;
   total: number;
+}
+
+/* --- v2 view models (data-model §3) --- */
+
+export interface RankPoint {
+  t: number;
+  rank: number;
+}
+
+/** A crawler's or the party's rank over the elapsed log (FR-140/141). */
+export interface RankSeries {
+  points: RankPoint[];
+  /** The most recent elapsed rank, or null with no points. */
+  current: number | null;
+  /** The best (lowest) rank reached so far, or null with no points. */
+  best: number | null;
+}
+
+/** `'party'` reads party-scoped rank events; `{ actor }` reads one crawler's. */
+export type RankScopeSelector = 'party' | { actor: string };
+
+/** The ten-segment HP strip from the official sheet (FR-110). */
+export interface HpSegments {
+  /** 0–10; any HP above zero fills at least one segment. */
+  filled: number;
+  /** 0–100, rounded. */
+  pct: number;
+}
+
+export interface DossierAchievement {
+  title: string;
+  desc?: string;
+  t: number;
+}
+
+/** Everything FR-110 renders, as of the playhead. */
+export interface Dossier {
+  id: string;
+  name: string;
+  handle: string;
+  player: string;
+  portrait: string;
+  race?: string;
+  pronouns?: string;
+  crawlerNumber?: string | number;
+  level: number;
+  class: string | null;
+  floor: number;
+  hp: Hp & HpSegments;
+  rank: RankSeries;
+  debuffs: string[];
+  stats?: CrawlerStats;
+  hotlist: string[];
+  skills: SkillEntry[];
+  inventory: string[];
+  achievements: DossierAchievement[];
+  history: FeedItem[];
+}
+
+/** One named neighborhood on the expanded map (FR-120). */
+export interface MapLabel {
+  label: string;
+  /** Centroid over the union of every cell revealed under this label. */
+  row: number;
+  col: number;
+  /** How many distinct cells carry the label. */
+  cells: number;
 }
 
 export const TOAST_DURATION_SEC = 6;
@@ -175,6 +245,12 @@ function toFeedItem(
       return { ...base, actorName, text: copy.feedText.status(who, event.add, event.remove) };
     case 'inventory':
       return { ...base, actorName, text: copy.feedText.inventory(who, event.add, event.remove) };
+    case 'skill':
+      return { ...base, actorName, text: copy.feedText.skill(who, event.name, event.rank) };
+    case 'class':
+      return { ...base, actorName, text: copy.feedText.classChange(who, event.class) };
+    case 'hotlist':
+      return { ...base, actorName, text: copy.feedText.hotlist(who, event.add, event.remove) };
     default:
       return null;
   }
@@ -316,4 +392,149 @@ export function recentlyRevealed(
     }
   }
   return recent;
+}
+
+/* ------------------------------------------------------------- v2 selectors */
+
+/**
+ * One crawler's elapsed, known events, newest first and uncapped — the dossier's
+ * HISTORY section (data-model §3). Party-scoped events belong to no crawler.
+ */
+export function crawlerHistory(
+  events: readonly AnyEvent[],
+  t: number,
+  actorId: string,
+  party: readonly Crawler[] = [],
+): FeedItem[] {
+  const items: FeedItem[] = [];
+  for (let i = 0; i < events.length; i += 1) {
+    const event = events[i];
+    if (event.t > t) continue;
+    if (!isKnownEvent(event)) continue;
+    if (!('actor' in event) || event.actor !== actorId) continue;
+    const item = toFeedItem(event, i, party);
+    if (item) items.push(item);
+  }
+  return items.reverse();
+}
+
+/** Elapsed rank events for one crawler or for the party, oldest first (FR-140/141). */
+export function rankSeries(
+  events: readonly AnyEvent[],
+  t: number,
+  scope: RankScopeSelector,
+): RankSeries {
+  const points: RankPoint[] = [];
+  for (const event of events) {
+    if (event.type !== 'rank' || event.t > t) continue;
+    if (scope === 'party') {
+      if (event.scope !== 'party') continue;
+    } else if (event.scope !== 'crawler' || event.actor !== scope.actor) {
+      continue;
+    }
+    points.push({ t: event.t, rank: event.rank });
+  }
+  if (points.length === 0) return { points, current: null, best: null };
+  return {
+    points,
+    current: points[points.length - 1].rank,
+    best: points.reduce((best, point) => Math.min(best, point.rank), Infinity),
+  };
+}
+
+/**
+ * The sheet's ten-segment HP strip: `ceil(current / max * 10)`, clamped, so any
+ * living crawler keeps at least one segment and only 0 HP shows none (FR-110).
+ */
+export function hpSegments(hp: Hp): HpSegments {
+  const max = hp.max > 0 ? hp.max : 1;
+  const current = Math.min(Math.max(hp.current, 0), max);
+  const ratio = current / max;
+  return {
+    filled: Math.min(10, Math.max(0, Math.ceil(ratio * 10))),
+    pct: Math.round(ratio * 100),
+  };
+}
+
+/** Everything the dossier renders as of `t`; `null` for an actor nobody knows. */
+export function crawlerDossier(
+  state: OverlayState,
+  events: readonly AnyEvent[],
+  t: number,
+  actorId: string,
+  party: readonly Crawler[] = state.party,
+): Dossier | null {
+  const crawler = state.party.find((entry) => entry.id === actorId);
+  if (crawler === undefined) return null;
+
+  const achievements: DossierAchievement[] = [];
+  for (const event of events) {
+    if (event.type !== 'achievement' || event.t > t || event.actor !== actorId) continue;
+    achievements.push({
+      title: event.title,
+      ...(event.desc === undefined ? {} : { desc: event.desc }),
+      t: event.t,
+    });
+  }
+
+  const max = crawler.hp.max > 0 ? crawler.hp.max : 1;
+  const current = Math.min(Math.max(crawler.hp.current, 0), max);
+
+  return {
+    id: crawler.id,
+    name: crawler.name,
+    handle: crawler.handle,
+    player: crawler.player,
+    portrait: crawler.portrait,
+    ...(crawler.race === undefined ? {} : { race: crawler.race }),
+    ...(crawler.pronouns === undefined ? {} : { pronouns: crawler.pronouns }),
+    ...(crawler.crawlerNumber === undefined ? {} : { crawlerNumber: crawler.crawlerNumber }),
+    level: crawler.level,
+    class: crawler.class,
+    floor: state.map.floor,
+    hp: { current, max: crawler.hp.max, ...hpSegments(crawler.hp) },
+    rank: rankSeries(events, t, { actor: actorId }),
+    debuffs: crawler.statuses,
+    ...(crawler.stats === undefined ? {} : { stats: crawler.stats }),
+    hotlist: crawler.hotlist,
+    skills: crawler.skills,
+    inventory: crawler.inventory,
+    achievements,
+    history: crawlerHistory(events, t, actorId, party),
+  };
+}
+
+/**
+ * One label per distinct neighborhood name among elapsed reveals, placed at the
+ * centroid of the union of its cells and ordered by first reveal (FR-120).
+ * Unlabeled reveals contribute nothing.
+ */
+export function mapLabels(events: readonly AnyEvent[], t: number): MapLabel[] {
+  const groups = new Map<string, { cells: Map<string, [number, number]>; first: number }>();
+  for (const event of events) {
+    if (event.type !== 'map_reveal' || event.t > t) continue;
+    if (event.label === undefined || event.label === '') continue;
+    let group = groups.get(event.label);
+    if (group === undefined) {
+      group = { cells: new Map(), first: event.t };
+      groups.set(event.label, group);
+    }
+    for (const cell of event.cells) {
+      group.cells.set(cellKey(cell[0], cell[1]), [cell[0], cell[1]]);
+    }
+  }
+
+  return [...groups.entries()]
+    .sort((a, b) => a[1].first - b[1].first)
+    .map(([label, group]) => {
+      const cells = [...group.cells.values()];
+      const rows = cells.reduce((sum, cell) => sum + cell[0], 0);
+      const cols = cells.reduce((sum, cell) => sum + cell[1], 0);
+      return {
+        label,
+        row: rows / cells.length,
+        col: cols / cells.length,
+        cells: cells.length,
+      };
+    });
 }

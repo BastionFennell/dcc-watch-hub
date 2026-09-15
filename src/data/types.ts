@@ -50,6 +50,21 @@ export interface Hp {
   max: number;
 }
 
+/** One row of the sheet's SKILLS section (v2, FR-113). */
+export interface SkillEntry {
+  name: string;
+  rank?: number;
+}
+
+/** The sheet's five stats. All five are present or the block is absent (v2, FR-113). */
+export interface CrawlerStats {
+  str: number;
+  int: number;
+  con: number;
+  dex: number;
+  cha: number;
+}
+
 export interface Crawler {
   id: string;
   name: string;
@@ -61,6 +76,14 @@ export interface Crawler {
   class: string | null;
   inventory: string[];
   rank: number | null;
+
+  /* Optional sheet fields (v2, FR-113). Absent in every v1 file. */
+  race?: string;
+  pronouns?: string;
+  crawlerNumber?: string | number;
+  stats?: CrawlerStats;
+  hotlist?: string[];
+  skills?: SkillEntry[];
 }
 
 export interface Grid {
@@ -173,6 +196,30 @@ export interface NoteEvent extends EventBase {
   text: string;
 }
 
+/* --- v2 events (FR-112). Old files simply do not carry them. --- */
+
+/** Adds a skill, or updates its rank when one is given. */
+export interface SkillEvent extends EventBase {
+  type: 'skill';
+  actor: string;
+  name: string;
+  rank?: number;
+  desc?: string;
+}
+
+export interface ClassEvent extends EventBase {
+  type: 'class';
+  actor: string;
+  class: string;
+}
+
+export interface HotlistEvent extends EventBase {
+  type: 'hotlist';
+  actor: string;
+  add: string[];
+  remove: string[];
+}
+
 /** A well-formed event of a type this version understands. */
 export type Event =
   | SystemMessageEvent
@@ -186,7 +233,10 @@ export type Event =
   | ChapterEvent
   | StatusEvent
   | InventoryEvent
-  | NoteEvent;
+  | NoteEvent
+  | SkillEvent
+  | ClassEvent
+  | HotlistEvent;
 
 /**
  * Anything the reducer, feed, toast, and timeline must ignore without crashing:
@@ -214,6 +264,9 @@ export const KNOWN_EVENT_TYPES = [
   'status',
   'inventory',
   'note',
+  'skill',
+  'class',
+  'hotlist',
 ] as const satisfies readonly EventType[];
 
 export const CHAPTER_KINDS = ['boss', 'loot', 'achievement', 'levelup', 'story'] as const;

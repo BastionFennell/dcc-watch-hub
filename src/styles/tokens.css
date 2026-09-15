@@ -83,6 +83,22 @@
   --minimap-cell: 4px;
   --hp-bar: 4px;
 
+  /* HP segment scale (v2 dossier): ten steps, red → amber → green, like the sheet's strip */
+  --hp-seg-1: #e24b4a;
+  --hp-seg-2: #e4603f;
+  --hp-seg-3: #e77534;
+  --hp-seg-4: #e98a2e;
+  --hp-seg-5: #ef9f27;
+  --hp-seg-6: #d5a024;
+  --hp-seg-7: #bba023;
+  --hp-seg-8: #9fa023;
+  --hp-seg-9: #849b22;
+  --hp-seg-10: #639922;
+
+  /* Panels (v2): the rail slot's overlay layer and the shared trigger focus ring */
+  --panel-z: 20;
+  --focus-ring: 0 0 0 2px var(--brand-2);
+
   /* Chrome */
   --header-h: 48px;
   --header-h-compact: 36px;

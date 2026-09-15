@@ -1,6 +1,11 @@
 /**
  * The production `TimeSource`: a thin adapter over the YouTube IFrame Player API
- * (research R4, contracts/time-source.md).
+ * (research R4/R8, contracts/time-source.md §6).
+ *
+ * A seek is accepted at any time. Before the player is ready the latest target is
+ * queued and applied in `onReady` with `seekTo(t, true)`, so answering the resume
+ * card while the iframe is still loading still lands the broadcast in the right
+ * place (FR-132).
  *
  * This file and `loadYouTubeApi.ts` are the ONLY modules allowed to reference the
  * `YT` global (constitution II). Nothing here knows about React or the overlay.
@@ -23,6 +28,9 @@ export class YouTubeTimeSource implements TimeSource {
   private player: YT.Player | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
   private destroyed = false;
+  private ready = false;
+  /** Only the most recent seek requested before `onReady` is kept (contract §6). */
+  private pendingSeek: number | null = null;
 
   /** Our own child element: `YT.Player` replaces the node it is given. */
   private host: HTMLElement | null;
@@ -56,7 +64,8 @@ export class YouTubeTimeSource implements TimeSource {
           events: {
             onReady: () => {
               if (this.destroyed) return;
-              this.emitTime(this.readTime());
+              this.ready = true;
+              this.applyPendingSeek();
               this.opts.onReady?.();
             },
             onStateChange: (event: YT.OnStateChangeEvent) => this.handleState(event.data),
@@ -97,14 +106,20 @@ export class YouTubeTimeSource implements TimeSource {
   seek(t: number): void {
     if (this.destroyed) return;
     const target = Math.max(0, t);
-    this.player?.seekTo(target, true);
-    // Contract: a seek MUST produce a tick, even while paused.
+    if (this.ready) {
+      this.player?.seekTo(target, true);
+    } else {
+      // Not ready yet: remember the latest target and apply it in onReady.
+      this.pendingSeek = target;
+    }
+    // Contract: a seek MUST produce a tick, even while paused or not yet ready.
     this.emitTime(target);
   }
 
   destroy(): void {
     if (this.destroyed) return;
     this.destroyed = true;
+    this.pendingSeek = null;
     this.stopPolling();
     try {
       this.player?.destroy();
@@ -125,6 +140,18 @@ export class YouTubeTimeSource implements TimeSource {
   private readTime(): number {
     const raw = this.player?.getCurrentTime?.();
     return typeof raw === 'number' && Number.isFinite(raw) ? Math.max(0, raw) : this.t;
+  }
+
+  /** Applies a seek queued before the player was ready, then emits its tick. */
+  private applyPendingSeek(): void {
+    const target = this.pendingSeek;
+    this.pendingSeek = null;
+    if (target === null) {
+      this.emitTime(this.readTime());
+      return;
+    }
+    this.player?.seekTo(target, true);
+    this.emitTime(target);
   }
 
   private emitTime(t: number): void {

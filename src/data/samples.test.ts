@@ -13,6 +13,8 @@ import { orderedEpisodeIds } from './show';
 
 const root = resolve(__dirname, '../..');
 const contracts = resolve(root, 'specs/001-watch-hub-v1/contracts');
+// v2 extends the episode contract (skill/class/hotlist events, optional sheet fields).
+const episodeSchemaPath = resolve(root, 'specs/002-watch-hub-v2/contracts/episode.schema.json');
 const dataDir = resolve(root, 'public/data');
 
 function readJson(path: string): unknown {
@@ -23,7 +25,7 @@ const ajv = new Ajv({ strict: false, allErrors: true });
 addFormats(ajv);
 
 const validateShow = ajv.compile(readJson(resolve(contracts, 'show.schema.json')) as object);
-const validateEpisode = ajv.compile(readJson(resolve(contracts, 'episode.schema.json')) as object);
+const validateEpisode = ajv.compile(readJson(episodeSchemaPath) as object);
 
 const showRaw = readJson(resolve(dataDir, 'show.json'));
 
@@ -70,7 +72,7 @@ describe.each(show.episodes.map((meta) => [meta.id, meta] as const))(
     it('is rich enough to exercise every story', () => {
       const episode = normalizeEpisode(raw);
       expect(episode.events.length).toBeGreaterThanOrEqual(25);
-      expect(episode.events.length).toBeLessThanOrEqual(40);
+      expect(episode.events.length).toBeLessThanOrEqual(60);
 
       const counts = new Map<string, number>();
       for (const event of episode.events) {
@@ -90,6 +92,9 @@ describe.each(show.episodes.map((meta) => [meta.id, meta] as const))(
         'status',
         'inventory',
         'note',
+        'skill',
+        'class',
+        'hotlist',
       ];
       for (const type of known) {
         expect(counts.get(type) ?? 0, `${type} appears at least twice`).toBeGreaterThanOrEqual(2);

@@ -15,7 +15,26 @@
       "inventory": [
         "Utility Harness"
       ],
-      "rank": null
+      "rank": null,
+      "race": "Human",
+      "pronouns": "he/him",
+      "crawlerNumber": "4,102,116",
+      "stats": {
+        "str": 7,
+        "int": 4,
+        "con": 7,
+        "dex": 6,
+        "cha": 5
+      },
+      "hotlist": [
+        "The Doorway"
+      ],
+      "skills": [
+        {
+          "name": "Reckless Tumble",
+          "rank": 1
+        }
+      ]
     },
     {
       "id": "psychic",
@@ -32,7 +51,24 @@
       "inventory": [
         "Cracked Visor"
       ],
-      "rank": null
+      "rank": null,
+      "race": "Human",
+      "pronouns": "she/her",
+      "crawlerNumber": "9,338,470",
+      "stats": {
+        "str": 3,
+        "int": 8,
+        "con": 4,
+        "dex": 5,
+        "cha": 7
+      },
+      "hotlist": [],
+      "skills": [
+        {
+          "name": "Static Read",
+          "rank": 1
+        }
+      ]
     },
     {
       "id": "harry",
@@ -49,7 +85,24 @@
       "inventory": [
         "Bent Pry Bar"
       ],
-      "rank": null
+      "rank": null,
+      "race": "Human",
+      "pronouns": "he/him",
+      "crawlerNumber": "10,491,201",
+      "stats": {
+        "str": 5,
+        "int": 6,
+        "con": 6,
+        "dex": 7,
+        "cha": 4
+      },
+      "hotlist": [],
+      "skills": [
+        {
+          "name": "Powerful Strike",
+          "rank": 1
+        }
+      ]
     },
     {
       "id": "xo",
@@ -66,7 +119,26 @@
       "inventory": [
         "Signal Flare"
       ],
-      "rank": null
+      "rank": null,
+      "race": "Crocodilian",
+      "pronouns": "they/them",
+      "crawlerNumber": "2,776,845",
+      "stats": {
+        "str": 6,
+        "int": 5,
+        "con": 8,
+        "dex": 4,
+        "cha": 3
+      },
+      "hotlist": [
+        "The Quartermaster"
+      ],
+      "skills": [
+        {
+          "name": "Signal Discipline",
+          "rank": 1
+        }
+      ]
     },
     {
       "id": "actress",
@@ -83,7 +155,24 @@
       "inventory": [
         "Stage Blood (x3)"
       ],
-      "rank": null
+      "rank": null,
+      "race": "Human",
+      "pronouns": "she/her",
+      "crawlerNumber": "6,204,998",
+      "stats": {
+        "str": 4,
+        "int": 6,
+        "con": 5,
+        "dex": 8,
+        "cha": 9
+      },
+      "hotlist": [],
+      "skills": [
+        {
+          "name": "Stage Presence",
+          "rank": 1
+        }
+      ]
     }
   ],
   "partyRank": null,

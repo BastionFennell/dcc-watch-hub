@@ -125,7 +125,12 @@ describe('EpisodePage', () => {
     const items = screen.getAllByTestId('feed-item');
     expect(items).toHaveLength(8);
 
-    const newest = textOf(episode.events.length - 1);
+    // The newest event that has actually elapsed at 180 (the fixture runs past it).
+    const lastElapsed = episode.events.reduce(
+      (latest, event, index) => (event.t <= 180 ? index : latest),
+      -1,
+    );
+    const newest = textOf(lastElapsed);
     expect(newest).toBeDefined();
     expect(within(items[0]).getByText(newest!)).toBeInTheDocument();
   });

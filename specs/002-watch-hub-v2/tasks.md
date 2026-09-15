@@ -32,7 +32,7 @@ Everyone appends to `src/copy.ts` only at the end of the file. Nobody in wave 2 
 
 ## Phase 1: Setup
 
-- [ ] T101 Append v2 copy to `src/copy.ts` (end of object, under a `/* --- v2 --- */` banner):
+- [X] T101 Append v2 copy to `src/copy.ts` (end of object, under a `/* --- v2 --- */` banner):
   panel close label ("Close"), dossier kicker "CRAWLER DOSSIER", section titles (Vitals, Debuffs,
   Stats, Hotlist, Skills, Inventory, Achievements, History), sheet labels (Race, Pronouns,
   Crawler #, Level, Class, Floor, Player, Handle), empty states in System voice (e.g. "No debuffs
@@ -45,41 +45,41 @@ Everyone appends to `src/copy.ts` only at the end of the file. Nobody in wave 2 
   ("Rejoin the broadcast", "Start from the beginning"), party rank line `(rank) => 'Party rank #N'`,
   feed labels for `skill` ("Skill"), `class` ("Class"), `hotlist` ("Hotlist"), feedText templates
   for the three (`skill(actor, name, rank?)`, `classChange(actor, cls)`, `hotlist(actor, add, remove)`).
-- [ ] T102 [P] Add tokens to `src/styles/tokens.css`: HP segment scale `--hp-seg-1`…`--hp-seg-10`
+- [X] T102 [P] Add tokens to `src/styles/tokens.css`: HP segment scale `--hp-seg-1`…`--hp-seg-10`
   (red #E24B4A → amber #EF9F27 → green #639922 ramp), `--panel-z: 20`, `--focus-ring: 0 0 0 2px var(--brand-2)`;
   add `body.panel-open { overflow: hidden }` to `src/styles/global.css`.
-- [ ] T103 [P] Raise the per-file event ceiling in `src/data/samples.test.ts` from 40 to 60 and add
+- [X] T103 [P] Raise the per-file event ceiling in `src/data/samples.test.ts` from 40 to 60 and add
   `skill`, `class`, `hotlist` to its "every known type ≥ 2×" expectation.
 
 ## Phase 2: Foundational
 
-- [ ] T104 `src/data/types.ts`: add `SkillEntry { name; rank? }`, `CrawlerStats`, optional `Crawler`
+- [X] T104 `src/data/types.ts`: add `SkillEntry { name; rank? }`, `CrawlerStats`, optional `Crawler`
   fields (`race`, `pronouns`, `crawlerNumber`, `stats`, `hotlist`, `skills`), events `SkillEvent`,
   `ClassEvent`, `HotlistEvent`, extend `Event`, `EventType`, `KNOWN_EVENT_TYPES`.
-- [ ] T105 `src/data/validate.ts`: normalize the three events (coerce `rank`, split nothing — arrays
+- [X] T105 `src/data/validate.ts`: normalize the three events (coerce `rank`, split nothing — arrays
   arrive as arrays) and the optional crawler fields (drop malformed optional fields with a
   `console.warn`, never throw); extend `src/data/validate.test.ts`.
-- [ ] T106 `src/engine/state.ts` + `src/engine/reducer.ts`: `CrawlerState` gains `skills`, `hotlist`
+- [X] T106 `src/engine/state.ts` + `src/engine/reducer.ts`: `CrawlerState` gains `skills`, `hotlist`
   seeded from initial fields; reducer cases per data-model §1 (skill upsert by name, class set,
   hotlist union). Extend `src/engine/reducer.test.ts` (upsert replaces rank, keeps order; class;
   hotlist add/remove; unknown actor ignored).
-- [ ] T107 `src/engine/selectors.ts`: add `crawlerHistory`, `rankSeries`, `hpSegments`,
+- [X] T107 `src/engine/selectors.ts`: add `crawlerHistory`, `rankSeries`, `hpSegments`,
   `crawlerDossier`, `mapLabels` per data-model §3; `toFeedItem` handles the three new types with
   `copy.labels`/`copy.feedText`. Extend `src/engine/selectors.test.ts` with the cases in research R12.
-- [ ] T108 [P] `src/test/fixtures.ts`: add the facts in data-model §5 (keep all existing times and
+- [X] T108 [P] `src/test/fixtures.ts`: add the facts in data-model §5 (keep all existing times and
   texts so v1 page tests still pass).
-- [ ] T109 [P] Sample data `public/data/ep{1,2,3}.json`: add sheet fields to all five crawlers, ≥ 2
+- [X] T109 [P] Sample data `public/data/ep{1,2,3}.json`: add sheet fields to all five crawlers, ≥ 2
   `skill`, ≥ 2 `class`, ≥ 2 `hotlist` events, ≥ 3 crawler-scoped `rank` events for two crawlers,
   a third labeled `map_reveal`; keep every `t ≤ durationSec` and ascending; diegetic text.
   `npm test -- samples` must pass against the v2 schema (see T110).
-- [ ] T110 [P] Contracts + converter: point `src/data/samples.test.ts` and `scripts/sheet-to-json.test.ts`
+- [X] T110 [P] Contracts + converter: point `src/data/samples.test.ts` and `scripts/sheet-to-json.test.ts`
   at `specs/002-watch-hub-v2/contracts/episode.schema.json`; extend `scripts/sheet-to-json.ts` with
   `skill`/`class`/`hotlist` rows per `contracts/sheet-csv.md`; update `scripts/samples/ep1.csv`,
   `ep1-broken.csv`, `ep1-error.csv`, `ep1.initial.json`; extend `scripts/sheet-to-json.test.ts`.
-- [ ] T111 [P] `src/playback/resume.ts` per `contracts/resume-storage.md` (`createResumeStore`,
+- [X] T111 [P] `src/playback/resume.ts` per `contracts/resume-storage.md` (`createResumeStore`,
   default export bound to `localStorage`) + `src/playback/resume.test.ts` (round-trip, bad JSON,
   wrong episode, negative t, throwing storage, clear).
-- [ ] T112 [P] `src/playback/YouTubeTimeSource.ts`: queue `seek` until `onReady` (latest wins),
+- [X] T112 [P] `src/playback/YouTubeTimeSource.ts`: queue `seek` until `onReady` (latest wins),
   apply with `seekTo(t, true)` and emit a tick; update the header comment. No test (host-bound);
   `contracts/time-source.md` §6 documents it.
 

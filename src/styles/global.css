@@ -21,6 +21,11 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* A full-viewport panel (≤ 900 px) locks the page behind it (FR-102). */
+body.panel-open {
+  overflow: hidden;
+}
+
 h1,
 h2,
 h3,
