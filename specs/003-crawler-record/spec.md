@@ -163,3 +163,75 @@ panel's kicker becomes "CRAWLER GLANCE" and the record's kicker "CRAWLER RECORD"
 ## Out of Scope
 
 - Tooltips, per-item explanations, sheet fields beyond v2, deep links to a record, printing.
+
+---
+
+# Revision 2 (2026-09-15) — author feedback after the first build
+
+Author, on the glance card: "We don't need the skills list in the sideboard (the PCs will have a
+ton of skills very quickly). Similar for inventory — better to just show equipped items. Maybe
+instead of achievements we show the most recent achievement? What are the two dashes in history?"
+On the record: "We'll need room for full character art on the sheet. Make the hotlist look like an
+actual MMO hotlist. Similar feedback for skills, inventory, achievements, etc. — maybe those can
+be expanded into a different list view?"
+
+The dashes were placeholder rows keeping the card's height fixed; they are removed (R2-FR-201).
+
+## R2 User Story 1 - The glance card shows what matters right now (P1)
+
+**Acceptance Scenarios**
+
+1. **Given** a crawler frame is clicked, **Then** the card shows, in order: header (bust, name,
+   handle · player, class · level), HP segments + numbers, rank current/best + sparkline (own
+   row) or "Unranked", debuffs, **Equipped** (each worn slot as `slot · item`; "Nothing
+   equipped." when none), **Latest achievement** (title, description, time; "No achievements
+   yet." when none), **Recent moments** (up to three, no placeholders), and "Open full record".
+2. **Given** any list length, **Then** the card's height is bounded (equipped shows at most the
+   seven slot rows; other sections are single items) and never scrolls at ≥ 1024 px height.
+3. Skills, inventory counts, and ledger rows no longer appear in the card.
+
+## R2 User Story 2 - The record reads like a crawler sheet in an MMO (P2)
+
+**Acceptance Scenarios**
+
+1. **Given** the record opens, **Then** the left column is the crawler's full-figure art
+   (`art` field; the bust when absent) at full dialog height, with identity, vitals, and stats
+   beside it.
+2. **Given** the Hotlist, **Then** it renders as a hotbar of ten square slots numbered 1–10,
+   entries filling slots in order, empty slots drawn dim; on a phone the bar wraps to two rows of five.
+3. **Given** gear, **Then** a Gear section lists the sheet's slots (Head, Torso, Arms, Hands,
+   Legs, Feet, Accessories) with the equipped item or "—" per slot.
+4. **Given** Skills, Inventory, Achievements, **Then** each is a tile grid (square-ish tiles with
+   the name, and rank / time where relevant) showing at most eight tiles, with "View all (N)"
+   when there are more; History shows its latest eight rows with "View all (N)".
+5. **Given** "View all" is activated, **Then** the dialog body is replaced by a full list view for
+   that category with a "Back to record" control and the same live updating; Escape in the list
+   view returns to the sheet, a second Escape closes the record; focus moves to the list's
+   heading on entry and back to the "View all" button on return.
+6. **Given** the playhead moves while any view is open, **Then** the view updates within 500 ms.
+
+## R2 Requirements
+
+- **R2-FR-201**: Glance card content per US1 scenario 1; no placeholder rows; bounded height.
+- **R2-FR-220**: New events, end to end (types, reducer, selectors, converter rows, schema,
+  samples, fixtures): `equip { actor, slot, item }`, `unequip { actor, slot, item? }` with
+  `slot ∈ head | torso | arms | hands | legs | feet | accessory` (accessory is a list, max 10,
+  `unequip` by item name). Crawler optional `gear` starting state and optional `art` (path to a
+  full-figure image). Feed labels "Equip" / "Unequip"; history includes them.
+- **R2-FR-221**: `hotlist` keeps its list semantics but the record renders ten fixed slots; more
+  than ten entries show the first ten and a "+N" marker.
+- **R2-FR-222**: Record layout per US2 (art column, hotbar, gear, tile grids with "View all",
+  history), stacking on ≤ 900 px with the art above the identity.
+- **R2-FR-223**: List views are dialog-internal state (`view`), reset when the record closes;
+  the dialog title gains the category name while a list view is open.
+- **R2-FR-224**: Placeholder art: generated full-figure silhouettes per crawler under
+  `public/img/crawlers/<id>-art.svg` (tall, ~2:5 aspect), listed as placeholders in README.
+
+## R2 Success Criteria
+
+- **R2-SC-201**: Card height equal for the fixture crawler with the most items and the one with
+  the least; no dashes.
+- **R2-SC-202**: Equipped and latest achievement follow the playhead in a scripted sweep.
+- **R2-SC-203**: Hotbar shows 10 slots with entries in order; tile grids cap at 8 and "View all"
+  opens the list view and returns focus correctly; Escape order holds.
+- **R2-SC-204**: Lighthouse accessibility 100; no horizontal scroll at 360 px in any record view.

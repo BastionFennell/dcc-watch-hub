@@ -52,6 +52,23 @@ describe('CrawlerGlance', () => {
     expect(screen.queryByTestId('rank-sparkline')).not.toBeInTheDocument();
   });
 
+  it('gives the sparkline its own row, reserved whether or not there is a series (T313)', () => {
+    // Ranked: the numbers, then the chart on the row below — never beside them,
+    // where the rail squeezes it (T313 visual review).
+    const { rerender, onOpenRecord } = renderGlance(glanceAt(200));
+    const rank = () => screen.getByTestId('glance-rank');
+    const spark = () => screen.getByTestId('glance-rank-spark');
+    expect(rank().children).toHaveLength(2);
+    expect(rank().children[1]).toBe(spark());
+    expect(within(spark()).getByTestId('rank-sparkline')).toBeInTheDocument();
+
+    // Unranked: the same two rows, the second one empty — so the card is the
+    // same height for every crawler (FR-201, SC-201).
+    rerender(<CrawlerGlance glance={glanceAt(90)} onOpenRecord={onOpenRecord} />);
+    expect(rank().children).toHaveLength(2);
+    expect(spark()).toBeEmptyDOMElement();
+  });
+
   it('gives each list one row with its count and newest entry', () => {
     renderGlance(glanceAt(200));
     expect(ledger('hotlist')).toHaveTextContent(copy.dossierSections.hotlist);

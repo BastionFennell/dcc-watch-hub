@@ -316,17 +316,19 @@ Measured on the production build (`npm run build`, Node 20.9.0):
 
 | Asset | Raw | Gzipped |
 |-------|-----|---------|
-| `dist/assets/index-*.js` | 325.7 kB | **103.3 kB** |
-| `dist/assets/index-*.css` | 30.7 kB | 6.4 kB |
+| `dist/assets/index-*.js` | 337.5 kB | **106.7 kB** |
+| `dist/assets/index-*.css` | 38.9 kB | 7.5 kB |
 | `dist/index.html` | 0.7 kB | 0.4 kB |
 
 That is React 19 + react-router 7 + the whole app — v1 plus the v2 panels, dossier, floor map
-and resume — comfortably under the 150 kB gzipped budget.
+and resume, plus the glance card and full record — comfortably under the 150 kB gzipped budget.
 
 Lighthouse 11.7.1, desktop preset, against `npm run preview` with the real YouTube embed loading:
 **performance 100, accessibility 100** on both `/ep/1` and `/` (FCP 0.4 s, LCP 0.5 s, TBT 0 ms,
 CLS 0), with no accessibility audit below 1 — including the zero-weight informational ones.
-Details in `specs/002-watch-hub-v2/quickstart.md` → Results.
+Details in `specs/002-watch-hub-v2/quickstart.md` → Results; re-measured for the crawler
+record in `specs/003-crawler-record/quickstart.md` → Results (`/ep/1` still 100/100, and the
+full record itself audits at accessibility 100 with zero axe violations).
 
 The budget holds because of three rules: no webfonts (`system-ui` stack only, nothing blocks
 first render), no render-blocking scripts (the bundle is a `type="module"` script, deferred by

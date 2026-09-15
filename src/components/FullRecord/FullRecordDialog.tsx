@@ -61,7 +61,13 @@ export function FullRecordDialog({
         data-testid="crawler-record"
         data-crawler={dossier.id}
       >
-        <header className={styles.header}>
+        {/*
+          Deliberately not a <header>: inside `role="dialog"` it maps to a
+          second banner landmark alongside the site header (axe landmark-unique
+          / landmark-no-duplicate-banner). A plain box keeps the styles, the
+          testids and the `aria-labelledby` target (T313).
+        */}
+        <div className={styles.header} data-testid="record-header">
           <div className={styles.heading}>
             <p className={styles.kicker}>{copy.recordKicker}</p>
             <h2 id={TITLE_ID} className={styles.title}>
@@ -77,13 +83,25 @@ export function FullRecordDialog({
           >
             <IconClose className={styles.closeIcon} />
           </button>
-        </header>
+        </div>
 
-        <div className={styles.body} data-testid="record-body">
+        {/*
+          `tabIndex={0}`: the sheet scrolls internally (FR-212) and holds no
+          controls of its own, so without a tab stop a keyboard could not scroll
+          it at all (axe scrollable-region-focusable, WCAG 2.1.1 — T313). It
+          joins the dialog's own focus cycle; no role and no label, so it stays
+          a plain group to assistive tech.
+        */}
+        <div className={styles.body} data-testid="record-body" tabIndex={0}>
           <div className={styles.top}>
-            <div className={styles.topCell}>
+            {/*
+              A <section> (unnamed, so still generic to assistive tech) purely
+              to scope `DossierHeader`'s System-blue <header> band: unscoped it
+              would be a banner landmark of its own inside the dialog (T313).
+            */}
+            <section className={styles.topCell}>
               <DossierHeader dossier={dossier} meta={meta} />
-            </div>
+            </section>
             <div className={styles.topCell}>
               <DossierVitals dossier={dossier} />
             </div>

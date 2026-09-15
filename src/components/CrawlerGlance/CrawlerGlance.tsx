@@ -96,24 +96,31 @@ export function CrawlerGlance({ glance, onOpenRecord }: CrawlerGlanceProps) {
         </p>
       </div>
 
+      {/*
+        Two stacked rows: the numbers, then the chart on a row of its own. Beside
+        the numbers the rail squeezed it to ~80 px (T313 visual review). The
+        chart's row is reserved whether or not there is a series to draw —
+        `RankSparkline` renders nothing when unranked — so an unranked crawler's
+        card is exactly as tall as a ranked one (FR-201, SC-201).
+      */}
       <div className={styles.rankBlock} data-testid="glance-rank">
         {rank.current === null || rank.best === null ? (
           <p className={styles.unranked}>{copy.unranked}</p>
         ) : (
-          <>
-            <div className={styles.rankNumbers}>
-              <span className={styles.rankLabel}>{copy.rankCurrent}</span>
-              <span className={styles.rankValue} data-testid="glance-rank-current">
-                {copy.rankValue(rank.current)}
-              </span>
-              <span className={styles.rankLabel}>{copy.rankBest}</span>
-              <span className={styles.rankValue} data-testid="glance-rank-best">
-                {copy.rankValue(rank.best)}
-              </span>
-            </div>
-            <RankSparkline series={rank} />
-          </>
+          <div className={styles.rankNumbers}>
+            <span className={styles.rankLabel}>{copy.rankCurrent}</span>
+            <span className={styles.rankValue} data-testid="glance-rank-current">
+              {copy.rankValue(rank.current)}
+            </span>
+            <span className={styles.rankLabel}>{copy.rankBest}</span>
+            <span className={styles.rankValue} data-testid="glance-rank-best">
+              {copy.rankValue(rank.best)}
+            </span>
+          </div>
         )}
+        <div className={styles.rankSpark} data-testid="glance-rank-spark">
+          <RankSparkline series={rank} />
+        </div>
       </div>
 
       <section className={styles.block} data-testid="glance-debuffs">

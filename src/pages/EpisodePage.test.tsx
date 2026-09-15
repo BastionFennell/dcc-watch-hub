@@ -631,11 +631,29 @@ describe('EpisodePage', () => {
     expect(screen.queryByTestId('crawler-record')).not.toBeInTheDocument();
   });
 
+  it('adds no second banner landmark when the record opens (T313)', async () => {
+    const { seek } = await mountEpisode();
+    seek(100);
+    clickFrame('harry');
+    openRecord();
+
+    // The record's title bar is a plain box. A <header> whose nearest section
+    // is the dialog maps to a banner landmark next to the site header's (axe
+    // landmark-unique / landmark-no-duplicate-banner), and the record is what
+    // has to hold Lighthouse accessibility at 100 (SC-204). The glance card's
+    // own <header> is scoped by its <article>, so it is not a landmark.
+    expect(screen.getByTestId('record-header').tagName).toBe('DIV');
+    // Any <header> left inside the dialog must be scoped by sectioning content,
+    // which is what stops it computing as a banner.
+    for (const node of record().querySelectorAll('header')) {
+      expect(node.closest('article, aside, main, nav, section')).not.toBeNull();
+    }
+    expect(glance().closest('article')).toBe(glance());
+  });
+
   it('closes the record and the glance when the viewer changes episode', async () => {
     const { seek } = await mountEpisode();
     seek(100);
-    // The site header is a landmark the record's own header would collide with,
-    // so hold the link before the dialog exists.
     const nextLink = within(screen.getByRole('banner')).getByRole('link', {
       name: copy.nextEpisode,
     });

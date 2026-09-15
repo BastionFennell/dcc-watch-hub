@@ -132,6 +132,9 @@ describe('FullRecordDialog', () => {
     expect(achievement).toHaveAttribute('data-name', 'Gate Crasher');
     // Nothing is interactive yet: the close control is the dialog's only control.
     expect(within(screen.getByTestId('record-body')).queryByRole('button')).toBeNull();
+    // The sheet itself is the one tab stop besides it, so a keyboard can scroll
+    // a record too long for the viewport (axe scrollable-region-focusable, T313).
+    expect(screen.getByTestId('record-body')).toHaveAttribute('tabindex', '0');
   });
 
   it('keeps updating with the playhead without closing or remounting', () => {

@@ -56,3 +56,35 @@
 - Page: frame → glance (not the full list sections); "Open full record" → dialog with sections;
   Escape closes only the dialog (glance stays), focus on the button; backdrop closes; live update
   while open (seek changes Inventory in the dialog); episode change closes both; ≤ 900 px class.
+
+## Revision 2
+
+### R7. Equipped items need a data source
+- **Decision**: `equip`/`unequip` events with the official sheet's gear slots, plus optional
+  starting `gear`. The glance's "Equipped" reads the gear state; inventory stays the carried list.
+- **Alternatives**: an `equipped: boolean` on inventory strings (the inventory is `string[]`, so
+  this would change the whole model); inferring from names (unreliable).
+
+### R8. Hotbar and tiles
+- **Decision**: Hotbar = ten `<li>` squares in a CSS grid `repeat(10, 1fr)` (five per row ≤ 900
+  px), each with a small slot number top-left and the entry name centered, empty slots at 40%
+  opacity with a dashed hairline; `+N` marker after slot ten when overflowed. Tiles = CSS grid
+  `repeat(auto-fill, minmax(120px, 1fr))` of square-ish panels (name, then rank / time as a
+  mono caps footer); first eight only; "View all (N)" button after the grid when N > 8.
+- **List view**: dialog-internal `view` state; the body swaps to a single scrolling list (the
+  existing `DossierList` / `DossierAchievements` / `DossierHistory` sections render the full
+  content) with a "Back to record" button at the top; Escape returns to the sheet before closing.
+- **Alternatives**: nested accordions (crowded); a second dialog (focus management doubles).
+
+### R9. Art column
+- **Decision**: `art` renders in a left column `grid-template-columns: minmax(180px, 22%) 1fr`
+  spanning the top band and the sections, `object-fit: contain`, `object-position: top`, on a
+  `--panel-deep` backdrop; falls back to the bust centered in the same column. ≤ 900 px: the art
+  becomes a 40 vh banner above the identity. Placeholder art: generated SVG silhouettes.
+
+### R9a. Art aspect ratio varies
+The author's samples: The Actress ≈ 1:2.7 (tall, narrow), The Stuntman ≈ 1:1.7 (wide stance).
+The art column therefore uses `object-fit: contain; object-position: top center` inside a column
+of `minmax(200px, 28%)` width, and the column's height follows the sheet; wide figures simply
+use more of the column width, tall ones more height. Placeholder art ships one wide silhouette
+(stuntman, 320×540) and tall ones (others, 200×540) so both cases are exercised.

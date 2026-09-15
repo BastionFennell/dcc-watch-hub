@@ -38,9 +38,9 @@ description: "Task list for the Crawler Record feature (glance card + full recor
 
 ## Phase 4: Polish (wave 3)
 
-- [ ] T313 [P] Visual/accessibility pass with headless Chrome at 1440×900 and 500 px: glance card height equal for Harry vs The Actress at t=560 (record the px), no scroll; record layout columns; contrast of new elements; Lighthouse a11y 100 on `/ep/1`.
-- [ ] T314 [P] Responsive: 360/400 px with the record open — no horizontal scroll, close reachable, stacked order; glance card at 360 px.
-- [ ] T315 Final: `typecheck && lint && test && build`; quickstart walk; SC-201..SC-205 under quickstart `## Results`; all tasks `[X]`.
+- [X] T313 [P] Visual/accessibility pass with headless Chrome at 1440×900 and 500 px: glance card height equal for Harry vs The Actress at t=560 (record the px), no scroll; record layout columns; contrast of new elements; Lighthouse a11y 100 on `/ep/1`.
+- [X] T314 [P] Responsive: 360/400 px with the record open — no horizontal scroll, close reachable, stacked order; glance card at 360 px.
+- [X] T315 Final: `typecheck && lint && test && build`; quickstart walk; SC-201..SC-205 under quickstart `## Results`; all tasks `[X]`.
 
 ## Notes
 - No git write commands by agents; orchestrator commits per wave. No new dependencies. Copy only from `src/copy.ts` (append at end).
