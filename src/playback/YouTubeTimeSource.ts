@@ -1,6 +1,11 @@
 /**
  * The production `TimeSource`: a thin adapter over the YouTube IFrame Player API
- * (research R4, contracts/time-source.md).
+ * (research R4/R8, contracts/time-source.md §6).
+ *
+ * A seek is accepted at any time. Before the player is ready the latest target is
+ * queued and applied in `onReady` with `seekTo(t, true)`, so answering the resume
+ * card while the iframe is still loading still lands the broadcast in the right
+ * place (FR-132).
  *
  * This file and `loadYouTubeApi.ts` are the ONLY modules allowed to reference the
  * `YT` global (constitution II). Nothing here knows about React or the overlay.
@@ -10,6 +15,9 @@ import { createEmitter } from './TimeSource';
 import { loadYouTubeApi } from './loadYouTubeApi';
 
 const POLL_MS = 250;
+// While paused, cued, or ended the host can still be scrubbed with its own bar without
+// any state change, so keep watching the clock at a gentler cadence (contract §1).
+const IDLE_POLL_MS = 500;
 
 export interface YouTubeTimeSourceOptions {
   /** Fired once the player is ready to accept commands. */
@@ -22,7 +30,11 @@ export class YouTubeTimeSource implements TimeSource {
   private t = 0;
   private player: YT.Player | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
+  private timerMs = 0;
   private destroyed = false;
+  private ready = false;
+  /** Only the most recent seek requested before `onReady` is kept (contract §6). */
+  private pendingSeek: number | null = null;
 
   /** Our own child element: `YT.Player` replaces the node it is given. */
   private host: HTMLElement | null;
@@ -56,7 +68,9 @@ export class YouTubeTimeSource implements TimeSource {
           events: {
             onReady: () => {
               if (this.destroyed) return;
-              this.emitTime(this.readTime());
+              this.ready = true;
+              this.startPolling(IDLE_POLL_MS);
+              this.applyPendingSeek();
               this.opts.onReady?.();
             },
             onStateChange: (event: YT.OnStateChangeEvent) => this.handleState(event.data),
@@ -97,14 +111,20 @@ export class YouTubeTimeSource implements TimeSource {
   seek(t: number): void {
     if (this.destroyed) return;
     const target = Math.max(0, t);
-    this.player?.seekTo(target, true);
-    // Contract: a seek MUST produce a tick, even while paused.
+    if (this.ready) {
+      this.player?.seekTo(target, true);
+    } else {
+      // Not ready yet: remember the latest target and apply it in onReady.
+      this.pendingSeek = target;
+    }
+    // Contract: a seek MUST produce a tick, even while paused or not yet ready.
     this.emitTime(target);
   }
 
   destroy(): void {
     if (this.destroyed) return;
     this.destroyed = true;
+    this.pendingSeek = null;
     this.stopPolling();
     try {
       this.player?.destroy();
@@ -127,6 +147,18 @@ export class YouTubeTimeSource implements TimeSource {
     return typeof raw === 'number' && Number.isFinite(raw) ? Math.max(0, raw) : this.t;
   }
 
+  /** Applies a seek queued before the player was ready, then emits its tick. */
+  private applyPendingSeek(): void {
+    const target = this.pendingSeek;
+    this.pendingSeek = null;
+    if (target === null) {
+      this.emitTime(this.readTime());
+      return;
+    }
+    this.player?.seekTo(target, true);
+    this.emitTime(target);
+  }
+
   private emitTime(t: number): void {
     if (this.destroyed) return;
     this.t = t;
@@ -142,19 +174,19 @@ export class YouTubeTimeSource implements TimeSource {
         this.startPolling();
         break;
       case 0 /* ENDED */:
-        this.stopPolling();
+        this.startPolling(IDLE_POLL_MS);
         this.emitTime(this.readTime());
         this.ends.emit();
         break;
       case 2 /* PAUSED */:
-        this.stopPolling();
+        this.startPolling(IDLE_POLL_MS);
         // One tick so a scrub made while paused still moves the overlay.
         this.emitTime(this.readTime());
         this.pauses.emit();
         break;
       case 3 /* BUFFERING */:
       case 5 /* CUED */:
-        this.stopPolling();
+        this.startPolling(IDLE_POLL_MS);
         this.emitTime(this.readTime());
         break;
       default:
@@ -162,9 +194,12 @@ export class YouTubeTimeSource implements TimeSource {
     }
   }
 
-  private startPolling(): void {
-    if (this.timer !== null || this.destroyed) return;
-    this.timer = setInterval(() => this.emitTime(this.readTime()), POLL_MS);
+  private startPolling(ms: number = POLL_MS): void {
+    if (this.destroyed) return;
+    if (this.timer !== null && this.timerMs === ms) return;
+    this.stopPolling();
+    this.timerMs = ms;
+    this.timer = setInterval(() => this.emitTime(this.readTime()), ms);
   }
 
   private stopPolling(): void {

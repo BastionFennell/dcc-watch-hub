@@ -18,7 +18,10 @@ export function AchievementToast({ toast }: AchievementToastProps) {
     <div className={styles.region} role="status" aria-live="polite">
       {toast ? (
         <div key={toast.id} className={styles.toast} data-testid="achievement-toast">
-          <span className={styles.tag}>{copy.newAchievementTag}</span>
+          <span className={styles.tagRow}>
+            <span className={styles.tag}>{copy.newAchievementTag}</span>
+            {toast.actorName ? <span className={styles.actor}>{toast.actorName}</span> : null}
+          </span>
           <p className={styles.body}>
             <span className={styles.title}>{toast.title}</span>
             {toast.desc ? <span className={styles.desc}> — {toast.desc}</span> : null}

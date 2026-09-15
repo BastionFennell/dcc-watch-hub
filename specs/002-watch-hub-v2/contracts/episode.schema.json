@@ -1,0 +1,551 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://dcc-watch-hub/contracts/episode.v2.schema.json",
+  "title": "EpisodeData (v2)",
+  "type": "object",
+  "required": [
+    "episodeId",
+    "initialState",
+    "events"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "cell": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "stringList": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "crawler": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "handle",
+        "player",
+        "level",
+        "hp",
+        "portrait",
+        "class",
+        "inventory",
+        "rank"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9_-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "handle": {
+          "type": "string"
+        },
+        "player": {
+          "type": "string"
+        },
+        "level": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "hp": {
+          "type": "object",
+          "required": [
+            "current",
+            "max"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "current": {
+              "type": "number",
+              "minimum": 0
+            },
+            "max": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        "portrait": {
+          "type": "string"
+        },
+        "class": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "inventory": {
+          "$ref": "#/definitions/stringList"
+        },
+        "rank": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "race": {
+          "type": "string"
+        },
+        "pronouns": {
+          "type": "string"
+        },
+        "crawlerNumber": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "stats": {
+          "type": "object",
+          "required": [
+            "str",
+            "int",
+            "con",
+            "dex",
+            "cha"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "str": {
+              "type": "number"
+            },
+            "int": {
+              "type": "number"
+            },
+            "con": {
+              "type": "number"
+            },
+            "dex": {
+              "type": "number"
+            },
+            "cha": {
+              "type": "number"
+            }
+          }
+        },
+        "hotlist": {
+          "$ref": "#/definitions/stringList"
+        },
+        "skills": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/skillEntry"
+          }
+        }
+      }
+    },
+    "baseEvent": {
+      "type": "object",
+      "required": [
+        "t",
+        "type"
+      ],
+      "properties": {
+        "t": {
+          "type": "number",
+          "minimum": 0
+        },
+        "type": {
+          "type": "string"
+        },
+        "actor": {
+          "type": "string"
+        }
+      }
+    },
+    "skillEntry": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rank": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "properties": {
+    "episodeId": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "initialState": {
+      "type": "object",
+      "required": [
+        "party",
+        "partyRank",
+        "map"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "party": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/crawler"
+          },
+          "minItems": 1
+        },
+        "partyRank": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "map": {
+          "type": "object",
+          "required": [
+            "floor",
+            "grid",
+            "revealed"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "floor": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "grid": {
+              "type": "object",
+              "required": [
+                "cols",
+                "rows"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "cols": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "rows": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "revealed": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/cell"
+              }
+            }
+          }
+        }
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/definitions/baseEvent"
+          },
+          {
+            "oneOf": [
+              {
+                "properties": {
+                  "type": {
+                    "const": "system_message"
+                  },
+                  "text": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "text"
+                ]
+              },
+              {
+                "properties": {
+                  "type": {
+                    "const": "achievement"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "desc": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "actor",
+                  "title"
+                ]
+              },
+              {
+                "properties": {
+                  "type": {
+                    "const": "loot"
+                  },
+                  "item": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "actor",
+                  "item"
+                ]
+              },
+              {
+                "properties": {
+                  "type": {
+                    "const": "hp"
+                  },
+                  "current": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "actor",
+                  "current",
+                  "max"
+                ]
+              },
+              {
+                "properties": {
+                  "type": {
+                    "const": "level_up"
+                  },
+                  "level": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "actor",
+                  "level"
+                ]
+              },
+              {
+                "properties": {
+                  "type": {
+                    "const": "rank"
+                  },
+                  "scope": {
+                    "enum": [
+                      "party",
+                      "crawler"
+                    ]
+                  },
+                  "rank": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "scope",
+                  "rank"
+                ]
+              },
+              {
+                "properties": {
+                  "type": {
+                    "const": "map_reveal"
+                  },
+                  "cells": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/definitions/cell"
+                    }
+                  },
+                  "label": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "cells"
+                ]
+              },
+              {
+                "properties": {
+                  "type": {
+                    "const": "sponsor"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "durationSec": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
+                },
+                "required": [
+                  "text",
+                  "durationSec"
+                ]
+              },
+              {
+                "properties": {
+                  "type": {
+                    "const": "chapter"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "label",
+                  "kind"
+                ]
+              },
+              {
+                "properties": {
+                  "type": {
+                    "const": "status"
+                  },
+                  "add": {
+                    "$ref": "#/definitions/stringList"
+                  },
+                  "remove": {
+                    "$ref": "#/definitions/stringList"
+                  }
+                },
+                "required": [
+                  "actor",
+                  "add",
+                  "remove"
+                ]
+              },
+              {
+                "properties": {
+                  "type": {
+                    "const": "inventory"
+                  },
+                  "add": {
+                    "$ref": "#/definitions/stringList"
+                  },
+                  "remove": {
+                    "$ref": "#/definitions/stringList"
+                  }
+                },
+                "required": [
+                  "actor",
+                  "add",
+                  "remove"
+                ]
+              },
+              {
+                "properties": {
+                  "type": {
+                    "const": "note"
+                  },
+                  "text": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "text"
+                ]
+              },
+              {
+                "properties": {
+                  "type": {
+                    "const": "skill"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "rank": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "desc": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "actor",
+                  "name"
+                ]
+              },
+              {
+                "properties": {
+                  "type": {
+                    "const": "class"
+                  },
+                  "class": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "actor",
+                  "class"
+                ]
+              },
+              {
+                "properties": {
+                  "type": {
+                    "const": "hotlist"
+                  },
+                  "add": {
+                    "$ref": "#/definitions/stringList"
+                  },
+                  "remove": {
+                    "$ref": "#/definitions/stringList"
+                  }
+                },
+                "required": [
+                  "actor",
+                  "add",
+                  "remove"
+                ]
+              },
+              {
+                "properties": {
+                  "type": {
+                    "not": {
+                      "enum": [
+                        "system_message",
+                        "achievement",
+                        "loot",
+                        "hp",
+                        "level_up",
+                        "rank",
+                        "map_reveal",
+                        "sponsor",
+                        "chapter",
+                        "status",
+                        "inventory",
+                        "note",
+                        "skill",
+                        "class",
+                        "hotlist"
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,112 @@
+/*
+ * Resume offer over the 16:9 stage (FR-131). Same System card as the ended
+ * state, one layer above the toast and the minimap badge (both z-index 2) so
+ * nothing on the stage can sit on top of the question.
+ */
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+  background: rgb(19 19 32 / 88%);
+  animation: resumeIn 150ms ease-out;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: center;
+  text-align: center;
+  max-width: 360px;
+  padding: var(--space-6) var(--space-7);
+  background: var(--system-bg);
+  color: var(--system-fg);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 12px rgb(0 0 0 / 45%);
+}
+
+.kicker {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--system-pill-fg);
+}
+
+.title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.body {
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: center;
+  margin-top: var(--space-3);
+}
+
+.primary,
+.secondary {
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.primary {
+  background: var(--brand-2);
+  color: var(--brand-fg-2);
+  font-weight: 500;
+}
+
+.primary:hover {
+  background: var(--brand);
+}
+
+.secondary {
+  border: var(--border-hairline-2);
+  color: var(--system-fg);
+}
+
+.secondary:hover {
+  border-color: var(--brand-2);
+  color: var(--brand-fg-2);
+}
+
+.primary:focus-visible,
+.secondary:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+@keyframes resumeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop {
+    animation: none;
+  }
+
+  .primary,
+  .secondary {
+    transition: none;
+  }
+}

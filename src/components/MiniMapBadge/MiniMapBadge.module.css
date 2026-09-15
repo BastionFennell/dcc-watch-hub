@@ -1,20 +1,52 @@
 /*
  * Wireframe: a 96×64 panel 8 px in from the stage's bottom-right, hairline-2
  * border, a muted "Floor n" header and a 1 px-gapped grid of sector cells.
+ *
+ * Since v2 the badge is also the expanded map's trigger (FR-122), so it takes a
+ * pointer and shows hover/focus affordances — but it keeps the ambient, flat
+ * look until one of those happens.
  */
 .badge {
   position: absolute;
   right: var(--space-4);
   bottom: var(--stage-overlay-bottom, var(--space-4));
   z-index: 2;
+  display: block;
   width: var(--minimap-width);
   min-height: 64px;
   padding: var(--space-2);
+  color: inherit;
+  font: inherit;
+  text-align: left;
   background: var(--panel);
   border: var(--border-hairline-2);
   border-radius: var(--radius-md);
-  pointer-events: none;
-  cursor: default;
+  cursor: pointer;
+  transition: border-color 200ms ease;
+}
+
+.badge:hover {
+  border-color: var(--brand-2);
+}
+
+.badge:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/*
+ * The badge while its map panel is open (T131), driven off `aria-expanded` so it
+ * cannot drift from the accessible state. Same border treatment as the crawler
+ * frame — `--brand-line` at 3.98:1 on --panel, brighter than the hover border —
+ * but no background wash: the revealed cells are `--brand-deep` and would
+ * disappear into it. The header brightens instead.
+ */
+.badge[aria-expanded='true'] {
+  border-color: var(--brand-line);
+}
+
+.badge[aria-expanded='true'] .header {
+  color: var(--text-2);
 }
 
 .header {
@@ -50,4 +82,11 @@
 
 .cell[data-state='recent'] {
   background: var(--brand-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge,
+  .cell {
+    transition: none;
+  }
 }

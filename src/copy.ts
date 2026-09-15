@@ -50,6 +50,9 @@ export const copy = {
     status: 'Status',
     inventory: 'Inventory',
     note: 'Note',
+    skill: 'Skill',
+    class: 'Class',
+    hotlist: 'Hotlist',
   } as const,
 
   // Stage
@@ -96,6 +99,18 @@ export const copy = {
       return `${actor} ${parts.length > 0 ? parts.join(' and ') : 'carries on'}`;
     },
     chapter: (label: string) => label,
+    /* --- v2 event types (FR-112) --- */
+    skill: (actor: string, name: string, rank?: number) =>
+      rank === undefined
+        ? `${actor} logs the skill ${name}`
+        : `${actor} logs ${name} at rank ${rank}`,
+    classChange: (actor: string, cls: string) => `${actor} is classed: ${cls}`,
+    hotlist: (actor: string, add: string[], remove: string[]) => {
+      const parts: string[] = [];
+      if (add.length > 0) parts.push(`adds ${add.join(', ')} to the Hotlist`);
+      if (remove.length > 0) parts.push(`clears ${remove.join(', ')} from the Hotlist`);
+      return `${actor} ${parts.length > 0 ? parts.join(' and ') : 'leaves the Hotlist alone'}`;
+    },
     markerLevelUp: (actor: string, level: number) => `${actor} reaches Lv ${level}`,
     stageCaption: (episodeId: number, floor: number, time: string) =>
       `Ep ${episodeId} · Floor ${floor} · ${time}`,
@@ -141,6 +156,89 @@ export const copy = {
   markerUpcoming: (kind: string, time: string) => `${kind} at ${time}`,
   unfiledFloor: 'Unfiled transmissions',
   broadcastUnavailable: 'The broadcast relay is unreachable. The System is recalibrating.',
+
+  /* --- v2 --- */
+
+  /** Panels (FR-100..FR-104). One rail slot, one close control. */
+  panelClose: 'Close',
+
+  /** Crawler dossier (FR-110/111) — the System's copy of the crawler sheet. */
+  dossierKicker: 'CRAWLER DOSSIER',
+  dossierTitle: (name: string) => `${name} — System record`,
+  dossierSections: {
+    vitals: 'VITALS',
+    debuffs: 'DEBUFFS',
+    stats: 'STATS',
+    hotlist: 'HOTLIST',
+    skills: 'SKILLS',
+    inventory: 'INVENTORY',
+    achievements: 'ACHIEVEMENTS',
+    history: 'HISTORY',
+  } as const,
+  sheetLabels: {
+    race: 'Race',
+    pronouns: 'Pronouns',
+    crawlerNumber: 'Crawler #',
+    level: 'Level',
+    class: 'Class',
+    floor: 'Floor',
+    player: 'Player',
+    handle: 'Handle',
+  } as const,
+  statLabels: {
+    str: 'STR',
+    int: 'INT',
+    con: 'CON',
+    dex: 'DEX',
+    cha: 'CHA',
+  } as const,
+  /** Empty states: the System never leaves a section blank, it files it as empty. */
+  dossierEmpty: {
+    debuffs: 'No debuffs on record.',
+    stats: 'Stats unfiled.',
+    hotlist: 'Hotlist empty.',
+    skills: 'No skills logged.',
+    inventory: 'Nothing carried.',
+    achievements: 'No achievements yet.',
+    history: 'No moments logged.',
+  } as const,
+  unranked: 'Unranked',
+  unclassed: 'Unclassed',
+  rankCurrent: 'Current',
+  rankBest: 'Best',
+  rankValue: (rank: number) => `#${rank}`,
+  /** Sparkline text alternative (FR-140, SC-104). */
+  sparklineSummary: (from: number, to: number, count: number, best: number) =>
+    `Rank moved from #${from} to #${to} across ${count} update${count === 1 ? '' : 's'}; best #${best}`,
+  skillRank: (rank: number) => `Rank ${rank}`,
+
+  /** Expanded floor map (FR-120..FR-122). */
+  mapKicker: 'SYSTEM CARTOGRAPHY',
+  mapTitle: (floor: number) => `Floor ${floor}`,
+  mapZoomIn: 'Zoom in',
+  mapZoomOut: 'Zoom out',
+  mapFit: 'Fit',
+  /*
+   * The badge's accessible name opens with its visible text ("Floor 1"), which
+   * WCAG 2.5.3 Label in Name requires and axe flags otherwise (T131).
+   */
+  mapTriggerLabel: (floor: number) => `Floor ${floor} — open the floor map`,
+  /** Names the focusable map viewport and states its keys (T131). */
+  mapViewportLabel: 'Floor map — drag or arrow keys to pan, + and − or scroll to zoom, 0 to fit',
+  mapPointerHint: 'Drag to pan · scroll or double-click to zoom · Fit resets',
+  mapZoomReadout: (zoom: number) => `${Math.round(zoom * 100)}%`,
+  mapSummary: (revealed: number, total: number, labels: number) =>
+    `${revealed} of ${total} sectors revealed, ${labels} neighborhood${labels === 1 ? '' : 's'} named`,
+
+  /** Resume (FR-130..FR-133). The System keeps your place; it does not nag. */
+  resumeKicker: 'BROADCAST BOOKMARK',
+  resumeTitle: (time: string) => `Rejoin at ${time}?`,
+  resumeBody: 'The System has your place marked.',
+  resumeRejoin: 'Rejoin the broadcast',
+  resumeStartOver: 'Start from the beginning',
+
+  /** Party rank line in the feed header (FR-141). */
+  partyRankLine: (rank: number) => `Party rank #${rank}`,
 } as const;
 
 export type Copy = typeof copy;

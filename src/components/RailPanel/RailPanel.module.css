@@ -1,0 +1,115 @@
+/*
+ * The rail slot (research R1). Desktop: a bordered card in the feed's column
+ * that scrolls internally so the stage, timeline, and party rail never move.
+ * ≤ 900 px: a full-viewport overlay above everything, page scroll locked by
+ * `body.panel-open` (FR-102).
+ */
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  max-height: calc(100vh - var(--header-h) - 2 * var(--space-6));
+  background: var(--panel);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  animation: panelIn 150ms ease-out;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--panel-deep);
+  border-bottom: var(--border-hairline-2);
+  flex: none;
+}
+
+.heading {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.kicker {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.title {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.close {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  border: var(--border-hairline-2);
+  cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+
+.close:hover {
+  color: var(--text);
+  border-color: var(--brand-2);
+}
+
+.close:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+.closeIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.body {
+  overflow: auto;
+  min-height: 0;
+  padding: var(--space-5);
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    animation: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .panel {
+    position: fixed;
+    inset: 0;
+    z-index: var(--panel-z);
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    background: var(--canvas);
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .body {
+    padding-bottom: calc(var(--space-8) + env(safe-area-inset-bottom));
+  }
+}

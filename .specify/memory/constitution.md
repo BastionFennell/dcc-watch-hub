@@ -1,5 +1,16 @@
 <!--
 Sync Impact Report
+- Version change: 1.0.0 → 1.1.0 (2026-09-15)
+- Modified principles: V. Scope Discipline now binds to the ACTIVE feature spec rather than the v1 list;
+  I. Time-Truth gains an explicit rule for persisted playhead (resume) — storage may hold the playhead only,
+  never overlay state; III. Ambient & Diegetic clarified: opt-in panels (dossier, map) are allowed when opened by
+  an explicit click and closed by an explicit action
+- Added sections: none
+- Removed sections: none
+- Templates requiring updates: none (plan-template Constitution Check derives from Principles I–VI)
+- Follow-up TODOs: none
+
+Previous report (1.0.0):
 - Version change: (template) → 1.0.0
 - Modified principles: none (initial ratification)
 - Added sections: Core Principles (I–VI), Technical Constraints, Development Workflow & Quality Gates, Governance
@@ -25,6 +36,9 @@ event log filtered to `event.t <= playhead`. Concretely:
   playhead. Prefetching data is allowed; displaying it is not.
 - The reducer and selector layer MUST have automated unit tests covering t=0, mid-episode,
   backward seek, forward seek, and the "no event before its `t`" invariant.
+- Persisted viewer state (for example a resume position in `localStorage`) MAY hold the playhead
+  and viewer preferences only. It MUST NOT hold overlay state or anything derived from events;
+  on resume the overlay is recomputed from `initialState` at the restored playhead.
 
 Rationale: the product promise is a spoiler-free synchronized broadcast. Any state that is not a
 pure function of the playhead can leak future events or desynchronize after scrubbing.
@@ -48,7 +62,10 @@ Rationale: v3 parks alternate video sources. The seam must exist now or it will 
   archive, sponsors, recap episodes). Generic web-app copy ("Dashboard", "Home", "Ads") is a defect.
 - No audio MAY play in v1.
 - Interactions reserved for later versions MUST NOT be teased: no hover affordances, pointer
-  cursors, or tooltips on elements that do nothing in v1.
+  cursors, or tooltips on elements that do nothing in the active feature's scope.
+- Opt-in panels (a crawler dossier, an expanded map) MUST open only from an explicit click or
+  keypress, MUST close from an explicit action (close control, Escape, or click-away), and MUST
+  never cover the video stage on desktop. One panel at a time.
 
 Rationale: the experience is lean-back broadcast; teasing unbuilt features erodes trust.
 
@@ -64,8 +81,11 @@ Rationale: the spec fixes the deploy target and performance bar; a heavy toolcha
 to a single-page broadcast overlay.
 
 ### V. Scope Discipline
-- v1 scope is exactly Section 2 of the handoff spec. Items listed as parked (v2/v3) MUST NOT be
-  built, stubbed, or partially wired in v1, even "for later."
+- The active feature spec (`.specify/feature.json` → `specs/<feature>/spec.md`) defines scope.
+  Items the handoff spec parks beyond the active feature MUST NOT be built, stubbed, or partially
+  wired, even "for later." As of 1.1.0 the active feature is v2 (`specs/002-watch-hub-v2`):
+  character dossiers, interactive minimap, resume, rank sparklines. Still parked: stinger sounds,
+  roster page, and all v3 items.
 - Optimizations not required to meet an acceptance item (memoization, virtualization, caching)
   MUST NOT be added. The spec explicitly says recompute from `initialState` on seek.
 - Every functional requirement MUST trace to a v1 acceptance-checklist item or spec section.
@@ -122,4 +142,4 @@ Compliance is reviewed at every plan (Constitution Check gate) and at implementa
 (acceptance checklist). Use `CLAUDE.md` for runtime development guidance and pointers to the
 active plan.
 
-**Version**: 1.0.0 | **Ratified**: 2026-09-14 | **Last Amended**: 2026-09-14
+**Version**: 1.1.0 | **Ratified**: 2026-09-14 | **Last Amended**: 2026-09-15

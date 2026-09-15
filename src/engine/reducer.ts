@@ -4,7 +4,7 @@
  * Constitution I: no I/O, no clocks, no randomness, no component or DOM reads.
  * Unknown event types and unknown actors leave state untouched (FR-006, edge cases).
  */
-import type { AnyEvent, Cell, EpisodeData } from '../data/types';
+import type { AnyEvent, Cell, EpisodeData, SkillEntry } from '../data/types';
 import type { CrawlerState, OverlayState } from './state';
 import { cellKey, fromInitialState } from './state';
 
@@ -33,6 +33,18 @@ function union(existing: string[], add: string[], remove: string[]): string[] {
     if (!kept.includes(item)) kept.push(item);
   }
   return kept;
+}
+
+/** Upsert by name: an existing skill keeps its slot and takes the new rank. */
+function upsertSkill(existing: SkillEntry[], name: string, rank: number | undefined): SkillEntry[] {
+  const index = existing.findIndex((skill) => skill.name === name);
+  if (index === -1) {
+    return [...existing, rank === undefined ? { name } : { name, rank }];
+  }
+  if (rank === undefined) return existing;
+  const skills = existing.slice();
+  skills[index] = { ...skills[index], rank };
+  return skills;
 }
 
 export function applyEvent(state: OverlayState, event: AnyEvent): OverlayState {
@@ -71,6 +83,24 @@ export function applyEvent(state: OverlayState, event: AnyEvent): OverlayState {
       return withCrawler(state, event.actor, (crawler) => ({
         ...crawler,
         achievements: [...crawler.achievements, event.title],
+      }));
+
+    case 'skill':
+      return withCrawler(state, event.actor, (crawler) => ({
+        ...crawler,
+        skills: upsertSkill(crawler.skills, event.name, event.rank),
+      }));
+
+    case 'class':
+      return withCrawler(state, event.actor, (crawler) => ({
+        ...crawler,
+        class: event.class,
+      }));
+
+    case 'hotlist':
+      return withCrawler(state, event.actor, (crawler) => ({
+        ...crawler,
+        hotlist: union(crawler.hotlist, event.add, event.remove),
       }));
 
     case 'rank':

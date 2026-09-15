@@ -24,13 +24,15 @@ npm run dev -- --open  # opens the archive
 - Archive: <http://localhost:5180/>
 - Episode with the real embed: <http://localhost:5180/ep/1>
 - Episode with the dev scrubber, no network: <http://localhost:5180/ep/1?fake=1>
+- The v2 panels mid-episode: <http://localhost:5180/ep/1?fake=1&t=560> (click a crawler, then
+  the floor-map badge)
 
 ### Verify
 
 ```sh
 npm run typecheck      # tsc --noEmit
 npm run lint           # eslint .
-npm test               # vitest run  (184 tests)
+npm test               # vitest run  (322 tests)
 npm run build          # vite build + copies dist/index.html → dist/404.html
 npm run preview        # serves dist/ at http://localhost:4173/
 ```
@@ -75,13 +77,85 @@ achievement toast with a populated feed.
 |------|------------------|
 | `src/engine/` | reducer, selectors, time formatting — pure, framework-free |
 | `src/data/` | schema types, guards/normalization, fetching, show ordering |
-| `src/playback/` | `TimeSource` interface, YouTube adapter, fake, `usePlayhead` |
-| `src/components/` | stage, party rail, event feed, timeline, toast, minimap, header |
+| `src/playback/` | `TimeSource` interface, YouTube adapter, fake, `usePlayhead`, resume store + `useResume` |
+| `src/hooks/` | `usePanel` — the right rail's one-panel state machine |
+| `src/components/` | stage, party rail, event feed, timeline, toast, minimap, header, rail panel, dossier, floor map, resume card |
 | `src/pages/` | `EpisodePage`, `HubPage`, `NotFoundPage` |
 | `src/copy.ts` | **every** user-facing string, in the System's voice |
 | `src/styles/tokens.css` | the colour/spacing/type tokens from spec §6 |
 | `public/data/` | `show.json` + `ep{N}.json` (static, fetched at load) |
 | `scripts/sheet-to-json.ts` | editor CSV → `ep{N}.json` converter |
+
+---
+
+## Lean-forward (v2)
+
+The ambient view is unchanged: video, party rail, ticker. Everything below is **opt-in** — it
+opens on an explicit click or keypress and closes on an explicit action, and the right rail
+hosts exactly one of the feed (default), a dossier, or the map. Panel content is still a pure
+function of the playhead, so scrubbing in either direction updates it and never leaks an event
+whose `t` is ahead of the playhead.
+
+### Crawler dossier
+
+Click (or focus and press Enter/Space) a crawler frame in the party rail. The rail swaps the
+feed for that crawler's System dossier, in the order the official crawler sheet uses:
+
+1. **Header** — portrait, name, handle, player, race, pronouns, crawler number, level, class
+   (or "Unclassed"), floor.
+2. **Vitals** — a ten-segment HP bar with current/max, current rank with an inline sparkline of
+   every elapsed `rank` event (better rank drawn higher, current and best-so-far as numbers, a
+   text summary for assistive tech), and debuffs.
+3. **Stats** — STR / INT / CON / DEX / CHA, when the episode data carries them.
+4. **Hotlist**, **Skills** (name and rank), **Inventory**, **Achievements** (title, description,
+   time), then **History** — that crawler's elapsed events, newest first.
+
+Sections with nothing in them yet render a one-line System empty state rather than vanishing.
+Close with the panel's × control, <kbd>Escape</kbd>, or by clicking the same frame again; focus
+returns to the frame. Clicking a different frame switches dossiers without closing. At ≤ 900 px
+the panel is a full-viewport overlay and the page behind it does not scroll.
+
+### Floor map
+
+The minimap badge is now the map's trigger (a real button, with `aria-expanded`). Click it and
+the rail shows the expanded floor map: the whole grid, sectors revealed as of the playhead
+tinted, sectors revealed in the last 5 s highlighted, and one label per named neighborhood at
+the centroid of its cells. Nothing unrevealed at the playhead is drawn or labeled.
+
+| Control | Buttons | Keys |
+|---------|---------|------|
+| Zoom in / out | **Zoom in** / **Zoom out** (×1.5 steps toward the center, disabled at the limits); scroll wheel or trackpad pinch zooms toward the pointer; double-click zooms in at the pointer | <kbd>+</kbd> / <kbd>-</kbd> |
+| Reset to fit | **Fit** | <kbd>0</kbd> |
+| Pan | drag the map at any zoom (it stops once half the view would be empty) | arrow keys |
+
+Zoom and pan are viewer state, not overlay state: they reset when the panel closes.
+<kbd>Escape</kbd> or the × closes it and returns focus to the badge.
+
+### Resume where you left off
+
+Per episode, on this device only — no accounts, no server.
+
+- **Key**: `dcc-watch-hub:resume:v1:<episodeId>` in `localStorage`.
+- **Value**: `{ "episodeId": number, "t": number, "savedAt": ISO-8601 }` — the playhead and
+  nothing else. Overlay state is never stored; on rejoin it is recomputed from the playhead
+  like any other seek.
+- **Saved** at most once every 5 s while playing, plus immediately on pause, on `pagehide`, when
+  the tab is hidden, on an episode change and on unmount.
+- **Offered** on open when the saved position is at least **30 s** in and outside the **last
+  30 s** — a System card over the stage with "Rejoin the broadcast" and "Start from the
+  beginning". Rejoining seeks there; starting over discards the position. An unanswered offer
+  expires on its own once the broadcast has run past 5 s.
+- **Cleared** when playback ends, when the playhead reaches the last 30 s, and on "start over".
+- **Blocked storage** (private windows, disabled site data, a full quota) is silent: no card,
+  no error, playback unaffected.
+
+Opening the dev scrubber at `?t=` starts the fake source past that 5 s grace window, so the
+offer is answered by the playhead itself and no card appears. That is expected.
+
+### Party rank
+
+Once a party-scoped `rank` event has elapsed, the feed header carries a "Party rank #…" line.
+Before that it is omitted.
 
 ---
 
@@ -109,6 +183,9 @@ required; columns are `timecode,type,actor,field1,field2,field3`
 | `chapter` | label | kind (`boss`/`loot`/`achievement`/`levelup`/`story`) | – |
 | `status` | add (`;`) | remove (`;`) | – |
 | `inventory` | add (`;`) | remove (`;`) | – |
+| `skill` | name | rank (number, optional) | desc (optional) |
+| `class` | class | – | – |
+| `hotlist` | add (`;`) | remove (`;`) | – |
 | `note` | text | – | – |
 
 Convert:
@@ -121,6 +198,10 @@ npm run sheet-to-json -- path/to/ep4.csv \
 ```
 
 `--initial-state` is a JSON file holding the episode's `initialState` (party, `partyRank`, map).
+Each crawler there may carry the optional sheet fields the dossier renders — `race`, `pronouns`,
+`crawlerNumber`, `stats` (`{ str, int, con, dex, cha }`), `hotlist[]` and `skills[]`
+(`{ name, rank? }`). They need no new CSV columns, and v1 files without them keep working: the
+dossier simply omits what it does not know.
 The converter sorts events by `t`, normalizes them, and prints a summary such as
 `wrote public/data/ep4.json (42 events, 2 warnings)`. **Warnings still produce output** (unknown
 actor, impossible HP, timecode past `--duration`, unknown type, bad `chapter.kind`); **errors
@@ -177,7 +258,7 @@ Keep the filenames, or update each crawler's `portrait` path in every `ep{N}.jso
 renders them at 40 px (32 px on a phone), so square art crops best.
 
 **Also placeholder**: `public/img/dcc-mark.svg` and `public/favicon.svg` (the circular "DC" mark),
-and the event logs in `public/data/ep1.json`, `ep2.json`, `ep3.json` — 31 invented events each,
+and the event logs in `public/data/ep1.json`, `ep2.json`, `ep3.json` — 43 invented events each,
 written to exercise every event type. Regenerate them from real sheets with `sheet-to-json`.
 
 ---
@@ -208,15 +289,17 @@ Measured on the production build (`npm run build`, Node 20.9.0):
 
 | Asset | Raw | Gzipped |
 |-------|-----|---------|
-| `dist/assets/index-*.js` | 299.0 kB | **95.1 kB** |
-| `dist/assets/index-*.css` | 17.9 kB | 4.2 kB |
+| `dist/assets/index-*.js` | 325.7 kB | **103.3 kB** |
+| `dist/assets/index-*.css` | 30.7 kB | 6.4 kB |
 | `dist/index.html` | 0.7 kB | 0.4 kB |
 
-That is React 19 + react-router 7 + the whole app, comfortably under the 150 kB gzipped budget.
+That is React 19 + react-router 7 + the whole app — v1 plus the v2 panels, dossier, floor map
+and resume — comfortably under the 150 kB gzipped budget.
 
 Lighthouse 11.7.1, desktop preset, against `npm run preview` with the real YouTube embed loading:
-**performance 100, accessibility 100** on both `/ep/1` and `/` (FCP 0.4 s, LCP 0.4 s, TBT 0 ms,
-CLS 0). Details in `specs/001-watch-hub-v1/quickstart.md` → Results.
+**performance 100, accessibility 100** on both `/ep/1` and `/` (FCP 0.4 s, LCP 0.5 s, TBT 0 ms,
+CLS 0), with no accessibility audit below 1 — including the zero-weight informational ones.
+Details in `specs/002-watch-hub-v2/quickstart.md` → Results.
 
 The budget holds because of three rules: no webfonts (`system-ui` stack only, nothing blocks
 first render), no render-blocking scripts (the bundle is a `type="module"` script, deferred by
@@ -237,6 +320,8 @@ Read in this order:
 3. `specs/001-watch-hub-v1/` — `spec.md` (requirements and success criteria), `plan.md`,
    `research.md` (the decisions and what was rejected), `data-model.md`, `contracts/`,
    `quickstart.md` (run + manual acceptance walkthrough + results), `tasks.md`.
+4. `specs/002-watch-hub-v2/` — the active feature: dossiers, the expanded map, resume and rank
+   sparklines. Same layout, plus `contracts/panels.md` and `contracts/resume-storage.md`.
 
 Three rules bite most often while editing:
 
@@ -249,21 +334,25 @@ Three rules bite most often while editing:
 
 ---
 
-## Scope fence — v1 is exactly what is here
+## Scope fence — v1 + v2 is exactly what is here
 
-Parked, from the handoff spec §8. Do not build, stub, or partially wire these in v1 — not even
-"for later". In particular, do not *tease* them: no hover affordances, pointer cursors, or
-tooltips on elements that do nothing yet. Clicking a crawler frame is deliberately a no-op with
-a default cursor, and the minimap is deliberately inert.
+Parked, from the handoff spec §8 and constitution 1.1.0. Do not build, stub, or partially wire
+these — not even "for later". In particular, do not *tease* them: no hover affordances, pointer
+cursors, or tooltips on elements that do nothing. The only interactive triggers are the ones v2
+ships: crawler frames (dossier), the minimap badge (floor map), the timeline, and the resume
+card's two buttons.
 
-**v2**
+**Shipped in v2** (the four items below left the fence; see "Lean-forward (v2)" above)
 
 - Click-open character sheets (inventory / skills / hot list history)
 - Interactive minimap with pan and labels
 - `localStorage` resume
-- Stinger sounds (opt-in)
-- Roster page with commissioned art
 - Per-crawler fame/rank sparklines
+
+**Still parked**
+
+- Stinger sounds (opt-in) — needs real audio
+- Roster page with commissioned art — needs real art
 
 **v3**
 
@@ -272,6 +361,6 @@ a default cursor, and the minimap is deliberately inert.
 - Sponsor slot management
 - Accounts
 
-v1 also explicitly excludes comments and any server-side anything. The `TimeSource` seam exists
+v1 and v2 also explicitly exclude comments and any server-side anything. The `TimeSource` seam exists
 so v3 costs one new adapter and a factory change — that is the only forward accommodation the
 codebase makes.

@@ -18,7 +18,26 @@
           "Utility Harness",
           "Grappling Spool"
         ],
-        "rank": 612
+        "rank": 612,
+        "race": "Human",
+        "pronouns": "he/him",
+        "crawlerNumber": "4,102,116",
+        "stats": {
+          "str": 7,
+          "int": 4,
+          "con": 7,
+          "dex": 6,
+          "cha": 5
+        },
+        "hotlist": [
+          "The Warden"
+        ],
+        "skills": [
+          {
+            "name": "Reckless Tumble",
+            "rank": 3
+          }
+        ]
       },
       {
         "id": "psychic",
@@ -36,7 +55,24 @@
           "Resonant Visor",
           "Ration Brick"
         ],
-        "rank": 1488
+        "rank": 1488,
+        "race": "Human",
+        "pronouns": "she/her",
+        "crawlerNumber": "9,338,470",
+        "stats": {
+          "str": 3,
+          "int": 9,
+          "con": 4,
+          "dex": 5,
+          "cha": 7
+        },
+        "hotlist": [],
+        "skills": [
+          {
+            "name": "Static Read",
+            "rank": 1
+          }
+        ]
       },
       {
         "id": "harry",
@@ -54,7 +90,28 @@
           "Enchanted Crowbar",
           "Torch"
         ],
-        "rank": 740
+        "rank": 740,
+        "race": "Human",
+        "pronouns": "he/him",
+        "crawlerNumber": "10,491,201",
+        "stats": {
+          "str": 6,
+          "int": 6,
+          "con": 7,
+          "dex": 7,
+          "cha": 5
+        },
+        "hotlist": [],
+        "skills": [
+          {
+            "name": "Powerful Strike",
+            "rank": 2
+          },
+          {
+            "name": "Crowbar Work",
+            "rank": 2
+          }
+        ]
       },
       {
         "id": "xo",
@@ -72,7 +129,26 @@
           "Signal Flare",
           "Ledger of Debts"
         ],
-        "rank": 2901
+        "rank": 2901,
+        "race": "Crocodilian",
+        "pronouns": "they/them",
+        "crawlerNumber": "2,776,845",
+        "stats": {
+          "str": 6,
+          "int": 5,
+          "con": 8,
+          "dex": 4,
+          "cha": 3
+        },
+        "hotlist": [
+          "The Quartermaster"
+        ],
+        "skills": [
+          {
+            "name": "Signal Discipline",
+            "rank": 2
+          }
+        ]
       },
       {
         "id": "actress",
@@ -90,7 +166,24 @@
           "Understudy's Dagger",
           "Greasepaint"
         ],
-        "rank": 1955
+        "rank": 1955,
+        "race": "Human",
+        "pronouns": "she/her",
+        "crawlerNumber": "6,204,998",
+        "stats": {
+          "str": 4,
+          "int": 6,
+          "con": 5,
+          "dex": 8,
+          "cha": 9
+        },
+        "hotlist": [],
+        "skills": [
+          {
+            "name": "Stage Presence",
+            "rank": 2
+          }
+        ]
       }
     ],
     "partyRank": 48,
@@ -193,16 +286,37 @@
       "desc": "Named the thing before it spoke."
     },
     {
+      "t": 200,
+      "type": "class",
+      "actor": "actress",
+      "class": "Method Understudy"
+    },
+    {
       "t": 211,
       "type": "level_up",
       "actor": "xo",
       "level": 4
     },
     {
+      "t": 220,
+      "type": "skill",
+      "actor": "actress",
+      "name": "Stage Presence",
+      "rank": 2,
+      "desc": "The room forgot to breathe."
+    },
+    {
       "t": 229,
       "type": "sponsor",
       "text": "Descending? Grull Industries rappelling line. Rated for one of you.",
       "durationSec": 20
+    },
+    {
+      "t": 250,
+      "type": "rank",
+      "scope": "crawler",
+      "actor": "stuntman",
+      "rank": 690
     },
     {
       "t": 252,
@@ -216,10 +330,26 @@
       "kind": "loot"
     },
     {
+      "t": 280,
+      "type": "hotlist",
+      "actor": "stuntman",
+      "add": [
+        "The Warden"
+      ],
+      "remove": []
+    },
+    {
       "t": 297,
       "type": "future_type",
       "headline": "Reserved for a later season",
       "tier": 12
+    },
+    {
+      "t": 300,
+      "type": "rank",
+      "scope": "crawler",
+      "actor": "actress",
+      "rank": 3120
     },
     {
       "t": 324,
@@ -256,6 +386,13 @@
       "text": "The Warden Key is warm. Nobody mentions it on camera."
     },
     {
+      "t": 430,
+      "type": "rank",
+      "scope": "crawler",
+      "actor": "stuntman",
+      "rank": 520
+    },
+    {
       "t": 440,
       "type": "chapter",
       "label": "The Warden of Floor Two",
@@ -267,6 +404,13 @@
       "actor": "harry",
       "current": 21,
       "max": 25
+    },
+    {
+      "t": 480,
+      "type": "rank",
+      "scope": "crawler",
+      "actor": "actress",
+      "rank": 2755
     },
     {
       "t": 490,
@@ -322,6 +466,24 @@
       "durationSec": 20
     },
     {
+      "t": 610,
+      "type": "skill",
+      "actor": "actress",
+      "name": "Curtain Call",
+      "rank": 1
+    },
+    {
+      "t": 620,
+      "type": "hotlist",
+      "actor": "stuntman",
+      "add": [
+        "Warden Sigil"
+      ],
+      "remove": [
+        "The Warden"
+      ]
+    },
+    {
       "t": 627,
       "type": "achievement",
       "actor": "harry",
@@ -334,9 +496,41 @@
       "text": "Floor Two is logged. Floor Three is already watching."
     },
     {
+      "t": 660,
+      "type": "rank",
+      "scope": "crawler",
+      "actor": "actress",
+      "rank": 2390
+    },
+    {
+      "t": 680,
+      "type": "map_reveal",
+      "cells": [
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          7,
+          3
+        ]
+      ],
+      "label": "The Sump"
+    },
+    {
       "t": 692,
       "type": "note",
       "text": "Recap ends. The System reminds you: the stairs go both ways."
+    },
+    {
+      "t": 700,
+      "type": "class",
+      "actor": "harry",
+      "class": "Compensated Anarchist"
     }
   ]
 }

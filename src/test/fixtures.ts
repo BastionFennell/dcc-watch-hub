@@ -3,8 +3,14 @@
  * reason about by hand, but rich enough to exercise the time-truth invariants:
  * clustered achievements (60/61/62), a below-25% HP drop, a status add + remove,
  * a 20 s sponsor, a chapter, a map reveal, and one unknown event type.
+ *
+ * v2 adds the facts data-model §5 pins down, at times that leave every v1
+ * assertion true: Harry's crawler rank at 100/150/200 (4188 → 3012 → 3550),
+ * X.O.'s skill upsert at 80 and 160, Harry's class at 95, his hotlist at 105
+ * and 165, a second labeled reveal at 175 ("The Rot Market"), and optional
+ * sheet fields on the party (Harry carries the full set).
  */
-import type { EpisodeData, Show } from '../data/types';
+import type { Crawler, EpisodeData, Show } from '../data/types';
 import { normalizeEpisode } from '../data/validate';
 
 export function makeShow(): Show {
@@ -59,6 +65,8 @@ function crawler(
   max: number,
   handle = '',
   player = '',
+  /** Optional v2 sheet fields (data-model §5); v1 crawlers simply omit them. */
+  sheet: Partial<Crawler> = {},
 ) {
   return {
     id,
@@ -71,6 +79,7 @@ function crawler(
     class: null,
     inventory: [] as string[],
     rank: null,
+    ...sheet,
   };
 }
 
@@ -80,11 +89,30 @@ export function makeEpisodeRaw(episodeId = 1): unknown {
     episodeId,
     initialState: {
       party: [
-        crawler('stuntman', 'The Stuntman', 3, 24, 'Dungeon Crawler Danny', 'Danny'),
-        crawler('psychic', 'The Psychic', 3, 20, 'Signal', 'Rae'),
-        crawler('harry', 'Harry', 2, 22, 'Harry', 'Marcus'),
-        crawler('xo', 'X.O.', 1, 18, 'X.O.', 'Jules'),
-        crawler('actress', 'The Actress', 3, 21, 'Understudy', 'Nia'),
+        crawler('stuntman', 'The Stuntman', 3, 24, 'Dungeon Crawler Danny', 'Danny', {
+          race: 'Human',
+          pronouns: 'he/him',
+        }),
+        crawler('psychic', 'The Psychic', 3, 20, 'Signal', 'Rae', {
+          race: 'Human',
+          pronouns: 'she/her',
+        }),
+        crawler('harry', 'Harry', 2, 22, 'Harry', 'Marcus', {
+          race: 'Human',
+          pronouns: 'he/him',
+          crawlerNumber: '10,491,201',
+          stats: { str: 5, int: 6, con: 6, dex: 7, cha: 4 },
+          hotlist: [],
+          skills: [{ name: 'Powerful Strike', rank: 1 }],
+        }),
+        crawler('xo', 'X.O.', 1, 18, 'X.O.', 'Jules', {
+          race: 'Crocodilian',
+          pronouns: 'they/them',
+        }),
+        crawler('actress', 'The Actress', 3, 21, 'Understudy', 'Nia', {
+          race: 'Human',
+          pronouns: 'she/her',
+        }),
       ],
       partyRank: null,
       map: { floor: 1, grid: { cols: 12, rows: 8 }, revealed: [] },
@@ -98,15 +126,24 @@ export function makeEpisodeRaw(episodeId = 1): unknown {
       { t: 62, type: 'achievement', actor: 'stuntman', title: 'Stunt Double', desc: 'Took the hit.' },
       { t: 70, type: 'level_up', actor: 'xo', level: 2 },
       { t: 80, type: 'rank', scope: 'party', rank: 61 },
+      { t: 80, type: 'skill', actor: 'xo', name: 'Understudy Strike', rank: 1 },
       { t: 90, type: 'map_reveal', cells: [[3, 2], [4, 2]], label: 'The Meat District' },
+      { t: 95, type: 'class', actor: 'harry', class: 'Compensated Anarchist' },
       { t: 100, type: 'future_type', payload: 'must never render' },
+      { t: 100, type: 'rank', scope: 'crawler', actor: 'harry', rank: 4188 },
+      { t: 105, type: 'hotlist', actor: 'harry', add: ['Door'], remove: [] },
       { t: 110, type: 'sponsor', text: 'This death brought to you by Grull Industries.', durationSec: 20 },
       { t: 120, type: 'chapter', label: 'The Hoarder Fight', kind: 'boss' },
       { t: 130, type: 'status', actor: 'psychic', add: ['Poisoned'], remove: [] },
       { t: 140, type: 'status', actor: 'psychic', add: [], remove: ['Poisoned'] },
       { t: 150, type: 'inventory', actor: 'harry', add: ['Torch'], remove: ['Enchanted Crowbar'] },
+      { t: 150, type: 'rank', scope: 'crawler', actor: 'harry', rank: 3012 },
       { t: 160, type: 'note', text: 'The System declines to comment.' },
+      { t: 160, type: 'skill', actor: 'xo', name: 'Understudy Strike', rank: 2 },
+      { t: 165, type: 'hotlist', actor: 'harry', add: ['Crowbar'], remove: ['Door'] },
       { t: 170, type: 'hp', actor: 'harry', current: 20, max: 22 },
+      { t: 175, type: 'map_reveal', cells: [[6, 5], [6, 6], [7, 5]], label: 'The Rot Market' },
+      { t: 200, type: 'rank', scope: 'crawler', actor: 'harry', rank: 3550 },
     ],
   };
 }

@@ -1,0 +1,142 @@
+/*
+ * Expanded floor map (FR-120/FR-121). The viewport clips; zoom and pan are a
+ * transform on the scene group, so nothing reflows while dragging.
+ */
+.map {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.control {
+  padding: var(--space-2) var(--space-5);
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--panel-deep);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.control:hover:not(:disabled) {
+  color: var(--brand-fg);
+  border-color: var(--brand-2);
+}
+
+.control:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.control:disabled {
+  color: var(--text-4);
+  cursor: default;
+  opacity: 0.6;
+}
+
+.viewport {
+  position: relative;
+  width: 100%;
+  max-height: min(70vh, 640px);
+  overflow: hidden;
+  background: var(--canvas);
+  border: var(--border-hairline);
+  border-radius: var(--radius-md);
+  /* Pointer drags own the gesture; the browser must not scroll, pinch, or select text. */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.viewport:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.viewport {
+  cursor: grab;
+}
+
+.viewport[data-dragging='true'] {
+  cursor: grabbing;
+}
+
+.zoomReadout {
+  align-self: center;
+  margin-left: auto;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+}
+
+.hint {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.scene {
+  transition: transform 150ms ease;
+}
+
+/* A drag must track the pointer exactly, so it opts out of the easing. */
+.viewport[data-dragging='true'] .scene {
+  transition: none;
+}
+
+.cell {
+  fill: var(--panel-deep);
+  stroke: var(--hairline);
+  stroke-width: 0.01;
+}
+
+.cell[data-state='revealed'] {
+  fill: var(--brand-deep);
+  stroke: none;
+}
+
+.cell[data-state='recent'] {
+  fill: var(--brand-2);
+  stroke: none;
+}
+
+.label {
+  fill: var(--text);
+  font-family: var(--font-sans);
+  font-size: 0.55px;
+  /* A halo in the canvas colour keeps names legible over any cell tint. */
+  paint-order: stroke;
+  stroke: var(--canvas);
+  stroke-width: 0.12;
+  stroke-linejoin: round;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .control,
+  .scene {
+    transition: none;
+  }
+}

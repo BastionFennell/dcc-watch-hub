@@ -1,16 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import {
   activeSponsor,
+  crawlerDossier,
+  crawlerHistory,
   activeToast,
   elapsed,
   feedItems,
+  hpSegments,
   mapCells,
+  mapLabels,
   partyFrames,
+  rankSeries,
   recentlyRevealed,
   stageCaption,
   timelineMarkers,
 } from './selectors';
 import { reduceTo } from './reducer';
+import { copy } from '../copy';
 import { formatTime } from './time';
 import { normalizeEpisode } from '../data/validate';
 import type { EpisodeData } from '../data/types';
@@ -64,7 +70,13 @@ describe('feedItems', () => {
 
   it('never includes an unknown event type', () => {
     const items = feedItems(episode.events, 235, 100, party);
-    expect(items.some((i) => i.t === 100)).toBe(false);
+    // The fixture's forward-compatibility event shares t = 100 with a rank event,
+    // so identify it by its index (the FeedItem id), not by its time.
+    const unknownIds = episode.events
+      .map((event, index) => (event.type === 'unknown' ? index : -1))
+      .filter((index) => index !== -1);
+    expect(unknownIds.length).toBeGreaterThan(0);
+    expect(items.some((item) => unknownIds.includes(item.id))).toBe(false);
   });
 
   it('never shows an event before its t (checked at every event boundary)', () => {
@@ -242,7 +254,8 @@ describe('recentlyRevealed', () => {
   it('drops them once the window closes, while the cells stay revealed', () => {
     expect(recentlyRevealed(episode.events, 95).size).toBe(0);
     expect(recentlyRevealed(episode.events, 200).size).toBe(0);
-    expect(mapCells(reduceTo(episode, 200)).revealed.size).toBe(2);
+    // Two cells from the reveal at 90, three more from the reveal at 175.
+    expect(mapCells(reduceTo(episode, 200)).revealed.size).toBe(5);
   });
 
   it('honours a custom window', () => {
@@ -260,5 +273,221 @@ describe('recentlyRevealed', () => {
     // The first window has closed at 15.5; the second still covers both of its cells.
     expect([...recentlyRevealed(overlapping.events, 15.5)].sort()).toEqual(['0,0', '0,1']);
     expect(recentlyRevealed(overlapping.events, 17).size).toBe(0);
+  });
+});
+
+/* ---------------------------------------------------------- v2 selectors */
+
+describe('feed items for the v2 event types', () => {
+  it('labels and narrates skill, class and hotlist', () => {
+    const items = feedItems(episode.events, 200, 100, party);
+    const find = (kind: string, t: number) =>
+      items.find((item) => item.kind === kind && item.t === t);
+
+    expect(find('skill', 80)).toMatchObject({
+      label: copy.labels.skill,
+      text: copy.feedText.skill('X.O.', 'Understudy Strike', 1),
+      actorName: 'X.O.',
+    });
+    expect(find('class', 95)).toMatchObject({
+      label: copy.labels.class,
+      text: copy.feedText.classChange('Harry', 'Compensated Anarchist'),
+    });
+    expect(find('hotlist', 165)).toMatchObject({
+      label: copy.labels.hotlist,
+      text: copy.feedText.hotlist('Harry', ['Crowbar'], ['Door']),
+    });
+  });
+});
+
+describe('crawlerHistory', () => {
+  it('is empty at t = 0 and for an actor with nothing logged', () => {
+    expect(crawlerHistory(episode.events, 0, 'harry', party)).toEqual([]);
+    expect(crawlerHistory(episode.events, 200, 'actress', party)).toEqual([]);
+  });
+
+  it('returns only that crawler’s elapsed events, newest first and uncapped', () => {
+    const history = crawlerHistory(episode.events, 200, 'harry', party);
+    expect(history.map((item) => item.t)).toEqual([200, 170, 165, 150, 150, 105, 100, 95, 60, 45, 30]);
+    expect(history.length).toBeGreaterThan(8);
+    expect(history.every((item) => item.actorName === 'Harry')).toBe(true);
+  });
+
+  it('shrinks on a backward seek and never carries a party-scoped event', () => {
+    expect(crawlerHistory(episode.events, 60, 'harry', party).map((item) => item.t)).toEqual([
+      60, 45, 30,
+    ]);
+    // The party rank at 80 belongs to nobody.
+    expect(
+      crawlerHistory(episode.events, 200, 'harry', party).some(
+        (item) => item.kind === 'rank' && item.t === 80,
+      ),
+    ).toBe(false);
+  });
+
+  it('ignores unknown event types', () => {
+    expect(
+      crawlerHistory(episode.events, 200, 'harry', party).some((item) => item.t === 100 && item.kind !== 'rank'),
+    ).toBe(false);
+  });
+});
+
+describe('rankSeries', () => {
+  it('has no points, current or best before the first rank event', () => {
+    expect(rankSeries(episode.events, 99, { actor: 'harry' })).toEqual({
+      points: [],
+      current: null,
+      best: null,
+    });
+  });
+
+  it('plots one point per elapsed crawler rank event, with current and best', () => {
+    const at200 = rankSeries(episode.events, 200, { actor: 'harry' });
+    expect(at200.points).toEqual([
+      { t: 100, rank: 4188 },
+      { t: 150, rank: 3012 },
+      { t: 200, rank: 3550 },
+    ]);
+    expect(at200.current).toBe(3550);
+    expect(at200.best).toBe(3012);
+  });
+
+  it('rewinds with the playhead', () => {
+    const at120 = rankSeries(episode.events, 120, { actor: 'harry' });
+    expect(at120.points).toHaveLength(1);
+    expect(at120.current).toBe(4188);
+    expect(at120.best).toBe(4188);
+  });
+
+  it('reads party-scoped events under the party scope only', () => {
+    expect(rankSeries(episode.events, 200, 'party')).toEqual({
+      points: [{ t: 80, rank: 61 }],
+      current: 61,
+      best: 61,
+    });
+    expect(rankSeries(episode.events, 79, 'party').current).toBeNull();
+    expect(rankSeries(episode.events, 200, { actor: 'xo' }).points).toEqual([]);
+  });
+});
+
+describe('hpSegments', () => {
+  it('fills all ten segments at full health and none at zero', () => {
+    expect(hpSegments({ current: 22, max: 22 })).toEqual({ filled: 10, pct: 100 });
+    expect(hpSegments({ current: 0, max: 22 })).toEqual({ filled: 0, pct: 0 });
+  });
+
+  it('rounds up, so any surviving crawler keeps a segment', () => {
+    expect(hpSegments({ current: 1, max: 22 }).filled).toBe(1);
+    expect(hpSegments({ current: 4, max: 22 })).toEqual({ filled: 2, pct: 18 });
+    expect(hpSegments({ current: 11, max: 22 })).toEqual({ filled: 5, pct: 50 });
+    expect(hpSegments({ current: 12, max: 22 }).filled).toBe(6);
+  });
+
+  it('clamps nonsense instead of throwing', () => {
+    expect(hpSegments({ current: 99, max: 22 })).toEqual({ filled: 10, pct: 100 });
+    expect(hpSegments({ current: -5, max: 22 })).toEqual({ filled: 0, pct: 0 });
+    // A zero max is impossible per the schema; treat it like partyFrames does (max → 1).
+    expect(hpSegments({ current: 5, max: 0 })).toEqual({ filled: 10, pct: 100 });
+  });
+});
+
+describe('crawlerDossier', () => {
+  const dossierAt = (t: number, id = 'harry') =>
+    crawlerDossier(reduceTo(episode, t), episode.events, t, id, party);
+
+  it('is null for an actor the episode does not know', () => {
+    expect(crawlerDossier(reduceTo(episode, 200), episode.events, 200, 'ghost', party)).toBeNull();
+  });
+
+  it('carries the sheet header, vitals and stats as of the playhead', () => {
+    const dossier = dossierAt(200);
+    expect(dossier).toMatchObject({
+      id: 'harry',
+      name: 'Harry',
+      handle: 'Harry',
+      player: 'Marcus',
+      race: 'Human',
+      pronouns: 'he/him',
+      crawlerNumber: '10,491,201',
+      level: 2,
+      class: 'Compensated Anarchist',
+      floor: 1,
+      stats: { str: 5, int: 6, con: 6, dex: 7, cha: 4 },
+    });
+    expect(dossier?.hp).toEqual({ current: 20, max: 22, filled: 10, pct: 91 });
+    expect(dossier?.rank.current).toBe(3550);
+  });
+
+  it('is unclassed and unranked before those events elapse', () => {
+    const dossier = dossierAt(90);
+    expect(dossier?.class).toBeNull();
+    expect(dossier?.rank.points).toEqual([]);
+    expect(dossier?.hp).toMatchObject({ current: 4, filled: 2 });
+  });
+
+  it('lists hotlist, skills, inventory and achievements as of t', () => {
+    expect(dossierAt(110)?.hotlist).toEqual(['Door']);
+    expect(dossierAt(200)?.hotlist).toEqual(['Crowbar']);
+    expect(dossierAt(200)?.skills).toEqual([{ name: 'Powerful Strike', rank: 1 }]);
+    expect(dossierAt(200, 'xo')?.skills).toEqual([{ name: 'Understudy Strike', rank: 2 }]);
+    expect(dossierAt(100, 'xo')?.skills).toEqual([{ name: 'Understudy Strike', rank: 1 }]);
+    expect(dossierAt(200)?.achievements).toEqual([
+      { title: 'Gate Crasher', desc: 'Ten mobs, one door.', t: 60 },
+    ]);
+    expect(dossierAt(59)?.achievements).toEqual([]);
+  });
+
+  it('removes what has not been earned yet on a backward seek', () => {
+    // Harry loots the crowbar at 30 and trades it for a torch at 150.
+    expect(dossierAt(40)?.inventory).toEqual(['Enchanted Crowbar']);
+    expect(dossierAt(200)?.inventory).toEqual(['Torch']);
+    expect(dossierAt(20)?.inventory).toEqual([]);
+    expect(dossierAt(20)?.history).toEqual([]);
+  });
+
+  it('reports debuffs from the crawler’s statuses', () => {
+    expect(dossierAt(135, 'psychic')?.debuffs).toEqual(['Poisoned']);
+    expect(dossierAt(145, 'psychic')?.debuffs).toEqual([]);
+  });
+
+  it('omits sheet fields the data does not carry', () => {
+    const dossier = dossierAt(200, 'xo');
+    expect(dossier?.stats).toBeUndefined();
+    expect(dossier?.crawlerNumber).toBeUndefined();
+    expect(dossier?.race).toBe('Crocodilian');
+  });
+});
+
+describe('mapLabels', () => {
+  it('labels nothing before the first labeled reveal', () => {
+    expect(mapLabels(episode.events, 89)).toEqual([]);
+  });
+
+  it('places one label at the centroid of its cells', () => {
+    expect(mapLabels(episode.events, 100)).toEqual([
+      { label: 'The Meat District', row: 3.5, col: 2, cells: 2 },
+    ]);
+  });
+
+  it('adds later labels in first-reveal order and drops them on a backward seek', () => {
+    const at180 = mapLabels(episode.events, 180);
+    expect(at180.map((entry) => entry.label)).toEqual(['The Meat District', 'The Rot Market']);
+    expect(at180[1].row).toBeCloseTo(6.333, 3);
+    expect(at180[1].col).toBeCloseTo(5.333, 3);
+    expect(at180[1].cells).toBe(3);
+    expect(mapLabels(episode.events, 174)).toHaveLength(1);
+  });
+
+  it('merges reveals that share a label over the union of their cells', () => {
+    const shared = withEvents([
+      { t: 10, type: 'map_reveal', cells: [[0, 0], [0, 2]], label: 'The Sump' },
+      { t: 20, type: 'map_reveal', cells: [[0, 2], [2, 2]], label: 'The Sump' },
+      { t: 30, type: 'map_reveal', cells: [[5, 5]] },
+    ]);
+    expect(mapLabels(shared.events, 20)).toEqual([
+      { label: 'The Sump', row: 2 / 3, col: 4 / 3, cells: 3 },
+    ]);
+    // An unlabeled reveal contributes nothing.
+    expect(mapLabels(shared.events, 30)).toHaveLength(1);
   });
 });

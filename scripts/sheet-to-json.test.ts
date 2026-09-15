@@ -16,7 +16,7 @@ import type { RowContext, SheetRow } from './sheet-to-json';
 
 const root = resolve(__dirname, '..');
 const samples = resolve(root, 'scripts/samples');
-const schemaPath = resolve(root, 'specs/001-watch-hub-v1/contracts/episode.schema.json');
+const schemaPath = resolve(root, 'specs/002-watch-hub-v2/contracts/episode.schema.json');
 
 const ajv = new Ajv({ strict: false, allErrors: true });
 addFormats(ajv);
@@ -135,9 +135,49 @@ describe('convert(scripts/samples/ep1.csv)', () => {
       'status',
       'inventory',
       'note',
+      'skill',
+      'class',
+      'hotlist',
     ]) {
       expect(types, `${type} appears in the sample`).toContain(type);
     }
+  });
+
+  it('maps the v2 rows: skill, class and hotlist', () => {
+    const skill = result.episode?.events.find(
+      (event) => event.type === 'skill' && event.actor === 'harry',
+    );
+    expect(skill).toMatchObject({
+      type: 'skill',
+      actor: 'harry',
+      name: 'Powerful Strike',
+      rank: 1,
+      desc: 'Learned on a doorframe.',
+    });
+
+    const classed = result.episode?.events.find((event) => event.type === 'class');
+    expect(classed).toMatchObject({ type: 'class', actor: 'harry', class: 'Compensated Anarchist' });
+
+    const hotlists = result.episode?.events.filter((event) => event.type === 'hotlist') ?? [];
+    expect(hotlists).toHaveLength(2);
+    expect(hotlists[0]).toMatchObject({ actor: 'harry', add: ['The Hoarder'], remove: [] });
+    expect(hotlists[1]).toMatchObject({
+      actor: 'harry',
+      add: ['Bronze Box Runner'],
+      remove: ['The Hoarder'],
+    });
+  });
+
+  it('passes the optional crawler sheet fields through untouched', () => {
+    const harry = result.episode?.initialState.party.find((crawler) => crawler.id === 'harry');
+    expect(harry).toMatchObject({
+      race: 'Human',
+      pronouns: 'he/him',
+      crawlerNumber: '10,491,201',
+      stats: { str: 5, int: 6, con: 6, dex: 7, cha: 4 },
+      hotlist: [],
+      skills: [{ name: 'Powerful Strike', rank: 1 }],
+    });
   });
 
   it('keeps a comma inside a quoted cell and splits map cells', () => {
@@ -206,6 +246,13 @@ describe('convert(scripts/samples/ep1-error.csv)', () => {
     expect(result.errors.length).toBeGreaterThan(0);
     expect(result.errors[0]).toBe(`row ${dataRow(csv, 'abc,')}: unparseable timecode "abc"`);
   });
+
+  it('reports the non-integer skill rank as the second error', () => {
+    expect(result.errors).toHaveLength(2);
+    expect(result.errors[1]).toBe(
+      `row ${dataRow(csv, ',high,')}: skill rank (field2) must be a non-negative integer, got "high"`,
+    );
+  });
 });
 
 /* -------------------------------------------------------- header + rows */
@@ -270,6 +317,47 @@ describe('rowToEvent', () => {
   it('warns when an actor event has no actor', () => {
     const result = rowToEvent(sheetRow({ type: 'loot', field1: 'Torch' }), rowCtx());
     expect(result.warnings).toContain('loot row has no actor');
+  });
+
+  it('errors on a skill row with no name', () => {
+    const result = rowToEvent(sheetRow({ type: 'skill', actor: 'harry', field2: '2' }), rowCtx());
+    expect(result.errors).toEqual(['empty required field: name (field1) on skill']);
+    expect(result.event).toBeNull();
+  });
+
+  it('accepts a skill row without a rank', () => {
+    const result = rowToEvent(
+      sheetRow({ type: 'skill', actor: 'harry', field1: 'Crowbar Work' }),
+      rowCtx(),
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.event).toEqual({ t: 10, type: 'skill', actor: 'harry', name: 'Crowbar Work' });
+  });
+
+  it('errors on a class row with no class', () => {
+    const result = rowToEvent(sheetRow({ type: 'class', actor: 'harry' }), rowCtx());
+    expect(result.errors).toEqual(['empty required field: class (field1) on class']);
+    expect(result.event).toBeNull();
+  });
+
+  it('splits both hotlist lists', () => {
+    const result = rowToEvent(
+      sheetRow({ type: 'hotlist', actor: 'harry', field1: 'A; B', field2: 'C' }),
+      rowCtx(),
+    );
+    expect(result.event).toEqual({
+      t: 10,
+      type: 'hotlist',
+      actor: 'harry',
+      add: ['A', 'B'],
+      remove: ['C'],
+    });
+  });
+
+  it('warns when a v2 row has no actor', () => {
+    expect(
+      rowToEvent(sheetRow({ type: 'skill', field1: 'Powerful Strike' }), rowCtx()).warnings,
+    ).toContain('skill row has no actor');
   });
 
   it('warns about an unknown chapter kind', () => {

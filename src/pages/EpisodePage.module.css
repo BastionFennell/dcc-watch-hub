@@ -75,3 +75,16 @@
   inset: 0;
   z-index: 3;
 }
+
+/*
+ * With a panel open the rail column sticks under the header on desktop, so a
+ * long dossier scrolls inside its own body and the stage never moves (FR-102).
+ * Below 900px the panel itself goes full-viewport, so sticky is pointless there.
+ */
+@media (min-width: 901px) {
+  .rail[data-panel='dossier'],
+  .rail[data-panel='map'] {
+    position: sticky;
+    top: calc(var(--header-h) + var(--space-6));
+  }
+}

@@ -7,11 +7,13 @@ import type {
   AnyEvent,
   Cell,
   Crawler,
+  CrawlerStats,
   EpisodeData,
   EpisodeMeta,
   InitialState,
   MapState,
   Show,
+  SkillEntry,
   UnknownEvent,
 } from './types';
 
@@ -53,6 +55,14 @@ function toStringList(x: unknown): string[] | null {
     out.push(s);
   }
   return out;
+}
+
+/** Skill ranks are whole numbers ≥ 0; anything else is dropped, never fatal. */
+function toSkillRank(x: unknown): number | null {
+  if (x === undefined || x === null) return null;
+  const n = toNumber(x);
+  if (n === null || !Number.isInteger(n) || n < 0) return null;
+  return n;
 }
 
 function toCell(x: unknown): Cell | null {
@@ -170,9 +180,106 @@ export function normalizeEvent(raw: unknown): AnyEvent {
       if (actor === null || add === null || remove === null) return unknownEvent(t, raw);
       return { t, type, actor, add, remove };
     }
+    case 'skill': {
+      const name = toString_(raw.name);
+      if (actor === null || name === null || name === '') return unknownEvent(t, raw);
+      const rank = toSkillRank(raw.rank);
+      const desc = toString_(raw.desc);
+      return {
+        t,
+        type: 'skill',
+        actor,
+        name,
+        ...(rank === null ? {} : { rank }),
+        ...(desc === null ? {} : { desc }),
+      };
+    }
+    case 'class': {
+      const cls = toString_(raw.class);
+      if (actor === null || cls === null || cls === '') return unknownEvent(t, raw);
+      return { t, type: 'class', actor, class: cls };
+    }
+    case 'hotlist': {
+      const add = toStringList(raw.add);
+      const remove = toStringList(raw.remove);
+      if (actor === null || add === null || remove === null) return unknownEvent(t, raw);
+      return { t, type: 'hotlist', actor, add, remove };
+    }
     default:
       return unknownEvent(t, raw);
   }
+}
+
+/* ------------------------------------------- optional crawler sheet fields */
+
+const STAT_KEYS = ['str', 'int', 'con', 'dex', 'cha'] as const;
+
+function toStats(x: unknown): CrawlerStats | null {
+  if (!isRecord(x)) return null;
+  const stats = {} as CrawlerStats;
+  for (const key of STAT_KEYS) {
+    const value = toNumber(x[key]);
+    if (value === null) return null;
+    stats[key] = value;
+  }
+  return stats;
+}
+
+function toSkillEntries(x: unknown): SkillEntry[] | null {
+  if (!Array.isArray(x)) return null;
+  const out: SkillEntry[] = [];
+  for (const item of x) {
+    if (!isRecord(item)) return null;
+    const name = toString_(item.name);
+    if (name === null || name === '') return null;
+    const rank = toSkillRank(item.rank);
+    out.push(rank === null ? { name } : { name, rank });
+  }
+  return out;
+}
+
+function toCrawlerNumber(x: unknown): string | number | null {
+  if (typeof x === 'number' && Number.isFinite(x)) return x;
+  if (typeof x === 'string' && x.trim() !== '') return x;
+  return null;
+}
+
+/**
+ * Copies a crawler, keeping only the optional v2 sheet fields that are well
+ * formed. A malformed optional field is dropped with a warning — never fatal,
+ * so a v1 file (which has none of them) and a half-edited v2 file both load.
+ */
+export function normalizeCrawler(raw: Crawler): Crawler {
+  const crawler: Crawler = { ...raw };
+  const drop = (field: string): void => {
+    delete (crawler as unknown as Record<string, unknown>)[field];
+    console.warn(`Crawler "${raw.id}": dropping malformed "${field}".`);
+  };
+
+  if (crawler.race !== undefined && typeof crawler.race !== 'string') drop('race');
+  if (crawler.pronouns !== undefined && typeof crawler.pronouns !== 'string') drop('pronouns');
+
+  if (crawler.crawlerNumber !== undefined) {
+    const value = toCrawlerNumber(crawler.crawlerNumber);
+    if (value === null) drop('crawlerNumber');
+    else crawler.crawlerNumber = value;
+  }
+  if (crawler.stats !== undefined) {
+    const stats = toStats(crawler.stats);
+    if (stats === null) drop('stats');
+    else crawler.stats = stats;
+  }
+  if (crawler.hotlist !== undefined) {
+    const hotlist = toStringList(crawler.hotlist);
+    if (hotlist === null) drop('hotlist');
+    else crawler.hotlist = hotlist;
+  }
+  if (crawler.skills !== undefined) {
+    const skills = toSkillEntries(crawler.skills);
+    if (skills === null) drop('skills');
+    else crawler.skills = skills;
+  }
+  return crawler;
 }
 
 /** Ascending by `t`, stable for equal `t` (file order wins — spec edge case). */
@@ -265,7 +372,11 @@ export function normalizeEpisode(raw: unknown): EpisodeData {
     throw new DataError('Episode data does not match the episode schema.');
   }
   const events = sortEvents((raw.events as unknown[]).map(normalizeEvent));
-  return { episodeId: raw.episodeId, initialState: raw.initialState, events };
+  const initialState: InitialState = {
+    ...raw.initialState,
+    party: raw.initialState.party.map(normalizeCrawler),
+  };
+  return { episodeId: raw.episodeId, initialState, events };
 }
 
 export function normalizeShow(raw: unknown): Show {
