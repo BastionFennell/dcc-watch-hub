@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router';
+import { useParams, useSearchParams } from 'react-router';
 import { useShow } from '../data/ShowContext';
 import { fetchEpisode } from '../data/load';
 import { findEpisode, prevNext } from '../data/show';
@@ -62,6 +62,16 @@ export function EpisodePage() {
   // Viewer state, not overlay state: which record is open. Resets per episode.
   const panelApi = usePanel(meta?.id);
   const { panel } = panelApi;
+  // DEV only: `?panel=dossier:<id>` or `?panel=map` opens a panel on load (screenshots, manual QA).
+  const [searchParams] = useSearchParams();
+  const devPanel = import.meta.env.DEV ? searchParams.get('panel') : null;
+  const partyLoaded = episode !== null;
+  useEffect(() => {
+    if (!devPanel || !partyLoaded) return;
+    if (devPanel === 'map') panelApi.open({ kind: 'map' }, null);
+    else if (devPanel.startsWith('dossier:')) panelApi.open({ kind: 'dossier', crawlerId: devPanel.slice(8) }, null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- open once per episode load
+  }, [devPanel, partyLoaded, meta?.id]);
   // Persisted playhead only, never overlay state (constitution I, FR-133).
   const resume = useResume(meta, source, playhead);
 
