@@ -45,3 +45,50 @@ description: "Task list for the Crawler Record feature (glance card + full recor
 ## Notes
 - No git write commands by agents; orchestrator commits per wave. No new dependencies. Copy only from `src/copy.ts` (append at end).
 - The dialog must never call the `TimeSource`; playback is untouched.
+
+---
+
+# Revision 2 tasks (author feedback: equipped items, latest achievement, art, hotbar, tiles, list views)
+
+## Waves
+
+| Wave | Tasks | Ownership |
+|------|-------|-----------|
+| R2-1 | T316–T321 | one agent: types/validate/state/reducer/selectors (+tests), converter + schema + samples + fixtures + placeholder art, copy |
+| R2-2 | T322–T323 ∥ T324–T327 | "glance": `src/components/CrawlerGlance/**`. "record": `src/components/FullRecord/**`, `src/components/CrawlerDossier/sections.tsx` (+css) |
+| R2-3 | T328–T331 | one agent: page tests, docs, polish, verification |
+
+## Phase R2-1: Foundation
+
+- [ ] T316 `src/data/types.ts`: `GearSlot`, `Gear`, `Crawler.gear?`, `Crawler.art?`, `EquipEvent`, `UnequipEvent`; extend `Event`, `EventType`, `KNOWN_EVENT_TYPES`. `src/data/validate.ts`: normalize both events (unknown slot → `unknown`), `normalizeCrawler` drops malformed `gear`/`art`. Tests appended.
+- [ ] T317 `src/engine/state.ts` + `reducer.ts`: `CrawlerState.gear` normalized `{ head|torso|arms|hands|legs|feet: string | null; accessories: string[] }` seeded from `Crawler.gear`; `equip`/`unequip` per data-model.md (accessory cap 10, dedupe, remove by name or last). Tests appended.
+- [ ] T318 `src/engine/selectors.ts`: `Dossier` gains `gear`, `art?`; `toFeedItem` handles equip/unequip (`copy.feedText.equip(actor, slot, item)`, `unequip(actor, slot, item?)`); **revise** `Glance` per data-model Revision 2 (remove `ledger`; add `equipped` in sheet order with accessories expanded, `latestAchievement`); add `hotbarSlots(hotlist, n = 10): { slots: (string | null)[]; overflow: number }`; `GEAR_SLOT_ORDER` const. Update existing `crawlerGlance` tests; add hotbar tests.
+- [ ] T319 `src/copy.ts` (append): `labels.equip` "Equip", `labels.unequip` "Unequip", `feedText.equip/unequip`, `gearSlotLabels { head: 'Head', torso: 'Torso', arms: 'Arms', hands: 'Hands', legs: 'Legs', feet: 'Feet', accessory: 'Accessory' }`, `dossierSections.equipped` "EQUIPPED", `dossierSections.gear` "GEAR", `dossierSections.latestAchievement` "LATEST ACHIEVEMENT", `dossierSections.recent` "RECENT MOMENTS", `dossierEmpty.equipped` "Nothing equipped.", `dossierEmpty.gearSlot` "—", `hotbarSlot(n)` → `${n}`, `hotbarOverflow(n)` → `+${n}`, `viewAll(n)` → `View all (${n})`, `backToRecord` "Back to record", `recordListTitle(name, category)` → `${name} — ${category}`, `artAlt(name)` → `${name}, full figure`.
+- [ ] T320 Contracts + converter + samples: add `equip`/`unequip` branches and `gear`/`art` crawler fields to `specs/003-crawler-record/contracts/episode.schema.json` (copy v2 schema and extend; point `samples.test.ts` and `sheet-to-json.test.ts` at it); converter rows per data-model (unknown slot ERROR; accessory unequip without item WARN); `scripts/samples/*` rows; `public/data/ep{1,2,3}.json`: starting `gear` for all crawlers, ≥ 2 `equip` and ≥ 1 `unequip` per file, `art` for at least two crawlers per file, X.O. with ≥ 9 skills in ep1, Harry with 11 hotlist entries late in ep1; keep counts ≤ 60 (raise the samples ceiling to 80 if needed, and note it).
+- [ ] T321 Fixtures + art: `src/test/fixtures.ts` per data-model Revision 2 (Harry gear/equip/unequip times, X.O. nine skills by 200, Harry 11 hotlist entries at 210, `art` for actress + harry); placeholder art SVGs `public/img/crawlers/{stuntman,psychic,harry,xo,actress}-art.svg` (tall 200×500 monochrome full-figure silhouettes, distinct per crawler, brand-tinted background) and README placeholder list update.
+
+**Checkpoint**: typecheck/lint/test/build green; all prior tests pass (glance tests updated).
+
+## Phase R2-2a: Glance card (US1)
+
+- [ ] T322 [P] `src/components/CrawlerGlance/CrawlerGlance.tsx` + css: per R2 US1 — remove the ledger and placeholders; add EQUIPPED (≤ 7 rows `slot · item`, sheet order; "Nothing equipped."), LATEST ACHIEVEMENT (title bold, desc, time; empty phrase), RECENT MOMENTS (up to three, no placeholders, `min-height` for three rows so the card height holds), sparkline on its own row. testids: `glance-equipped`, `glance-latest-achievement`, `glance-history` (rows `glance-history-row`).
+- [ ] T323 [P] `CrawlerGlance.test.tsx`: update for the new shape (equipped rows and order, latest achievement, no dashes, three-row min-height class present, button).
+
+## Phase R2-2b: Record (US2)
+
+- [ ] T324 [P] `src/components/CrawlerDossier/sections.tsx` + css: add `DossierHotbar({ hotlist })` (ten numbered square slots, `+N`), `DossierGear({ gear })` (seven slot rows, accessories joined, "—" when empty), `DossierTiles({ kind, items, max = 8, onViewAll? })` for skills/inventory/achievements (square tiles: name, mono footer rank/time; "View all (N)" button when over max), `DossierHistory` gains `max?` and `onViewAll?`. Keep existing exports working (the stacked `CrawlerDossier` keeps using full lists).
+- [ ] T325 [P] `src/components/FullRecord/FullRecordDialog.tsx` + css: art column (`art` or bust fallback; `alt` from `artAlt`), top band (identity, vitals, stats) beside it; sheet body: Hotbar, Gear, then Skills / Inventory / Achievements tile grids and History (8 rows) with "View all"; `view` state per contracts/dialog.md Revision 2 (list views reuse `DossierList`/`DossierAchievements`/`DossierHistory` full lists with a "Back to record" button, heading focus, focus return, Escape → back before close); title switches to `recordListTitle`; ≤ 900 px art banner + stacking; hotbar wraps 5×2.
+- [ ] T326 [P] `FullRecordDialog.test.tsx`: art img/alt and bust fallback; hotbar 10 slots + order + `+N`; gear rows; tiles capped at 8 with "View all (9)" for X.O. skills; list view open/back/Escape order/focus; live update in a list view; title changes.
+- [ ] T327 [P] `useModalDialog.ts`: allow the component to intercept Escape first (e.g. accept an `onEscape?: () => boolean` returning true when consumed) so list views can step back before the dialog closes; test.
+
+## Phase R2-3: Wiring, docs, polish
+
+- [ ] T328 `src/pages/EpisodePage.test.tsx`: update glance assertions (equipped, latest achievement, no ledger), record assertions (hotbar, gear, tiles, view all → list view → back), sweep for equipped/latest achievement at fixture boundaries.
+- [ ] T329 README + quickstart: glance/record descriptions, new events and CSV rows, `gear`/`art` fields, placeholder art list, `?t=` values re-verified against `public/data/ep1.json`.
+- [ ] T330 [P] Visual/a11y/responsive pass (headless Chrome 1440×900 + 500 px): card heights equal Harry vs Actress (px), no dashes; record with art at 1440; list view; 360 px no horizontal scroll in sheet and list views; Lighthouse a11y 100 (preview ambient + dev record); contrast of hotbar numbers/tiles ≥ 4.5:1.
+- [ ] T331 Final: gates green; R2-SC-201..204 recorded under quickstart `## Results (revision 2)`; all tasks `[X]`.
+
+## Carry-overs from the revision 1 polish (fold into R2-2b / R2-3)
+
+- [ ] T332 [P] `FullRecordDialog`: anchor the dialog to a fixed top offset (e.g. `margin-top: 5vh`, `align-items: flex-start`) so a shrinking seek never re-centres it vertically (US2 scenario 2).
+- [ ] T333 [P] `RankSparkline`: accept `preserveAspectRatio="none"` (or a `stretch` prop) so the glance row draws full width; keep the dialog's vitals usage as is.
