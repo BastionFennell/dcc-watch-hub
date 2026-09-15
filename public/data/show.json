@@ -1,0 +1,55 @@
+{
+  "title": "Dungeon Crawl Cast",
+  "seasons": [
+    {
+      "season": 1,
+      "floors": [
+        {
+          "floor": 1,
+          "label": "Floor 1",
+          "episodes": [
+            1,
+            2
+          ]
+        },
+        {
+          "floor": 2,
+          "label": "Floor 2",
+          "episodes": [
+            3
+          ]
+        }
+      ]
+    }
+  ],
+  "episodes": [
+    {
+      "id": 1,
+      "title": "Episode 1 — The World Dungeon",
+      "youtubeId": "M7lc1UVf-VE",
+      "floor": 1,
+      "durationSec": 240,
+      "dataUrl": "/data/ep1.json"
+    },
+    {
+      "id": 2,
+      "title": "Episode 2 — The Meat District",
+      "youtubeId": "M7lc1UVf-VE",
+      "floor": 1,
+      "durationSec": 240,
+      "dataUrl": "/data/ep2.json"
+    },
+    {
+      "id": 3,
+      "title": "Episode 3 — Descent",
+      "youtubeId": "M7lc1UVf-VE",
+      "floor": 2,
+      "durationSec": 240,
+      "dataUrl": "/data/ep3.json"
+    }
+  ],
+  "links": {
+    "youtube": "https://www.youtube.com/@DungeonCrawlCast",
+    "discord": "https://discord.gg/REPLACE_ME"
+  }
+}

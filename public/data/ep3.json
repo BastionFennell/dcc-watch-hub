@@ -1,0 +1,342 @@
+{
+  "episodeId": 3,
+  "initialState": {
+    "party": [
+      {
+        "id": "stuntman",
+        "name": "The Stuntman",
+        "handle": "Dungeon Crawler Danny",
+        "player": "Danny",
+        "level": 4,
+        "hp": {
+          "current": 26,
+          "max": 26
+        },
+        "portrait": "/img/crawlers/stuntman.svg",
+        "class": null,
+        "inventory": [
+          "Utility Harness",
+          "Grappling Spool"
+        ],
+        "rank": 612
+      },
+      {
+        "id": "psychic",
+        "name": "The Psychic",
+        "handle": "Static Bloom",
+        "player": "Rae",
+        "level": 3,
+        "hp": {
+          "current": 21,
+          "max": 21
+        },
+        "portrait": "/img/crawlers/psychic.svg",
+        "class": null,
+        "inventory": [
+          "Resonant Visor",
+          "Ration Brick"
+        ],
+        "rank": 1488
+      },
+      {
+        "id": "harry",
+        "name": "Harry",
+        "handle": "Harold the Unhoused",
+        "player": "Marcus",
+        "level": 4,
+        "hp": {
+          "current": 25,
+          "max": 25
+        },
+        "portrait": "/img/crawlers/harry.svg",
+        "class": null,
+        "inventory": [
+          "Enchanted Crowbar",
+          "Torch"
+        ],
+        "rank": 740
+      },
+      {
+        "id": "xo",
+        "name": "X.O.",
+        "handle": "Executive Officer",
+        "player": "Jules",
+        "level": 3,
+        "hp": {
+          "current": 23,
+          "max": 23
+        },
+        "portrait": "/img/crawlers/xo.svg",
+        "class": null,
+        "inventory": [
+          "Signal Flare",
+          "Ledger of Debts"
+        ],
+        "rank": 2901
+      },
+      {
+        "id": "actress",
+        "name": "The Actress",
+        "handle": "Second Billing",
+        "player": "Nia",
+        "level": 4,
+        "hp": {
+          "current": 24,
+          "max": 24
+        },
+        "portrait": "/img/crawlers/actress.svg",
+        "class": null,
+        "inventory": [
+          "Understudy's Dagger",
+          "Greasepaint"
+        ],
+        "rank": 1955
+      }
+    ],
+    "partyRank": 48,
+    "map": {
+      "floor": 2,
+      "grid": {
+        "cols": 12,
+        "rows": 8
+      },
+      "revealed": []
+    }
+  },
+  "events": [
+    {
+      "t": 7,
+      "type": "system_message",
+      "text": "Floor Two. Fewer neighbors, worse ones. The feed thanks you for your service."
+    },
+    {
+      "t": 15,
+      "type": "chapter",
+      "label": "The Descent",
+      "kind": "story"
+    },
+    {
+      "t": 23,
+      "type": "note",
+      "text": "Someone has been marking the stairwell. The marks are recent."
+    },
+    {
+      "t": 29,
+      "type": "loot",
+      "actor": "psychic",
+      "item": "Cartographer Sigil",
+      "source": "Sealed Landing Cache"
+    },
+    {
+      "t": 36,
+      "type": "inventory",
+      "actor": "xo",
+      "add": [
+        "Chalk Stub"
+      ],
+      "remove": []
+    },
+    {
+      "t": 43,
+      "type": "hp",
+      "actor": "stuntman",
+      "current": 15,
+      "max": 26
+    },
+    {
+      "t": 49,
+      "type": "map_reveal",
+      "cells": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "label": "The Landing"
+    },
+    {
+      "t": 55,
+      "type": "status",
+      "actor": "xo",
+      "add": [
+        "Marked"
+      ],
+      "remove": []
+    },
+    {
+      "t": 60,
+      "type": "achievement",
+      "actor": "xo",
+      "title": "Marked for Broadcast",
+      "desc": "Selected by something patient."
+    },
+    {
+      "t": 61,
+      "type": "achievement",
+      "actor": "stuntman",
+      "title": "Three-Story Landing",
+      "desc": "Stuck it. Mostly."
+    },
+    {
+      "t": 62,
+      "type": "achievement",
+      "actor": "psychic",
+      "title": "Cold Reading",
+      "desc": "Named the thing before it spoke."
+    },
+    {
+      "t": 71,
+      "type": "level_up",
+      "actor": "xo",
+      "level": 4
+    },
+    {
+      "t": 77,
+      "type": "sponsor",
+      "text": "Descending? Grull Industries rappelling line. Rated for one of you.",
+      "durationSec": 20
+    },
+    {
+      "t": 85,
+      "type": "system_message",
+      "text": "A floor boss is now aware of this broadcast. Ratings are climbing."
+    },
+    {
+      "t": 93,
+      "type": "chapter",
+      "label": "The Sealed Cache",
+      "kind": "loot"
+    },
+    {
+      "t": 100,
+      "type": "future_type",
+      "headline": "Reserved for a later season",
+      "tier": 12
+    },
+    {
+      "t": 109,
+      "type": "loot",
+      "actor": "harry",
+      "item": "Warden Key",
+      "source": "Platinum Adventurer Box"
+    },
+    {
+      "t": 117,
+      "type": "hp",
+      "actor": "harry",
+      "current": 6,
+      "max": 25
+    },
+    {
+      "t": 125,
+      "type": "rank",
+      "scope": "party",
+      "rank": 29
+    },
+    {
+      "t": 132,
+      "type": "status",
+      "actor": "xo",
+      "add": [],
+      "remove": [
+        "Marked"
+      ]
+    },
+    {
+      "t": 140,
+      "type": "note",
+      "text": "The Warden Key is warm. Nobody mentions it on camera."
+    },
+    {
+      "t": 148,
+      "type": "chapter",
+      "label": "The Warden of Floor Two",
+      "kind": "boss"
+    },
+    {
+      "t": 156,
+      "type": "hp",
+      "actor": "harry",
+      "current": 21,
+      "max": 25
+    },
+    {
+      "t": 165,
+      "type": "level_up",
+      "actor": "psychic",
+      "level": 4
+    },
+    {
+      "t": 174,
+      "type": "map_reveal",
+      "cells": [
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          5,
+          6
+        ]
+      ],
+      "label": "The Warden Hall"
+    },
+    {
+      "t": 182,
+      "type": "inventory",
+      "actor": "harry",
+      "add": [
+        "Warden Key"
+      ],
+      "remove": [
+        "Bent Pry Bar"
+      ]
+    },
+    {
+      "t": 191,
+      "type": "rank",
+      "scope": "crawler",
+      "actor": "stuntman",
+      "rank": 401
+    },
+    {
+      "t": 200,
+      "type": "sponsor",
+      "text": "Ghaza Provisioners salutes the fallen and invoices the living.",
+      "durationSec": 20
+    },
+    {
+      "t": 211,
+      "type": "achievement",
+      "actor": "harry",
+      "title": "Warden Breaker",
+      "desc": "Opened what was sealed for a reason."
+    },
+    {
+      "t": 221,
+      "type": "system_message",
+      "text": "Floor Two is logged. Floor Three is already watching."
+    },
+    {
+      "t": 233,
+      "type": "note",
+      "text": "Recap ends. The System reminds you: the stairs go both ways."
+    }
+  ]
+}

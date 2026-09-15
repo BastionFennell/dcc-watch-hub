@@ -1,0 +1,341 @@
+{
+  "episodeId": 2,
+  "initialState": {
+    "party": [
+      {
+        "id": "stuntman",
+        "name": "The Stuntman",
+        "handle": "Dungeon Crawler Danny",
+        "player": "Danny",
+        "level": 2,
+        "hp": {
+          "current": 24,
+          "max": 24
+        },
+        "portrait": "/img/crawlers/stuntman.svg",
+        "class": null,
+        "inventory": [
+          "Utility Harness",
+          "Duct Tape"
+        ],
+        "rank": 918
+      },
+      {
+        "id": "psychic",
+        "name": "The Psychic",
+        "handle": "Static Bloom",
+        "player": "Rae",
+        "level": 2,
+        "hp": {
+          "current": 20,
+          "max": 20
+        },
+        "portrait": "/img/crawlers/psychic.svg",
+        "class": null,
+        "inventory": [
+          "Cracked Visor",
+          "Ration Brick"
+        ],
+        "rank": 2204
+      },
+      {
+        "id": "harry",
+        "name": "Harry",
+        "handle": "Harold the Unhoused",
+        "player": "Marcus",
+        "level": 2,
+        "hp": {
+          "current": 22,
+          "max": 22
+        },
+        "portrait": "/img/crawlers/harry.svg",
+        "class": null,
+        "inventory": [
+          "Torch",
+          "Bent Pry Bar"
+        ],
+        "rank": 1177
+      },
+      {
+        "id": "xo",
+        "name": "X.O.",
+        "handle": "Executive Officer",
+        "player": "Jules",
+        "level": 2,
+        "hp": {
+          "current": 21,
+          "max": 21
+        },
+        "portrait": "/img/crawlers/xo.svg",
+        "class": null,
+        "inventory": [
+          "Signal Flare",
+          "Ledger of Debts"
+        ],
+        "rank": 4188
+      },
+      {
+        "id": "actress",
+        "name": "The Actress",
+        "handle": "Second Billing",
+        "player": "Nia",
+        "level": 2,
+        "hp": {
+          "current": 20,
+          "max": 20
+        },
+        "portrait": "/img/crawlers/actress.svg",
+        "class": null,
+        "inventory": [
+          "Understudy's Dagger"
+        ],
+        "rank": 3050
+      }
+    ],
+    "partyRank": 61,
+    "map": {
+      "floor": 1,
+      "grid": {
+        "cols": 12,
+        "rows": 8
+      },
+      "revealed": []
+    }
+  },
+  "events": [
+    {
+      "t": 5,
+      "type": "system_message",
+      "text": "Crawlers. You survived the doorway. The Meat District will not be so polite."
+    },
+    {
+      "t": 13,
+      "type": "chapter",
+      "label": "Recap — What the Door Cost",
+      "kind": "story"
+    },
+    {
+      "t": 20,
+      "type": "note",
+      "text": "Rae has stopped narrating her own thoughts. The audience objects."
+    },
+    {
+      "t": 27,
+      "type": "inventory",
+      "actor": "actress",
+      "add": [
+        "Greasepaint"
+      ],
+      "remove": []
+    },
+    {
+      "t": 33,
+      "type": "loot",
+      "actor": "xo",
+      "item": "Ledger of Debts",
+      "source": "Abandoned Kiosk"
+    },
+    {
+      "t": 40,
+      "type": "hp",
+      "actor": "psychic",
+      "current": 11,
+      "max": 20
+    },
+    {
+      "t": 47,
+      "type": "map_reveal",
+      "cells": [
+        [
+          2,
+          6
+        ],
+        [
+          2,
+          7
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          3,
+          6
+        ]
+      ],
+      "label": "The Butcher Row"
+    },
+    {
+      "t": 53,
+      "type": "status",
+      "actor": "harry",
+      "add": [
+        "Bleeding"
+      ],
+      "remove": []
+    },
+    {
+      "t": 60,
+      "type": "achievement",
+      "actor": "psychic",
+      "title": "Static Bloom",
+      "desc": "Read a room that was not there."
+    },
+    {
+      "t": 61,
+      "type": "achievement",
+      "actor": "actress",
+      "title": "Second Billing",
+      "desc": "Upstaged a mid-boss."
+    },
+    {
+      "t": 62,
+      "type": "achievement",
+      "actor": "harry",
+      "title": "Blood Tax",
+      "desc": "Paid in advance, twice."
+    },
+    {
+      "t": 69,
+      "type": "level_up",
+      "actor": "psychic",
+      "level": 3
+    },
+    {
+      "t": 75,
+      "type": "sponsor",
+      "text": "Meat District cuts, dressed by Grull Industries. Ask for the thoracic special.",
+      "durationSec": 20
+    },
+    {
+      "t": 83,
+      "type": "system_message",
+      "text": "A neighborhood boss has noticed you. This is excellent for engagement."
+    },
+    {
+      "t": 90,
+      "type": "chapter",
+      "label": "The Hook Run",
+      "kind": "loot"
+    },
+    {
+      "t": 100,
+      "type": "future_type",
+      "headline": "Forward-compatibility probe",
+      "tier": 7
+    },
+    {
+      "t": 107,
+      "type": "loot",
+      "actor": "stuntman",
+      "item": "Grappling Spool",
+      "source": "Gold Adventurer Box"
+    },
+    {
+      "t": 114,
+      "type": "hp",
+      "actor": "harry",
+      "current": 5,
+      "max": 22
+    },
+    {
+      "t": 121,
+      "type": "rank",
+      "scope": "party",
+      "rank": 48
+    },
+    {
+      "t": 128,
+      "type": "status",
+      "actor": "harry",
+      "add": [],
+      "remove": [
+        "Bleeding"
+      ]
+    },
+    {
+      "t": 136,
+      "type": "note",
+      "text": "Marcus asks whether the hooks are load-bearing. Nobody answers."
+    },
+    {
+      "t": 144,
+      "type": "chapter",
+      "label": "The Butcher of Row Nine",
+      "kind": "boss"
+    },
+    {
+      "t": 152,
+      "type": "hp",
+      "actor": "harry",
+      "current": 19,
+      "max": 22
+    },
+    {
+      "t": 160,
+      "type": "level_up",
+      "actor": "actress",
+      "level": 3
+    },
+    {
+      "t": 169,
+      "type": "map_reveal",
+      "cells": [
+        [
+          6,
+          8
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          7,
+          9
+        ]
+      ],
+      "label": "The Cold Locker"
+    },
+    {
+      "t": 177,
+      "type": "inventory",
+      "actor": "psychic",
+      "add": [
+        "Resonant Visor"
+      ],
+      "remove": [
+        "Cracked Visor"
+      ]
+    },
+    {
+      "t": 186,
+      "type": "rank",
+      "scope": "crawler",
+      "actor": "harry",
+      "rank": 740
+    },
+    {
+      "t": 195,
+      "type": "sponsor",
+      "text": "Ghaza Provisioners: ration bricks that outlive their owners.",
+      "durationSec": 20
+    },
+    {
+      "t": 205,
+      "type": "achievement",
+      "actor": "stuntman",
+      "title": "Rigging Expert",
+      "desc": "Nobody asked him to swing."
+    },
+    {
+      "t": 216,
+      "type": "system_message",
+      "text": "Row Nine is cleared. The stairs down are no longer optional."
+    },
+    {
+      "t": 228,
+      "type": "note",
+      "text": "The Actress requests a costume change. Denied."
+    }
+  ]
+}

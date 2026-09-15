@@ -1,0 +1,298 @@
+/**
+ * View models. Every one is a pure function of the event log and the playhead,
+ * so scrubbing in either direction is automatically correct (constitution I).
+ * No memoization by design (spec §3.2: do not prematurely optimize).
+ */
+import type {
+  AnyEvent,
+  ChapterKind,
+  Crawler,
+  EpisodeMeta,
+  Event,
+  EventType,
+} from '../data/types';
+import { isKnownEvent } from '../data/types';
+import { copy } from '../copy';
+import type { OverlayState } from './state';
+import { cellKey } from './state';
+import { formatTime } from './time';
+
+/* ------------------------------------------------------------------ types */
+
+export interface PartyFrame {
+  id: string;
+  name: string;
+  handle: string;
+  level: number;
+  hp: { current: number; max: number };
+  /** 0–100, clamped; drives the HP bar width. */
+  pct: number;
+  danger: boolean;
+  levelUpPulse: boolean;
+  statuses: string[];
+  portrait: string;
+  rank: number | null;
+}
+
+export interface FeedItem {
+  /** Index in the episode's event array — a stable React key across seeks. */
+  id: number;
+  t: number;
+  kind: EventType;
+  label: string;
+  text: string;
+  actorName?: string;
+  /** Sponsor only. */
+  durationSec?: number;
+}
+
+export interface Toast {
+  id: number;
+  title: string;
+  desc?: string;
+  actorName?: string;
+  /** Queue window, in content seconds. */
+  start: number;
+  end: number;
+}
+
+export type MarkerKind = ChapterKind;
+
+export interface Marker {
+  id: number;
+  t: number;
+  /** 0–1 along the bar. */
+  pos: number;
+  kind: MarkerKind;
+  /** Ready to drop into a style attribute. */
+  color: string;
+  label: string;
+}
+
+export interface MapCellsView {
+  floor: number;
+  cols: number;
+  rows: number;
+  revealed: Set<string>;
+  total: number;
+}
+
+export const TOAST_DURATION_SEC = 6;
+export const LEVEL_UP_PULSE_SEC = 1.2;
+
+const CHAPTER_KIND_SET = new Set<string>(['boss', 'loot', 'achievement', 'levelup', 'story']);
+
+function markerKind(kind: string): MarkerKind {
+  return CHAPTER_KIND_SET.has(kind) ? (kind as MarkerKind) : 'story';
+}
+
+function markerColor(kind: MarkerKind): string {
+  return `var(--marker-${kind})`;
+}
+
+function nameOf(party: readonly Crawler[], actor: string | undefined): string | undefined {
+  if (!actor) return undefined;
+  return party.find((crawler) => crawler.id === actor)?.name ?? actor;
+}
+
+/* -------------------------------------------------------------- selectors */
+
+/** Every event at or before the playhead, in file order. */
+export function elapsed(events: readonly AnyEvent[], t: number): AnyEvent[] {
+  return events.filter((event) => event.t <= t);
+}
+
+export function partyFrames(
+  state: OverlayState,
+  events: readonly AnyEvent[],
+  t: number,
+): PartyFrame[] {
+  return state.party.map((crawler) => {
+    const max = crawler.hp.max > 0 ? crawler.hp.max : 1;
+    const current = Math.min(Math.max(crawler.hp.current, 0), max);
+    const levelUpPulse = events.some(
+      (event) =>
+        event.type === 'level_up' &&
+        event.actor === crawler.id &&
+        event.t <= t &&
+        t < event.t + LEVEL_UP_PULSE_SEC,
+    );
+    return {
+      id: crawler.id,
+      name: crawler.name,
+      handle: crawler.handle,
+      level: crawler.level,
+      hp: { current, max: crawler.hp.max },
+      pct: Math.round((current / max) * 100),
+      danger: current / max < 0.25,
+      levelUpPulse,
+      statuses: crawler.statuses,
+      portrait: crawler.portrait,
+      rank: crawler.rank,
+    };
+  });
+}
+
+function toFeedItem(
+  event: Event,
+  id: number,
+  party: readonly Crawler[],
+): FeedItem | null {
+  const label = copy.labels[event.type];
+  const actorName = 'actor' in event ? nameOf(party, event.actor) : undefined;
+  const who = actorName ?? '';
+  const base = { id, t: event.t, kind: event.type, label } as const;
+
+  switch (event.type) {
+    case 'system_message':
+      return { ...base, text: event.text };
+    case 'note':
+      return { ...base, text: event.text };
+    case 'achievement':
+      return { ...base, actorName, text: copy.feedText.achievement(who, event.title, event.desc) };
+    case 'loot':
+      return { ...base, actorName, text: copy.feedText.loot(who, event.item, event.source) };
+    case 'hp':
+      return { ...base, actorName, text: copy.feedText.hp(who, event.current, event.max) };
+    case 'level_up':
+      return { ...base, actorName, text: copy.feedText.levelUp(who, event.level) };
+    case 'rank':
+      return {
+        ...base,
+        actorName,
+        text:
+          event.scope === 'party'
+            ? copy.feedText.rankParty(event.rank)
+            : copy.feedText.rankCrawler(who, event.rank),
+      };
+    case 'map_reveal':
+      return { ...base, text: copy.feedText.mapReveal(event.cells.length, event.label) };
+    case 'sponsor':
+      return { ...base, text: event.text, durationSec: event.durationSec };
+    case 'chapter':
+      return { ...base, text: copy.feedText.chapter(event.label) };
+    case 'status':
+      return { ...base, actorName, text: copy.feedText.status(who, event.add, event.remove) };
+    case 'inventory':
+      return { ...base, actorName, text: copy.feedText.inventory(who, event.add, event.remove) };
+    default:
+      return null;
+  }
+}
+
+/** The last `n` elapsed, known events, newest first (FR-020). */
+export function feedItems(
+  events: readonly AnyEvent[],
+  t: number,
+  n = 8,
+  party: readonly Crawler[] = [],
+): FeedItem[] {
+  const items: FeedItem[] = [];
+  for (let i = 0; i < events.length; i += 1) {
+    const event = events[i];
+    if (event.t > t) continue;
+    if (!isKnownEvent(event)) continue;
+    const item = toFeedItem(event, i, party);
+    if (item) items.push(item);
+  }
+  return items.slice(-n).reverse();
+}
+
+/** The sponsor whose window contains the playhead; the latest one wins on overlap. */
+export function activeSponsor(
+  events: readonly AnyEvent[],
+  t: number,
+  party: readonly Crawler[] = [],
+): FeedItem | null {
+  let active: FeedItem | null = null;
+  for (let i = 0; i < events.length; i += 1) {
+    const event = events[i];
+    if (event.type !== 'sponsor') continue;
+    if (event.t <= t && t < event.t + event.durationSec) {
+      active = toFeedItem(event, i, party);
+    }
+  }
+  return active;
+}
+
+/**
+ * The achievement toast queue, expressed as a pure function of the playhead:
+ * `start_i = max(t_i, end_{i-1})`, `end_i = start_i + 6` (research R5).
+ */
+export function activeToast(
+  events: readonly AnyEvent[],
+  t: number,
+  party: readonly Crawler[] = [],
+): Toast | null {
+  let previousEnd = -Infinity;
+  for (let i = 0; i < events.length; i += 1) {
+    const event = events[i];
+    if (event.type !== 'achievement') continue;
+    const start = Math.max(event.t, previousEnd);
+    const end = start + TOAST_DURATION_SEC;
+    previousEnd = end;
+    if (start <= t && t < end) {
+      const actorName = nameOf(party, event.actor);
+      return {
+        id: i,
+        title: event.title,
+        ...(event.desc !== undefined ? { desc: event.desc } : {}),
+        ...(actorName !== undefined ? { actorName } : {}),
+        start,
+        end,
+      };
+    }
+  }
+  return null;
+}
+
+/** Chapter, achievement, and level-up markers positioned by `t / durationSec` (FR-040). */
+export function timelineMarkers(
+  events: readonly AnyEvent[],
+  durationSec: number,
+  party: readonly Crawler[] = [],
+): Marker[] {
+  const span = durationSec > 0 ? durationSec : 1;
+  const markers: Marker[] = [];
+  for (let i = 0; i < events.length; i += 1) {
+    const event = events[i];
+    let kind: MarkerKind;
+    let label: string;
+    if (event.type === 'chapter') {
+      kind = markerKind(event.kind);
+      label = event.label;
+    } else if (event.type === 'achievement') {
+      kind = 'achievement';
+      label = event.title;
+    } else if (event.type === 'level_up') {
+      kind = 'levelup';
+      label = copy.feedText.markerLevelUp(nameOf(party, event.actor) ?? '', event.level);
+    } else {
+      continue;
+    }
+    markers.push({
+      id: i,
+      t: event.t,
+      pos: Math.min(1, Math.max(0, event.t / span)),
+      kind,
+      color: markerColor(kind),
+      label,
+    });
+  }
+  return markers;
+}
+
+export function mapCells(state: OverlayState): MapCellsView {
+  const { cols, rows } = state.map.grid;
+  return {
+    floor: state.map.floor,
+    cols,
+    rows,
+    revealed: new Set(state.map.revealed.map((cell) => cellKey(cell[0], cell[1]))),
+    total: cols * rows,
+  };
+}
+
+export function stageCaption(meta: EpisodeMeta, t: number): string {
+  return copy.feedText.stageCaption(meta.id, meta.floor, formatTime(t));
+}

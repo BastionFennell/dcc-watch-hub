@@ -38,7 +38,7 @@ US2 owns `src/components/SiteHeader/**`, `src/components/NextEpisodeCard/**`, `s
 
 **Purpose**: Toolchain, project skeleton, tokens, CI.
 
-- [ ] T001 Scaffold the Vite + React + TypeScript project at repo root: `package.json` (name
+- [X] T001 Scaffold the Vite + React + TypeScript project at repo root: `package.json` (name
   `dcc-watch-hub`, `"type": "module"`, `engines.node ">=20.9 <21 || >=22"`, scripts `dev`,
   `build` = `vite build && node scripts/postbuild.mjs`, `preview`, `typecheck` = `tsc --noEmit -p tsconfig.json`,
   `lint` = `eslint .`, `test` = `vitest run`, `test:watch`, `sheet-to-json` = `tsx scripts/sheet-to-json.ts`),
@@ -51,12 +51,12 @@ US2 owns `src/components/SiteHeader/**`, `src/components/NextEpisodeCard/**`, `s
   `tsconfig.json` (strict, `moduleResolution: bundler`, `jsx: react-jsx`, `types: ["vite/client", "youtube", "vitest/globals"]`, include `src`, `scripts`),
   `tsconfig.node.json`, `index.html` (lang en, viewport, `<title>Dungeon Crawl Cast · System Feed</title>`, theme-color `#131320`, no external fonts, `<div id="root">`),
   `.gitignore` (node_modules, dist, .DS_Store, *.log, .env*), `src/vite-env.d.ts`. Run `npm install` and confirm `npm run typecheck` passes on an empty `src/main.tsx`.
-- [ ] T002 [P] Create `eslint.config.js` (flat): typescript-eslint recommended, react-hooks
+- [X] T002 [P] Create `eslint.config.js` (flat): typescript-eslint recommended, react-hooks
   recommended, react-refresh; `no-restricted-globals` for `YT` and `onYouTubeIframeAPIReady`
   everywhere except `src/playback/YouTubeTimeSource.ts` and `src/playback/loadYouTubeApi.ts`
   (use a second config block with `files` for those two paths that turns the rule off); ignore
   `dist/`, `node_modules/`, `specs/`.
-- [ ] T003 [P] Create `src/styles/tokens.css` (custom properties: `--canvas:#131320`,
+- [X] T003 [P] Create `src/styles/tokens.css` (custom properties: `--canvas:#131320`,
   `--panel:#1d1d28`, `--panel-deep:#0d0d16`, `--hairline:#2C2C2A`, `--hairline-2:#444441`,
   `--text:#EEEDFE`, `--text-2:#B4B2A9`, `--text-3:#888780`, `--text-4:#5F5E5A`,
   `--system-bg:#0C447C`, `--system-fg:#B5D4F4`, `--system-pill-fg:#85B7EB`, `--system-pill-border:#185FA5`,
@@ -68,14 +68,14 @@ US2 owns `src/components/SiteHeader/**`, `src/components/NextEpisodeCard/**`, `s
   `--font-mono: ui-monospace, SFMono-Regular, Menlo, monospace`, `--header-h:48px`, `--header-h-compact:36px`)
   and `src/styles/global.css` (reset, `body{background:var(--canvas);color:var(--text);font-family:var(--font-sans)}`,
   `:focus-visible` outline in brand-2, `.sr-only`, `@media (prefers-reduced-motion: reduce)` disables transitions/animations).
-- [ ] T004 [P] Create `.github/workflows/ci.yml`: on push and pull_request; `actions/checkout@v4`,
+- [X] T004 [P] Create `.github/workflows/ci.yml`: on push and pull_request; `actions/checkout@v4`,
   `actions/setup-node@v4` with `node-version: 20.9.0` and npm cache; `npm ci`, `npm run typecheck`,
   `npm run lint`, `npm test`, `npm run build`.
-- [ ] T005 [P] Create `.github/workflows/deploy.yml` (on push to `main`; permissions `pages: write`,
+- [X] T005 [P] Create `.github/workflows/deploy.yml` (on push to `main`; permissions `pages: write`,
   `id-token: write`; build with `VITE_BASE=/dcc-watch-hub/`; `actions/upload-pages-artifact@v3` of
   `dist`; `actions/deploy-pages@v4`), `scripts/postbuild.mjs` (copy `dist/index.html` → `dist/404.html`),
   and `public/_redirects` (`/* /index.html 200`).
-- [ ] T006 [P] Create `src/copy.ts` exporting a single `copy` object with every user-facing string
+- [X] T006 [P] Create `src/copy.ts` exporting a single `copy` object with every user-facing string
   in System voice (site title, "System feed" pill, "Broadcast archive", "Recap episodes",
   "Event feed · synced {time}", "Next recap episode →", "Return to the broadcast archive",
   "No such recap episode exists in the archive.", "Feed unavailable. The System is
@@ -93,32 +93,32 @@ US2 owns `src/components/SiteHeader/**`, `src/components/NextEpisodeCard/**`, `s
 
 **Purpose**: Framework-free data + engine layers, playback interface, sample data, routing shell.
 
-- [ ] T007 Create `src/data/types.ts` per data-model.md §1: `Show`, `Season`, `Floor`,
+- [X] T007 Create `src/data/types.ts` per data-model.md §1: `Show`, `Season`, `Floor`,
   `EpisodeMeta`, `EpisodeData`, `InitialState`, `Crawler`, `MapState`, `Cell`, the `Event`
   discriminated union (12 known types with `t`, optional `actor`), `UnknownEvent = { type: 'unknown'; t: number; raw: unknown }`,
   `AnyEvent = Event | UnknownEvent`, `KNOWN_EVENT_TYPES` const array, `CHAPTER_KINDS` const array.
-- [ ] T008 Create `src/data/validate.ts`: `isShow(x): x is Show`, `isEpisodeData(x): x is EpisodeData`
+- [X] T008 Create `src/data/validate.ts`: `isShow(x): x is Show`, `isEpisodeData(x): x is EpisodeData`
   (structural checks, not exhaustive), `normalizeEvent(raw: unknown): AnyEvent` (returns
   `UnknownEvent` for unknown/malformed types; coerces numeric strings for `t`, `current`, `max`,
   `level`, `rank`, `durationSec`; clamps negative `t` to 0), `normalizeEpisode(raw): EpisodeData`
   (normalizes events and stable-sorts by `t`), `class DataError extends Error`. Add
   `src/data/validate.test.ts` covering unknown type → `unknown`, malformed hp → `unknown`, sort stability.
-- [ ] T009 [P] Create `src/data/load.ts`: `joinBase(base: string, url: string)`, `fetchShow(): Promise<Show>`,
+- [X] T009 [P] Create `src/data/load.ts`: `joinBase(base: string, url: string)`, `fetchShow(): Promise<Show>`,
   `fetchEpisode(meta: EpisodeMeta): Promise<EpisodeData>` (both resolve leading-slash URLs
   against `import.meta.env.BASE_URL`, throw `DataError` on non-2xx or validation failure). Unit
   test `joinBase` in `src/data/load.test.ts` (`/` + `/data/ep1.json`, `/dcc-watch-hub/` + `/data/ep1.json`, already-absolute http URL untouched).
-- [ ] T010 [P] Create `src/data/show.ts`: `orderedEpisodeIds(show)`, `orderedEpisodes(show)`,
+- [X] T010 [P] Create `src/data/show.ts`: `orderedEpisodeIds(show)`, `orderedEpisodes(show)`,
   `findEpisode(show, id)`, `prevNext(show, id)`, `episodesByFloor(show)` (append an "Unsorted"
   group for ids missing from floors, `console.warn` once). Test in `src/data/show.test.ts`:
   ordering across two floors, prev undefined at first, next undefined at last, grouping, unsorted fallback.
-- [ ] T011 Create `src/engine/state.ts` (`OverlayState`, `CrawlerState`, `fromInitialState`) and
+- [X] T011 Create `src/engine/state.ts` (`OverlayState`, `CrawlerState`, `fromInitialState`) and
   `src/engine/reducer.ts` (`applyEvent(state, event): OverlayState` handling all 12 types per
   data-model.md table, ignoring `unknown` and unknown actors; HP clamped to `[0, max]`;
   `reduceTo(episode: EpisodeData, t: number): OverlayState`). No React/DOM imports. Test in
   `src/engine/reducer.test.ts`: one case per event type, unknown type ignored, unknown actor
   ignored, clamp, determinism (two calls deep-equal), `reduceTo(ep, e.t - 0.001)` excludes `e`
   and `reduceTo(ep, e.t)` includes `e` for every event in the fixture.
-- [ ] T012 Create `src/engine/time.ts` (`formatTime(sec)` → `m:ss`/`mm:ss` under 1 h, `h:mm:ss`
+- [X] T012 Create `src/engine/time.ts` (`formatTime(sec)` → `m:ss`/`mm:ss` under 1 h, `h:mm:ss`
   at/after; floors fractional seconds) and `src/engine/selectors.ts` per data-model.md §3:
   `elapsed`, `partyFrames` (with `danger`, `levelUpPulse` window 1.2 s), `feedItems(events, t, n=8)`
   (known types only, newest first, each `{ id, t, kind, label, text, actorName? }` — `id` =
@@ -130,13 +130,13 @@ US2 owns `src/components/SiteHeader/**`, `src/components/NextEpisodeCard/**`, `s
   FIFO with 3 clustered achievements (5:00/5:01/5:02 → windows 300–306, 306–312, 312–318, none at 318);
   active sponsor window edges; overlapping sponsors pick latest; markers positions/colors incl. unknown kind → story;
   `formatTime(0)`, `formatTime(61)`, `formatTime(3661)`.
-- [ ] T013 [P] Create `src/playback/TimeSource.ts` (interface per contracts/time-source.md +
+- [X] T013 [P] Create `src/playback/TimeSource.ts` (interface per contracts/time-source.md +
   `createEmitter<T>()` helper) and `src/playback/FakeTimeSource.ts` (`set(t)`, `advance(dt)`,
   `play()` using `setInterval` 250 ms at 1×, `pause()`, `end()`, `seek(t)`, `destroy()`; every
   state change emits a tick). Test in `src/playback/FakeTimeSource.test.ts` with fake timers.
-- [ ] T014 [P] Create `src/playback/usePlayhead.ts`: `usePlayhead(source: TimeSource | null): { t: number; playing: boolean; ended: boolean }`
+- [X] T014 [P] Create `src/playback/usePlayhead.ts`: `usePlayhead(source: TimeSource | null): { t: number; playing: boolean; ended: boolean }`
   subscribing in `useEffect`, initial `t = source?.getTime() ?? 0`, cleanup unsubscribes.
-- [ ] T015 [P] Create sample data: `public/data/show.json` (title "Dungeon Crawl Cast"; season 1;
+- [X] T015 [P] Create sample data: `public/data/show.json` (title "Dungeon Crawl Cast"; season 1;
   Floor 1 label "Floor 1" episodes [1,2]; Floor 2 label "Floor 2" episodes [3]; episodes 1–3
   with titles "Episode 1 — The World Dungeon", "Episode 2 — The Meat District", "Episode 3 — Descent";
   `youtubeId: "M7lc1UVf-VE"` for all; `durationSec: 240`; `dataUrl: "/data/epN.json"`; links
@@ -151,16 +151,16 @@ US2 owns `src/components/SiteHeader/**`, `src/components/NextEpisodeCard/**`, `s
   a status add then remove, a sponsor lasting 20 s, chapters of kinds boss/loot/story, two
   map_reveals with labels, a rank scope party and a rank scope crawler, a note, and one event
   of type `"future_type"` with `t: 100` to prove forward compatibility.
-- [ ] T016 [P] Create placeholder art: `public/img/crawlers/{stuntman,psychic,harry,xo,actress}.svg`
+- [X] T016 [P] Create placeholder art: `public/img/crawlers/{stuntman,psychic,harry,xo,actress}.svg`
   (monochrome bust silhouettes, 96×96, each with a distinct brand-tinted background and the
   crawler initial), `public/img/dcc-mark.svg` (circular "DC" mark in brand colors, matching the
   wireframe), `public/favicon.svg` (same mark). Reference favicon from `index.html`.
-- [ ] T017 [P] Create `src/data/samples.test.ts`: loads `contracts/show.schema.json` and
+- [X] T017 [P] Create `src/data/samples.test.ts`: loads `contracts/show.schema.json` and
   `contracts/episode.schema.json` from `specs/001-watch-hub-v1/contracts/` with `ajv` +
   `ajv-formats` (draft-07, `strict: false`) and asserts every `public/data/*.json` validates;
   also asserts each `episodeId` matches `show.episodes[].id`, every `dataUrl` file exists, and
   every event `actor` is a party id (except the deliberate `future_type` event).
-- [ ] T018 Create the app shell: `src/main.tsx` (imports `styles/tokens.css`, `styles/global.css`;
+- [X] T018 Create the app shell: `src/main.tsx` (imports `styles/tokens.css`, `styles/global.css`;
   `BrowserRouter basename={import.meta.env.BASE_URL}`; `<App/>`), `src/App.tsx` (loads show via
   `fetchShow` in a `ShowProvider` context `src/data/ShowContext.tsx` exposing `{ show, error }`;
   `Routes`: `/` → `HubPage`, `/ep/:id` → `EpisodePage`, `*` → `NotFoundPage`; placeholder
