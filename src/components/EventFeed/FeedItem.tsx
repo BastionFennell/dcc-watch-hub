@@ -16,7 +16,7 @@ const LABEL_COLOR: Record<string, string> = {
   map_reveal: 'var(--label-map)',
   achievement: 'var(--amber-fg)',
   level_up: 'var(--marker-levelup)',
-  note: 'var(--text-4)',
+  note: 'var(--text-3)',
 };
 
 function iconFor(kind: string): ReactNode {

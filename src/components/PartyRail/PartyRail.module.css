@@ -70,7 +70,7 @@
 }
 
 .hpValue {
-  color: var(--text-4);
+  color: var(--text-3);
   font-variant-numeric: tabular-nums;
 }
 
