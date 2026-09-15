@@ -1,26 +1,57 @@
+import { useEffect } from 'react';
+import { Link } from 'react-router';
+import { useShow } from '../data/ShowContext';
+import { episodesByFloor } from '../data/show';
+import { IconPlay } from '../components/icons';
 import { copy } from '../copy';
+import styles from './HubPage.module.css';
 
 /**
- * Stub (tasks.md T018). T026 replaces this with the floor-grouped archive.
+ * The broadcast archive (FR-053): every recap episode the System has cleared,
+ * grouped by floor in the order show.json declares.
  */
 export function HubPage() {
+  const { show, loading } = useShow();
+
+  useEffect(() => {
+    document.title = copy.pageTitle(copy.archiveTitle);
+  }, []);
+
+  const groups = show ? episodesByFloor(show).filter((group) => group.episodes.length > 0) : [];
+
   return (
-    <section style={{ maxWidth: 960, margin: '0 auto', padding: 'var(--space-7)' }}>
-      <p
-        style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: 10,
-          letterSpacing: '0.12em',
-          color: 'var(--text-3)',
-        }}
-      >
-        {copy.archiveKicker}
-      </p>
-      <h1 style={{ fontSize: 'var(--text-xl)', fontWeight: 600, marginTop: 'var(--space-2)' }}>
-        {copy.archiveTitle}
-      </h1>
-      <p style={{ color: 'var(--text-2)', marginTop: 'var(--space-3)' }}>{copy.archiveLead}</p>
-    </section>
+    <div className={styles.page}>
+      <div className={styles.head}>
+        <p className={styles.kicker}>{copy.archiveKicker}</p>
+        <h1 className={styles.title}>{copy.archiveTitle}</h1>
+        <p className={styles.lead}>{copy.archiveLead}</p>
+      </div>
+
+      {show ? (
+        <div className={styles.floors}>
+          {groups.map((group) => (
+            <section key={`${group.season}-${group.floor}`} className={styles.floor}>
+              <h2 className={styles.floorLabel}>{group.label}</h2>
+              <ul className={styles.cards}>
+                {group.episodes.map((episode) => (
+                  <li key={episode.id}>
+                    <Link to={`/ep/${episode.id}`} className={styles.card}>
+                      <span className={styles.cardId}>{copy.episodeShort(episode.id)}</span>
+                      <span className={styles.cardTitle}>{episode.title}</span>
+                      <span className={styles.cardPlay} aria-hidden="true">
+                        <IconPlay />
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <p className={styles.loading}>{loading ? copy.archiveLoading : copy.archiveUnavailable}</p>
+      )}
+    </div>
   );
 }
 

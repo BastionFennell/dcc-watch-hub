@@ -4,48 +4,6 @@
   flex-direction: column;
 }
 
-/*
- * Header slot. T025/T028 replace the contents with <SiteHeader/>; the slot keeps
- * the sticky, slim, dark chrome the spec fixes at <= 48px.
- */
-.headerSlot {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  height: var(--header-h);
-  padding: 0 var(--space-6);
-  background: var(--canvas);
-  border-bottom: 1px solid var(--hairline);
-}
-
-.mark {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  color: var(--brand-fg);
-  font-size: var(--text-md);
-  font-weight: 500;
-}
-
-.mark img {
-  width: 22px;
-  height: 22px;
-}
-
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  color: var(--system-pill-fg);
-  font-size: var(--text-xs);
-  border: 1px solid var(--system-pill-border);
-  border-radius: var(--radius-pill);
-  padding: 2px 8px;
-}
-
 .main {
   flex: 1;
   min-width: 0;
@@ -55,7 +13,7 @@
   position: absolute;
   left: -9999px;
   top: 0;
-  z-index: 20;
+  z-index: 30;
   background: var(--panel);
   color: var(--text);
   padding: var(--space-3) var(--space-5);
@@ -67,12 +25,23 @@
   top: var(--space-4);
 }
 
-@media (max-width: 640px) {
-  .headerSlot {
-    padding: 0 var(--space-5);
-  }
+/* Archive load failure — the System admits nothing but a recalibration. */
+.failure {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space-7);
+}
 
-  .markTitle {
-    display: none;
-  }
+.retryRow {
+  margin-top: var(--space-4);
+}
+
+.retry {
+  color: var(--brand-fg);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.retry:hover {
+  color: var(--brand-fg-2);
 }

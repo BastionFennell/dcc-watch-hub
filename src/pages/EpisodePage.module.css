@@ -1,0 +1,46 @@
+/*
+ * Wireframe layout: two columns, stage ~1.9× the feed, 10px gutter. Under 900px
+ * everything stacks: stage, timeline, rail, feed — with no horizontal scroll.
+ */
+.page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: var(--space-6);
+  min-width: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+  min-width: 0;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.rail {
+  min-width: 0;
+}
+
+.loading {
+  color: var(--text-3);
+  font-size: var(--text-xs);
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: var(--space-5);
+  }
+}

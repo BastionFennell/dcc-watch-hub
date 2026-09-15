@@ -1,0 +1,125 @@
+/* Broadcast archive: floor-grouped episode cards on the dark canvas. */
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-7);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.kicker {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.title {
+  font-size: var(--text-xl);
+  font-weight: 600;
+}
+
+.lead {
+  color: var(--text-2);
+  font-size: var(--text-md);
+  max-width: 60ch;
+}
+
+.floors {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.floor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.floorLabel {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  padding-bottom: var(--space-3);
+  border-bottom: var(--border-hairline);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-5);
+}
+
+.card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-5);
+  min-width: 0;
+  height: 100%;
+  padding: var(--space-6);
+  background: var(--panel);
+  border: var(--border-hairline);
+  border-radius: var(--radius-lg);
+  color: var(--text);
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.card:hover {
+  background: var(--panel-deep);
+  border-color: var(--hairline-2);
+  color: var(--text);
+}
+
+.cardId {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-3);
+}
+
+.cardTitle {
+  min-width: 0;
+  font-size: var(--text-md);
+  font-weight: 500;
+}
+
+.cardPlay {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: var(--radius-pill);
+  background: var(--brand);
+  color: var(--brand-fg);
+  font-size: 13px;
+}
+
+.loading {
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: var(--space-7) var(--space-6);
+    gap: var(--space-7);
+  }
+
+  .cards {
+    grid-template-columns: 1fr;
+  }
+}

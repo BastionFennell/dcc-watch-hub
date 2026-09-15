@@ -101,6 +101,27 @@ export const copy = {
     stageCaption: (episodeId: number, floor: number, time: string) =>
       `Ep ${episodeId} · Floor ${floor} · ${time}`,
   },
+
+  /* --- appended by T025–T029 (archive navigation) --- */
+
+  /** Document title suffix: the show is always the broadcaster. */
+  pageTitle: (name: string) => `${name} · Dungeon Crawl Cast`,
+  archiveLoading: 'The System is retrieving the broadcast archive.',
+
+  /* --- appended by T019–T024 (party rail, event feed, stage) --- */
+
+  partyRailLabel: 'Crawler status',
+  feedLabel: 'System event feed',
+  levelShort: (level: number) => `Lv ${level}`,
+  hpValue: (current: number, max: number) => `${current}/${max}`,
+  hpAria: (current: number, max: number) => `${current} of ${max} HP`,
+  stageLabel: (title: string) => `Broadcast: ${title}`,
+
+  /** Dev-only scrubber (research R14); never reaches a viewer. */
+  fakeStageLabel: 'Simulated broadcast — dev scrubber',
+  fakeStagePlay: 'Play',
+  fakeStagePause: 'Pause',
+  fakeStageScrub: 'Scrub the broadcast',
 } as const;
 
 export type Copy = typeof copy;

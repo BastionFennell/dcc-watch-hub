@@ -1,0 +1,98 @@
+{
+  "party": [
+    {
+      "id": "stuntman",
+      "name": "The Stuntman",
+      "handle": "Dungeon Crawler Danny",
+      "player": "Danny",
+      "level": 1,
+      "hp": {
+        "current": 22,
+        "max": 22
+      },
+      "portrait": "/img/crawlers/stuntman.svg",
+      "class": null,
+      "inventory": [
+        "Utility Harness"
+      ],
+      "rank": null
+    },
+    {
+      "id": "psychic",
+      "name": "The Psychic",
+      "handle": "Static Bloom",
+      "player": "Rae",
+      "level": 1,
+      "hp": {
+        "current": 18,
+        "max": 18
+      },
+      "portrait": "/img/crawlers/psychic.svg",
+      "class": null,
+      "inventory": [
+        "Cracked Visor"
+      ],
+      "rank": null
+    },
+    {
+      "id": "harry",
+      "name": "Harry",
+      "handle": "Harold the Unhoused",
+      "player": "Marcus",
+      "level": 1,
+      "hp": {
+        "current": 22,
+        "max": 22
+      },
+      "portrait": "/img/crawlers/harry.svg",
+      "class": null,
+      "inventory": [
+        "Bent Pry Bar"
+      ],
+      "rank": null
+    },
+    {
+      "id": "xo",
+      "name": "X.O.",
+      "handle": "Executive Officer",
+      "player": "Jules",
+      "level": 1,
+      "hp": {
+        "current": 20,
+        "max": 20
+      },
+      "portrait": "/img/crawlers/xo.svg",
+      "class": null,
+      "inventory": [
+        "Signal Flare"
+      ],
+      "rank": null
+    },
+    {
+      "id": "actress",
+      "name": "The Actress",
+      "handle": "Second Billing",
+      "player": "Nia",
+      "level": 1,
+      "hp": {
+        "current": 19,
+        "max": 19
+      },
+      "portrait": "/img/crawlers/actress.svg",
+      "class": null,
+      "inventory": [
+        "Stage Blood (x3)"
+      ],
+      "rank": null
+    }
+  ],
+  "partyRank": null,
+  "map": {
+    "floor": 1,
+    "grid": {
+      "cols": 12,
+      "rows": 8
+    },
+    "revealed": []
+  }
+}

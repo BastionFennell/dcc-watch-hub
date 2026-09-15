@@ -1,40 +1,107 @@
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import { useShow } from '../data/ShowContext';
-import { findEpisode, seasonOf } from '../data/show';
+import { fetchEpisode } from '../data/load';
+import { findEpisode } from '../data/show';
+import type { EpisodeData } from '../data/types';
+import { reduceTo } from '../engine/reducer';
+import { activeSponsor, feedItems, partyFrames } from '../engine/selectors';
+import type { TimeSource } from '../playback/TimeSource';
+import { usePlayhead } from '../playback/usePlayhead';
+import { VideoStage } from '../components/VideoStage/VideoStage';
+import { PartyRail } from '../components/PartyRail/PartyRail';
+import { EventFeed } from '../components/EventFeed/EventFeed';
+import { SystemNotice } from '../components/SystemNotice/SystemNotice';
 import { NotFoundPage } from './NotFoundPage';
 import { copy } from '../copy';
+import styles from './EpisodePage.module.css';
+
+const EMPTY_PARTY = [] as const;
 
 /**
- * Stub (tasks.md T018). T023 replaces this with the stage, timeline, party rail
- * and event feed driven by a `TimeSource`.
+ * The watch page. Everything below the stage is recomputed from `(episode, t)`
+ * on every render — no memoization, no incremental patching, so a seek in either
+ * direction is automatically correct (constitution I, FR-001/002/003).
  */
 export function EpisodePage() {
   const { id } = useParams();
   const { show } = useShow();
-  const episodeId = Number(id);
 
-  if (!Number.isInteger(episodeId)) return <NotFoundPage />;
+  const [source, setSource] = useState<TimeSource | null>(null);
+  const [episode, setEpisode] = useState<EpisodeData | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  const validId = id !== undefined && /^\d+$/.test(id);
+  const episodeId = validId ? Number(id) : Number.NaN;
+  const meta = show && validId ? findEpisode(show, episodeId) : undefined;
+
+  const { t, ended } = usePlayhead(source);
+
+  useEffect(() => {
+    if (!meta) return;
+    let live = true;
+    setEpisode(null);
+    setFailed(false);
+    fetchEpisode(meta)
+      .then((data) => {
+        if (live) setEpisode(data);
+      })
+      .catch(() => {
+        // The stage keeps playing; only the overlay is unavailable (spec Edge Cases).
+        if (live) setFailed(true);
+      });
+    return () => {
+      live = false;
+    };
+  }, [meta]);
+
+  useEffect(() => {
+    if (meta) document.title = copy.pageTitle(meta.title);
+  }, [meta]);
+
+  // The stage destroys its own source on unmount; this covers a source swap.
+  useEffect(() => () => source?.destroy(), [source]);
+
+  if (!validId) return <NotFoundPage />;
   if (!show) return null;
-
-  const meta = findEpisode(show, episodeId);
   if (!meta) return <NotFoundPage />;
 
+  const party = episode ? episode.initialState.party : EMPTY_PARTY;
+  const state = episode ? reduceTo(episode, t) : null;
+  const frames = state && episode ? partyFrames(state, episode.events, t) : [];
+  const items = episode ? feedItems(episode.events, t, 8, party) : [];
+  const sponsor = episode ? activeSponsor(episode.events, t, party) : null;
+
   return (
-    <section style={{ maxWidth: 1120, margin: '0 auto', padding: 'var(--space-6)' }}>
-      <p
-        style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: 10,
-          letterSpacing: '0.12em',
-          color: 'var(--text-3)',
-        }}
-      >
-        {copy.episodeLabel(seasonOf(show, meta.id), meta.floor, meta.id)}
-      </p>
-      <h1 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginTop: 'var(--space-2)' }}>
-        {meta.title}
-      </h1>
-    </section>
+    <div className={styles.page} data-ended={ended ? 'true' : undefined}>
+      <h1 className="sr-only">{meta.title}</h1>
+      <div className={styles.grid}>
+        <div className={styles.main}>
+          <VideoStage meta={meta} t={t} onSource={setSource}>
+            {/* Overlay slot: AchievementToast, MiniMapBadge, NextEpisodeCard (US3/US4, T030–T035). */}
+          </VideoStage>
+
+          {/* Timeline slot: <EventTimeline markers={...} t={t} duration={meta.durationSec} onSeek={source?.seek} /> (US3, T031). */}
+
+          <PartyRail frames={frames} />
+        </div>
+
+        <aside className={styles.rail}>
+          <EventFeed
+            items={items}
+            sponsor={sponsor}
+            t={t}
+            notice={
+              failed ? (
+                <SystemNotice tone="error">{copy.feedUnavailable}</SystemNotice>
+              ) : !episode ? (
+                <p className={styles.loading}>{copy.feedLoading}</p>
+              ) : null
+            }
+          />
+        </aside>
+      </div>
+    </div>
   );
 }
 

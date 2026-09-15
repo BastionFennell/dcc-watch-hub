@@ -1,49 +1,34 @@
-import { Link, Route, Routes } from 'react-router';
+import { Route, Routes, useMatch } from 'react-router';
 import { ShowProvider, useShow } from './data/ShowContext';
+import { findEpisode } from './data/show';
+import { SiteHeader } from './components/SiteHeader/SiteHeader';
 import { SystemNotice } from './components/SystemNotice/SystemNotice';
-import { IconBroadcast } from './components/icons';
 import { HubPage } from './pages/HubPage';
 import { EpisodePage } from './pages/EpisodePage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { copy } from './copy';
 import styles from './App.module.css';
 
-/**
- * Header slot — a placeholder for <SiteHeader/> (tasks.md T025/T028).
- * It already carries the mark, the show title, and the System feed pill so the
- * chrome height and colors are fixed before the real header lands.
- */
-function HeaderSlot() {
-  return (
-    <header className={styles.headerSlot}>
-      <Link to="/" className={styles.mark}>
-        <img src={`${import.meta.env.BASE_URL}img/dcc-mark.svg`} alt="" width={22} height={22} />
-        <span className={styles.markTitle}>{copy.siteTitle}</span>
-      </Link>
-      <span className={styles.pill}>
-        <IconBroadcast />
-        {copy.systemFeedPill}
-      </span>
-    </header>
-  );
-}
-
 function AppShell() {
-  const { error, reload } = useShow();
+  const { show, error, reload } = useShow();
+  const match = useMatch('/ep/:id');
+  const routeId = Number(match?.params.id);
+  const current =
+    show && match && Number.isInteger(routeId) ? findEpisode(show, routeId) : undefined;
 
   return (
     <div className={styles.shell}>
       <a className={styles.skip} href="#main">
         {copy.skipToContent}
       </a>
-      <HeaderSlot />
+      <SiteHeader show={show} current={current} />
       <main id="main" className={styles.main}>
         {error ? (
-          <section style={{ maxWidth: 640, margin: '0 auto', padding: 'var(--space-7)' }}>
+          <section className={styles.failure}>
             <SystemNotice tone="error">
               <p>{copy.archiveUnavailable}</p>
-              <p style={{ marginTop: 'var(--space-4)' }}>
-                <button type="button" onClick={reload} style={{ color: 'var(--brand-fg)' }}>
+              <p className={styles.retryRow}>
+                <button type="button" onClick={reload} className={styles.retry}>
                   {copy.retry}
                 </button>
               </p>

@@ -184,20 +184,20 @@ function of the playhead; correct after any seek.
 **Independent Test**: `npm test` (EpisodePage test with `FakeTimeSource`) + manual: `/ep/1`
 play/pause/seek per quickstart steps 1–2; `/ep/1?fake=1` scrubs without network.
 
-- [ ] T019 [P] [US1] Create `src/playback/loadYouTubeApi.ts` (idempotent loader returning
+- [X] T019 [P] [US1] Create `src/playback/loadYouTubeApi.ts` (idempotent loader returning
   `Promise<typeof YT>`; injects `https://www.youtube.com/iframe_api` once; chains any existing
   `window.onYouTubeIframeAPIReady`; rejects after 15 s) and `src/playback/YouTubeTimeSource.ts`
   per research R4 (constructor `(container: HTMLElement, videoId: string, opts?: { onReady?: () => void })`;
   250 ms polling while PLAYING; single tick on PAUSED/BUFFERING/CUED; `onEnded` on ENDED;
   `seek` → `seekTo(t, true)` + immediate tick; `destroy` idempotent). These are the ONLY files
   allowed to reference `YT`.
-- [ ] T020 [P] [US1] Create `src/components/PartyRail/PartyRail.tsx`, `CrawlerFrame.tsx`, `HpBar.tsx`,
+- [X] T020 [P] [US1] Create `src/components/PartyRail/PartyRail.tsx`, `CrawlerFrame.tsx`, `HpBar.tsx`,
   `StatusPips.tsx`, `PartyRail.module.css`: 5-up grid (`repeat(auto-fit, minmax(0,1fr))`, wraps to
   3+2 under 640 px), frame = panel bg, hairline border, portrait 40 px round, name, "Lv N",
   HP bar (`transition: width 400ms ease`, fill `--hp`, or `--danger` when `danger`), `data-danger`
   → border `--danger` + `@keyframes dangerFlash` 600 ms, `data-levelup` → `@keyframes levelPulse` 1.2 s,
   status pips as small rounded chips. No `onClick`, `cursor: default`, no hover styles. Props: `frames: PartyFrame[]`.
-- [ ] T021 [P] [US1] Create `src/components/EventFeed/EventFeed.tsx`, `FeedItem.tsx`, `SponsorSlot.tsx`,
+- [X] T021 [P] [US1] Create `src/components/EventFeed/EventFeed.tsx`, `FeedItem.tsx`, `SponsorSlot.tsx`,
   `EventFeed.module.css`: header row "Event feed · synced {mm:ss}" (`--text-3`), optional pinned
   `SponsorSlot` (brand-deep bg, brand-2 border, brand-fg text, mono caps "SPONSORED" label),
   then items newest first: `system_message` as System box (`--system-bg`/`--system-fg`, mono caps
@@ -206,7 +206,7 @@ play/pause/seek per quickstart steps 1–2; `/ep/1?fake=1` scrubs without networ
   `Level up` `--marker-levelup`, `Status`/`Inventory`/`Chapter` `--text-2`, `Note` `--text-4` muted)
   and the icon from `icons.tsx` where the wireframe shows one; footer line "scrubbing rewinds the feed".
   Text wraps; `min-width: 0`. Props: `items: FeedItem[]`, `sponsor: FeedItem | null`, `t: number`.
-- [ ] T022 [US1] Create `src/components/VideoStage/VideoStage.tsx`, `YouTubeStage.tsx`, `FakeStage.tsx`,
+- [X] T022 [US1] Create `src/components/VideoStage/VideoStage.tsx`, `YouTubeStage.tsx`, `FakeStage.tsx`,
   `StageCaption.tsx`, `VideoStage.module.css`: 16:9 box (`aspect-ratio: 16/9`, panel-deep bg,
   hairline border, radius 8, `overflow: hidden`, `position: relative`), `YouTubeStage` mounts a
   div and creates a `YouTubeTimeSource` in `useEffect` (destroy on unmount / videoId change),
@@ -215,7 +215,7 @@ play/pause/seek per quickstart steps 1–2; `/ep/1?fake=1` scrubs without networ
   `FakeTimeSource`; `StageCaption` bottom-left "Ep {n} · Floor {n} · {time}" in `--text-2` 11–12 px;
   `children` slot for overlays (toast, minimap, ended card added in later stories). Props:
   `meta: EpisodeMeta`, `t: number`, `onSource: (s: TimeSource) => void`, `children?`.
-- [ ] T023 [US1] Implement `src/pages/EpisodePage.tsx` + `EpisodePage.module.css`: parse `:id`
+- [X] T023 [US1] Implement `src/pages/EpisodePage.tsx` + `EpisodePage.module.css`: parse `:id`
   (non-integer/unknown → `NotFoundPage`); `fetchEpisode(meta)` with loading/`SystemNotice` error
   ("Feed unavailable…") while the stage still renders; hold `TimeSource` in state from
   `onSource`; `const { t, ended } = usePlayhead(source)`; compute `state = reduceTo(episode, t)`
@@ -224,7 +224,7 @@ play/pause/seek per quickstart steps 1–2; `/ep/1?fake=1` scrubs without networ
   rail; right column = feed; ≤ 900 px → single column stack: stage, timeline slot, rail, feed;
   page padding 12–16 px; no horizontal overflow (`min-width: 0` on grid children). Destroy the
   source on unmount.
-- [ ] T024 [US1] Create `src/pages/EpisodePage.test.tsx` (`// @vitest-environment jsdom`): stub
+- [X] T024 [US1] Create `src/pages/EpisodePage.test.tsx` (`// @vitest-environment jsdom`): stub
   `fetch` for show + episode using `src/test/fixtures.ts`; render `<MemoryRouter initialEntries={['/ep/1?fake=1']}>`
   with `import.meta.env.DEV` true in Vitest so `FakeStage` mounts, grab its `FakeTimeSource` via an
   exposed test hook (`data-testid="fake-stage"` + a module-level registry `__fakeSources` in
@@ -248,7 +248,7 @@ ended-state next-episode card, not-found handling.
 **Independent Test**: `/` groups episodes; header arrows/dropdown navigate; arrows hidden at
 ends; ended card navigates; `/ep/999` shows System not-found.
 
-- [ ] T025 [P] [US2] Create `src/hooks/useScrolled.ts` (`useScrolled(threshold = 8): boolean`
+- [X] T025 [P] [US2] Create `src/hooks/useScrolled.ts` (`useScrolled(threshold = 8): boolean`
   via passive scroll listener) and `src/components/SiteHeader/SiteHeader.tsx`, `EpisodesMenu.tsx`,
   `SiteHeader.module.css`: sticky top, height `--header-h` → `--header-h-compact` with
   `transition: height 200ms` when scrolled, canvas bg with hairline bottom border; left = mark
@@ -260,22 +260,22 @@ ends; ended card navigates; `/ep/999` shows System not-found.
   navigation) + YouTube + Discord external links (`rel="noopener noreferrer"`). ≤ 640 px: hide
   the show title and right links, keep mark + episode label + an `IconMenu` `<details>` that
   contains the episodes list and the two links. Props: `show: Show`, `current?: EpisodeMeta`.
-- [ ] T026 [P] [US2] Implement `src/pages/HubPage.tsx` + `HubPage.module.css`: heading
+- [X] T026 [P] [US2] Implement `src/pages/HubPage.tsx` + `HubPage.module.css`: heading
   "Broadcast archive" (System voice, mono caps label "RECAP EPISODES"), sections per
   `episodesByFloor(show)` with floor label and a list of episode cards (title, "Ep N",
   `Link` to `/ep/N`), max-width ~960 px centered, panel cards with hairline borders.
-- [ ] T027 [P] [US2] Create `src/components/NextEpisodeCard/NextEpisodeCard.tsx` + `.module.css`:
+- [X] T027 [P] [US2] Create `src/components/NextEpisodeCard/NextEpisodeCard.tsx` + `.module.css`:
   centered System-styled card over the stage (`position:absolute; inset:0; display:grid; place-items:center;`
   translucent canvas backdrop) with mono caps "SYSTEM" label, "Next recap episode →" `Link` to
   `/ep/{next.id}` showing the next title, or when `next` is undefined "Return to the broadcast
   archive" `Link` to `/`. Props: `next?: EpisodeMeta`.
-- [ ] T028 [US2] Wire `src/App.tsx`: render `SiteHeader` above routes with `current` derived from
+- [X] T028 [US2] Wire `src/App.tsx`: render `SiteHeader` above routes with `current` derived from
   the location (`useMatch('/ep/:id')` + `findEpisode`), show `SystemNotice` error with a retry
   link if `show` failed to load, and make `NotFoundPage` also handle `/ep/:id` with unknown id
   (EpisodePage already delegates). Add `src/App.test.tsx` (jsdom): renders hub grouped by floor
   from the fixture; at `/ep/1` header shows "Episode 1" with no prev link and a next link to
   `/ep/2`; at `/ep/3` no next link; `/ep/999` shows the not-found copy.
-- [ ] T029 [US2] Add header + hub polish: `aria-current="page"` on the active episode in menus,
+- [X] T029 [US2] Add header + hub polish: `aria-current="page"` on the active episode in menus,
   skip-to-content link, `<main id="main">` wrapper in `App.tsx`, and document title updates
   (`document.title = `${episode.title} · Dungeon Crawl Cast`` in EpisodePage via `useEffect`; hub
   sets "Broadcast archive · Dungeon Crawl Cast").
@@ -345,12 +345,12 @@ pinned during its window only.
 **Independent Test**: Clean sample → valid JSON; broken sample → WARN lines naming rows, exit 0;
 error sample → ERROR, exit 1, no file.
 
-- [ ] T036 [P] [US5] Create `scripts/samples/ep1.initial.json` (the five crawlers as in T015),
+- [X] T036 [P] [US5] Create `scripts/samples/ep1.initial.json` (the five crawlers as in T015),
   `scripts/samples/ep1.csv` (header + ~30 rows covering every type per contracts/sheet-csv.md,
   timecodes as `mm:ss` and `hh:mm:ss`, a quoted field containing a comma), `scripts/samples/ep1-broken.csv`
   (clean rows + actor `ghost` row + `01:30:00` row + hp `999` row + a `mystery_type` row), and
   `scripts/samples/ep1-error.csv` (a row with timecode `abc`).
-- [ ] T037 [US5] Implement `scripts/sheet-to-json.ts`: parse args (`<csv> --episode N --duration S
+- [X] T037 [US5] Implement `scripts/sheet-to-json.ts`: parse args (`<csv> --episode N --duration S
   --initial-state path --out path`, `--help`), read CSV with `csv-parse/sync` (`columns: true,
   trim: true, skip_empty_lines: true`), validate header columns, `parseTimecode` (`h:mm:ss`,
   `mm:ss`, seconds), map rows → events per contract using a `rowToEvent(row, ctx)` function
@@ -359,7 +359,7 @@ error sample → ERROR, exit 1, no file.
   write JSON (2-space) only if no errors, print `WARN`/`ERROR` lines to stderr and a summary to
   stdout, exit 1 on errors. Keep all logic in exported functions (`convert(csvText, ctx) →
   { episode, warnings, errors }`) with a thin `main()` guarded by `import.meta.url` check.
-- [ ] T038 [US5] Create `scripts/sheet-to-json.test.ts`: `convert` on the clean sample → 0
+- [X] T038 [US5] Create `scripts/sheet-to-json.test.ts`: `convert` on the clean sample → 0
   errors, 0 warnings, events sorted, validates against `contracts/episode.schema.json` via ajv;
   broken sample → warnings include `row` numbers for `ghost`, the past-duration row, the hp 999
   row, and `mystery_type`, output still produced; error sample → errors non-empty and `episode`

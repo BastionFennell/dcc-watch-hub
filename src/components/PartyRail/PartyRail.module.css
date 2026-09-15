@@ -1,0 +1,143 @@
+/*
+ * Wireframe: five panel boxes, hairline-2 border, radius 6, name 11–12px
+ * semibold, "Lv N" muted, 4px HP bar. Nothing here is interactive (FR-012).
+ */
+.rail {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+
+.frame {
+  min-width: 0;
+  background: var(--panel);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  cursor: default;
+  transition: border-color 200ms ease;
+}
+
+.frame[data-danger] {
+  border-color: var(--danger);
+  animation: dangerFlash 600ms ease-out;
+}
+
+.frame[data-levelup] {
+  animation: levelPulse 1200ms ease-out;
+}
+
+.frameTop {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.portrait {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--brand-deep);
+  object-fit: cover;
+}
+
+.frameMeta {
+  min-width: 0;
+}
+
+.name {
+  color: var(--text);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stats {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  color: var(--text-3);
+  font-size: var(--text-xs);
+}
+
+.hpValue {
+  color: var(--text-4);
+  font-variant-numeric: tabular-nums;
+}
+
+.hpTrack {
+  height: 4px;
+  margin-top: var(--space-2);
+  background: var(--hairline);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.hpFill {
+  display: block;
+  height: 4px;
+  background: var(--hp);
+  border-radius: 2px;
+  transition: width 400ms ease;
+}
+
+.hpTrack[data-danger] .hpFill {
+  background: var(--danger);
+}
+
+.pips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+
+.pip {
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--amber-fg);
+  background: var(--amber-bg);
+  border-radius: var(--radius-pill);
+  padding: 0 6px;
+  white-space: nowrap;
+}
+
+@keyframes dangerFlash {
+  0% {
+    box-shadow: 0 0 0 0 rgb(226 75 74 / 55%);
+  }
+  100% {
+    box-shadow: 0 0 0 6px rgb(226 75 74 / 0%);
+  }
+}
+
+@keyframes levelPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(93 202 165 / 55%);
+    border-color: var(--marker-levelup);
+  }
+  100% {
+    box-shadow: 0 0 0 8px rgb(93 202 165 / 0%);
+    border-color: var(--hairline-2);
+  }
+}
+
+/* Five across is unreadable on a phone: wrap to 3 + 2. */
+@media (max-width: 640px) {
+  .rail {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .portrait {
+    width: 32px;
+    height: 32px;
+  }
+}
