@@ -1,5 +1,12 @@
 <!--
 Sync Impact Report
+- Version change: 1.1.0 → 1.2.0 (2026-09-15)
+- Modified principles: III. Ambient & Diegetic — a modal "full record" dialog MAY cover the stage when the
+  viewer explicitly asks for it from an already-open panel; it is the only overlay allowed to do so;
+  V. Scope Discipline — active feature is now 003 (crawler record: glance card + full-record dialog)
+- Added sections: none · Removed sections: none · Templates: none
+
+Previous report (1.1.0):
 - Version change: 1.0.0 → 1.1.0 (2026-09-15)
 - Modified principles: V. Scope Discipline now binds to the ACTIVE feature spec rather than the v1 list;
   I. Time-Truth gains an explicit rule for persisted playhead (resume) — storage may hold the playhead only,
@@ -63,9 +70,13 @@ Rationale: v3 parks alternate video sources. The seam must exist now or it will 
 - No audio MAY play in v1.
 - Interactions reserved for later versions MUST NOT be teased: no hover affordances, pointer
   cursors, or tooltips on elements that do nothing in the active feature's scope.
-- Opt-in panels (a crawler dossier, an expanded map) MUST open only from an explicit click or
+- Opt-in panels (a crawler glance card, an expanded map) MUST open only from an explicit click or
   keypress, MUST close from an explicit action (close control, Escape, or click-away), and MUST
   never cover the video stage on desktop. One panel at a time.
+- Exactly one overlay MAY cover the stage: the full crawler record dialog, and only when the
+  viewer asks for it from the glance card. It MUST be modal (focus trapped, Escape/backdrop/close
+  dismiss it, focus returns to its trigger), MUST keep updating with the playhead while open, and
+  MUST NOT pause or otherwise touch playback.
 
 Rationale: the experience is lean-back broadcast; teasing unbuilt features erodes trust.
 
@@ -83,9 +94,9 @@ to a single-page broadcast overlay.
 ### V. Scope Discipline
 - The active feature spec (`.specify/feature.json` → `specs/<feature>/spec.md`) defines scope.
   Items the handoff spec parks beyond the active feature MUST NOT be built, stubbed, or partially
-  wired, even "for later." As of 1.1.0 the active feature is v2 (`specs/002-watch-hub-v2`):
-  character dossiers, interactive minimap, resume, rank sparklines. Still parked: stinger sounds,
-  roster page, and all v3 items.
+  wired, even "for later." As of 1.2.0 the active feature is 003 (`specs/003-crawler-record`): the crawler glance card
+  and the full-record dialog. v1 and v2 are merged. Still parked: stinger sounds, roster page,
+  tooltips/explanations inside the record, and all v3 items.
 - Optimizations not required to meet an acceptance item (memoization, virtualization, caching)
   MUST NOT be added. The spec explicitly says recompute from `initialState` on seek.
 - Every functional requirement MUST trace to a v1 acceptance-checklist item or spec section.
@@ -142,4 +153,4 @@ Compliance is reviewed at every plan (Constitution Check gate) and at implementa
 (acceptance checklist). Use `CLAUDE.md` for runtime development guidance and pointers to the
 active plan.
 
-**Version**: 1.1.0 | **Ratified**: 2026-09-14 | **Last Amended**: 2026-09-15
+**Version**: 1.2.0 | **Ratified**: 2026-09-14 | **Last Amended**: 2026-09-15
