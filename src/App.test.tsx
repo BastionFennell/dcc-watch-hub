@@ -59,7 +59,7 @@ describe('broadcast archive', () => {
     ).toEqual(['/ep/3']);
     expect(
       within(main).getByRole('link', { name: /Episode 2 — The Meat District/ }),
-    ).toHaveAttribute('href', '/ep/2?fake=1');
+    ).toHaveAttribute('href', '/ep/2');
   });
 
   it('titles the hub document in the System voice', async () => {
