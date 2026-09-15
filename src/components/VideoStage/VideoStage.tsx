@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
-import { useSearchParams } from 'react-router';
+import { useLocation, useSearchParams } from 'react-router';
 import type { EpisodeMeta } from '../../data/types';
 import type { TimeSource } from '../../playback/TimeSource';
+import { parseDeepLinkT } from '../../playback/deepLink';
 import { FakeStage } from './FakeStage';
 import { YouTubeStage } from './YouTubeStage';
 import styles from './VideoStage.module.css';
@@ -26,8 +27,14 @@ export interface VideoStageProps {
  */
 export function VideoStage({ meta, t, onSource, children }: VideoStageProps) {
   const [searchParams] = useSearchParams();
+  const { search } = useLocation();
   const fake = import.meta.env.DEV && searchParams.get('fake') === '1';
-  const initialT = Number(searchParams.get('t') ?? 0) || 0;
+  /*
+   * Since 004 the dev scrubber's starting point is the product's own `?t=`
+   * (T403): one parser, one set of rules, so the fake stage and the real host
+   * cannot disagree about what a link means.
+   */
+  const initialT = parseDeepLinkT(search, meta.durationSec) ?? 0;
 
   return (
     <div className={styles.stage} data-testid="video-stage" data-host={fake ? 'fake' : 'youtube'}>

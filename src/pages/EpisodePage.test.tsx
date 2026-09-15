@@ -6,7 +6,7 @@
  * no video host — which is exactly the guarantee constitution II asks for.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { App } from '../App';
 import { copy } from '../copy';
@@ -1124,8 +1124,11 @@ describe('EpisodePage', () => {
     const rows = screen.getAllByTestId('feed-item');
     expect(rows).toHaveLength(4); // 12, 30, 45, 60
 
-    // Newest first, so the last row is the System's opener at t = 12.
-    const oldest = within(rows[3]).getByRole('button');
+    // Newest first, so the last row is the System's opener at t = 12. Since 004
+    // the row holds two controls, so the seek half is named explicitly.
+    const oldest = within(rows[3]).getByRole('button', {
+      name: copy.feedSeek(formatTime(12), 'Attention crawlers. The broadcast is live.'),
+    });
     expect(within(rows[3]).getByTestId('feed-time')).toHaveTextContent(formatTime(12));
     expect(oldest).toHaveAccessibleName(
       copy.feedSeek(formatTime(12), 'Attention crawlers. The broadcast is live.'),
@@ -1473,5 +1476,186 @@ describe('EpisodePage', () => {
     expect(screen.queryByTestId('resume-card')).not.toBeInTheDocument();
     expect(screen.getByTestId('rail-panel')).toBeInTheDocument();
     expect(localStorage.getItem(resumeKey(1))).toBeNull();
+  });
+
+  /* ------------------------------ 004 US1: deep links to a moment (T408) */
+
+  /**
+   * jsdom serves the page from `http://localhost:3000` and vitest's
+   * `BASE_URL` is `/`, so this is the exact link a share produces here.
+   */
+  const MOMENT_URL = 'http://localhost:3000/ep/1?t=156';
+
+  /** The clipboard is not implemented in jsdom; every test that shares stubs it. */
+  function stubClipboard(writeText = vi.fn().mockResolvedValue(undefined)) {
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+      writable: true,
+    });
+    return writeText;
+  }
+
+  /** No clipboard and no share sheet: the fallback path (FR-304). */
+  function removeClipboard() {
+    Object.defineProperty(navigator, 'clipboard', {
+      value: undefined,
+      configurable: true,
+      writable: true,
+    });
+  }
+
+  it('opens a deep-linked moment with the overlay already at that time', async () => {
+    const { source } = await mountEpisode('/ep/1?fake=1&t=156');
+
+    expect(source.getTime()).toBe(156);
+    await waitFor(() =>
+      expect(screen.getByTestId('stage-caption-time')).toHaveTextContent('2:36'),
+    );
+    expect(screen.getByText(copy.feedHeader('2:36'))).toBeInTheDocument();
+    // The overlay is the state at 2:36, not a replay of it: Harry's 2:32 equip
+    // has landed and the feed is not empty.
+    expect(feedCount()).toBeGreaterThan(0);
+  });
+
+  it('lets the deep link win over a saved position for that visit (FR-301)', async () => {
+    seedResume(1, 120);
+    const { source } = await mountEpisode('/ep/1?fake=1&t=156');
+
+    expect(source.getTime()).toBe(156);
+    await waitFor(() => expect(screen.getByText(copy.feedHeader('2:36'))).toBeInTheDocument());
+    expect(screen.queryByTestId('resume-card')).not.toBeInTheDocument();
+    // The record is not destroyed by the deep link; it is simply not offered.
+    expect(localStorage.getItem(resumeKey(1))).not.toBeNull();
+  });
+
+  it('still offers the saved position on a plain visit', async () => {
+    seedResume(1, 120);
+    await mountEpisode('/ep/1?fake=1');
+
+    expect(screen.getByTestId('resume-card')).toBeInTheDocument();
+    expect(screen.getByText(copy.feedHeader('0:00'))).toBeInTheDocument();
+  });
+
+  it('ignores an invalid moment entirely (US1 scenario 3)', async () => {
+    for (const bad of ['t=abc', 't=-5', 't=99999', 't=']) {
+      localStorage.clear();
+      __fakeSources.length = 0;
+      seedResume(1, 120);
+      const { source } = await mountEpisode(`/ep/1?fake=1&${bad}`);
+
+      expect(source.getTime()).toBe(0);
+      expect(screen.getByText(copy.feedHeader('0:00'))).toBeInTheDocument();
+      // Behaves exactly like a bare visit, so the offer is allowed again.
+      expect(screen.getByTestId('resume-card')).toBeInTheDocument();
+      cleanup();
+    }
+  });
+
+  it('applies to one visit of one episode (US1 scenario 5)', async () => {
+    await mountEpisode('/ep/1?fake=1&t=156');
+    expect(screen.getByText(copy.feedHeader('2:36'))).toBeInTheDocument();
+
+    const header = screen.getByRole('banner');
+    fireEvent.click(within(header).getByRole('link', { name: copy.nextEpisode }));
+
+    await waitFor(() => expect(screen.getByText(copy.feedHeader('0:00'))).toBeInTheDocument());
+    await waitFor(() => expect(screen.getAllByTestId('crawler-frame')).toHaveLength(5));
+    expect(screen.getByTestId('stage-caption-time')).toHaveTextContent('0:00');
+  });
+
+  /* ---------------------------------- 004 US2: share this moment (T408) */
+
+  it('copies the caption row moment and confirms in the System voice', async () => {
+    const writeText = stubClipboard();
+    const { source } = await mountEpisode('/ep/1?fake=1&t=156');
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('share-moment'));
+    });
+
+    expect(writeText).toHaveBeenCalledWith(MOMENT_URL);
+    const notice = screen.getByTestId('share-notice');
+    expect(notice).toHaveAttribute('role', 'status');
+    expect(notice).toHaveAttribute('aria-live', 'polite');
+    expect(notice).toHaveTextContent(copy.shareCopied);
+    // Sharing never touches playback (FR-306).
+    expect(source.getTime()).toBe(156);
+  });
+
+  it('names the caption control in the System voice', async () => {
+    await mountEpisode();
+    expect(screen.getByTestId('share-moment')).toHaveAccessibleName(copy.shareMoment);
+    // Nothing is announced until the viewer asks for something.
+    expect(screen.getByTestId('share-notice')).toHaveTextContent('');
+  });
+
+  it('shares a feed row without seeking to it (FR-303)', async () => {
+    const writeText = stubClipboard();
+    const { source, seek } = await mountEpisode();
+    seek(60);
+
+    const rows = screen.getAllByTestId('feed-item');
+    const oldest = rows[3]; // the System's opener at 0:12
+    expect(within(oldest).getByTestId('feed-time')).toHaveTextContent(formatTime(12));
+
+    const rowShare = within(oldest).getByTestId('share-row');
+    expect(rowShare).toHaveAccessibleName(copy.shareRow(formatTime(12)));
+
+    await act(async () => {
+      fireEvent.click(rowShare);
+    });
+
+    expect(writeText).toHaveBeenCalledWith('http://localhost:3000/ep/1?t=12');
+    // The row's own seek did not fire: the broadcast has not moved.
+    expect(source.getTime()).toBe(60);
+    expect(screen.getByText(copy.feedHeader('1:00'))).toBeInTheDocument();
+  });
+
+  it('shares the pinned sponsor break too', async () => {
+    const writeText = stubClipboard();
+    const { source, seek } = await mountEpisode();
+    seek(115);
+
+    const pinned = screen.getByTestId('active-sponsor');
+    // Siblings, not nested: the share button is not inside the seek button.
+    expect(pinned.contains(screen.getAllByTestId('share-row')[0])).toBe(false);
+
+    await act(async () => {
+      fireEvent.click(within(pinned.parentElement as HTMLElement).getByTestId('share-row'));
+    });
+
+    expect(writeText).toHaveBeenCalledWith('http://localhost:3000/ep/1?t=110');
+    expect(source.getTime()).toBe(115);
+  });
+
+  it('shows the link to copy by hand when nothing can deliver it (FR-304)', async () => {
+    removeClipboard();
+    await mountEpisode('/ep/1?fake=1&t=156');
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('share-moment'));
+    });
+
+    expect(screen.getByTestId('share-notice')).toHaveTextContent(copy.shareShown);
+    const field = screen.getByTestId('share-url') as HTMLInputElement;
+    expect(field).toHaveValue(MOMENT_URL);
+    expect(field.selectionEnd).toBe(MOMENT_URL.length);
+
+    fireEvent.click(screen.getByTestId('share-dismiss'));
+    expect(screen.getByTestId('share-notice')).toHaveTextContent('');
+  });
+
+  it('never puts a dev flag in a shared link (FR-305)', async () => {
+    const writeText = stubClipboard();
+    await mountEpisode('/ep/1?fake=1&t=156&panel=map&record=1');
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('share-moment'));
+    });
+
+    const shared = writeText.mock.calls[0][0] as string;
+    expect(shared).toBe(MOMENT_URL);
+    for (const flag of ['fake', 'panel', 'record']) expect(shared).not.toContain(flag);
   });
 });

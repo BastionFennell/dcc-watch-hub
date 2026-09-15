@@ -24,3 +24,9 @@ Dev-only params (`fake`, `panel`, `record`) may coexist in DEV and are never emi
 - `ShareButton({ onClick, label?, size? })` — icon button, `data-testid="share-moment"` (caption row) / `share-row` (feed rows).
 - `ShareNotice({ status, url, onDismiss })` — `role="status"`, `data-testid="share-notice"`, read-only `input` with the URL when `status === 'shown'`.
 - `EventFeed` props: `+ onShare(t: number): void`; each row renders the seek button and a sibling share button (no nesting).
+
+## Amendment (wave 1, T404)
+`deliver` returns a fourth result, `'cancelled'`, when the viewer dismisses the native share
+sheet (`AbortError`). It is not a viewer-facing outcome: the UI shows nothing for it, which is how
+"cancelling it is silent" (spec US2 scenario 3) is told apart from a successful copy. The union is
+therefore `'shared' | 'copied' | 'shown' | 'cancelled'`.

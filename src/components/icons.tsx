@@ -104,3 +104,15 @@ export function IconClose(props: IconProps) {
     </Svg>
   );
 }
+
+/** "Share this moment" (004): three nodes on a line, the platform-neutral glyph. */
+export function IconShare(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="18" cy="5" r="2.6" />
+      <circle cx="6" cy="12" r="2.6" />
+      <circle cx="18" cy="19" r="2.6" />
+      <path d="M8.4 10.8 15.7 6.6M8.4 13.2l7.3 4.2" />
+    </Svg>
+  );
+}

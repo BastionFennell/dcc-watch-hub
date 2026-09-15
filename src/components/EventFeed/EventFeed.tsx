@@ -15,6 +15,8 @@ export interface EventFeedProps {
   t: number;
   /** Seeks playback to a row's moment (T342). The page hands it the source. */
   onSeek: (t: number) => void;
+  /** Shares a link to a row's moment (004 FR-303). Never seeks (FR-306). */
+  onShare: (t: number) => void;
   /** Loading / failure copy from the page, shown above the list. */
   notice?: ReactNode;
 }
@@ -27,7 +29,7 @@ export interface EventFeedProps {
  * cursor and the hover ring honest affordances rather than a tease
  * (constitution III).
  */
-export function EventFeed({ items, sponsor, t, onSeek, notice }: EventFeedProps) {
+export function EventFeed({ items, sponsor, t, onSeek, onShare, notice }: EventFeedProps) {
   /** Nothing has elapsed and nothing is wrong: the System says so (T335). */
   const standby = notice === null || notice === undefined;
 
@@ -35,7 +37,7 @@ export function EventFeed({ items, sponsor, t, onSeek, notice }: EventFeedProps)
     <section className={styles.feed} aria-label={copy.feedLabel}>
       <h2 className={styles.header}>{copy.feedHeader(formatTime(t))}</h2>
       {notice}
-      {sponsor ? <SponsorSlot item={sponsor} pinned onSeek={onSeek} /> : null}
+      {sponsor ? <SponsorSlot item={sponsor} pinned onSeek={onSeek} onShare={onShare} /> : null}
       {items.length === 0 && sponsor === null && standby ? (
         <p className={styles.standby} data-testid="feed-standby">
           {copy.feedStandby}
@@ -44,7 +46,7 @@ export function EventFeed({ items, sponsor, t, onSeek, notice }: EventFeedProps)
       <ul className={styles.items} data-testid="feed-items">
         {items.map((item) => (
           <li key={item.id} className={styles.row} data-testid="feed-item">
-            <FeedItemView item={item} onSeek={onSeek} />
+            <FeedItemView item={item} onSeek={onSeek} onShare={onShare} />
           </li>
         ))}
       </ul>

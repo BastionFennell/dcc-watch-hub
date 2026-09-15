@@ -44,12 +44,31 @@
  * The slim caption row between the stage and the timeline (T340): what you are
  * watching on the left, where you are on the right.
  */
+/*
+ * The row and its confirmation are one block, so the share notice appearing
+ * cannot push the row away from the stage — it only grows downward, above the
+ * timeline (T407).
+ */
+.captionBlock {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
 .captionRow {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
   min-width: 0;
+}
+
+/* The time and the share control, at the right of the row (004 FR-302). */
+.captionRight {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: var(--space-3);
 }
 
 .captionTitle {

@@ -1,0 +1,86 @@
+/*
+ * The live region is always present but weightless: no padding, no margin, no
+ * min-height. The box inside reserves its own space only while it is up, so the
+ * stage above the caption row never shifts (T407).
+ */
+.live {
+  display: block;
+  min-width: 0;
+  min-height: 0;
+}
+
+.box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  margin-top: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--system-bg);
+  color: var(--system-fg);
+  font-size: var(--text-xs);
+  min-width: 0;
+}
+
+.tag {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.message {
+  margin: 0;
+  min-width: 0;
+  line-height: 1.45;
+}
+
+.fallback {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.field {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--system-pill-border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-deep);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+}
+
+.field:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.dismiss {
+  flex: none;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--system-pill-border);
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--system-fg);
+  font-family: inherit;
+  font-size: var(--text-2xs);
+  cursor: pointer;
+}
+
+.dismiss:hover {
+  color: var(--text);
+  border-color: var(--system-pill-fg);
+}
+
+.dismiss:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
