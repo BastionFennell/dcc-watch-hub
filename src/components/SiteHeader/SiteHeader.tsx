@@ -38,7 +38,7 @@ export function SiteHeader({ show, current }: SiteHeaderProps) {
 
   return (
     <header className={styles.header} data-scrolled={scrolled ? '' : undefined}>
-      <Link to="/" className={styles.brand} aria-label={copy.archiveTitle}>
+      <Link to="/" className={styles.brand}>
         <img
           className={styles.mark}
           src={`${import.meta.env.BASE_URL}img/dcc-mark.svg`}

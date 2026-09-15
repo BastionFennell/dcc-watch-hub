@@ -14,7 +14,9 @@
   --text: #eeedfe;
   --text-2: #b4b2a9;
   --text-3: #888780;
-  --text-4: #5f5e5a;
+  /* Bumped from #5f5e5a (T040): 2.57:1 on --panel failed WCAG AA for the
+     HP readout, note items and the feed footer. 4.51:1 on --panel, 4.97:1 on --canvas. */
+  --text-4: #86857f;
 
   /* System blue */
   --system-bg: #0c447c;

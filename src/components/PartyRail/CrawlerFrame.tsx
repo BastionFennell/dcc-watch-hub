@@ -26,7 +26,13 @@ export function CrawlerFrame({ frame }: CrawlerFrameProps) {
       data-levelup={frame.levelUpPulse ? 'true' : undefined}
     >
       <div className={styles.frameTop}>
-        <img className={styles.portrait} src={frame.portrait} alt="" width={40} height={40} />
+        <img
+          className={styles.portrait}
+          src={frame.portrait}
+          alt={frame.name}
+          width={40}
+          height={40}
+        />
         <div className={styles.frameMeta}>
           <div className={styles.name}>{frame.name}</div>
           <div className={styles.stats}>

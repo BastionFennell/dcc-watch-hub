@@ -238,9 +238,24 @@
     gap: var(--space-3);
   }
 
-  .title,
   .pill {
     display: none;
+  }
+
+  /*
+   * The mark alone would leave the archive link nameless, so the title stays in
+   * the accessibility tree and only leaves the layout (T040).
+   */
+  .title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
   .links {

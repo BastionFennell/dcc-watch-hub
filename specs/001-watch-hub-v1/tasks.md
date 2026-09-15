@@ -372,23 +372,23 @@ error sample → ERROR, exit 1, no file.
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T039 [P] Write `README.md`: what the site is (System voice one-liner), quickstart commands,
+- [X] T039 [P] Write `README.md`: what the site is (System voice one-liner), quickstart commands,
   data authoring flow, list of every placeholder to replace (video ids, links, portraits, Discord),
   deploy notes (Pages source = GitHub Actions), constitution pointer, and the v2/v3 fence.
-- [ ] T040 [P] Accessibility + copy pass: every interactive element has a name; images have
+- [X] T040 [P] Accessibility + copy pass: every interactive element has a name; images have
   `alt` (portraits: crawler name); color contrast of `--text-3` on `--panel` ≥ 4.5:1 or bump
   token; `prefers-reduced-motion` honored; grep `src/` for forbidden words ("Dashboard", "Home",
   "Ads", "Advertisement") and fix; confirm no `cursor: pointer` on frames or minimap.
-- [ ] T041 [P] Responsive verification at 400 px and 360 px in `EpisodePage.module.css`,
+- [X] T041 [P] Responsive verification at 400 px and 360 px in `EpisodePage.module.css`,
   `SiteHeader.module.css`, `PartyRail.module.css`, `EventFeed.module.css`: no element wider than
   the viewport (`overflow-x: hidden` on `body` is NOT an acceptable fix; find the cause), rail
   wraps 3+2, header collapses, feed text wraps.
-- [ ] T042 Performance pass: verify `index.html` has no external fonts or blocking scripts, the
+- [X] T042 Performance pass: verify `index.html` has no external fonts or blocking scripts, the
   YouTube API script loads only on episode pages, portraits are `loading="lazy"` except the first
   five, `dist/` JS ≤ 150 kB gzipped (React 19 + router + app; note the number in README); run
   Lighthouse manually per quickstart step 10 and record the score in `specs/001-watch-hub-v1/quickstart.md`
   under a "Results" heading (or note if Chrome is unavailable).
-- [ ] T043 Final verification: `npm run typecheck && npm run lint && npm test && npm run build &&
+- [X] T043 Final verification: `npm run typecheck && npm run lint && npm test && npm run build &&
   npm run preview` (smoke: curl `/` and `/ep/1` return 200 with the app shell; `dist/404.html`
   exists; `dist/_redirects` exists); walk quickstart steps 1–11 with `?fake=1` where the embed
   is not available; tick every item in spec.md §7 acceptance list by editing the handoff spec's

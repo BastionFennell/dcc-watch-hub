@@ -91,6 +91,7 @@
 
 .cardTitle {
   min-width: 0;
+  overflow-wrap: anywhere;
   font-size: var(--text-md);
   font-weight: 500;
 }

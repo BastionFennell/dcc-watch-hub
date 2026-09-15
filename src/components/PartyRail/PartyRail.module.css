@@ -62,8 +62,9 @@
 
 .stats {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: var(--space-3);
+  gap: 0 var(--space-3);
   color: var(--text-3);
   font-size: var(--text-xs);
 }
