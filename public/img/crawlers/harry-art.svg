@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 540" width="200" height="540" role="img" aria-label="Harry placeholder full-figure art">
+  <title>Harry</title>
+  <rect width="200" height="540" fill="#0C447C"/>
+  <rect x="0.5" y="0.5" width="199" height="539" fill="none" stroke="#444441" stroke-width="1"/>
+  <g fill="#0d0d16" opacity="0.55">
+    <!-- head under a flat cap -->
+    <circle cx="100" cy="92" r="34"/>
+    <path d="M62 84h76l8 -10H54z"/>
+    <rect x="90" y="122" width="20" height="16"/>
+    <!-- heavy torso -->
+    <path d="M62 138h76l10 164H52z"/>
+    <!-- arms: one down, one raised holding the crowbar -->
+    <path d="M52 146h20v150H52z"/>
+    <path d="M128 146h20v150h-20z"/>
+    <circle cx="62" cy="302" r="13"/>
+    <circle cx="138" cy="302" r="13"/>
+    <!-- crowbar -->
+    <path d="M150 298l10 6-52 96-10-6z"/>
+    <!-- legs planted -->
+    <path d="M60 302h34l-4 196H52z"/>
+    <path d="M106 302h34l8 196h-38z"/>
+    <rect x="44" y="494" width="54" height="20" rx="8"/>
+    <rect x="104" y="494" width="54" height="20" rx="8"/>
+  </g>
+</svg>

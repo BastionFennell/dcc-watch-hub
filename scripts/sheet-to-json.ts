@@ -2,15 +2,17 @@
  * Editor sheet CSV → `ep{N}.json` (constitution: Author-Friendly Data Pipeline).
  *
  * Contract: specs/001-watch-hub-v1/contracts/sheet-csv.md, extended by
- * specs/002-watch-hub-v2/contracts/sheet-csv.md (skill / class / hotlist rows).
+ * specs/002-watch-hub-v2/contracts/sheet-csv.md (skill / class / hotlist rows) and by
+ * specs/003-crawler-record/data-model.md (equip / unequip rows: field1 slot, field2 item).
  *
  *   npm run sheet-to-json -- scripts/samples/ep1.csv --episode 1 --duration 240 \
  *     --initial-state scripts/samples/ep1.initial.json --out public/data/ep1.json
  *
  * Warnings (unknown actor, impossible HP, timecode past the duration, unknown type or
- * chapter kind) are reported and the file is still written. Only malformed input
- * (unparseable timecode, missing column, non-numeric numeric, empty required field)
- * is an error, and then nothing is written.
+ * chapter kind, an accessory unequip with no item) are reported and the file is still
+ * written. Only malformed input (unparseable timecode, missing column, non-numeric
+ * numeric, empty required field, an unknown gear slot) is an error, and then nothing
+ * is written.
  *
  * Everything here is a pure exported function except `main()`, which runs only when
  * this file is executed directly.

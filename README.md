@@ -213,6 +213,8 @@ required; columns are `timecode,type,actor,field1,field2,field3`
 | `skill` | name | rank (number, optional) | desc (optional) |
 | `class` | class | – | – |
 | `hotlist` | add (`;`) | remove (`;`) | – |
+| `equip` | slot (`head`/`torso`/`arms`/`hands`/`legs`/`feet`/`accessory`) | item | – |
+| `unequip` | slot (as above) | item (accessory only; optional) | – |
 | `note` | text | – | – |
 
 Convert:
@@ -226,14 +228,16 @@ npm run sheet-to-json -- path/to/ep4.csv \
 
 `--initial-state` is a JSON file holding the episode's `initialState` (party, `partyRank`, map).
 Each crawler there may carry the optional sheet fields the dossier renders — `race`, `pronouns`,
-`crawlerNumber`, `stats` (`{ str, int, con, dex, cha }`), `hotlist[]` and `skills[]`
-(`{ name, rank? }`). They need no new CSV columns, and v1 files without them keep working: the
+`crawlerNumber`, `stats` (`{ str, int, con, dex, cha }`), `hotlist[]`, `skills[]`
+(`{ name, rank? }`), `gear` (`{ head?, torso?, arms?, hands?, legs?, feet?, accessories[]? }`)
+and `art` (a full-figure image path; the record falls back to the bust without it). They need no new CSV columns, and v1 files without them keep working: the
 dossier simply omits what it does not know.
 The converter sorts events by `t`, normalizes them, and prints a summary such as
 `wrote public/data/ep4.json (42 events, 2 warnings)`. **Warnings still produce output** (unknown
-actor, impossible HP, timecode past `--duration`, unknown type, bad `chapter.kind`); **errors
-write nothing and exit 1** (unparseable timecode, missing header column, non-numeric numeric
-field, empty required field).
+actor, impossible HP, timecode past `--duration`, unknown type, bad `chapter.kind`, an
+accessory `unequip` with no item — the last one worn comes off); **errors write nothing and
+exit 1** (unparseable timecode, missing header column, non-numeric numeric field, empty required
+field, an `equip`/`unequip` slot that is not one of the seven).
 
 Try it against the samples:
 
@@ -284,9 +288,21 @@ video's real length and the sample events are spread across it. Change ids and d
 Keep the filenames, or update each crawler's `portrait` path in every `ep{N}.json`. The rail
 renders them at 40 px (32 px on a phone), so square art crops best.
 
+**Crawler full-figure art** — the record's art column; also generated monochrome silhouettes:
+
+- `public/img/crawlers/stuntman-art.svg` (The Stuntman — 320×540, the wide-stance case)
+- `public/img/crawlers/psychic-art.svg` (The Psychic — 200×540)
+- `public/img/crawlers/harry-art.svg` (Harry — 200×540)
+- `public/img/crawlers/xo-art.svg` (X.O. — 200×540)
+- `public/img/crawlers/actress-art.svg` (The Actress — 200×540)
+
+A crawler's `art` field names one of these; the sample data gives art to two crawlers per
+episode so the bust fallback stays visible. Real art may be any aspect ratio — the column
+contains it rather than cropping it.
+
 **Also placeholder**: `public/img/dcc-mark.svg` and `public/favicon.svg` (the circular "DC" mark),
-and the event logs in `public/data/ep1.json`, `ep2.json`, `ep3.json` — 43 invented events each,
-written to exercise every event type. Regenerate them from real sheets with `sheet-to-json`.
+and the event logs in `public/data/ep1.json`, `ep2.json`, `ep3.json` — 57 / 47 / 47 invented
+events, written to exercise every event type. Regenerate them from real sheets with `sheet-to-json`.
 
 ---
 
