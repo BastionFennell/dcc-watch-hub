@@ -34,6 +34,21 @@
   box-shadow: var(--focus-ring);
 }
 
+/*
+ * The badge while its map panel is open (T131), driven off `aria-expanded` so it
+ * cannot drift from the accessible state. Same border treatment as the crawler
+ * frame — `--brand-line` at 3.98:1 on --panel, brighter than the hover border —
+ * but no background wash: the revealed cells are `--brand-deep` and would
+ * disappear into it. The header brightens instead.
+ */
+.badge[aria-expanded='true'] {
+  border-color: var(--brand-line);
+}
+
+.badge[aria-expanded='true'] .header {
+  color: var(--text-2);
+}
+
 .header {
   display: flex;
   align-items: center;
@@ -67,4 +82,11 @@
 
 .cell[data-state='recent'] {
   background: var(--brand-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge,
+  .cell {
+    transition: none;
+  }
 }

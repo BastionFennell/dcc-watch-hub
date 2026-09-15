@@ -18,8 +18,8 @@ export interface ResumeCardProps {
  *
  * Escape answers "start over", the conservative choice: nothing is seeked and
  * the saved position is discarded. The listener is on `window` (bubble phase)
- * so it also works after the viewer has clicked elsewhere on the page; it does
- * not stop propagation, so other Escape handlers keep their behaviour.
+ * so it also works after the viewer has clicked elsewhere on the page, and it
+ * stops propagation so no later `window` listener answers the same keypress.
  */
 export function ResumeCard({ t, onRejoin, onStartOver }: ResumeCardProps) {
   const titleId = useId();
@@ -32,10 +32,17 @@ export function ResumeCard({ t, onRejoin, onStartOver }: ResumeCardProps) {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onStartOver();
+      if (event.key !== 'Escape') return;
+      // The card owns this Escape. Registered in the capture phase so it runs
+      // before `usePanel`'s bubble-phase listener: one keypress answers the
+      // card and nothing else.
+      event.stopPropagation();
+      onStartOver();
     };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    // Capture phase on `document` runs before the panel hook's bubble-phase listener
+    // (also on `document`), so one Escape cannot both start over and close a panel.
+    document.addEventListener('keydown', onKeyDown, true);
+    return () => document.removeEventListener('keydown', onKeyDown, true);
   }, [onStartOver]);
 
   return (

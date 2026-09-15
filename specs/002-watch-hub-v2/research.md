@@ -105,7 +105,7 @@
 - **Decision**: `CrawlerFrame` becomes a `<button type="button">` wrapping the frame content
   (keeps its `data-*` test attributes) with `aria-expanded`, `aria-controls="rail-panel"`,
   `cursor: pointer`, hover/focus ring in `--brand-2`, and `aria-pressed`-free semantics.
-  `MiniMapBadge` becomes a `<button>` with `aria-label` "Open the floor map", pointer events
+  `MiniMapBadge` becomes a `<button>` with `aria-label` "Floor N — open the floor map" (visible text first: WCAG 2.5.3), pointer events
   restored, same affordances; its decorative grid stays `aria-hidden`.
 - **Rationale**: FR-104, FR-122; constitution III now permits affordances because the triggers do
   something.

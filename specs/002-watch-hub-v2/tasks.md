@@ -39,7 +39,7 @@ Everyone appends to `src/copy.ts` only at the end of the file. Nobody in wave 2 
   on record.", "Hotlist empty.", "No skills logged.", "Nothing carried.", "No achievements yet.",
   "No moments logged."), "Unranked", "Unclassed", rank labels (Current, Best), sparkline summary
   `(from, to, count, best) => string`, map kicker "SYSTEM CARTOGRAPHY", map title `(floor) => 'Floor N'`,
-  map controls (Zoom in, Zoom out, Fit), map trigger label "Open the floor map", map summary
+  map controls (Zoom in, Zoom out, Fit), map trigger label `(floor) => "Floor N — open the floor map"`, map summary
   `(revealed, total, labels) => string`, resume kicker "BROADCAST BOOKMARK", resume title
   `(time) => 'Rejoin at m:ss?'`, resume body "The System has your place marked.", resume actions
   ("Rejoin the broadcast", "Start from the beginning"), party rank line `(rank) => 'Party rank #N'`,
@@ -176,17 +176,17 @@ Everyone appends to `src/copy.ts` only at the end of the file. Nobody in wave 2 
 
 ## Phase 7: Polish & Cross-Cutting
 
-- [ ] T131 [P] Accessibility pass on panels: focus order, `aria-expanded` sync, region labels,
+- [X] T131 [P] Accessibility pass on panels: focus order, `aria-expanded` sync, region labels,
   reduced motion, contrast of new colors (HP segments on panel, sparkline stroke) ≥ 3:1 for
   graphics, 4.5:1 for text; fix in tokens if needed.
-- [ ] T132 [P] Responsive pass: panel overlay at 360/400 px (no horizontal scroll, close reachable,
+- [X] T132 [P] Responsive pass: panel overlay at 360/400 px (no horizontal scroll, close reachable,
   body scroll locked), dossier header wraps, map controls reachable; desktop panel body scrolls
   internally and the stage never moves when a panel opens (measure `getBoundingClientRect` of the
   stage before/after in a test).
-- [ ] T133 [P] Performance check: `npm run build`, note gzipped JS in README (must stay ≤ 150 kB),
+- [X] T133 [P] Performance check: `npm run build`, note gzipped JS in README (must stay ≤ 150 kB),
   Lighthouse on `/ep/1` from `npm run preview` if Chrome is available; record under quickstart `## Results`.
-- [ ] T134 Diegetic copy review of every new string; no "Dashboard/Home/Ads"; forbidden-word grep.
-- [ ] T135 Final verification: `typecheck && lint && test && build`, walk quickstart, tick spec SCs with
+- [X] T134 Diegetic copy review of every new string; no "Dashboard/Home/Ads"; forbidden-word grep.
+- [X] T135 Final verification: `typecheck && lint && test && build`, walk quickstart, tick spec SCs with
   evidence under quickstart `## Results`, ensure every task here is `[X]`.
 
 ## Dependencies

@@ -45,4 +45,20 @@ describe('ResumeCard', () => {
     expect(onStartOver).toHaveBeenCalledTimes(1);
     expect(onRejoin).not.toHaveBeenCalled();
   });
+
+  it('answers Escape exactly once, whatever else is listening (T131)', () => {
+    // `usePanel` listens on `document`, which the bubble phase reaches before
+    // `window`, so the card can only ever add to that keypress — never replace
+    // it. Asserted here so a future move to the capture phase is a deliberate,
+    // failing-test decision rather than a silent change of Escape's meaning.
+    const documentListener = vi.fn();
+    document.addEventListener('keydown', documentListener);
+    const { onStartOver } = setup();
+
+    fireEvent.keyDown(screen.getByRole('button', { name: copy.resumeRejoin }), { key: 'Escape' });
+    expect(onStartOver).toHaveBeenCalledTimes(1);
+    expect(documentListener).toHaveBeenCalledTimes(1);
+
+    document.removeEventListener('keydown', documentListener);
+  });
 });

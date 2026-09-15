@@ -26,7 +26,7 @@ describe('MiniMapBadge', () => {
     expect(badge).toHaveAttribute('type', 'button');
     expect(badge).toHaveAttribute('data-panel-trigger', 'map');
     expect(badge).toHaveAttribute('aria-controls', 'rail-panel');
-    expect(screen.getByRole('button', { name: copy.mapTriggerLabel })).toBe(badge);
+    expect(screen.getByRole('button', { name: copy.mapTriggerLabel(cells.floor) })).toBe(badge);
 
     const describedBy = badge.getAttribute('aria-describedby') ?? '';
     expect(document.getElementById(describedBy)).toHaveTextContent(copy.sectorsRevealed(2, 96));

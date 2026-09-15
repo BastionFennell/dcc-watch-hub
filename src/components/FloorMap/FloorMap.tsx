@@ -196,6 +196,10 @@ export function FloorMap({ cells, recent, labels, floor }: FloorMapProps) {
         ref={viewportRef}
         className={styles.viewport}
         tabIndex={0}
+        // A focusable box needs a name and a role of its own; the `<svg>` inside
+        // keeps the state summary, this says what the keys do (T131).
+        role="group"
+        aria-label={copy.mapViewportLabel}
         data-testid="floormap-viewport"
         data-pannable={zoom > 1 ? 'true' : undefined}
         data-dragging={dragging ? 'true' : undefined}

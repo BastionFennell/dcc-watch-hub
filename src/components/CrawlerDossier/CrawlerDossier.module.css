@@ -187,6 +187,13 @@
   max-width: 260px;
 }
 
+/* The chart's floor: enough to give the line a scale, not enough to read as data. */
+.sparkBaseline {
+  stroke: var(--hairline-2);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
 /* --- chips, lists, stats --- */
 
 .chips {

@@ -32,7 +32,9 @@
   border-radius: var(--radius-md);
   padding: var(--space-3);
   cursor: pointer;
-  transition: border-color 200ms ease;
+  transition:
+    border-color 200ms ease,
+    background-color 200ms ease;
 }
 
 .frame:hover {
@@ -43,6 +45,24 @@
   outline: none;
   box-shadow: var(--focus-ring);
   border-color: var(--brand-2);
+}
+
+/*
+ * The open dossier's frame (T131). Driven off `aria-expanded`, so the state can
+ * never drift from what assistive tech is told. `--brand-line` rather than the
+ * hover border's `--brand-2`: it is 3.98:1 on --panel (--brand-2 is 2.41:1) and
+ * it keeps "open" distinguishable from "hovered".
+ */
+.frame[aria-expanded='true'] {
+  border-color: var(--brand-line);
+  background: var(--brand-deep);
+}
+
+/* The wash costs --text-3 its 4.5:1 (4.00 on --brand-deep), so the open frame's
+   metadata steps up to --text-2 (6.79:1) rather than the tint being watered down. */
+.frame[aria-expanded='true'] .stats,
+.frame[aria-expanded='true'] .hpValue {
+  color: var(--text-2);
 }
 
 .frame[data-danger] {
@@ -135,6 +155,22 @@
   border-radius: var(--radius-pill);
   padding: 0 6px;
   white-space: nowrap;
+}
+
+/* Belt and braces over the global rule: no frame motion when motion is unwanted. */
+@media (prefers-reduced-motion: reduce) {
+  .frame {
+    transition: none;
+  }
+
+  .frame[data-danger],
+  .frame[data-levelup] {
+    animation: none;
+  }
+
+  .hpFill {
+    transition: none;
+  }
 }
 
 @keyframes dangerFlash {

@@ -218,7 +218,13 @@ export const copy = {
   mapZoomIn: 'Zoom in',
   mapZoomOut: 'Zoom out',
   mapFit: 'Fit',
-  mapTriggerLabel: 'Open the floor map',
+  /*
+   * The badge's accessible name opens with its visible text ("Floor 1"), which
+   * WCAG 2.5.3 Label in Name requires and axe flags otherwise (T131).
+   */
+  mapTriggerLabel: (floor: number) => `Floor ${floor} — open the floor map`,
+  /** Names the focusable map viewport and states its keys (T131). */
+  mapViewportLabel: 'Floor map — zoom with + and −, reset with 0, drag to pan',
   mapSummary: (revealed: number, total: number, labels: number) =>
     `${revealed} of ${total} sectors revealed, ${labels} neighborhood${labels === 1 ? '' : 's'} named`,
 

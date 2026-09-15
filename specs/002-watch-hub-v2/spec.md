@@ -81,7 +81,7 @@ scrub back, verify labels vanish, zoom and pan, press fit, close.
 5. **Given** the expanded map, **When** the viewer presses Escape or the close control,
    **Then** the feed returns and focus goes back to the badge.
 6. **Given** the badge, **When** the viewer hovers it, **Then** it shows an affordance; it is
-   keyboard-focusable and announces "Open the floor map".
+   keyboard-focusable and announces "Floor N — open the floor map" (its visible text plus the action, so the name matches the label).
 7. **Given** the map and a dossier, **When** one opens, **Then** the other closes (one panel).
 
 ---

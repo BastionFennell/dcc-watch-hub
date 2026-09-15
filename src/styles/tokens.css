@@ -95,9 +95,18 @@
   --hp-seg-9: #849b22;
   --hp-seg-10: #639922;
 
+  /*
+   * Brand purple for informational graphics (v2, T131). Spec §6's --brand-2 is a
+   * fill/border colour: as a 2 px line on --panel it measures 2.41:1, under the
+   * 3:1 WCAG 1.4.11 bar for a graphic that carries meaning (the rank sparkline,
+   * the open-panel trigger state). This is the same hue lifted 30% toward
+   * --brand-fg: 3.98:1 on --panel, 4.39:1 on --canvas. Spec §6 values unchanged.
+   */
+  --brand-line: #7871ca;
+
   /* Panels (v2): the rail slot's overlay layer and the shared trigger focus ring */
   --panel-z: 20;
-  --focus-ring: 0 0 0 2px var(--brand-2);
+  --focus-ring: 0 0 0 2px var(--brand-line);
 
   /* Chrome */
   --header-h: 48px;

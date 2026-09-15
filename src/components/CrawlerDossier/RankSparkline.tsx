@@ -44,8 +44,28 @@ export function RankSparkline({ series }: RankSparklineProps) {
       data-testid="rank-sparkline"
       focusable="false"
     >
+      {/*
+        A hairline floor, so a single point or a flat run still reads as a chart
+        rather than a stray dot (T131 visual review). Decorative: the summary in
+        `aria-label` already carries the whole series.
+      */}
+      <line
+        className={styles.sparkBaseline}
+        x1={0}
+        y1={HEIGHT - 0.5}
+        x2={WIDTH}
+        y2={HEIGHT - 0.5}
+        data-testid="sparkline-baseline"
+      />
       {points.length > 1 ? (
-        <polyline points={line} fill="none" stroke="var(--brand-2)" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+        <polyline
+          points={line}
+          fill="none"
+          stroke="var(--brand-line)"
+          strokeWidth={2}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
       ) : null}
       <circle
         cx={x(bestIndex)}
@@ -60,7 +80,7 @@ export function RankSparkline({ series }: RankSparklineProps) {
         cx={x(last)}
         cy={y(points[last].rank)}
         r={3}
-        fill="var(--brand-2)"
+        fill="var(--brand-line)"
         data-testid="sparkline-current"
       />
     </svg>

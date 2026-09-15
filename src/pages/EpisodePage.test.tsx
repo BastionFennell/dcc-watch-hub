@@ -802,4 +802,88 @@ describe('EpisodePage', () => {
       blocked.mockRestore();
     }
   });
+  /* ------------------------------------- v2 Phase 7: a11y & layout polish (T131/T132) */
+
+  /** Everything a keyboard can land on inside `element`, in document order. */
+  function focusables(element: HTMLElement): HTMLElement[] {
+    return Array.from(
+      element.querySelectorAll<HTMLElement>('a[href], button, input, select, textarea, [tabindex]'),
+    ).filter((node) => !node.hasAttribute('disabled') && node.getAttribute('tabindex') !== '-1');
+  }
+
+  it('puts the close control first in every panel\u2019s focus order (T131)', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+
+    clickFrame('harry');
+    const dossierPanel = screen.getByTestId('rail-panel');
+    expect(focusables(dossierPanel)[0]).toBe(screen.getByTestId('panel-close'));
+
+    fireEvent.click(badge());
+    const mapPanel = screen.getByTestId('rail-panel');
+    expect(focusables(mapPanel)[0]).toBe(screen.getByTestId('panel-close'));
+    // …and the map's own controls come after it, never before. Zoom out is
+    // disabled at the fit step, so it is not in the tab order at all.
+    expect(focusables(mapPanel).slice(1)).toEqual([
+      screen.getByTestId('floormap-zoom-in'),
+      screen.getByTestId('floormap-fit'),
+      screen.getByTestId('floormap-viewport'),
+    ]);
+  });
+
+  it('names the region and the map viewport for assistive tech (T131)', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+
+    clickFrame('harry');
+    expect(screen.getByTestId('rail-panel')).toHaveAccessibleName(copy.dossierTitle('Harry'));
+
+    fireEvent.click(badge());
+    expect(screen.getByTestId('rail-panel')).toHaveAccessibleName(copy.mapTitle(1));
+    expect(screen.getByTestId('floormap-viewport')).toHaveAccessibleName(copy.mapViewportLabel);
+  });
+
+  it('opens a panel without disturbing the stage column (T132)', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+
+    const stage = screen.getByTestId('video-stage');
+    const stageColumn = stage.parentElement as HTMLElement;
+    const rail = document.querySelector('aside') as HTMLElement;
+    const before = Array.from(stageColumn.children).map((child) => child.tagName);
+
+    expect(rail).toHaveAttribute('data-panel', 'none');
+    expect(screen.getByTestId('feed-items')).toBeInTheDocument();
+
+    clickFrame('harry');
+
+    // The rail swaps its contents; the stage column keeps the same nodes in the
+    // same order, so nothing above or beside the video can reflow (FR-102).
+    // jsdom has no layout, so this is the structural half of the claim — the
+    // geometric half is CSS-only and recorded in the quickstart Results.
+    expect(rail).toHaveAttribute('data-panel', 'dossier');
+    expect(screen.getByTestId('video-stage')).toBe(stage);
+    expect(stage.parentElement).toBe(stageColumn);
+    expect(Array.from(stageColumn.children).map((child) => child.tagName)).toEqual(before);
+    expect(screen.getByTestId('rail-panel').parentElement).toBe(rail);
+
+    fireEvent.click(badge());
+    expect(rail).toHaveAttribute('data-panel', 'map');
+    expect(screen.getByTestId('video-stage')).toBe(stage);
+    expect(Array.from(stageColumn.children).map((child) => child.tagName)).toEqual(before);
+  });
+
+  it('lets the resume card own Escape even while a dossier is open', async () => {
+    seedResume(1, 120);
+    await mountEpisode();
+    expect(screen.getByTestId('resume-card')).toBeInTheDocument();
+
+    fireEvent.click(frame('harry'));
+    expect(screen.getByTestId('rail-panel')).toBeInTheDocument();
+
+    fireEvent.keyDown(document.body, { key: 'Escape' });
+    expect(screen.queryByTestId('resume-card')).not.toBeInTheDocument();
+    expect(screen.getByTestId('rail-panel')).toBeInTheDocument();
+    expect(localStorage.getItem(resumeKey(1))).toBeNull();
+  });
 });
