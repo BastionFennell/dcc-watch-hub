@@ -54,8 +54,10 @@
   background: var(--canvas);
   border: var(--border-hairline);
   border-radius: var(--radius-md);
-  /* Pointer drags own the gesture; the browser must not scroll or pinch it. */
+  /* Pointer drags own the gesture; the browser must not scroll, pinch, or select text. */
   touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .viewport:focus-visible {
@@ -128,6 +130,8 @@
   stroke-width: 0.12;
   stroke-linejoin: round;
   pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

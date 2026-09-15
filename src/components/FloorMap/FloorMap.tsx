@@ -212,6 +212,8 @@ export function FloorMap({ cells, recent, labels, floor }: FloorMapProps) {
       const element = viewportRef.current;
       const scale = unitsPerPx();
       if (element === null || scale === null) return;
+      // A drag must not start a text selection on the labels (or anything behind).
+      event.preventDefault();
       if (typeof element.setPointerCapture === 'function') {
         try {
           element.setPointerCapture(event.pointerId);
