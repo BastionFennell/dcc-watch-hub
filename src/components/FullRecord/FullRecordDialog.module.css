@@ -1,0 +1,188 @@
+/*
+ * The full record (research R1/R5, FR-211/FR-212). Desktop: a centered sheet in
+ * landscape — a top band of identity, vitals and stats, then three columns —
+ * over a dimmed page. ≤ 900 px: the viewport, with the same sections stacked in
+ * the sheet's order. The only overlay allowed to cover the stage (constitution
+ * III, 1.2.0); `body.dialog-open` locks the page behind it.
+ */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  /* Above the rail panel's full-viewport overlay at ≤ 900 px. */
+  z-index: calc(var(--panel-z) + 10);
+  display: grid;
+  place-items: center;
+  padding: var(--space-7);
+  background: rgb(19 19 32 / 78%);
+  animation: recordIn 150ms ease-out;
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(1200px, 94vw);
+  max-height: 90vh;
+  min-height: 0;
+  background: var(--panel);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-lg);
+  /* The frame clips; `.body` is what scrolls (FR-212: 90 vh, internal scroll). */
+  overflow: hidden;
+  animation: recordIn 150ms ease-out;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  flex: none;
+  padding: var(--space-5) var(--space-6);
+  background: var(--panel-deep);
+  border-bottom: var(--border-hairline-2);
+}
+
+.heading {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.kicker {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+/* The rail panel's close control, unchanged: one shape for every dismiss. */
+.close {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  border: var(--border-hairline-2);
+  cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+
+.close:hover {
+  color: var(--text);
+  border-color: var(--brand-2);
+}
+
+.close:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+.closeIcon {
+  width: 16px;
+  height: 16px;
+}
+
+/* --- the sheet's landscape grid (research R5) --- */
+
+.body {
+  display: grid;
+  grid-template-areas:
+    'top top top'
+    'a b c';
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-7);
+  padding: var(--space-6);
+  overflow: auto;
+  min-height: 0;
+}
+
+.top {
+  grid-area: top;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-7);
+  align-items: start;
+}
+
+.topCell,
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.column {
+  gap: var(--space-7);
+}
+
+.colA {
+  grid-area: a;
+}
+
+.colB {
+  grid-area: b;
+}
+
+.colC {
+  grid-area: c;
+}
+
+@keyframes recordIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop,
+  .dialog {
+    animation: none;
+  }
+}
+
+/* ≤ 900 px: the record is the page — same sections, sheet order, one column. */
+@media (max-width: 900px) {
+  .backdrop {
+    padding: 0;
+  }
+
+  .dialog {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    background: var(--canvas);
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .body {
+    grid-template-areas:
+      'top'
+      'a'
+      'b'
+      'c';
+    grid-template-columns: minmax(0, 1fr);
+    padding-bottom: calc(var(--space-8) + env(safe-area-inset-bottom));
+  }
+
+  .top {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

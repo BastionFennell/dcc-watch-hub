@@ -12,6 +12,17 @@
 
 /* --- header band --- */
 
+/*
+ * Band + identity grid as one block, so the record can place the whole identity
+ * in a single grid cell (research R5) while the rail keeps the v2 rhythm.
+ */
+.identityBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
 .band {
   display: flex;
   align-items: center;
@@ -277,7 +288,7 @@
   overflow-wrap: anywhere;
 }
 
-.itemName {
+.itemLabel {
   color: var(--text);
   font-weight: 500;
   min-width: 0;

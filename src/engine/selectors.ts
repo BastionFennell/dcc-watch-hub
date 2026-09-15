@@ -538,3 +538,99 @@ export function mapLabels(events: readonly AnyEvent[], t: number): MapLabel[] {
       };
     });
 }
+
+/* ------------------------------------------------------- 003 glance card */
+
+/** One ledger line on the glance card: how many, and what landed last (FR-200). */
+export interface LedgerRow {
+  count: number;
+  /** Absent when the list is empty — the card prints the System's empty phrase. */
+  newest?: { text: string; t?: number };
+}
+
+/**
+ * The fixed-height rail card's view model (FR-200..FR-203): the same facts the
+ * dossier holds, reduced to one line per list so the card cannot grow with the
+ * episode.
+ */
+export interface Glance {
+  id: string;
+  name: string;
+  handle: string;
+  player: string;
+  portrait: string;
+  class: string | null;
+  level: number;
+  hp: Hp & HpSegments;
+  rank: RankSeries;
+  debuffs: string[];
+  ledger: {
+    hotlist: LedgerRow;
+    skills: LedgerRow;
+    inventory: LedgerRow;
+    achievements: LedgerRow;
+  };
+  /** At most three, newest first. */
+  recentHistory: FeedItem[];
+}
+
+/** The number of history rows the glance card always shows (research R4). */
+export const GLANCE_HISTORY_ROWS = 3;
+
+/** `{ count }` plus the last element, which the reducer appends in event order. */
+function ledgerRow(items: readonly string[]): LedgerRow {
+  const count = items.length;
+  if (count === 0) return { count };
+  return { count, newest: { text: items[count - 1] } };
+}
+
+/**
+ * The glance card's view model, derived from an already-elapsed `Dossier`, so it
+ * inherits time-truth for free (constitution I, FR-202). "Newest" is the last
+ * element of each current list — after a removal that is the most recently
+ * gained item still held (research R3).
+ */
+export function crawlerGlance(dossier: Dossier): Glance {
+  const skills = dossier.skills;
+  const lastSkill = skills.length === 0 ? undefined : skills[skills.length - 1];
+  const achievements = dossier.achievements;
+  const lastAchievement =
+    achievements.length === 0 ? undefined : achievements[achievements.length - 1];
+
+  return {
+    id: dossier.id,
+    name: dossier.name,
+    handle: dossier.handle,
+    player: dossier.player,
+    portrait: dossier.portrait,
+    class: dossier.class,
+    level: dossier.level,
+    hp: dossier.hp,
+    rank: dossier.rank,
+    debuffs: dossier.debuffs,
+    ledger: {
+      hotlist: ledgerRow(dossier.hotlist),
+      skills:
+        lastSkill === undefined
+          ? { count: skills.length }
+          : {
+              count: skills.length,
+              newest: {
+                text:
+                  lastSkill.rank === undefined
+                    ? lastSkill.name
+                    : `${lastSkill.name} · ${copy.skillRank(lastSkill.rank)}`,
+              },
+            },
+      inventory: ledgerRow(dossier.inventory),
+      achievements:
+        lastAchievement === undefined
+          ? { count: achievements.length }
+          : {
+              count: achievements.length,
+              newest: { text: lastAchievement.title, t: lastAchievement.t },
+            },
+    },
+    recentHistory: dossier.history.slice(0, GLANCE_HISTORY_ROWS),
+  };
+}

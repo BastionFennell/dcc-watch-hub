@@ -1,0 +1,326 @@
+/*
+ * The rail's glance card (FR-200..FR-203, research R4). Same sheet vocabulary as
+ * the dossier — System-blue header, mono caps labels, black-bar sections — but
+ * every row is single-line and the history block is a fixed three rows, so the
+ * card's height never grows with the episode (FR-201).
+ */
+.glance {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+/* --- header --- */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  background: var(--system-bg);
+  border-radius: var(--radius-md);
+  min-width: 0;
+}
+
+.portrait {
+  width: 48px;
+  height: 48px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--brand-deep);
+  object-fit: cover;
+}
+
+.headerMeta {
+  min-width: 0;
+}
+
+.name {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.handle,
+.classLine {
+  font-size: var(--text-2xs);
+  color: var(--system-fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dot {
+  opacity: 0.6;
+}
+
+/* --- vitals: HpSegments and RankSparkline carry the dossier module's styles --- */
+
+.vitals {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.hpValue {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- rank --- */
+
+.rankBlock {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+  min-width: 0;
+}
+
+.rankNumbers {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-3);
+}
+
+.rankLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.rankValue {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--label-rank);
+  font-variant-numeric: tabular-nums;
+}
+
+.unranked {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+}
+
+/* --- labelled blocks --- */
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.blockLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.empty {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- debuffs: two rows of chips, then a count --- */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  max-height: 3.4em;
+  overflow: hidden;
+}
+
+.chip,
+.chipMore {
+  font-size: var(--text-2xs);
+  line-height: 1.5;
+  border-radius: var(--radius-pill);
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+.chip {
+  color: var(--amber-fg);
+  background: var(--amber-bg);
+}
+
+.chipMore {
+  color: var(--text-3);
+  background: var(--panel-deep);
+  font-family: var(--font-mono);
+}
+
+/* --- ledger: one line per list --- */
+
+.ledger {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.ledgerRow {
+  display: grid;
+  grid-template-columns: minmax(0, 6.5em) minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: var(--border-hairline);
+  min-width: 0;
+}
+
+.ledgerRow:first-child {
+  border-top: var(--border-hairline);
+}
+
+.ledgerLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ledgerValue {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin: 0;
+  min-width: 0;
+  font-size: var(--text-xs);
+  /* One line, always: the full text lives in the record (spec, edge cases). */
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.count {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+  background: var(--panel-deep);
+  border-radius: var(--radius-sm);
+  padding: 0 6px;
+  min-width: 2.2em;
+  text-align: center;
+}
+
+.newest {
+  flex: 0 1 auto;
+  min-width: 0;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.newestEmpty {
+  flex: 0 1 auto;
+  min-width: 0;
+  color: var(--text-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.newestTime {
+  flex: none;
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- history: exactly three single-line rows --- */
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.historyRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--text-2);
+  line-height: 1.5;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.historyTime {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.historyText {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.historyPlaceholder {
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+}
+
+/* --- the card's one control (FR-203) --- */
+
+.openRecord {
+  margin-top: var(--space-1);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-pill);
+  background: var(--brand-2);
+  color: var(--brand-fg-2);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.openRecord:hover {
+  background: var(--brand);
+}
+
+.openRecord:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .openRecord {
+    transition: none;
+  }
+}

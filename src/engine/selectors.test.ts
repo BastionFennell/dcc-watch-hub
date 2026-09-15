@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   activeSponsor,
   crawlerDossier,
+  crawlerGlance,
   crawlerHistory,
   activeToast,
   elapsed,
@@ -489,5 +490,94 @@ describe('mapLabels', () => {
     ]);
     // An unlabeled reveal contributes nothing.
     expect(mapLabels(shared.events, 30)).toHaveLength(1);
+  });
+});
+
+describe('crawlerGlance', () => {
+  const glanceAt = (t: number, id = 'harry') => {
+    const dossier = crawlerDossier(reduceTo(episode, t), episode.events, t, id, party);
+    if (dossier === null) throw new Error(`no dossier for ${id} at ${t}`);
+    return crawlerGlance(dossier);
+  };
+
+  it('carries the header, vitals and rank straight from the dossier', () => {
+    const glance = glanceAt(200);
+    expect(glance).toMatchObject({
+      id: 'harry',
+      name: 'Harry',
+      handle: 'Harry',
+      player: 'Marcus',
+      portrait: '/img/crawlers/harry.svg',
+      class: 'Compensated Anarchist',
+      level: 2,
+      debuffs: [],
+    });
+    expect(glance.hp).toEqual({ current: 20, max: 22, filled: 10, pct: 91 });
+    expect(glance.rank.current).toBe(3550);
+    expect(glance.rank.best).toBe(3012);
+  });
+
+  it('reduces each list to a count and its newest entry', () => {
+    // Harry at 200: hotlist ['Crowbar'] (Door cleared at 165), inventory
+    // ['Torch'] (the crowbar traded at 150), one skill, one achievement.
+    expect(glanceAt(200).ledger).toEqual({
+      hotlist: { count: 1, newest: { text: 'Crowbar' } },
+      skills: { count: 1, newest: { text: 'Powerful Strike · Rank 1' } },
+      inventory: { count: 1, newest: { text: 'Torch' } },
+      achievements: { count: 1, newest: { text: 'Gate Crasher', t: 60 } },
+    });
+  });
+
+  it('follows a backward seek: the hotlist is the Door again at 110', () => {
+    expect(glanceAt(110).ledger.hotlist).toEqual({ count: 1, newest: { text: 'Door' } });
+    expect(glanceAt(110).ledger.inventory).toEqual({
+      count: 1,
+      newest: { text: 'Enchanted Crowbar' },
+    });
+  });
+
+  it('omits `newest` for a list nothing has landed in yet', () => {
+    const glance = glanceAt(20);
+    expect(glance.ledger.hotlist).toEqual({ count: 0 });
+    expect(glance.ledger.inventory).toEqual({ count: 0 });
+    expect(glance.ledger.achievements).toEqual({ count: 0 });
+    expect(glance.ledger.hotlist.newest).toBeUndefined();
+    // The sheet's initial skills are not events; they are there from t=0.
+    expect(glance.ledger.skills).toEqual({
+      count: 1,
+      newest: { text: 'Powerful Strike · Rank 1' },
+    });
+    expect(glance.recentHistory).toEqual([]);
+  });
+
+  it('suffixes a skill rank only when the entry carries one', () => {
+    expect(glanceAt(160, 'xo').ledger.skills).toEqual({
+      count: 1,
+      newest: { text: 'Understudy Strike · Rank 2' },
+    });
+    expect(glanceAt(100, 'xo').ledger.skills).toEqual({
+      count: 1,
+      newest: { text: 'Understudy Strike · Rank 1' },
+    });
+    expect(glanceAt(79, 'xo').ledger.skills).toEqual({ count: 0 });
+  });
+
+  it('keeps at most the three newest history moments, newest first', () => {
+    const history = glanceAt(200).recentHistory;
+    expect(history).toHaveLength(3);
+    expect(history.map((item) => item.t)).toEqual([200, 170, 165]);
+    expect(history[0].kind).toBe('rank');
+    // Harry's first moment is the loot at 30; before that there is nothing.
+    expect(glanceAt(40).recentHistory.map((item) => item.t)).toEqual([30]);
+  });
+
+  it('is unranked before the first rank event elapses', () => {
+    const glance = glanceAt(90);
+    expect(glance.rank).toEqual({ points: [], current: null, best: null });
+  });
+
+  it('reports debuffs as the dossier does', () => {
+    expect(glanceAt(135, 'psychic').debuffs).toEqual(['Poisoned']);
+    expect(glanceAt(145, 'psychic').debuffs).toEqual([]);
   });
 });

@@ -239,6 +239,23 @@ export const copy = {
 
   /** Party rank line in the feed header (FR-141). */
   partyRankLine: (rank: number) => `Party rank #${rank}`,
+
+  /* --- 003 crawler record --- */
+
+  /** The rail card (FR-200): a glance, not the whole sheet. */
+  glanceKicker: 'CRAWLER GLANCE',
+  openRecord: 'Open full record',
+  /** Ledger cells are plain values today; they stay in copy so the voice can change. */
+  ledgerCount: (n: number) => `${n}`,
+  ledgerNewest: (text: string) => text,
+  /** Stands in for a history row the crawler has not earned yet (research R4). */
+  historyPlaceholder: '—',
+
+  /** The full record dialog (FR-210). */
+  recordKicker: 'CRAWLER RECORD',
+  recordTitle: (name: string) => `${name} — full record`,
+  /** Debuff chips past the card's two-row cap. */
+  debuffsMore: (n: number) => `+${n}`,
 } as const;
 
 export type Copy = typeof copy;
