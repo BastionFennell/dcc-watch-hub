@@ -20,7 +20,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'csv-parse/sync';
 import type { Cell, EpisodeData, Hp, InitialState } from '../src/data/types';
-import { CHAPTER_KINDS } from '../src/data/types';
+import { CHAPTER_KINDS, GEAR_SLOTS } from '../src/data/types';
 import { normalizeEpisode, toNumber } from '../src/data/validate';
 
 /* ----------------------------------------------------------------- shapes */
@@ -85,6 +85,8 @@ const ACTOR_EVENT_TYPES = new Set([
   'skill',
   'class',
   'hotlist',
+  'equip',
+  'unequip',
 ]);
 
 /* -------------------------------------------------------------- timecodes */
@@ -327,6 +329,28 @@ export function rowToEvent(row: SheetRow, ctx: RowContext): RowResult {
         ...(rank === null ? {} : { rank }),
         ...(field3 === '' ? {} : { desc: field3 }),
       };
+      break;
+    }
+    case 'equip':
+    case 'unequip': {
+      if (!(GEAR_SLOTS as readonly string[]).includes(field1)) {
+        errors.push(
+          `${type} slot (field1) must be one of ${GEAR_SLOTS.join(', ')}, got ${JSON.stringify(field1)}`,
+        );
+        break;
+      }
+      if (type === 'equip') {
+        if (field2 === '') errors.push('empty required field: item (field2) on equip');
+        else event = { t, type, actor, slot: field1, item: field2 };
+        break;
+      }
+      if (field1 === 'accessory' && field2 === '') {
+        warnings.push('unequip of an accessory with no item (field2): the last one is removed');
+      }
+      event =
+        field2 === ''
+          ? { t, type, actor, slot: field1 }
+          : { t, type, actor, slot: field1, item: field2 };
       break;
     }
     case 'class': {

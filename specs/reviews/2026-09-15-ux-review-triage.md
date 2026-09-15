@@ -31,7 +31,7 @@ later feature · **Decline / context** = not adopted, with the reason · **Done*
 |---|---------|---------|-------|
 | 1.1 | Timeline markers unlabeled / no affordance | Partly wrong, partly Do now | Markers already have `title` tooltips, pointer cursor, scale-on-hover, focus rings (the review missed native tooltips). Adopt: a custom hover/focus tooltip (instant, works on touch), a compact color legend, and a distinct playhead marker separate from the fill. |
 | 1.2 | One-time coach mark | Milestone (low) | Allowed (viewer preference), diegetic copy possible; low priority. |
-| 1.3 | Segmented red→green HP reads as damaged at full health | Author decision | The strip deliberately mirrors the official sheet's 10 %…100 % HP boxes. Alternative: single threshold color. Recommend keeping sheet fidelity and adding an "HP" label; author to confirm. |
+| 1.3 | Segmented red→green HP reads as damaged at full health | Decided (author): keep sheet fidelity, add label | The strip mirrors the official sheet's 10 %…100 % HP boxes. Author confirmed 2026-09-15: keep it, add an "HP" label beside the strip (glance, record, dossier). |
 | 1.4 | Rank values unlabeled; party rank meaningless | Do now (individual rank only) | Add a "RANK" label and a ↑/↓ delta since the previous rank event. Party rank removed entirely (author). |
 | 1.5 | "System feed" pill looks interactive | Decline | It is inside the brand link to the archive, so it is interactive. Minor restyle possible later. |
 | 1.6 | Feed items click-to-seek, show timestamps | Do now | Cheap; every item carries `t`. |

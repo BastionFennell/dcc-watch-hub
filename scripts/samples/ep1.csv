@@ -14,6 +14,8 @@ timecode,type,actor,field1,field2,field3
 1:22,skill,harry,Powerful Strike,1,Learned on a doorframe.
 1:26,class,harry,Compensated Anarchist,,
 1:38,hotlist,harry,The Hoarder,,
+1:44,equip,harry,hands,Enchanted Crowbar,
+1:52,equip,harry,accessory,Lucky Rabbit Foot,
 1:16,sponsor,,This doorway brought to you by Grull Industries. We make the hole.,20,
 84,system_message,,Attention crawlers. Quadrant C is now an active hunting ground. Enjoy.,,
 1:32,chapter,,The Bronze Box Run,loot,
@@ -27,6 +29,8 @@ timecode,type,actor,field1,field2,field3
 2:43,level_up,xo,2,,
 2:52,map_reveal,,"5,4;5,5;6,5",The Rot Market,
 3:00,inventory,harry,Torch,Enchanted Crowbar,
+3:02,unequip,harry,hands,Enchanted Crowbar,
+3:04,equip,harry,hands,Torch,
 3:10,rank,xo,crawler,4188,
 3:14,skill,xo,Signal Discipline,2,Held the flare. Held the line.
 3:24,class,xo,Quartermaster,,

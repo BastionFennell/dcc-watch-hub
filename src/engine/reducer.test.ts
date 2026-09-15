@@ -311,3 +311,117 @@ describe('applyEvent — v2 event types', () => {
     });
   });
 });
+
+/* --------------------------------------- 003 revision 2: equip and unequip */
+
+describe('applyEvent — gear (R2-FR-220)', () => {
+  const gearOf = (state: ReturnType<typeof init>, id: string) => findCrawler(state, id)?.gear;
+
+  const equip = (slot: string, item: string, actor = 'harry', t = 1): AnyEvent =>
+    ({ t, type: 'equip', actor, slot, item }) as AnyEvent;
+  const unequip = (slot: string, item?: string, actor = 'harry', t = 2): AnyEvent =>
+    ({ t, type: 'unequip', actor, slot, ...(item === undefined ? {} : { item }) }) as AnyEvent;
+
+  it('seeds gear from the crawler sheet and leaves the rest empty', () => {
+    expect(gearOf(init(), 'harry')).toEqual({
+      head: null,
+      torso: null,
+      arms: null,
+      hands: 'Enchanted Crowbar',
+      legs: null,
+      feet: null,
+      accessories: [],
+    });
+    // A crawler with no `gear` field still gets every slot, never undefined.
+    expect(gearOf(init(), 'xo')).toEqual({
+      head: null,
+      torso: null,
+      arms: null,
+      hands: null,
+      legs: null,
+      feet: null,
+      accessories: [],
+    });
+  });
+
+  it('equip fills a slot and replaces whatever was worn there', () => {
+    const after = applyEvent(applyEvent(init(), equip('torso', 'Patched Jacket')), equip('torso', 'Plate'));
+    expect(gearOf(after, 'harry')?.torso).toBe('Plate');
+    expect(gearOf(after, 'harry')?.hands).toBe('Enchanted Crowbar');
+  });
+
+  it('unequip clears a slot and is a no-op on an empty one', () => {
+    const cleared = applyEvent(init(), unequip('hands'));
+    expect(gearOf(cleared, 'harry')?.hands).toBeNull();
+    const again = applyEvent(cleared, unequip('hands'));
+    expect(gearOf(again, 'harry')?.hands).toBeNull();
+  });
+
+  it('accessory equips append, dedupe by name, and cap at ten', () => {
+    let state = init();
+    for (let i = 1; i <= 12; i += 1) {
+      state = applyEvent(state, equip('accessory', `Charm ${i}`));
+    }
+    state = applyEvent(state, equip('accessory', 'Charm 1'));
+    const accessories = gearOf(state, 'harry')?.accessories ?? [];
+    expect(accessories).toHaveLength(10);
+    expect(accessories[0]).toBe('Charm 1');
+    expect(accessories[9]).toBe('Charm 10');
+    expect(accessories).not.toContain('Charm 11');
+  });
+
+  it('accessory unequip removes by name, or the last one with no name', () => {
+    let state = init();
+    state = applyEvent(state, equip('accessory', 'Lucky Rabbit Foot'));
+    state = applyEvent(state, equip('accessory', 'Cracked Locket'));
+    state = applyEvent(state, equip('accessory', 'Signal Ring'));
+
+    const byName = applyEvent(state, unequip('accessory', 'Cracked Locket'));
+    expect(gearOf(byName, 'harry')?.accessories).toEqual(['Lucky Rabbit Foot', 'Signal Ring']);
+
+    const last = applyEvent(state, unequip('accessory'));
+    expect(gearOf(last, 'harry')?.accessories).toEqual(['Lucky Rabbit Foot', 'Cracked Locket']);
+
+    // A name nobody is wearing changes nothing.
+    expect(gearOf(applyEvent(state, unequip('accessory', 'Nothing')), 'harry')?.accessories).toEqual(
+      ['Lucky Rabbit Foot', 'Cracked Locket', 'Signal Ring'],
+    );
+    // Neither does clearing an empty accessory list.
+    expect(gearOf(applyEvent(init(), unequip('accessory')), 'harry')?.accessories).toEqual([]);
+  });
+
+  it('ignores gear events for an unknown actor', () => {
+    const before = init();
+    expect(applyEvent(before, equip('torso', 'Jacket', 'ghost'))).toBe(before);
+    expect(applyEvent(before, unequip('hands', undefined, 'ghost'))).toBe(before);
+  });
+
+  it('replays the fixture’s gear purely in both directions', () => {
+    // Harry: crowbar from the sheet, jacket at 152, charm at 153, crowbar off
+    // at 168, torch on at 169.
+    expect(gearOf(reduceTo(episode, 151), 'harry')).toMatchObject({
+      hands: 'Enchanted Crowbar',
+      torso: null,
+      accessories: [],
+    });
+    expect(gearOf(reduceTo(episode, 152), 'harry')?.torso).toBe('Patched Jacket');
+    expect(gearOf(reduceTo(episode, 153), 'harry')?.accessories).toEqual(['Lucky Rabbit Foot']);
+    expect(gearOf(reduceTo(episode, 168), 'harry')?.hands).toBeNull();
+    expect(gearOf(reduceTo(episode, 200), 'harry')).toEqual({
+      head: null,
+      torso: 'Patched Jacket',
+      arms: null,
+      hands: 'Torch',
+      legs: null,
+      feet: null,
+      accessories: ['Lucky Rabbit Foot'],
+    });
+    // Backward seek recomputes: nothing from after the playhead survives.
+    expect(gearOf(reduceTo(episode, 100), 'harry')).toEqual(gearOf(init(), 'harry'));
+  });
+
+  it('demoted gear events (unknown slot) leave state untouched', () => {
+    const broken = withEvents([{ t: 5, type: 'equip', actor: 'harry', slot: 'cape', item: 'Cloak' }]);
+    expect(reduceTo(broken, 10).party).toEqual(fromInitialState(broken.initialState).party);
+  });
+});

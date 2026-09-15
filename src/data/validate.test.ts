@@ -340,10 +340,10 @@ describe('normalizeCrawler — gear and art (R2-FR-220/224)', () => {
 
   it('drops malformed gear and art with a warning, never throwing', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const badSlot = normalizeCrawler({ ...base, gear: { torso: 42 } } as never);
+    const badSlot = normalizeCrawler({ ...base, gear: { torso: { name: 'Jacket' } } } as never);
     const badList = normalizeCrawler({ ...base, gear: { accessories: 'Ring' } } as never);
     const notAnObject = normalizeCrawler({ ...base, gear: 'a jacket' } as never);
-    const badArt = normalizeCrawler({ ...base, art: 7 } as never);
+    const badArt = normalizeCrawler({ ...base, art: ['/img/a.svg'] } as never);
     const emptyArt = normalizeCrawler({ ...base, art: '' });
     expect(badSlot.gear).toBeUndefined();
     expect(badList.gear).toBeUndefined();

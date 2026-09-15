@@ -14,4 +14,5 @@ timecode,type,actor,field1,field2,field3
 01:30:00,note,,A stray line from the edit bay. Nobody was watching this far in.,,
 3:30,rank,,party,61,
 3:50,inventory,xo,Signal Flare,,
+3:54,unequip,harry,accessory,,
 3:58,note,,Recap ends. Vitals logged. Sponsors paid.,,

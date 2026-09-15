@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  GEAR_SLOT_ORDER,
   activeSponsor,
   crawlerDossier,
   crawlerGlance,
   crawlerHistory,
+  hotbarSlots,
   activeToast,
   elapsed,
   feedItems,
@@ -584,5 +586,147 @@ describe('crawlerGlance', () => {
   it('reports debuffs as the dossier does', () => {
     expect(glanceAt(135, 'psychic').debuffs).toEqual(['Poisoned']);
     expect(glanceAt(145, 'psychic').debuffs).toEqual([]);
+  });
+});
+
+/* ------------------------------------------------------- 003 revision 2 */
+
+describe('feed items for the gear event types', () => {
+  it('labels and narrates equip and unequip', () => {
+    const items = feedItems(episode.events, 170, 8, party);
+    const equip = items.find((item) => item.kind === 'equip' && item.t === 152);
+    expect(equip?.label).toBe(copy.labels.equip);
+    expect(equip?.text).toBe(
+      copy.feedText.equip('Harry', copy.gearSlotLabels.torso, 'Patched Jacket'),
+    );
+    expect(equip?.actorName).toBe('Harry');
+
+    const unequip = items.find((item) => item.kind === 'unequip');
+    expect(unequip?.label).toBe(copy.labels.unequip);
+    expect(unequip?.text).toBe(copy.feedText.unequip('Harry', copy.gearSlotLabels.hands));
+  });
+
+  it('names the item on an accessory unequip', () => {
+    const custom = withEvents([
+      {
+        t: 10,
+        type: 'unequip',
+        actor: 'harry',
+        slot: 'accessory',
+        item: 'Lucky Rabbit Foot',
+      },
+    ]);
+    expect(feedItems(custom.events, 10, 8, party)[0].text).toBe(
+      copy.feedText.unequip('Harry', copy.gearSlotLabels.accessory, 'Lucky Rabbit Foot'),
+    );
+  });
+});
+
+describe('crawlerDossier — gear and art', () => {
+  const dossierAt = (t: number, id = 'harry') =>
+    crawlerDossier(reduceTo(episode, t), episode.events, t, id, party);
+
+  it('carries the worn gear as of the playhead', () => {
+    expect(dossierAt(151)?.gear).toMatchObject({ hands: 'Enchanted Crowbar', torso: null });
+    expect(dossierAt(200)?.gear).toEqual({
+      head: null,
+      torso: 'Patched Jacket',
+      arms: null,
+      hands: 'Torch',
+      legs: null,
+      feet: null,
+      accessories: ['Lucky Rabbit Foot'],
+    });
+  });
+
+  it('carries `art` only for the crawlers that have it', () => {
+    expect(dossierAt(200)?.art).toBe('/img/crawlers/harry-art.svg');
+    expect(dossierAt(200, 'actress')?.art).toBe('/img/crawlers/actress-art.svg');
+    expect(dossierAt(200, 'xo')?.art).toBeUndefined();
+    expect(dossierAt(200, 'xo')).not.toHaveProperty('art');
+  });
+});
+
+describe('GEAR_SLOT_ORDER', () => {
+  it('is the sheet order, accessories last', () => {
+    expect([...GEAR_SLOT_ORDER]).toEqual([
+      'head',
+      'torso',
+      'arms',
+      'hands',
+      'legs',
+      'feet',
+      'accessory',
+    ]);
+  });
+});
+
+describe('hotbarSlots', () => {
+  it('pads an empty hotlist to ten empty slots', () => {
+    expect(hotbarSlots([])).toEqual({ slots: Array(10).fill(null), overflow: 0 });
+  });
+
+  it('fills slots in order and leaves the rest dim', () => {
+    const { slots, overflow } = hotbarSlots(['The Hoarder', 'The Doorway']);
+    expect(slots.slice(0, 2)).toEqual(['The Hoarder', 'The Doorway']);
+    expect(slots.slice(2).every((slot) => slot === null)).toBe(true);
+    expect(slots).toHaveLength(10);
+    expect(overflow).toBe(0);
+  });
+
+  it('counts everything past the tenth slot', () => {
+    const many = Array.from({ length: 13 }, (_, i) => `Mark ${i + 1}`);
+    const { slots, overflow } = hotbarSlots(many);
+    expect(slots).toEqual(many.slice(0, 10));
+    expect(overflow).toBe(3);
+  });
+
+  it('honours a custom slot count', () => {
+    expect(hotbarSlots(['a', 'b', 'c'], 2)).toEqual({ slots: ['a', 'b'], overflow: 1 });
+  });
+
+  it('reads the fixture: Harry overflows the bar at 210', () => {
+    const at200 = reduceTo(episode, 200).party.find((crawler) => crawler.id === 'harry');
+    expect(hotbarSlots(at200?.hotlist ?? [])).toMatchObject({ overflow: 0 });
+    const at210 = reduceTo(episode, 210).party.find((crawler) => crawler.id === 'harry');
+    expect(at210?.hotlist).toHaveLength(11);
+    expect(hotbarSlots(at210?.hotlist ?? []).overflow).toBe(1);
+  });
+});
+
+describe('crawlerGlance — equipped and latest achievement', () => {
+  const glanceAt = (t: number, id = 'harry') => {
+    const dossier = crawlerDossier(reduceTo(episode, t), episode.events, t, id, party);
+    if (dossier === null) throw new Error(`no dossier for ${id} at ${t}`);
+    return crawlerGlance(dossier);
+  };
+
+  it('lists worn gear in sheet order with accessories expanded', () => {
+    expect(glanceAt(200).equipped).toEqual([
+      { slot: 'torso', item: 'Patched Jacket' },
+      { slot: 'hands', item: 'Torch' },
+      { slot: 'accessory', item: 'Lucky Rabbit Foot' },
+    ]);
+  });
+
+  it('follows the playhead, forwards and back', () => {
+    expect(glanceAt(20).equipped).toEqual([{ slot: 'hands', item: 'Enchanted Crowbar' }]);
+    expect(glanceAt(168).equipped).toEqual([
+      { slot: 'torso', item: 'Patched Jacket' },
+      { slot: 'accessory', item: 'Lucky Rabbit Foot' },
+    ]);
+    // A crawler who never equips anything shows nothing at all.
+    expect(glanceAt(200, 'xo').equipped).toEqual([]);
+  });
+
+  it('carries the newest achievement with its time, and none before the first', () => {
+    expect(glanceAt(200).latestAchievement).toEqual({
+      title: 'Gate Crasher',
+      desc: 'Ten mobs, one door.',
+      t: 60,
+    });
+    expect(glanceAt(59).latestAchievement).toBeUndefined();
+    expect(glanceAt(59)).not.toHaveProperty('latestAchievement');
+    expect(glanceAt(62, 'stuntman').latestAchievement?.title).toBe('Stunt Double');
   });
 });

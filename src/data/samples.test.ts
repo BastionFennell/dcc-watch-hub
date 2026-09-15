@@ -13,8 +13,8 @@ import { orderedEpisodeIds } from './show';
 
 const root = resolve(__dirname, '../..');
 const contracts = resolve(root, 'specs/001-watch-hub-v1/contracts');
-// v2 extends the episode contract (skill/class/hotlist events, optional sheet fields).
-const episodeSchemaPath = resolve(root, 'specs/002-watch-hub-v2/contracts/episode.schema.json');
+// 003 revision 2 extends the v2 episode contract (equip/unequip events, crawler gear and art).
+const episodeSchemaPath = resolve(root, 'specs/003-crawler-record/contracts/episode.schema.json');
 const dataDir = resolve(root, 'public/data');
 
 function readJson(path: string): unknown {
