@@ -89,28 +89,28 @@ Everyone appends to `src/copy.ts` only at the end of the file. Nobody in wave 2 
 
 ## Phase 3: User Story 1 — Crawler dossier (Priority: P1) 🎯
 
-- [ ] T113 [P] [US1] `src/hooks/usePanel.ts` per `contracts/panels.md` (state, open/toggle/close,
+- [X] T113 [P] [US1] `src/hooks/usePanel.ts` per `contracts/panels.md` (state, open/toggle/close,
   Escape with menu-first rule, focus return, `body.panel-open` at ≤ 900 px via `matchMedia`, reset
   on episode id) + `src/hooks/usePanel.test.tsx` (renderHook; jsdom `matchMedia` stub).
-- [ ] T114 [P] [US1] `src/components/RailPanel/RailPanel.tsx` + `.module.css`: region with kicker,
+- [X] T114 [P] [US1] `src/components/RailPanel/RailPanel.tsx` + `.module.css`: region with kicker,
   title, close button (`IconClose` added to `src/components/icons.tsx`), scrollable body; desktop
   `max-height: calc(100vh - var(--header-h) - 2 * var(--space-6))`; ≤ 900 px fixed overlay
   (`z-index: var(--panel-z)`, canvas background, safe-area padding); 150 ms fade honoring reduced motion.
-- [ ] T115 [P] [US1] `src/components/CrawlerDossier/HpSegments.tsx` (ten cells, filled count from
+- [X] T115 [P] [US1] `src/components/CrawlerDossier/HpSegments.tsx` (ten cells, filled count from
   `hpSegments`, colors `--hp-seg-N`, `role="img"` aria-label "HP 12 of 22") and
   `src/components/CrawlerDossier/CrawlerDossier.module.css` (sheet styling: black section bars with
   mono caps, two-column header, definition rows, lists; System blue header band).
-- [ ] T116 [US1] `src/components/CrawlerDossier/CrawlerDossier.tsx`: props `{ dossier: Dossier; meta: EpisodeMeta }`;
+- [X] T116 [US1] `src/components/CrawlerDossier/CrawlerDossier.tsx`: props `{ dossier: Dossier; meta: EpisodeMeta }`;
   sections in FR-110 order with empty states from copy; achievements show `formatTime(t)`; history
   reuses `FeedItemView`. (Sparkline slot rendered by T120.)
-- [ ] T117 [US1] `src/components/PartyRail/CrawlerFrame.tsx` + `PartyRail.module.css`: the frame becomes
+- [X] T117 [US1] `src/components/PartyRail/CrawlerFrame.tsx` + `PartyRail.module.css`: the frame becomes
   a `<button>` trigger per `contracts/panels.md` (keep `data-testid="crawler-frame"`, `data-crawler`,
   `data-danger`, `data-levelup` on the button); props gain `expanded: boolean`, `onActivate(el)`;
   hover/focus ring, `cursor: pointer`. `PartyRail` passes `activeId` and `onActivate`.
-- [ ] T118 [US1] `src/pages/EpisodePage.tsx` + `.module.css`: use `usePanel`; right rail renders
+- [X] T118 [US1] `src/pages/EpisodePage.tsx` + `.module.css`: use `usePanel`; right rail renders
   `EventFeed` when `none`, else `RailPanel` wrapping `CrawlerDossier` (map body comes in T125 — leave a
   clear `case 'map'` slot rendering `null` for now); wire `PartyRail` trigger; reset panel on episode change.
-- [ ] T119 [US1] Extend `src/pages/EpisodePage.test.tsx`: click Harry → dossier region with his name,
+- [X] T119 [US1] Extend `src/pages/EpisodePage.test.tsx`: click Harry → dossier region with his name,
   class "Compensated Anarchist" at 200, hotlist "Crowbar" at 200 and "Door" at 110, skills for X.O.
   upsert (rank 2 at 160, rank 1 at 100), inventory at t vs after a backward seek (crowbar gone before
   its loot time), achievements list; Escape closes and focus returns to the frame; clicking X.O.
@@ -119,13 +119,14 @@ Everyone appends to `src/copy.ts` only at the end of the file. Nobody in wave 2 
 
 ## Phase 4: User Story 4 — Rank sparklines (Priority: P4)
 
-- [ ] T120 [P] [US4] `src/components/CrawlerDossier/RankSparkline.tsx` + css per research R4; props
+- [X] T120 [P] [US4] `src/components/CrawlerDossier/RankSparkline.tsx` + css per research R4; props
   `{ series: RankSeries }`; renders nothing with zero points; `role="img"` + `aria-label` from
   `copy.sparklineSummary`; current/best numbers beside it. Mount it in `CrawlerDossier` vitals.
-- [ ] T121 [US4] `src/components/EventFeed/EventFeed.tsx`: new prop `partyRank: number | null`
+- [X] T121 [US4] `src/components/EventFeed/EventFeed.tsx`: new prop `partyRank: number | null`
   renders `copy.partyRankLine(rank)` under the header when non-null; page passes
   `rankSeries(events, t, 'party').current`. Tests: sparkline points/summary for Harry at 200 and
-  at 120; party rank line appears at 125, absent at 120 (in `EpisodePage.test.tsx`).
+  at 120; party rank line appears at 80, absent at 79 (in `EpisodePage.test.tsx`).
+  (Corrected during implementation: the fixture's party `rank` event is at t=80 → #61, not 125.)
 
 **Checkpoint**: dossier + sparklines demonstrable via `?fake=1&t=200`.
 
@@ -133,14 +134,14 @@ Everyone appends to `src/copy.ts` only at the end of the file. Nobody in wave 2 
 
 ## Phase 5: User Story 2 — Expanded floor map (Priority: P2)
 
-- [ ] T122 [P] [US2] `src/components/FloorMap/FloorMap.tsx` + `.module.css` per research R5: props
+- [X] T122 [P] [US2] `src/components/FloorMap/FloorMap.tsx` + `.module.css` per research R5: props
   `{ cells: MapCellsView; recent: Set<string>; labels: MapLabel[]; floor: number }`; SVG grid, labels
   at centroids, zoom steps, pan with pointer capture and clamping, keyboard `+ - 0`, buttons Zoom
   in / Zoom out / Fit (disabled at limits), `role="img"` summary, sr-only label list.
-- [ ] T123 [P] [US2] `src/components/FloorMap/FloorMap.test.tsx` (jsdom): renders cols×rows rects;
+- [X] T123 [P] [US2] `src/components/FloorMap/FloorMap.test.tsx` (jsdom): renders cols×rows rects;
   revealed/recent states; labels text and count; zoom buttons change the transform and disable at
   limits; Fit resets; keyboard `+`/`0`.
-- [ ] T124 [P] [US2] `src/components/MiniMapBadge/MiniMapBadge.tsx` + css: becomes a `<button>` trigger
+- [X] T124 [P] [US2] `src/components/MiniMapBadge/MiniMapBadge.tsx` + css: becomes a `<button>` trigger
   per `contracts/panels.md` (`aria-label` from copy, `aria-expanded`, pointer events on, hover/focus
   ring); decorative grid stays `aria-hidden`; props gain `expanded`, `onActivate(el)`.
 - [ ] T125 [US2] (wave 3) Wire the map into `EpisodePage.tsx`: badge trigger → `toggle({ kind: 'map' })`;
@@ -153,14 +154,14 @@ Everyone appends to `src/copy.ts` only at the end of the file. Nobody in wave 2 
 
 ## Phase 6: User Story 3 — Resume (Priority: P3)
 
-- [ ] T126 [P] [US3] `src/playback/useResume.ts` per `contracts/resume-storage.md` (throttle via
+- [X] T126 [P] [US3] `src/playback/useResume.ts` per `contracts/resume-storage.md` (throttle via
   `Date.now()` ref, `pagehide`/`visibilitychange` listeners, unmount save, clear rules, `pending`,
   `rejoin` retries when the source arrives, `startOver`). Injectable store for tests.
-- [ ] T127 [P] [US3] `src/playback/useResume.test.tsx` (renderHook + `FakeTimeSource` + in-memory store,
+- [X] T127 [P] [US3] `src/playback/useResume.test.tsx` (renderHook + `FakeTimeSource` + in-memory store,
   fake timers): pending thresholds (29 → null, 30 → offer, duration−29 → null), save cadence
   (two ticks within 5 s → one write), pause writes, `pagehide` writes, ended clears, `t ≥ duration−30`
   clears, rejoin seeks and resolves, startOver clears, throwing store never throws.
-- [ ] T128 [P] [US3] `src/components/ResumeCard/ResumeCard.tsx` + css: System-styled card centered over
+- [X] T128 [P] [US3] `src/components/ResumeCard/ResumeCard.tsx` + css: System-styled card centered over
   the stage (`z-index: 3`, above toast/badge, below nothing else), kicker/title/body from copy, two
   buttons (Rejoin primary in `--brand-2`, Start over secondary), `role="dialog"` `aria-labelledby`,
   initial focus on Rejoin, Escape = start over.

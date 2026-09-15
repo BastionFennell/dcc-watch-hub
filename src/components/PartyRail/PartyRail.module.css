@@ -1,6 +1,8 @@
 /*
  * Wireframe: five panel boxes, hairline-2 border, radius 6, name 11–12px
- * semibold, "Lv N" muted, 4px HP bar. Nothing here is interactive (FR-012).
+ * semibold, "Lv N" muted, 4px HP bar. In v2 each box is the `<button>` that
+ * opens that crawler's dossier, so it carries a pointer cursor, a hover border
+ * and a focus ring (FR-104, research R9) — otherwise it looks identical (SC-106).
  */
 .rail {
   display: grid;
@@ -12,14 +14,35 @@
   min-width: 0;
 }
 
-.frame {
+.frameItem {
   min-width: 0;
+  display: block;
+}
+
+/* Resets the UA button defaults the frame must not inherit. */
+.frame {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
   background: var(--panel);
   border: var(--border-hairline-2);
   border-radius: var(--radius-md);
   padding: var(--space-3);
-  cursor: default;
+  cursor: pointer;
   transition: border-color 200ms ease;
+}
+
+.frame:hover {
+  border-color: var(--brand-2);
+}
+
+.frame:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-color: var(--brand-2);
 }
 
 .frame[data-danger] {
@@ -48,10 +71,12 @@
 }
 
 .frameMeta {
+  display: block;
   min-width: 0;
 }
 
 .name {
+  display: block;
   color: var(--text);
   font-size: var(--text-xs);
   font-weight: 600;
@@ -75,6 +100,7 @@
 }
 
 .hpTrack {
+  display: block;
   height: var(--hp-bar);
   margin-top: var(--space-2);
   background: var(--hairline);

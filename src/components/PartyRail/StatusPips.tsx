@@ -4,17 +4,20 @@ export interface StatusPipsProps {
   statuses: string[];
 }
 
-/** Small rounded chips under the HP bar. Purely informational — never clickable. */
+/**
+ * Small rounded chips under the HP bar. Purely informational — never clickable,
+ * and spans only, because the v2 frame around them is a `<button>`.
+ */
 export function StatusPips({ statuses }: StatusPipsProps) {
   if (statuses.length === 0) return null;
   return (
-    <div className={styles.pips}>
+    <span className={styles.pips}>
       {statuses.map((status) => (
         <span key={status} className={styles.pip}>
           {status}
         </span>
       ))}
-    </div>
+    </span>
   );
 }
 

@@ -110,3 +110,13 @@
 .text {
   min-width: 0;
 }
+
+/* The party's standing, under the feed header (FR-141). Absent until a party rank elapses. */
+.partyRank {
+  color: var(--label-rank);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  margin-top: calc(-1 * var(--space-2));
+}

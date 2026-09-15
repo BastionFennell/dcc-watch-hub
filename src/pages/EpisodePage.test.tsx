@@ -11,6 +11,7 @@ import { MemoryRouter } from 'react-router';
 import { App } from '../App';
 import { copy } from '../copy';
 import { feedItems } from '../engine/selectors';
+import { formatTime } from '../engine/time';
 import { isKnownEvent } from '../data/types';
 import { __fakeSources } from '../components/VideoStage/FakeStage';
 import { makeEpisode, makeEpisodeRaw, makeShow } from '../test/fixtures';
@@ -69,6 +70,20 @@ function frame(crawlerId: string): HTMLElement {
 
 function feedCount(): number {
   return screen.queryAllByTestId('feed-item').length;
+}
+
+/** Clicks a crawler frame — the dossier trigger (contracts/panels.md). */
+function clickFrame(crawlerId: string): void {
+  fireEvent.click(frame(crawlerId));
+}
+
+/** One section of the open dossier, so "Door" in HISTORY never fools HOTLIST. */
+function section(name: string): HTMLElement {
+  return screen.getByTestId(`dossier-${name}`);
+}
+
+function pressEscape(): void {
+  fireEvent.keyDown(document, { key: 'Escape' });
 }
 
 /** The feed sentence a given event produces, used for the never-early sweep. */
@@ -385,5 +400,225 @@ describe('EpisodePage', () => {
     await waitFor(() => expect(screen.getAllByTestId('crawler-frame')).toHaveLength(5));
     expect(feedCount()).toBe(0);
     expect(document.title).toBe(copy.pageTitle(makeShow().episodes[1].title));
+  });
+
+  /* ------------------------------------------ v2 US1: the crawler dossier (T119) */
+
+  it('opens a crawler dossier in the rail and hides the feed', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+
+    clickFrame('harry');
+
+    const panel = screen.getByRole('region', { name: copy.dossierTitle('Harry') });
+    expect(panel).toHaveAttribute('id', 'rail-panel');
+    expect(within(panel).getByTestId('dossier-name')).toHaveTextContent('Harry');
+    expect(within(panel).getByText(copy.dossierKicker)).toBeInTheDocument();
+    // The rail hosts exactly one thing: the feed is gone while a panel is open (FR-100).
+    expect(screen.queryByTestId('feed-items')).not.toBeInTheDocument();
+    expect(screen.getAllByTestId('rail-panel')).toHaveLength(1);
+
+    // Sheet identity, straight from the episode's initial state (FR-113).
+    const identity = within(section('identity'));
+    expect(identity.getByText('Human')).toBeInTheDocument();
+    expect(identity.getByText('he/him')).toBeInTheDocument();
+    expect(identity.getByText('10,491,201')).toBeInTheDocument();
+    expect(identity.getByText('Compensated Anarchist')).toBeInTheDocument(); // class at 95
+
+    // Vitals: the ten-segment strip and the HP readout.
+    expect(within(section('vitals')).getAllByTestId('hp-segment')).toHaveLength(10);
+    expect(screen.getByTestId('dossier-hp')).toHaveTextContent(copy.hpValue(20, 22));
+
+    // Stats only exist because this fixture crawler carries them.
+    expect(within(section('stats')).getByText(copy.statLabels.dex)).toBeInTheDocument();
+    expect(within(section('stats')).getByText('7')).toBeInTheDocument();
+  });
+
+  it('shows the hotlist as of the playhead, not as of the newest event', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+    clickFrame('harry');
+
+    // 105 adds Door, 165 swaps it for Crowbar.
+    expect(within(section('hotlist')).getByText('Crowbar')).toBeInTheDocument();
+    expect(within(section('hotlist')).queryByText('Door')).not.toBeInTheDocument();
+
+    seek(110);
+    expect(within(section('hotlist')).getByText('Door')).toBeInTheDocument();
+    expect(within(section('hotlist')).queryByText('Crowbar')).not.toBeInTheDocument();
+
+    seek(20);
+    expect(within(section('hotlist')).getByText(copy.dossierEmpty.hotlist)).toBeInTheDocument();
+  });
+
+  it('upserts a skill rank while the dossier stays open', async () => {
+    const { seek } = await mountEpisode();
+    seek(160);
+    clickFrame('xo');
+
+    const skills = () => within(section('skills'));
+    expect(skills().getByText('Understudy Strike')).toBeInTheDocument();
+    expect(skills().getByText(copy.skillRank(2))).toBeInTheDocument();
+
+    seek(100);
+    expect(skills().getByText(copy.skillRank(1))).toBeInTheDocument();
+    expect(skills().queryByText(copy.skillRank(2))).not.toBeInTheDocument();
+
+    seek(20);
+    expect(skills().getByText(copy.dossierEmpty.skills)).toBeInTheDocument();
+  });
+
+  it('drops inventory the crawler has not looted yet on a backward seek', async () => {
+    const { seek } = await mountEpisode();
+    seek(110);
+    clickFrame('harry');
+
+    // Looted at 30 …
+    expect(within(section('inventory')).getByText('Enchanted Crowbar')).toBeInTheDocument();
+
+    seek(20);
+    expect(within(section('inventory')).queryByText('Enchanted Crowbar')).not.toBeInTheDocument();
+    expect(within(section('inventory')).getByText(copy.dossierEmpty.inventory)).toBeInTheDocument();
+
+    // … and traded for a Torch at 150.
+    seek(200);
+    expect(within(section('inventory')).getByText('Torch')).toBeInTheDocument();
+    expect(within(section('inventory')).queryByText('Enchanted Crowbar')).not.toBeInTheDocument();
+  });
+
+  it('lists the achievements the crawler has earned, with their times', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+    clickFrame('harry');
+
+    const achievements = within(section('achievements'));
+    expect(achievements.getByText('Gate Crasher')).toBeInTheDocument();
+    expect(achievements.getByText(formatTime(60))).toBeInTheDocument();
+    // X.O.'s achievement at 61 belongs to X.O., not to Harry.
+    expect(achievements.queryByText('Understudy')).not.toBeInTheDocument();
+
+    seek(59);
+    expect(
+      within(section('achievements')).getByText(copy.dossierEmpty.achievements),
+    ).toBeInTheDocument();
+  });
+
+  it('shows only that crawler in the history, newest first', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+    clickFrame('harry');
+
+    const rows = within(section('history')).getAllByTestId('dossier-history-item');
+    expect(rows.length).toBeGreaterThan(0);
+    // Newest first: Harry's rank at 200.
+    expect(within(rows[0]).getByText(copy.feedText.rankCrawler('Harry', 3550))).toBeInTheDocument();
+    // The party rank at 80 belongs to nobody's dossier.
+    expect(
+      within(section('history')).queryByText(copy.feedText.rankParty(61)),
+    ).not.toBeInTheDocument();
+  });
+
+  it('switches dossiers, toggles closed, and tracks aria-expanded', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+
+    clickFrame('harry');
+    expect(frame('harry')).toHaveAttribute('aria-expanded', 'true');
+    expect(frame('xo')).toHaveAttribute('aria-expanded', 'false');
+
+    // A different frame switches without closing (US1 scenario 4).
+    clickFrame('xo');
+    expect(screen.getAllByTestId('rail-panel')).toHaveLength(1);
+    expect(screen.getByTestId('dossier-name')).toHaveTextContent('X.O.');
+    expect(frame('harry')).toHaveAttribute('aria-expanded', 'false');
+    expect(frame('xo')).toHaveAttribute('aria-expanded', 'true');
+
+    // The same frame again closes it.
+    clickFrame('xo');
+    expect(screen.queryByTestId('rail-panel')).not.toBeInTheDocument();
+    expect(screen.getByTestId('feed-items')).toBeInTheDocument();
+    expect(frame('xo')).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('closes on the panel close control and on Escape, returning focus to the frame', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+
+    clickFrame('harry');
+    fireEvent.click(screen.getByRole('button', { name: copy.panelClose }));
+    expect(screen.queryByTestId('rail-panel')).not.toBeInTheDocument();
+    expect(document.activeElement).toBe(frame('harry'));
+
+    clickFrame('harry');
+    expect(screen.getByTestId('rail-panel')).toBeInTheDocument();
+    pressEscape();
+    expect(screen.queryByTestId('rail-panel')).not.toBeInTheDocument();
+    expect(screen.getByTestId('feed-items')).toBeInTheDocument();
+    expect(document.activeElement).toBe(frame('harry'));
+  });
+
+  it('lets the Episodes menu win the first Escape (spec edge case)', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+    clickFrame('harry');
+
+    const menu = document.querySelector('header details') as HTMLDetailsElement;
+    act(() => {
+      menu.open = true;
+    });
+
+    pressEscape();
+    expect(menu.open).toBe(false);
+    expect(screen.getByTestId('rail-panel')).toBeInTheDocument();
+
+    pressEscape();
+    expect(screen.queryByTestId('rail-panel')).not.toBeInTheDocument();
+  });
+
+  /* ------------------------------------------- v2 US4: rank sparklines (T121) */
+
+  it('plots every elapsed rank event and summarizes it for assistive tech', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+    clickFrame('harry');
+
+    const sparkline = screen.getByTestId('rank-sparkline');
+    expect(sparkline).toHaveAttribute(
+      'aria-label',
+      copy.sparklineSummary(4188, 3550, 3, 3012),
+    );
+    expect(sparkline.getAttribute('aria-label')).toContain('3 updates');
+    expect(sparkline.getAttribute('aria-label')).toContain('#3012');
+    expect(sparkline.querySelectorAll('polyline')).toHaveLength(1);
+    expect(screen.getByTestId('rank-current')).toHaveTextContent(copy.rankValue(3550));
+    expect(screen.getByTestId('rank-best')).toHaveTextContent(copy.rankValue(3012));
+
+    // Before the second rank event: one point, current and best both #4188.
+    seek(120);
+    const single = screen.getByTestId('rank-sparkline');
+    expect(single.querySelectorAll('polyline')).toHaveLength(0);
+    expect(single.querySelectorAll('circle')).toHaveLength(2); // best ring + current dot
+    expect(single).toHaveAttribute('aria-label', copy.sparklineSummary(4188, 4188, 1, 4188));
+    expect(screen.getByTestId('rank-current')).toHaveTextContent(copy.rankValue(4188));
+    expect(screen.getByTestId('rank-best')).toHaveTextContent(copy.rankValue(4188));
+  });
+
+  it('reads "Unranked" and draws no chart without rank events', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+    clickFrame('xo');
+
+    expect(within(screen.getByTestId('dossier-rank')).getByText(copy.unranked)).toBeInTheDocument();
+    expect(screen.queryByTestId('rank-sparkline')).not.toBeInTheDocument();
+  });
+
+  it('shows the party rank in the feed header only once it has elapsed', async () => {
+    const { seek } = await mountEpisode();
+
+    seek(79);
+    expect(screen.queryByTestId('party-rank')).not.toBeInTheDocument();
+
+    seek(80);
+    expect(screen.getByTestId('party-rank')).toHaveTextContent(copy.partyRankLine(61));
   });
 });
