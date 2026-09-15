@@ -37,7 +37,13 @@
             "name": "Reckless Tumble",
             "rank": 2
           }
-        ]
+        ],
+        "gear": {
+          "head": "Scuffed Helmet",
+          "torso": "Padded Stunt Vest",
+          "feet": "Grip Boots"
+        },
+        "art": "/img/crawlers/stuntman-art.svg"
       },
       {
         "id": "psychic",
@@ -72,7 +78,12 @@
             "name": "Static Read",
             "rank": 1
           }
-        ]
+        ],
+        "gear": {
+          "head": "Cracked Visor",
+          "torso": "Static Shawl"
+        },
+        "art": "/img/crawlers/psychic-art.svg"
       },
       {
         "id": "harry",
@@ -111,7 +122,11 @@
             "name": "Crowbar Work",
             "rank": 1
           }
-        ]
+        ],
+        "gear": {
+          "hands": "Bent Pry Bar",
+          "legs": "Work Trousers"
+        }
       },
       {
         "id": "xo",
@@ -148,7 +163,13 @@
             "name": "Signal Discipline",
             "rank": 2
           }
-        ]
+        ],
+        "gear": {
+          "arms": "Signal Bracers",
+          "accessories": [
+            "Quartermaster Tag"
+          ]
+        }
       },
       {
         "id": "actress",
@@ -182,17 +203,53 @@
             "name": "Stage Presence",
             "rank": 1
           }
-        ]
+        ],
+        "gear": {
+          "torso": "Stage Corset",
+          "feet": "Character Shoes"
+        }
       }
     ],
-    "partyRank": 61,
     "map": {
       "floor": 1,
       "grid": {
         "cols": 12,
         "rows": 8
       },
-      "revealed": []
+      "revealed": [
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          7,
+          9
+        ]
+      ]
     }
   },
   "events": [
@@ -322,7 +379,6 @@
     {
       "t": 300,
       "type": "rank",
-      "scope": "crawler",
       "actor": "harry",
       "rank": 1150
     },
@@ -344,7 +400,6 @@
     {
       "t": 350,
       "type": "rank",
-      "scope": "crawler",
       "actor": "xo",
       "rank": 5210
     },
@@ -362,6 +417,13 @@
       "source": "Gold Adventurer Box"
     },
     {
+      "t": 390,
+      "type": "equip",
+      "actor": "stuntman",
+      "slot": "accessory",
+      "item": "Grappling Spool"
+    },
+    {
       "t": 412,
       "type": "hp",
       "actor": "harry",
@@ -369,10 +431,17 @@
       "max": 22
     },
     {
+      "t": 415,
+      "type": "unequip",
+      "actor": "harry",
+      "slot": "hands",
+      "item": "Bent Pry Bar"
+    },
+    {
       "t": 437,
       "type": "rank",
-      "scope": "party",
-      "rank": 48
+      "actor": "psychic",
+      "rank": 3310
     },
     {
       "t": 462,
@@ -397,7 +466,6 @@
     {
       "t": 520,
       "type": "rank",
-      "scope": "crawler",
       "actor": "harry",
       "rank": 905
     },
@@ -411,7 +479,6 @@
     {
       "t": 560,
       "type": "rank",
-      "scope": "crawler",
       "actor": "xo",
       "rank": 4480
     },
@@ -458,9 +525,22 @@
       "class": "Static Diviner"
     },
     {
+      "t": 641,
+      "type": "unequip",
+      "actor": "psychic",
+      "slot": "head",
+      "item": "Cracked Visor"
+    },
+    {
+      "t": 642,
+      "type": "equip",
+      "actor": "psychic",
+      "slot": "head",
+      "item": "Resonant Visor"
+    },
+    {
       "t": 671,
       "type": "rank",
-      "scope": "crawler",
       "actor": "harry",
       "rank": 740
     },
@@ -487,7 +567,6 @@
     {
       "t": 760,
       "type": "rank",
-      "scope": "crawler",
       "actor": "xo",
       "rank": 3990
     },

@@ -1,23 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router';
 import { useShow } from '../data/ShowContext';
 import { fetchEpisode } from '../data/load';
 import { findEpisode, prevNext } from '../data/show';
-import type { EpisodeData, EpisodeMeta } from '../data/types';
+import type { EpisodeData } from '../data/types';
 import { reduceTo } from '../engine/reducer';
 import {
   activeSponsor,
   activeToast,
   crawlerDossier,
+  crawlerGlance,
   feedItems,
   mapCells,
   mapLabels,
   partyFrames,
-  rankSeries,
   recentlyRevealed,
   timelineMarkers,
 } from '../engine/selectors';
 import type { TimeSource } from '../playback/TimeSource';
+import { formatTime } from '../engine/time';
 import { usePlayhead } from '../playback/usePlayhead';
 import { useResume } from '../playback/useResume';
 import { usePanel } from '../hooks/usePanel';
@@ -29,7 +30,8 @@ import { EventTimeline } from '../components/EventTimeline/EventTimeline';
 import { PartyRail } from '../components/PartyRail/PartyRail';
 import { EventFeed } from '../components/EventFeed/EventFeed';
 import { RailPanel } from '../components/RailPanel/RailPanel';
-import { CrawlerDossier } from '../components/CrawlerDossier/CrawlerDossier';
+import { CrawlerGlance } from '../components/CrawlerGlance/CrawlerGlance';
+import { FullRecordDialog } from '../components/FullRecord/FullRecordDialog';
 import { FloorMap } from '../components/FloorMap/FloorMap';
 import { ResumeCard } from '../components/ResumeCard/ResumeCard';
 import { SystemNotice } from '../components/SystemNotice/SystemNotice';
@@ -62,9 +64,19 @@ export function EpisodePage() {
   // Viewer state, not overlay state: which record is open. Resets per episode.
   const panelApi = usePanel(meta?.id);
   const { panel } = panelApi;
+  /*
+   * Viewer state as well (data-model.md): which crawler's full record covers the
+   * stage, or `null`. Never persisted and never derived from events — the
+   * record's *content* is derived; this is only what the viewer asked to see.
+   */
+  const [record, setRecord] = useState<string | null>(null);
+  /** The "Open full record" button, so the dialog can hand focus back (FR-210). */
+  const recordTrigger = useRef<HTMLElement | null>(null);
   // DEV only: `?panel=dossier:<id>` or `?panel=map` opens a panel on load (screenshots, manual QA).
   const [searchParams] = useSearchParams();
   const devPanel = import.meta.env.DEV ? searchParams.get('panel') : null;
+  const devRecord = import.meta.env.DEV && searchParams.get('record') === '1';
+  const devRecordOpened = useRef(false);
   const partyLoaded = episode !== null;
   useEffect(() => {
     if (!devPanel || !partyLoaded) return;
@@ -72,6 +84,26 @@ export function EpisodePage() {
     else if (devPanel.startsWith('dossier:')) panelApi.open({ kind: 'dossier', crawlerId: devPanel.slice(8) }, null);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- open once per episode load
   }, [devPanel, partyLoaded, meta?.id]);
+
+  // The record cannot outlive the glance card that opened it: closing the panel,
+  // or switching to another crawler or to the map, closes it too (FR-213).
+  useEffect(() => {
+    if (record !== null && (panel.kind !== 'dossier' || panel.crawlerId !== record)) setRecord(null);
+  }, [panel, record]);
+
+  // A new episode always opens ambient — no panel (usePanel) and no record (US2 scenario 7).
+  useEffect(() => {
+    setRecord(null);
+    devRecordOpened.current = false;
+  }, [meta?.id]);
+
+  // DEV only: `?panel=dossier:<id>&record=1` opens the record once the panel the
+  // flag names is actually open, so a screenshot run lands on the full sheet.
+  useEffect(() => {
+    if (!devRecord || panel.kind !== 'dossier' || devRecordOpened.current) return;
+    devRecordOpened.current = true;
+    setRecord(panel.crawlerId);
+  }, [devRecord, panel]);
   // Persisted playhead only, never overlay state (constitution I, FR-133).
   const resume = useResume(meta, source, playhead);
 
@@ -115,7 +147,6 @@ export function EpisodePage() {
   const markers = episode ? timelineMarkers(episode.events, meta.durationSec, party) : [];
   const cells = state ? mapCells(state) : null;
   const recent = episode ? recentlyRevealed(episode.events, t) : EMPTY_CELLS;
-  const partyRank = episode ? rankSeries(episode.events, t, 'party').current : null;
   const { next } = prevNext(show, meta.id);
 
   // The dossier, like everything else, is derived at render time — a seek in
@@ -130,7 +161,7 @@ export function EpisodePage() {
       items={listed}
       sponsor={sponsor}
       t={t}
-      partyRank={partyRank}
+      onSeek={(sec) => source?.seek(sec)}
       notice={
         failed ? (
           <SystemNotice tone="error">{copy.feedUnavailable}</SystemNotice>
@@ -142,7 +173,7 @@ export function EpisodePage() {
   );
 
   /** The rail hosts exactly one of: feed (default), dossier, map (FR-100). */
-  function railSlot(episodeMeta: EpisodeMeta) {
+  function railSlot() {
     switch (panel.kind) {
       case 'dossier':
         // No dossier means no episode data behind it: the feed carries the
@@ -150,11 +181,17 @@ export function EpisodePage() {
         if (!dossier) return feed;
         return (
           <RailPanel
-            kicker={copy.dossierKicker}
+            kicker={copy.glanceKicker}
             title={copy.dossierTitle(dossier.name)}
             onClose={panelApi.close}
           >
-            <CrawlerDossier dossier={dossier} meta={episodeMeta} />
+            <CrawlerGlance
+              glance={crawlerGlance(dossier)}
+              onOpenRecord={(trigger) => {
+                recordTrigger.current = trigger;
+                setRecord(dossier.id);
+              }}
+            />
           </RailPanel>
         );
       case 'map':
@@ -182,7 +219,6 @@ export function EpisodePage() {
 
   return (
     <div className={styles.page} data-ended={ended ? 'true' : undefined}>
-      <h1 className="sr-only">{meta.title}</h1>
       <div className={styles.grid}>
         <div className={styles.main}>
           <VideoStage key={meta.id} meta={meta} t={t} onSource={setSource}>
@@ -209,6 +245,24 @@ export function EpisodePage() {
             ) : null}
           </VideoStage>
 
+          {/*
+            The caption row (review 0.11/0.13, T340). It used to sit inside the
+            stage, where the host's own control bar covered it and the episode
+            title never appeared at all. Out here it is legible at every width,
+            and its left half is the page's one `<h1>`.
+          */}
+          <div className={styles.captionRow} data-testid="stage-caption-row">
+            <h1 className={styles.captionTitle}>
+              {copy.captionLeft(meta.id, meta.floor, meta.title)}
+            </h1>
+            <span
+              className={styles.captionTime}
+              data-testid="stage-caption-time"
+            >
+              {formatTime(t)}
+            </span>
+          </div>
+
           <EventTimeline
             markers={markers}
             t={t}
@@ -226,9 +280,24 @@ export function EpisodePage() {
         </div>
 
         <aside className={styles.rail} data-panel={panel.kind}>
-          {railSlot(meta)}
+          {railSlot()}
         </aside>
       </div>
+
+      {/*
+        The one overlay allowed to cover the stage (constitution III, 1.2.0). It
+        reads the same `dossier` the glance card does, so a seek behind it flows
+        straight through and the dialog never remounts or moves (FR-212).
+      */}
+      {dossier ? (
+        <FullRecordDialog
+          dossier={dossier}
+          meta={meta}
+          open={record === dossier.id}
+          onClose={() => setRecord(null)}
+          returnFocusTo={recordTrigger.current}
+        />
+      ) : null}
     </div>
   );
 }

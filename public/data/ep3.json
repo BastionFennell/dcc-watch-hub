@@ -37,7 +37,12 @@
             "name": "Reckless Tumble",
             "rank": 3
           }
-        ]
+        ],
+        "gear": {
+          "head": "Scuffed Helmet",
+          "torso": "Padded Stunt Vest",
+          "feet": "Grip Boots"
+        }
       },
       {
         "id": "psychic",
@@ -72,7 +77,11 @@
             "name": "Static Read",
             "rank": 1
           }
-        ]
+        ],
+        "gear": {
+          "head": "Cracked Visor",
+          "torso": "Static Shawl"
+        }
       },
       {
         "id": "harry",
@@ -111,7 +120,12 @@
             "name": "Crowbar Work",
             "rank": 2
           }
-        ]
+        ],
+        "gear": {
+          "hands": "Bent Pry Bar",
+          "legs": "Work Trousers"
+        },
+        "art": "/img/crawlers/harry-art.svg"
       },
       {
         "id": "xo",
@@ -148,7 +162,14 @@
             "name": "Signal Discipline",
             "rank": 2
           }
-        ]
+        ],
+        "gear": {
+          "arms": "Signal Bracers",
+          "accessories": [
+            "Quartermaster Tag"
+          ]
+        },
+        "art": "/img/crawlers/xo-art.svg"
       },
       {
         "id": "actress",
@@ -183,10 +204,13 @@
             "name": "Stage Presence",
             "rank": 2
           }
-        ]
+        ],
+        "gear": {
+          "torso": "Stage Corset",
+          "feet": "Character Shoes"
+        }
       }
     ],
-    "partyRank": 48,
     "map": {
       "floor": 2,
       "grid": {
@@ -228,6 +252,13 @@
         "Chalk Stub"
       ],
       "remove": []
+    },
+    {
+      "t": 110,
+      "type": "equip",
+      "actor": "xo",
+      "slot": "accessory",
+      "item": "Chalk Stub"
     },
     {
       "t": 128,
@@ -314,7 +345,6 @@
     {
       "t": 250,
       "type": "rank",
-      "scope": "crawler",
       "actor": "stuntman",
       "rank": 690
     },
@@ -347,7 +377,6 @@
     {
       "t": 300,
       "type": "rank",
-      "scope": "crawler",
       "actor": "actress",
       "rank": 3120
     },
@@ -368,8 +397,8 @@
     {
       "t": 371,
       "type": "rank",
-      "scope": "party",
-      "rank": 29
+      "actor": "psychic",
+      "rank": 2210
     },
     {
       "t": 392,
@@ -381,6 +410,13 @@
       ]
     },
     {
+      "t": 396,
+      "type": "unequip",
+      "actor": "xo",
+      "slot": "accessory",
+      "item": "Quartermaster Tag"
+    },
+    {
       "t": 416,
       "type": "note",
       "text": "The Warden Key is warm. Nobody mentions it on camera."
@@ -388,7 +424,6 @@
     {
       "t": 430,
       "type": "rank",
-      "scope": "crawler",
       "actor": "stuntman",
       "rank": 520
     },
@@ -408,7 +443,6 @@
     {
       "t": 480,
       "type": "rank",
-      "scope": "crawler",
       "actor": "actress",
       "rank": 2755
     },
@@ -453,9 +487,22 @@
       ]
     },
     {
+      "t": 544,
+      "type": "unequip",
+      "actor": "harry",
+      "slot": "hands",
+      "item": "Bent Pry Bar"
+    },
+    {
+      "t": 546,
+      "type": "equip",
+      "actor": "harry",
+      "slot": "hands",
+      "item": "Warden Key"
+    },
+    {
       "t": 567,
       "type": "rank",
-      "scope": "crawler",
       "actor": "stuntman",
       "rank": 401
     },
@@ -498,7 +545,6 @@
     {
       "t": 660,
       "type": "rank",
-      "scope": "crawler",
       "actor": "actress",
       "rank": 2390
     },

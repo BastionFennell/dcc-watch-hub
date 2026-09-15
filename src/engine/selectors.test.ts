@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  GEAR_SLOT_ORDER,
   activeSponsor,
   crawlerDossier,
+  crawlerGlance,
   crawlerHistory,
+  hotbarSlots,
   activeToast,
   elapsed,
   feedItems,
@@ -12,7 +15,6 @@ import {
   partyFrames,
   rankSeries,
   recentlyRevealed,
-  stageCaption,
   timelineMarkers,
 } from './selectors';
 import { reduceTo } from './reducer';
@@ -20,11 +22,10 @@ import { copy } from '../copy';
 import { formatTime } from './time';
 import { normalizeEpisode } from '../data/validate';
 import type { EpisodeData } from '../data/types';
-import { makeEpisode, makeEpisodeRaw, makeShow } from '../test/fixtures';
+import { makeEpisode, makeEpisodeRaw } from '../test/fixtures';
 
 const episode = makeEpisode();
 const party = episode.initialState.party;
-const meta = makeShow().episodes[0];
 
 function withEvents(events: unknown[]): EpisodeData {
   const raw = makeEpisodeRaw() as { events: unknown[] };
@@ -232,12 +233,6 @@ describe('mapCells', () => {
   });
 });
 
-describe('stageCaption', () => {
-  it('reads Ep n · Floor n · time', () => {
-    expect(stageCaption(meta, 2482)).toBe('Ep 1 · Floor 1 · 41:22');
-  });
-});
-
 describe('recentlyRevealed', () => {
   it('is empty before the reveal and inside a backward seek', () => {
     expect(recentlyRevealed(episode.events, 0).size).toBe(0);
@@ -308,7 +303,9 @@ describe('crawlerHistory', () => {
 
   it('returns only that crawler’s elapsed events, newest first and uncapped', () => {
     const history = crawlerHistory(episode.events, 200, 'harry', party);
-    expect(history.map((item) => item.t)).toEqual([200, 170, 165, 150, 150, 105, 100, 95, 60, 45, 30]);
+    expect(history.map((item) => item.t)).toEqual([
+      200, 170, 169, 168, 165, 153, 152, 150, 150, 105, 100, 95, 60, 45, 30,
+    ]);
     expect(history.length).toBeGreaterThan(8);
     expect(history.every((item) => item.actorName === 'Harry')).toBe(true);
   });
@@ -334,7 +331,7 @@ describe('crawlerHistory', () => {
 
 describe('rankSeries', () => {
   it('has no points, current or best before the first rank event', () => {
-    expect(rankSeries(episode.events, 99, { actor: 'harry' })).toEqual({
+    expect(rankSeries(episode.events, 99, 'harry')).toEqual({
       points: [],
       current: null,
       best: null,
@@ -342,7 +339,7 @@ describe('rankSeries', () => {
   });
 
   it('plots one point per elapsed crawler rank event, with current and best', () => {
-    const at200 = rankSeries(episode.events, 200, { actor: 'harry' });
+    const at200 = rankSeries(episode.events, 200, 'harry');
     expect(at200.points).toEqual([
       { t: 100, rank: 4188 },
       { t: 150, rank: 3012 },
@@ -353,20 +350,28 @@ describe('rankSeries', () => {
   });
 
   it('rewinds with the playhead', () => {
-    const at120 = rankSeries(episode.events, 120, { actor: 'harry' });
+    const at120 = rankSeries(episode.events, 120, 'harry');
     expect(at120.points).toHaveLength(1);
     expect(at120.current).toBe(4188);
     expect(at120.best).toBe(4188);
   });
 
-  it('reads party-scoped events under the party scope only', () => {
-    expect(rankSeries(episode.events, 200, 'party')).toEqual({
-      points: [{ t: 80, rank: 61 }],
-      current: 61,
-      best: 61,
-    });
-    expect(rankSeries(episode.events, 79, 'party').current).toBeNull();
-    expect(rankSeries(episode.events, 200, { actor: 'xo' }).points).toEqual([]);
+  // DCC has individual rank only (T334): one crawler's events never leak into
+  // another's series, and a crawler nobody ranked has none.
+  it('keeps each crawler\'s series to their own events', () => {
+    expect(rankSeries(episode.events, 200, 'xo').points).toEqual([]);
+    expect(rankSeries(episode.events, 200, 'xo').current).toBeNull();
+    expect(rankSeries(episode.events, 200, 'harry').points).toHaveLength(3);
+  });
+
+  // A legacy party row normalizes to `unknown`, so it reaches no series at all.
+  it('ignores a legacy party-scoped rank row', () => {
+    const legacy = withEvents([
+      { t: 10, type: 'rank', scope: 'party', rank: 61 },
+      { t: 20, type: 'rank', actor: 'harry', rank: 4188 },
+    ]);
+    expect(legacy.events[0].type).toBe('unknown');
+    expect(rankSeries(legacy.events, 100, 'harry').points).toEqual([{ t: 20, rank: 4188 }]);
   });
 });
 
@@ -429,8 +434,10 @@ describe('crawlerDossier', () => {
     expect(dossierAt(110)?.hotlist).toEqual(['Door']);
     expect(dossierAt(200)?.hotlist).toEqual(['Crowbar']);
     expect(dossierAt(200)?.skills).toEqual([{ name: 'Powerful Strike', rank: 1 }]);
-    expect(dossierAt(200, 'xo')?.skills).toEqual([{ name: 'Understudy Strike', rank: 2 }]);
-    expect(dossierAt(100, 'xo')?.skills).toEqual([{ name: 'Understudy Strike', rank: 1 }]);
+    // X.O. logs nine skills by 200; the first one is upserted to rank 2 at 160.
+    expect(dossierAt(200, 'xo')?.skills).toHaveLength(9);
+    expect(dossierAt(200, 'xo')?.skills[0]).toEqual({ name: 'Understudy Strike', rank: 2 });
+    expect(dossierAt(100, 'xo')?.skills[0]).toEqual({ name: 'Understudy Strike', rank: 1 });
     expect(dossierAt(200)?.achievements).toEqual([
       { title: 'Gate Crasher', desc: 'Ten mobs, one door.', t: 60 },
     ]);
@@ -489,5 +496,198 @@ describe('mapLabels', () => {
     ]);
     // An unlabeled reveal contributes nothing.
     expect(mapLabels(shared.events, 30)).toHaveLength(1);
+  });
+});
+
+describe('crawlerGlance', () => {
+  const glanceAt = (t: number, id = 'harry') => {
+    const dossier = crawlerDossier(reduceTo(episode, t), episode.events, t, id, party);
+    if (dossier === null) throw new Error(`no dossier for ${id} at ${t}`);
+    return crawlerGlance(dossier);
+  };
+
+  it('carries the header, vitals and rank straight from the dossier', () => {
+    const glance = glanceAt(200);
+    expect(glance).toMatchObject({
+      id: 'harry',
+      name: 'Harry',
+      handle: 'Harry',
+      player: 'Marcus',
+      portrait: '/img/crawlers/harry.svg',
+      class: 'Compensated Anarchist',
+      level: 2,
+      debuffs: [],
+    });
+    expect(glance.hp).toEqual({ current: 20, max: 22, filled: 10, pct: 91 });
+    expect(glance.rank.current).toBe(3550);
+    expect(glance.rank.best).toBe(3012);
+  });
+
+  // The ledger rows are gone in revision 2 (T318/T334): the card carries the
+  // worn kit and the latest achievement instead of a count per list.
+  it('carries no ledger at all', () => {
+    expect(glanceAt(200)).not.toHaveProperty('ledger');
+    expect(glanceAt(20)).not.toHaveProperty('ledger');
+  });
+
+  it('keeps at most the three newest history moments, newest first', () => {
+    const history = glanceAt(200).recentHistory;
+    expect(history).toHaveLength(3);
+    expect(history.map((item) => item.t)).toEqual([200, 170, 169]);
+    expect(history[0].kind).toBe('rank');
+    // Harry's first moment is the loot at 30; before that there is nothing.
+    expect(glanceAt(40).recentHistory.map((item) => item.t)).toEqual([30]);
+  });
+
+  it('is unranked before the first rank event elapses', () => {
+    const glance = glanceAt(90);
+    expect(glance.rank).toEqual({ points: [], current: null, best: null });
+  });
+
+  it('reports debuffs as the dossier does', () => {
+    expect(glanceAt(135, 'psychic').debuffs).toEqual(['Poisoned']);
+    expect(glanceAt(145, 'psychic').debuffs).toEqual([]);
+  });
+});
+
+/* ------------------------------------------------------- 003 revision 2 */
+
+describe('feed items for the gear event types', () => {
+  it('labels and narrates equip and unequip', () => {
+    const items = feedItems(episode.events, 170, 8, party);
+    const equip = items.find((item) => item.kind === 'equip' && item.t === 152);
+    expect(equip?.label).toBe(copy.labels.equip);
+    expect(equip?.text).toBe(
+      copy.feedText.equip('Harry', copy.gearSlotLabels.torso, 'Patched Jacket'),
+    );
+    expect(equip?.actorName).toBe('Harry');
+
+    const unequip = items.find((item) => item.kind === 'unequip');
+    expect(unequip?.label).toBe(copy.labels.unequip);
+    expect(unequip?.text).toBe(copy.feedText.unequip('Harry', copy.gearSlotLabels.hands));
+  });
+
+  it('names the item on an accessory unequip', () => {
+    const custom = withEvents([
+      {
+        t: 10,
+        type: 'unequip',
+        actor: 'harry',
+        slot: 'accessory',
+        item: 'Lucky Rabbit Foot',
+      },
+    ]);
+    expect(feedItems(custom.events, 10, 8, party)[0].text).toBe(
+      copy.feedText.unequip('Harry', copy.gearSlotLabels.accessory, 'Lucky Rabbit Foot'),
+    );
+  });
+});
+
+describe('crawlerDossier — gear and art', () => {
+  const dossierAt = (t: number, id = 'harry') =>
+    crawlerDossier(reduceTo(episode, t), episode.events, t, id, party);
+
+  it('carries the worn gear as of the playhead', () => {
+    expect(dossierAt(151)?.gear).toMatchObject({ hands: 'Enchanted Crowbar', torso: null });
+    expect(dossierAt(200)?.gear).toEqual({
+      head: null,
+      torso: 'Patched Jacket',
+      arms: null,
+      hands: 'Torch',
+      legs: null,
+      feet: null,
+      accessories: ['Lucky Rabbit Foot'],
+    });
+  });
+
+  it('carries `art` only for the crawlers that have it', () => {
+    expect(dossierAt(200)?.art).toBe('/img/crawlers/harry-art.svg');
+    expect(dossierAt(200, 'actress')?.art).toBe('/img/crawlers/actress-art.svg');
+    expect(dossierAt(200, 'xo')?.art).toBeUndefined();
+    expect(dossierAt(200, 'xo')).not.toHaveProperty('art');
+  });
+});
+
+describe('GEAR_SLOT_ORDER', () => {
+  it('is the sheet order, accessories last', () => {
+    expect([...GEAR_SLOT_ORDER]).toEqual([
+      'head',
+      'torso',
+      'arms',
+      'hands',
+      'legs',
+      'feet',
+      'accessory',
+    ]);
+  });
+});
+
+describe('hotbarSlots', () => {
+  it('pads an empty hotlist to ten empty slots', () => {
+    expect(hotbarSlots([])).toEqual({ slots: Array(10).fill(null), overflow: 0 });
+  });
+
+  it('fills slots in order and leaves the rest dim', () => {
+    const { slots, overflow } = hotbarSlots(['The Hoarder', 'The Doorway']);
+    expect(slots.slice(0, 2)).toEqual(['The Hoarder', 'The Doorway']);
+    expect(slots.slice(2).every((slot) => slot === null)).toBe(true);
+    expect(slots).toHaveLength(10);
+    expect(overflow).toBe(0);
+  });
+
+  it('counts everything past the tenth slot', () => {
+    const many = Array.from({ length: 13 }, (_, i) => `Mark ${i + 1}`);
+    const { slots, overflow } = hotbarSlots(many);
+    expect(slots).toEqual(many.slice(0, 10));
+    expect(overflow).toBe(3);
+  });
+
+  it('honours a custom slot count', () => {
+    expect(hotbarSlots(['a', 'b', 'c'], 2)).toEqual({ slots: ['a', 'b'], overflow: 1 });
+  });
+
+  it('reads the fixture: Harry overflows the bar at 210', () => {
+    const at200 = reduceTo(episode, 200).party.find((crawler) => crawler.id === 'harry');
+    expect(hotbarSlots(at200?.hotlist ?? [])).toMatchObject({ overflow: 0 });
+    const at210 = reduceTo(episode, 210).party.find((crawler) => crawler.id === 'harry');
+    expect(at210?.hotlist).toHaveLength(11);
+    expect(hotbarSlots(at210?.hotlist ?? []).overflow).toBe(1);
+  });
+});
+
+describe('crawlerGlance — equipped and latest achievement', () => {
+  const glanceAt = (t: number, id = 'harry') => {
+    const dossier = crawlerDossier(reduceTo(episode, t), episode.events, t, id, party);
+    if (dossier === null) throw new Error(`no dossier for ${id} at ${t}`);
+    return crawlerGlance(dossier);
+  };
+
+  it('lists worn gear in sheet order with accessories expanded', () => {
+    expect(glanceAt(200).equipped).toEqual([
+      { slot: 'torso', item: 'Patched Jacket' },
+      { slot: 'hands', item: 'Torch' },
+      { slot: 'accessory', item: 'Lucky Rabbit Foot' },
+    ]);
+  });
+
+  it('follows the playhead, forwards and back', () => {
+    expect(glanceAt(20).equipped).toEqual([{ slot: 'hands', item: 'Enchanted Crowbar' }]);
+    expect(glanceAt(168).equipped).toEqual([
+      { slot: 'torso', item: 'Patched Jacket' },
+      { slot: 'accessory', item: 'Lucky Rabbit Foot' },
+    ]);
+    // A crawler who never equips anything shows nothing at all.
+    expect(glanceAt(200, 'xo').equipped).toEqual([]);
+  });
+
+  it('carries the newest achievement with its time, and none before the first', () => {
+    expect(glanceAt(200).latestAchievement).toEqual({
+      title: 'Gate Crasher',
+      desc: 'Ten mobs, one door.',
+      t: 60,
+    });
+    expect(glanceAt(59).latestAchievement).toBeUndefined();
+    expect(glanceAt(59)).not.toHaveProperty('latestAchievement');
+    expect(glanceAt(62, 'stuntman').latestAchievement?.title).toBe('Stunt Double');
   });
 });

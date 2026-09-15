@@ -46,8 +46,17 @@ export function CrawlerFrame({ frame, expanded, onActivate }: CrawlerFrameProps)
           />
           <span className={styles.frameMeta}>
             <span className={styles.name}>{frame.name}</span>
+            {/*
+              A real separator, not a CSS gap (review 0.7, T338): the dot is
+              decorative and the comma is what a screen reader reads, so the
+              frame announces "Lv 2, 22/22" instead of "Lv 222/22".
+            */}
             <span className={styles.stats}>
               <span className={styles.level}>{copy.levelShort(frame.level)}</span>
+              <span className={styles.dot} aria-hidden="true">
+                {'·'}
+              </span>
+              <span className="sr-only">{copy.srSeparator}</span>
               <span className={styles.hpValue}>{copy.hpValue(frame.hp.current, frame.hp.max)}</span>
             </span>
           </span>

@@ -10,12 +10,15 @@ import type {
   CrawlerStats,
   EpisodeData,
   EpisodeMeta,
+  Gear,
+  GearSlot,
   InitialState,
   MapState,
   Show,
   SkillEntry,
   UnknownEvent,
 } from './types';
+import { GEAR_SLOTS } from './types';
 
 export class DataError extends Error {
   constructor(message: string) {
@@ -63,6 +66,13 @@ function toSkillRank(x: unknown): number | null {
   const n = toNumber(x);
   if (n === null || !Number.isInteger(n) || n < 0) return null;
   return n;
+}
+
+/** A gear slot the schema knows, or `null` — an unknown slot is never guessed. */
+function toGearSlot(x: unknown): GearSlot | null {
+  return typeof x === 'string' && (GEAR_SLOTS as readonly string[]).includes(x)
+    ? (x as GearSlot)
+    : null;
 }
 
 function toCell(x: unknown): Cell | null {
@@ -143,13 +153,15 @@ export function normalizeEvent(raw: unknown): AnyEvent {
       return { t, type: 'level_up', actor, level };
     }
     case 'rank': {
+      /*
+       * DCC has individual rank only (T334). A legacy `scope: 'crawler'` row is
+       * still read — the field is simply dropped — while a legacy party row has
+       * no crawler to belong to, so it is demoted to `unknown` and ignored.
+       */
+      if (raw.scope === 'party') return unknownEvent(t, raw);
       const rank = toNumber(raw.rank);
-      const scope = raw.scope === 'party' || raw.scope === 'crawler' ? raw.scope : null;
-      if (rank === null || scope === null) return unknownEvent(t, raw);
-      if (scope === 'crawler' && actor === null) return unknownEvent(t, raw);
-      return actor === null
-        ? { t, type: 'rank', scope, rank }
-        : { t, type: 'rank', scope, rank, actor };
+      if (rank === null || actor === null) return unknownEvent(t, raw);
+      return { t, type: 'rank', actor, rank };
     }
     case 'map_reveal': {
       const cells = toCells(raw.cells);
@@ -205,6 +217,22 @@ export function normalizeEvent(raw: unknown): AnyEvent {
       if (actor === null || add === null || remove === null) return unknownEvent(t, raw);
       return { t, type: 'hotlist', actor, add, remove };
     }
+    case 'equip': {
+      const slot = toGearSlot(raw.slot);
+      const item = toString_(raw.item);
+      if (actor === null || slot === null || item === null || item === '') {
+        return unknownEvent(t, raw);
+      }
+      return { t, type: 'equip', actor, slot, item };
+    }
+    case 'unequip': {
+      const slot = toGearSlot(raw.slot);
+      if (actor === null || slot === null) return unknownEvent(t, raw);
+      const item = toString_(raw.item);
+      return item === null || item === ''
+        ? { t, type: 'unequip', actor, slot }
+        : { t, type: 'unequip', actor, slot, item };
+    }
     default:
       return unknownEvent(t, raw);
   }
@@ -236,6 +264,29 @@ function toSkillEntries(x: unknown): SkillEntry[] | null {
     out.push(rank === null ? { name } : { name, rank });
   }
   return out;
+}
+
+const SINGLE_GEAR_SLOTS = ['head', 'torso', 'arms', 'hands', 'legs', 'feet'] as const;
+
+/**
+ * Starting gear (R2-FR-220). One bad field makes the whole block malformed, so
+ * the crawler simply starts with nothing worn rather than half a kit.
+ */
+function toGear(x: unknown): Gear | null {
+  if (!isRecord(x)) return null;
+  const gear: Gear = {};
+  for (const slot of SINGLE_GEAR_SLOTS) {
+    if (x[slot] === undefined) continue;
+    const item = toString_(x[slot]);
+    if (item === null || item === '') return null;
+    gear[slot] = item;
+  }
+  if (x.accessories !== undefined) {
+    const accessories = toStringList(x.accessories);
+    if (accessories === null) return null;
+    gear.accessories = accessories;
+  }
+  return gear;
 }
 
 function toCrawlerNumber(x: unknown): string | number | null {
@@ -279,6 +330,14 @@ export function normalizeCrawler(raw: Crawler): Crawler {
     if (skills === null) drop('skills');
     else crawler.skills = skills;
   }
+  if (crawler.gear !== undefined) {
+    const gear = toGear(crawler.gear);
+    if (gear === null) drop('gear');
+    else crawler.gear = gear;
+  }
+  if (crawler.art !== undefined && (typeof crawler.art !== 'string' || crawler.art === '')) {
+    drop('art');
+  }
   return crawler;
 }
 
@@ -319,11 +378,7 @@ function isMapState(x: unknown): x is MapState {
 function isInitialState(x: unknown): x is InitialState {
   if (!isRecord(x)) return false;
   return (
-    Array.isArray(x.party) &&
-    x.party.length > 0 &&
-    x.party.every(isCrawler) &&
-    (x.partyRank === null || typeof x.partyRank === 'number') &&
-    isMapState(x.map)
+    Array.isArray(x.party) && x.party.length > 0 && x.party.every(isCrawler) && isMapState(x.map)
   );
 }
 
@@ -376,6 +431,12 @@ export function normalizeEpisode(raw: unknown): EpisodeData {
     ...raw.initialState,
     party: raw.initialState.party.map(normalizeCrawler),
   };
+  // A pre-T334 file may still carry `partyRank`. DCC has no party rank, so the
+  // field is dropped rather than allowed to reach the reducer (T334).
+  if ('partyRank' in initialState) {
+    delete (initialState as unknown as Record<string, unknown>).partyRank;
+    console.warn('Episode initialState: dropping "partyRank" (DCC has individual rank only).');
+  }
   return { episodeId: raw.episodeId, initialState, events };
 }
 

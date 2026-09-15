@@ -8,17 +8,16 @@ import type {
   ChapterKind,
   Crawler,
   CrawlerStats,
-  EpisodeMeta,
   Event,
   EventType,
+  GearSlot,
   Hp,
   SkillEntry,
 } from '../data/types';
 import { isKnownEvent } from '../data/types';
 import { copy } from '../copy';
-import type { OverlayState } from './state';
+import type { GearState, OverlayState } from './state';
 import { cellKey } from './state';
-import { formatTime } from './time';
 
 /* ------------------------------------------------------------------ types */
 
@@ -87,7 +86,7 @@ export interface RankPoint {
   rank: number;
 }
 
-/** A crawler's or the party's rank over the elapsed log (FR-140/141). */
+/** One crawler's rank over the elapsed log (FR-140; DCC has no party rank). */
 export interface RankSeries {
   points: RankPoint[];
   /** The most recent elapsed rank, or null with no points. */
@@ -95,9 +94,6 @@ export interface RankSeries {
   /** The best (lowest) rank reached so far, or null with no points. */
   best: number | null;
 }
-
-/** `'party'` reads party-scoped rank events; `{ actor }` reads one crawler's. */
-export type RankScopeSelector = 'party' | { actor: string };
 
 /** The ten-segment HP strip from the official sheet (FR-110). */
 export interface HpSegments {
@@ -130,12 +126,23 @@ export interface Dossier {
   rank: RankSeries;
   debuffs: string[];
   stats?: CrawlerStats;
+  /** Full-figure illustration; the record falls back to the bust (R2-FR-224). */
+  art?: string;
+  /** Worn gear as of the playhead, one item or null per slot (R2-FR-220). */
+  gear: GearState;
   hotlist: string[];
   skills: SkillEntry[];
   inventory: string[];
   achievements: DossierAchievement[];
   history: FeedItem[];
 }
+
+/**
+ * Everything the feed needs to name an actor. The static party and the reduced
+ * party both satisfy it, and `CrawlerState` re-types `gear`, so selectors take
+ * this rather than `Crawler` itself.
+ */
+export type PartyNames = readonly Pick<Crawler, 'id' | 'name'>[];
 
 /** One named neighborhood on the expanded map (FR-120). */
 export interface MapLabel {
@@ -160,7 +167,7 @@ function markerColor(kind: MarkerKind): string {
   return `var(--marker-${kind})`;
 }
 
-function nameOf(party: readonly Crawler[], actor: string | undefined): string | undefined {
+function nameOf(party: PartyNames, actor: string | undefined): string | undefined {
   if (!actor) return undefined;
   return party.find((crawler) => crawler.id === actor)?.name ?? actor;
 }
@@ -206,7 +213,7 @@ export function partyFrames(
 function toFeedItem(
   event: Event,
   id: number,
-  party: readonly Crawler[],
+  party: PartyNames,
 ): FeedItem | null {
   const label = copy.labels[event.type];
   const actorName = 'actor' in event ? nameOf(party, event.actor) : undefined;
@@ -227,14 +234,7 @@ function toFeedItem(
     case 'level_up':
       return { ...base, actorName, text: copy.feedText.levelUp(who, event.level) };
     case 'rank':
-      return {
-        ...base,
-        actorName,
-        text:
-          event.scope === 'party'
-            ? copy.feedText.rankParty(event.rank)
-            : copy.feedText.rankCrawler(who, event.rank),
-      };
+      return { ...base, actorName, text: copy.feedText.rankCrawler(who, event.rank) };
     case 'map_reveal':
       return { ...base, text: copy.feedText.mapReveal(event.cells.length, event.label) };
     case 'sponsor':
@@ -251,6 +251,18 @@ function toFeedItem(
       return { ...base, actorName, text: copy.feedText.classChange(who, event.class) };
     case 'hotlist':
       return { ...base, actorName, text: copy.feedText.hotlist(who, event.add, event.remove) };
+    case 'equip':
+      return {
+        ...base,
+        actorName,
+        text: copy.feedText.equip(who, copy.gearSlotLabels[event.slot], event.item),
+      };
+    case 'unequip':
+      return {
+        ...base,
+        actorName,
+        text: copy.feedText.unequip(who, copy.gearSlotLabels[event.slot], event.item),
+      };
     default:
       return null;
   }
@@ -261,7 +273,7 @@ export function feedItems(
   events: readonly AnyEvent[],
   t: number,
   n = 8,
-  party: readonly Crawler[] = [],
+  party: PartyNames = [],
 ): FeedItem[] {
   const items: FeedItem[] = [];
   for (let i = 0; i < events.length; i += 1) {
@@ -278,7 +290,7 @@ export function feedItems(
 export function activeSponsor(
   events: readonly AnyEvent[],
   t: number,
-  party: readonly Crawler[] = [],
+  party: PartyNames = [],
 ): FeedItem | null {
   let active: FeedItem | null = null;
   for (let i = 0; i < events.length; i += 1) {
@@ -298,7 +310,7 @@ export function activeSponsor(
 export function activeToast(
   events: readonly AnyEvent[],
   t: number,
-  party: readonly Crawler[] = [],
+  party: PartyNames = [],
 ): Toast | null {
   let previousEnd = -Infinity;
   for (let i = 0; i < events.length; i += 1) {
@@ -326,7 +338,7 @@ export function activeToast(
 export function timelineMarkers(
   events: readonly AnyEvent[],
   durationSec: number,
-  party: readonly Crawler[] = [],
+  party: PartyNames = [],
 ): Marker[] {
   const span = durationSec > 0 ? durationSec : 1;
   const markers: Marker[] = [];
@@ -369,10 +381,6 @@ export function mapCells(state: OverlayState): MapCellsView {
   };
 }
 
-export function stageCaption(meta: EpisodeMeta, t: number): string {
-  return copy.feedText.stageCaption(meta.id, meta.floor, formatTime(t));
-}
-
 /**
  * Cells whose `map_reveal` landed within the last `windowSec` seconds
  * (`t_e <= t < t_e + windowSec`). The minimap uses it to tint just-revealed
@@ -404,7 +412,7 @@ export function crawlerHistory(
   events: readonly AnyEvent[],
   t: number,
   actorId: string,
-  party: readonly Crawler[] = [],
+  party: PartyNames = [],
 ): FeedItem[] {
   const items: FeedItem[] = [];
   for (let i = 0; i < events.length; i += 1) {
@@ -418,20 +426,16 @@ export function crawlerHistory(
   return items.reverse();
 }
 
-/** Elapsed rank events for one crawler or for the party, oldest first (FR-140/141). */
+/** Elapsed rank events for one crawler, oldest first (FR-140; T334). */
 export function rankSeries(
   events: readonly AnyEvent[],
   t: number,
-  scope: RankScopeSelector,
+  actorId: string,
 ): RankSeries {
   const points: RankPoint[] = [];
   for (const event of events) {
     if (event.type !== 'rank' || event.t > t) continue;
-    if (scope === 'party') {
-      if (event.scope !== 'party') continue;
-    } else if (event.scope !== 'crawler' || event.actor !== scope.actor) {
-      continue;
-    }
+    if (event.actor !== actorId) continue;
     points.push({ t: event.t, rank: event.rank });
   }
   if (points.length === 0) return { points, current: null, best: null };
@@ -462,7 +466,7 @@ export function crawlerDossier(
   events: readonly AnyEvent[],
   t: number,
   actorId: string,
-  party: readonly Crawler[] = state.party,
+  party: PartyNames = state.party,
 ): Dossier | null {
   const crawler = state.party.find((entry) => entry.id === actorId);
   if (crawler === undefined) return null;
@@ -493,9 +497,11 @@ export function crawlerDossier(
     class: crawler.class,
     floor: state.map.floor,
     hp: { current, max: crawler.hp.max, ...hpSegments(crawler.hp) },
-    rank: rankSeries(events, t, { actor: actorId }),
+    rank: rankSeries(events, t, actorId),
     debuffs: crawler.statuses,
     ...(crawler.stats === undefined ? {} : { stats: crawler.stats }),
+    ...(crawler.art === undefined ? {} : { art: crawler.art }),
+    gear: crawler.gear,
     hotlist: crawler.hotlist,
     skills: crawler.skills,
     inventory: crawler.inventory,
@@ -537,4 +543,108 @@ export function mapLabels(events: readonly AnyEvent[], t: number): MapLabel[] {
         cells: cells.length,
       };
     });
+}
+
+/* ------------------------------------------------------- 003 glance card */
+
+/**
+ * The fixed-height rail card's view model (FR-200..FR-203): the same facts the
+ * dossier holds, reduced to one line per list so the card cannot grow with the
+ * episode.
+ */
+export interface Glance {
+  id: string;
+  name: string;
+  handle: string;
+  player: string;
+  portrait: string;
+  class: string | null;
+  level: number;
+  hp: Hp & HpSegments;
+  rank: RankSeries;
+  debuffs: string[];
+  /** Worn gear in sheet order, accessories expanded one row each (R2-FR-201). */
+  equipped: EquippedItem[];
+  /** The newest achievement earned so far; absent when there is none. */
+  latestAchievement?: DossierAchievement;
+  /** At most three, newest first. */
+  recentHistory: FeedItem[];
+}
+
+/** One worn item on the glance card: which slot, and what is in it. */
+export interface EquippedItem {
+  slot: GearSlot;
+  item: string;
+}
+
+/** Sheet order for every gear view (glance rows, record section) (R2-FR-220). */
+export const GEAR_SLOT_ORDER = [
+  'head',
+  'torso',
+  'arms',
+  'hands',
+  'legs',
+  'feet',
+  'accessory',
+] as const satisfies readonly GearSlot[];
+
+/** The record's ten-slot hotbar, plus how many entries did not fit (R2-FR-221). */
+export interface Hotbar {
+  slots: (string | null)[];
+  overflow: number;
+}
+
+/**
+ * Pads the hotlist to `n` fixed slots and counts the rest, so the hotbar is a
+ * pure function of the elapsed hotlist and never changes size (R2-FR-221).
+ */
+export function hotbarSlots(hotlist: readonly string[], n = 10): Hotbar {
+  const slots: (string | null)[] = [];
+  for (let i = 0; i < n; i += 1) slots.push(hotlist[i] ?? null);
+  return { slots, overflow: Math.max(0, hotlist.length - n) };
+}
+
+/** Worn gear as rows: one per filled slot, then one per accessory. */
+export function equippedItems(gear: GearState): EquippedItem[] {
+  const rows: EquippedItem[] = [];
+  for (const slot of GEAR_SLOT_ORDER) {
+    if (slot === 'accessory') {
+      for (const item of gear.accessories) rows.push({ slot, item });
+      continue;
+    }
+    const item = gear[slot];
+    if (item !== null) rows.push({ slot, item });
+  }
+  return rows;
+}
+
+/** The number of history rows the glance card always shows (research R4). */
+export const GLANCE_HISTORY_ROWS = 3;
+
+/**
+ * The glance card's view model, derived from an already-elapsed `Dossier`, so it
+ * inherits time-truth for free (constitution I, FR-202). "Newest" is the last
+ * element of each current list — after a removal that is the most recently
+ * gained item still held (research R3).
+ */
+export function crawlerGlance(dossier: Dossier): Glance {
+  const achievements = dossier.achievements;
+  const lastAchievement =
+    achievements.length === 0 ? undefined : achievements[achievements.length - 1];
+
+  return {
+    id: dossier.id,
+    name: dossier.name,
+    handle: dossier.handle,
+    player: dossier.player,
+    portrait: dossier.portrait,
+    class: dossier.class,
+    level: dossier.level,
+    hp: dossier.hp,
+    rank: dossier.rank,
+    debuffs: dossier.debuffs,
+    equipped: equippedItems(dossier.gear),
+    ...(lastAchievement === undefined ? {} : { latestAchievement: lastAchievement }),
+    recentHistory: dossier.history.slice(0, GLANCE_HISTORY_ROWS),
+  };
 }

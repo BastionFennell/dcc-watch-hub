@@ -12,6 +12,17 @@
 
 /* --- header band --- */
 
+/*
+ * Band + identity grid as one block, so the record can place the whole identity
+ * in a single grid cell (research R5) while the rail keeps the v2 rhythm.
+ */
+.identityBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
 .band {
   display: flex;
   align-items: center;
@@ -49,15 +60,29 @@
   overflow-wrap: anywhere;
 }
 
+/*
+ * The separator carries its own spacing (T330 visual review): the glance card's
+ * rows are flex containers, which trim the literal spaces around the glyph, so
+ * "HANDS·Torch" ran together. A margin survives flex, so every "·" in the
+ * feature — frame, glance, dossier header — is spaced the same way.
+ */
 .dot {
   opacity: 0.6;
+  margin: 0 0.35em;
 }
 
 /* --- identity grid --- */
 
+/*
+ * `auto-fit` rather than a hard two columns (T330 visual review): inside the
+ * record the identity sits in a grid cell that can be narrower than 320 px, and
+ * two columns there left every value breaking mid-word ("Compensate / d
+ * Anarchist"). The grid now drops to one column on its own when the cell is too
+ * narrow for two 150 px tracks, whatever the viewport is doing.
+ */
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: var(--space-2) var(--space-5);
   margin: 0;
 }
@@ -81,12 +106,25 @@
   white-space: nowrap;
 }
 
+/*
+ * Values wrap between words and never inside one (T330 visual review): the
+ * sheet was printing "Compensate / d Anarchist" and "they/the / m" beside the
+ * record's art column.
+ */
 .rowValue {
   margin: 0;
   font-size: var(--text-xs);
   color: var(--text);
   text-align: right;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: keep-all;
+  min-width: 0;
+}
+
+/* A crawler number is one group of digits; splitting it invents a new number. */
+.row[data-field='crawlerNumber'] .rowValue {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 /* --- sections --- */
@@ -181,10 +219,18 @@
   color: var(--text-3);
 }
 
+/*
+ * `overflow: visible` (T330 visual review): an SVG root clips to its viewBox by
+ * default, and the current-rank dot sits one pad-width from the right edge with
+ * a radius wider than that pad once the glance row stretches it — so the dot
+ * came out sliced in half. Letting it paint outside costs a couple of pixels
+ * and leaves the record's unstretched chart pixel-identical.
+ */
 .sparkline {
   width: 100%;
   height: auto;
   max-width: 260px;
+  overflow: visible;
 }
 
 /* The chart's floor: enough to give the line a scale, not enough to read as data. */
@@ -277,7 +323,7 @@
   overflow-wrap: anywhere;
 }
 
-.itemName {
+.itemLabel {
   color: var(--text);
   font-weight: 500;
   min-width: 0;
@@ -312,4 +358,240 @@
   .grid {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* --- 003 revision 2: rank label + delta (UX review 1.4, T343) --- */
+
+/*
+ * The block's own name, distinct from the "Current" / "Best" cell labels: the
+ * numbers used to sit unlabeled beside the HP strip.
+ */
+.rankTitle {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+
+/* ↑ means the rank number fell, which is an improvement. */
+.rankDelta {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--text-3);
+}
+
+.rankDelta[data-direction='up'] {
+  color: var(--marker-levelup);
+}
+
+/* --- 003 revision 2: the record's hotbar (research R8, R2-FR-221) --- */
+
+.hotbar {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: var(--space-2);
+  align-items: stretch;
+}
+
+/*
+ * The "+N" marker belongs after slot ten, not under slot one (T330 visual
+ * review): as an eleventh grid item in a ten-column grid it wrapped to the next
+ * row's first cell. An extra auto track holds it on the end of the bar.
+ */
+.hotbar[data-overflow] {
+  grid-template-columns: repeat(10, minmax(0, 1fr)) auto;
+}
+
+.hotbarSlot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  aspect-ratio: 1 / 1;
+  min-width: 0;
+  padding: var(--space-4) var(--space-2) var(--space-2);
+  border: 1px dashed var(--hairline);
+  border-radius: var(--radius-sm);
+  background: var(--panel-deep);
+  font-size: var(--text-2xs);
+  line-height: 1.25;
+  color: var(--text-3);
+  overflow: hidden;
+  /*
+   * An empty slot is an unlit key: a dashed hairline on the deepest surface,
+   * with no name in it (research R8). It used to be the lit key at `opacity:
+   * 0.4`, which dropped its slot number to 1.6:1 — axe flagged it as a real
+   * contrast failure on a crawler with a mostly empty bar (T330). The number
+   * stays legible now and the state is carried by the border and the fill.
+   */
+}
+
+.hotbarSlot[data-filled] {
+  border: var(--border-hairline-2);
+  border-style: solid;
+  background: var(--panel);
+  color: var(--text);
+}
+
+.hotbarNumber {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  /* Mono digits on the deep panel: the AA-passing muted step, not the decorative one. */
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Slot names wrap between words only and stop at two lines (T330 visual
+ * review): "The Quartermaster" was breaking into "The / Quartermast / er". The
+ * DOM still holds the whole name, and every filled slot carries an `aria-label`
+ * with it, so nothing is lost when the clamp bites.
+ */
+.hotbarSlot .itemLabel {
+  font-weight: 500;
+  font-size: calc(var(--text-2xs) - 1px);
+  line-height: 1.2;
+  /*
+   * `break-word`, not `anywhere`: a word only ever breaks when it cannot fit a
+   * line of its own, and then the clamp ends that line in an ellipsis — so the
+   * key reads "The / Quarterma…" instead of "The / Quartermast / er".
+   */
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: manual;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hotbarOverflow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--text-2);
+  padding: 0 var(--space-2);
+}
+
+/* --- 003 revision 2: gear rows (R2 US2 scenario 3) --- */
+
+.gearRows {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+}
+
+.gearRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  border-bottom: var(--border-hairline);
+  padding-bottom: var(--space-2);
+  min-width: 0;
+}
+
+.gearValue {
+  margin: 0;
+  font-size: var(--text-xs);
+  text-align: right;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.gearRow:not([data-filled]) .itemLabel {
+  color: var(--text-3);
+  font-weight: 400;
+}
+
+/* --- 003 revision 2: tile grids + "View all" (R2-FR-222) --- */
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--space-3);
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 72px;
+  min-width: 0;
+  padding: var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--text-2);
+  background: var(--panel-deep);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-sm);
+  overflow-wrap: anywhere;
+}
+
+.tileFooter {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.viewAll {
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  background: transparent;
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+
+.viewAll:hover {
+  color: var(--text);
+  border-color: var(--brand-2);
+}
+
+.viewAll:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+/* ≤ 900 px: the bar wraps to two rows of five (R2 US2 scenario 2). */
+@media (max-width: 900px) {
+  .hotbar,
+  .hotbar[data-overflow] {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  /* Five per row leaves no end track, so "+N" takes a right-aligned row of its own. */
+  .hotbarOverflow {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
+}
+
+/*
+ * `stretch` (T333): the chart fills the row it was given instead of holding the
+ * 120×32 box's ratio. Only the glance card's own rank row asks for this.
+ */
+.sparklineStretch {
+  height: 100%;
+  max-width: none;
 }

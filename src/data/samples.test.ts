@@ -13,8 +13,8 @@ import { orderedEpisodeIds } from './show';
 
 const root = resolve(__dirname, '../..');
 const contracts = resolve(root, 'specs/001-watch-hub-v1/contracts');
-// v2 extends the episode contract (skill/class/hotlist events, optional sheet fields).
-const episodeSchemaPath = resolve(root, 'specs/002-watch-hub-v2/contracts/episode.schema.json');
+// 003 revision 2 extends the v2 episode contract (equip/unequip events, crawler gear and art).
+const episodeSchemaPath = resolve(root, 'specs/003-crawler-record/contracts/episode.schema.json');
 const dataDir = resolve(root, 'public/data');
 
 function readJson(path: string): unknown {
@@ -72,7 +72,9 @@ describe.each(show.episodes.map((meta) => [meta.id, meta] as const))(
     it('is rich enough to exercise every story', () => {
       const episode = normalizeEpisode(raw);
       expect(episode.events.length).toBeGreaterThanOrEqual(25);
-      expect(episode.events.length).toBeLessThanOrEqual(60);
+      // Raised from 60 in 003 revision 2: ep1 carries X.O.'s nine skills and
+      // Harry's eleven hotlist marks on top of the v2 log.
+      expect(episode.events.length).toBeLessThanOrEqual(80);
 
       const counts = new Map<string, number>();
       for (const event of episode.events) {
@@ -95,6 +97,8 @@ describe.each(show.episodes.map((meta) => [meta.id, meta] as const))(
         'skill',
         'class',
         'hotlist',
+        'equip',
+        'unequip',
       ];
       for (const type of known) {
         expect(counts.get(type) ?? 0, `${type} appears at least twice`).toBeGreaterThanOrEqual(2);
@@ -125,6 +129,18 @@ describe.each(show.episodes.map((meta) => [meta.id, meta] as const))(
       const episode = normalizeEpisode(raw);
       for (const crawler of episode.initialState.party) {
         expect(existsSync(resolve(root, `public${crawler.portrait}`))).toBe(true);
+      }
+    });
+
+    it('gives every crawler starting gear, and art points at a real file', () => {
+      const episode = normalizeEpisode(raw);
+      const withArt = episode.initialState.party.filter((crawler) => crawler.art !== undefined);
+      expect(withArt.length, 'at least two crawlers carry full-figure art').toBeGreaterThanOrEqual(2);
+      for (const crawler of episode.initialState.party) {
+        expect(crawler.gear, `${crawler.id} has starting gear`).toBeDefined();
+        if (crawler.art !== undefined) {
+          expect(existsSync(resolve(root, `public${crawler.art}`))).toBe(true);
+        }
       }
     });
   },

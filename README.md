@@ -24,15 +24,18 @@ npm run dev -- --open  # opens the archive
 - Archive: <http://localhost:5180/>
 - Episode with the real embed: <http://localhost:5180/ep/1>
 - Episode with the dev scrubber, no network: <http://localhost:5180/ep/1?fake=1>
-- The v2 panels mid-episode: <http://localhost:5180/ep/1?fake=1&t=560> (click a crawler, then
+- The panels mid-episode: <http://localhost:5180/ep/1?fake=1&t=580> (click a crawler, then
   the floor-map badge)
+- Straight to a full record: <http://localhost:5180/ep/1?fake=1&t=580&panel=dossier:harry&record=1>
+  (Harry's hotbar overflows at 9:32) and `…&panel=dossier:xo&record=1` (X.O.'s skills fill the
+  eight-tile grid and offer "View all (10)"). The `panel` / `record` flags are DEV-only.
 
 ### Verify
 
 ```sh
 npm run typecheck      # tsc --noEmit
 npm run lint           # eslint .
-npm test               # vitest run  (322 tests)
+npm test               # vitest run  (444 tests)
 npm run build          # vite build + copies dist/index.html → dist/404.html
 npm run preview        # serves dist/ at http://localhost:4173/
 ```
@@ -78,8 +81,8 @@ achievement toast with a populated feed.
 | `src/engine/` | reducer, selectors, time formatting — pure, framework-free |
 | `src/data/` | schema types, guards/normalization, fetching, show ordering |
 | `src/playback/` | `TimeSource` interface, YouTube adapter, fake, `usePlayhead`, resume store + `useResume` |
-| `src/hooks/` | `usePanel` — the right rail's one-panel state machine |
-| `src/components/` | stage, party rail, event feed, timeline, toast, minimap, header, rail panel, dossier, floor map, resume card |
+| `src/hooks/` | `usePanel` — the right rail's one-panel state machine; `useModalDialog` — the full record's focus trap |
+| `src/components/` | stage, party rail, event feed, timeline, toast, minimap, header, rail panel, glance card, full record, dossier sections, floor map, resume card |
 | `src/pages/` | `EpisodePage`, `HubPage`, `NotFoundPage` |
 | `src/copy.ts` | **every** user-facing string, in the System's voice |
 | `src/styles/tokens.css` | the colour/spacing/type tokens from spec §6 |
@@ -92,28 +95,84 @@ achievement toast with a populated feed.
 
 The ambient view is unchanged: video, party rail, ticker. Everything below is **opt-in** — it
 opens on an explicit click or keypress and closes on an explicit action, and the right rail
-hosts exactly one of the feed (default), a dossier, or the map. Panel content is still a pure
-function of the playhead, so scrubbing in either direction updates it and never leaks an event
-whose `t` is ahead of the playhead.
+hosts exactly one of the feed (default), a crawler glance card, or the map. Exactly one thing
+may cover the stage, and only when asked for from the glance card: the full record. Panel and
+record content are still a pure function of the playhead, so scrubbing in either direction
+updates them and never leaks an event whose `t` is ahead of the playhead.
 
-### Crawler dossier
+### Crawler glance card
 
 Click (or focus and press Enter/Space) a crawler frame in the party rail. The rail swaps the
-feed for that crawler's System dossier, in the order the official crawler sheet uses:
+feed for that crawler's glance card — how they are doing *right now*, in a couple of seconds:
 
-1. **Header** — portrait, name, handle, player, race, pronouns, crawler number, level, class
-   (or "Unclassed"), floor.
-2. **Vitals** — a ten-segment HP bar with current/max, current rank with an inline sparkline of
-   every elapsed `rank` event (better rank drawn higher, current and best-so-far as numbers, a
-   text summary for assistive tech), and debuffs.
-3. **Stats** — STR / INT / CON / DEX / CHA, when the episode data carries them.
-4. **Hotlist**, **Skills** (name and rank), **Inventory**, **Achievements** (title, description,
-   time), then **History** — that crawler's elapsed events, newest first.
+1. **Header** — portrait, name, handle · played by {player}, class (or "Unclassed") · level. The
+   "·" is decorative and hidden; a comma beside it is what a screen reader hears.
+2. **Vitals** — an `HP` label, the sheet's ten-segment strip and current/max.
+3. **Rank** — a `RANK` label, the current rank, a ↑/↓ delta against the previous elapsed `rank`
+   event (↑ means the number fell, which is a climb), then `BEST`; a full-width sparkline of
+   every elapsed rank point sits on its own row under them, with a text summary for assistive
+   tech. An unranked crawler keeps the label and reads "Unranked".
+4. **Debuffs** — chips, two rows, then "+N".
+5. **Equipped** — one line per worn slot, `Slot · Item`, in the sheet's order (head, torso,
+   arms, hands, legs, feet, then each accessory). "Nothing equipped." when the crawler is bare.
+6. **Latest achievement** — the newest award only: title, time, and its description.
+7. **Recent moments** — up to three entries of that crawler's history, each with its time.
+
+Then **Open full record**, the card's only control.
+
+Revision 2 removed the four ledger rows (count + newest per list) and the "—" placeholder rows
+under Moments: a crawler's skill and inventory lists grow without limit, and the author only
+ever wanted what they are *wearing* and the *last* thing they were awarded. The card's height is
+still fixed — every row is single-line, Equipped is bounded by the sheet's seven slots, and the
+sparkline row and the three-moment block reserve their height in CSS — so a crawler with forty
+achievements renders exactly as tall as one with none and the card does not scroll on a laptop.
+
+Close with the panel's × control, <kbd>Escape</kbd>, or by clicking the same frame again; focus
+returns to the frame. Clicking a different frame switches cards without closing. At ≤ 900 px the
+panel is a full-viewport overlay and the page behind it does not scroll.
+
+### Full record
+
+**Open full record** opens the whole System sheet as a modal dialog over the page — the one
+overlay allowed to cover the stage. Revision 2 lays it out as a character sheet in an MMO:
+
+- **Art column** — the crawler's full-figure art (`art` in the episode data) down the left at
+  the sheet's height, contained rather than cropped, hung from the top so a tall figure uses the
+  height and a wide stance the width. A crawler with no `art` gets their bust in the same
+  column instead. At ≤ 900 px the art becomes a banner above the identity.
+- **Top band** — identity (portrait, name, handle, played by, race, pronouns, crawler number,
+  level, class, floor) and vitals side by side, with the **STATS** strip (STR / INT / CON / DEX
+  / CHA, when the data carries them) full width beneath them.
+- **Hotbar** — the Hotlist as ten numbered square keys filled in order, empty keys dashed and
+  unlit, and a `+N` marker after key ten when the crawler is tracking more than ten. Each key
+  names itself for assistive tech ("Slot 3, The Rot Market" / "Slot 4, empty"). On a phone the
+  bar wraps to two rows of five with the marker right-aligned beneath.
+- **Gear** — every slot on the official sheet (Head, Torso, Arms, Hands, Legs, Feet,
+  Accessories) with what is worn in it or "—". Accessories share one row.
+- **Tile grids** — Skills, Inventory and Achievements as bag-style tiles (name, then rank or
+  time in a mono footer), at most **eight**, with a **View all (N)** control when there are
+  more. History shows its latest eight rows the same way.
+- **List views** — **View all** replaces the dialog body with that category in full, under a
+  **Back to record** control, and the dialog's title becomes `{name} — {CATEGORY}`. Focus moves
+  to the list's heading on entry and back to the **View all** button on return. The list view is
+  dialog-internal state: it resets to the sheet whenever the record closes.
 
 Sections with nothing in them yet render a one-line System empty state rather than vanishing.
-Close with the panel's × control, <kbd>Escape</kbd>, or by clicking the same frame again; focus
-returns to the frame. Clicking a different frame switches dossiers without closing. At ≤ 900 px
-the panel is a full-viewport overlay and the page behind it does not scroll.
+
+- **Size**: `min(1200px, 94vw)` wide, at most 90 vh tall, anchored to a fixed top offset so a
+  seek that shortens it cannot re-centre it, scrolling inside itself over a backdrop that is
+  opaque from the first painted frame. At ≤ 900 px it fills the viewport and stacks.
+- **Modal**: focus moves to the close control on open and is trapped inside — <kbd>Tab</kbd> and
+  <kbd>Shift</kbd>+<kbd>Tab</kbd> wrap — and the page behind it is inert and does not scroll.
+- **Keys**: <kbd>Escape</kbd> steps back before it closes — in a list view it returns to the
+  sheet, and only a second press closes the record. Closing leaves the glance card open in the
+  rail and returns focus to **Open full record**. The dimmed backdrop and the × control close it
+  outright.
+- **Live**: it keeps updating with the playhead, in the sheet *and* in a list view. Scrub while
+  it is open and gear, tiles, hotbar and history follow, without the dialog closing or moving.
+  Opening it never pauses playback and never touches the `TimeSource`.
+- It closes with the card that opened it: switching crawlers, closing the panel, or changing
+  episode all dismiss it.
 
 ### Floor map
 
@@ -152,10 +211,35 @@ Per episode, on this device only — no accounts, no server.
 Opening the dev scrubber at `?t=` starts the fake source past that 5 s grace window, so the
 offer is answered by the playhead itself and no card appears. That is expected.
 
-### Party rank
+### Under the stage
 
-Once a party-scoped `rank` event has elapsed, the feed header carries a "Party rank #…" line.
-Before that it is omitted.
+Between the player and the timeline sits a slim caption row: `Ep 1 · Floor 1 — <title>` on the
+left (the page's one `<h1>`, so the episode title is finally visible) and the playhead on the
+right. It used to sit *inside* the stage, where the host's own control bar covered it; that is a
+deliberate deviation from v1 §5, recorded in `specs/003-crawler-record/spec.md`.
+
+The timeline below it carries a colour legend, a playhead tick distinct from the elapsed fill,
+and its own tooltip per marker — instant, touch-friendly, and still spoiler-safe: a marker the
+playhead has not reached names only its kind and time.
+
+Every feed row is a seek control: it shows the moment it happened and clicking it moves the
+broadcast there (the pinned sponsor too). Before the first event has elapsed the feed reads
+"Standing by. The System reports when the broadcast begins."
+
+The party rail wraps to 3 + 2 between 900 and 1100 px, where five frames next to the feed
+column started truncating names, and becomes a horizontal snap strip at 480 px and below. Every
+frame reserves its debuff-pip row whether or not it has one, so a seek never changes the rail's
+height.
+
+### Rank
+
+DCC has **individual rank only** — there is no party rank. A `rank` event names one crawler and
+their new standing; the glance card and the record show the current value, the best reached so
+far, and a sparkline of every elapsed point. A crawler nobody has ranked yet reads "Unranked".
+
+Legacy data is read, not rejected: a pre-revision-2 row with `scope: "crawler"` loads with the
+field dropped, a row with `scope: "party"` is ignored like any unknown event, and an
+`initialState.partyRank` is dropped with a console warning.
 
 ---
 
@@ -177,7 +261,7 @@ required; columns are `timecode,type,actor,field1,field2,field3`
 | `loot` | item | source | – |
 | `hp` | current | max | – |
 | `level_up` | level | – | – |
-| `rank` | scope (`party`/`crawler`) | rank | – |
+| `rank` | rank | – | – |
 | `map_reveal` | cells `r,c;r,c` | label | – |
 | `sponsor` | text | durationSec | – |
 | `chapter` | label | kind (`boss`/`loot`/`achievement`/`levelup`/`story`) | – |
@@ -186,6 +270,8 @@ required; columns are `timecode,type,actor,field1,field2,field3`
 | `skill` | name | rank (number, optional) | desc (optional) |
 | `class` | class | – | – |
 | `hotlist` | add (`;`) | remove (`;`) | – |
+| `equip` | slot (`head`/`torso`/`arms`/`hands`/`legs`/`feet`/`accessory`) | item | – |
+| `unequip` | slot (as above) | item (accessory only; optional) | – |
 | `note` | text | – | – |
 
 Convert:
@@ -197,16 +283,28 @@ npm run sheet-to-json -- path/to/ep4.csv \
   --out public/data/ep4.json
 ```
 
-`--initial-state` is a JSON file holding the episode's `initialState` (party, `partyRank`, map).
+`--initial-state` is a JSON file holding the episode's `initialState` (`party` and `map`).
 Each crawler there may carry the optional sheet fields the dossier renders — `race`, `pronouns`,
-`crawlerNumber`, `stats` (`{ str, int, con, dex, cha }`), `hotlist[]` and `skills[]`
-(`{ name, rank? }`). They need no new CSV columns, and v1 files without them keep working: the
+`crawlerNumber`, `stats` (`{ str, int, con, dex, cha }`), `hotlist[]`, `skills[]`
+(`{ name, rank? }`), `gear` (`{ head?, torso?, arms?, hands?, legs?, feet?, accessories[]? }`)
+and `art` (a full-figure image path; the record falls back to the bust without it). They need no new CSV columns, and v1 files without them keep working: the
 dossier simply omits what it does not know.
 The converter sorts events by `t`, normalizes them, and prints a summary such as
 `wrote public/data/ep4.json (42 events, 2 warnings)`. **Warnings still produce output** (unknown
-actor, impossible HP, timecode past `--duration`, unknown type, bad `chapter.kind`); **errors
-write nothing and exit 1** (unparseable timecode, missing header column, non-numeric numeric
-field, empty required field).
+actor, impossible HP, timecode past `--duration`, unknown type, bad `chapter.kind`, an
+accessory `unequip` with no item — the last one worn comes off, a legacy `rank` row with
+`crawler` in field1 — the rank is read out of field2); **errors write nothing and
+exit 1** (unparseable timecode, missing header column, non-numeric numeric field, empty required
+field, an `equip`/`unequip` slot that is not one of the seven, a `rank` row with `party` in
+field1 — DCC has no party rank).
+
+### Carrying the map across episodes
+
+Each episode file is self-contained: the overlay never reads another episode's log. So when two
+episodes share a floor, **the later one's `initialState.map.revealed` must already list every
+cell the earlier ones revealed on that floor** — that is what `initialState` is for. `ep2.json`
+seeds the eight cells `ep1.json` ends with; a viewer who starts at ep2 sees the floor as the
+party left it, and a viewer who skipped ahead learns nothing they should not.
 
 Try it against the samples:
 
@@ -257,9 +355,21 @@ video's real length and the sample events are spread across it. Change ids and d
 Keep the filenames, or update each crawler's `portrait` path in every `ep{N}.json`. The rail
 renders them at 40 px (32 px on a phone), so square art crops best.
 
+**Crawler full-figure art** — the record's art column; also generated monochrome silhouettes:
+
+- `public/img/crawlers/stuntman-art.svg` (The Stuntman — 320×540, the wide-stance case)
+- `public/img/crawlers/psychic-art.svg` (The Psychic — 200×540)
+- `public/img/crawlers/harry-art.svg` (Harry — 200×540)
+- `public/img/crawlers/xo-art.svg` (X.O. — 200×540)
+- `public/img/crawlers/actress-art.svg` (The Actress — 200×540)
+
+A crawler's `art` field names one of these; the sample data gives art to two crawlers per
+episode so the bust fallback stays visible. Real art may be any aspect ratio — the column
+contains it rather than cropping it.
+
 **Also placeholder**: `public/img/dcc-mark.svg` and `public/favicon.svg` (the circular "DC" mark),
-and the event logs in `public/data/ep1.json`, `ep2.json`, `ep3.json` — 43 invented events each,
-written to exercise every event type. Regenerate them from real sheets with `sheet-to-json`.
+and the event logs in `public/data/ep1.json`, `ep2.json`, `ep3.json` — 57 / 47 / 47 invented
+events, written to exercise every event type. Regenerate them from real sheets with `sheet-to-json`.
 
 ---
 
@@ -289,17 +399,19 @@ Measured on the production build (`npm run build`, Node 20.9.0):
 
 | Asset | Raw | Gzipped |
 |-------|-----|---------|
-| `dist/assets/index-*.js` | 325.7 kB | **103.3 kB** |
-| `dist/assets/index-*.css` | 30.7 kB | 6.4 kB |
+| `dist/assets/index-*.js` | 350.0 kB | **110.1 kB** |
+| `dist/assets/index-*.css` | 47.6 kB | 8.8 kB |
 | `dist/index.html` | 0.7 kB | 0.4 kB |
 
 That is React 19 + react-router 7 + the whole app — v1 plus the v2 panels, dossier, floor map
-and resume — comfortably under the 150 kB gzipped budget.
+and resume, plus the glance card and full record — comfortably under the 150 kB gzipped budget.
 
 Lighthouse 11.7.1, desktop preset, against `npm run preview` with the real YouTube embed loading:
 **performance 100, accessibility 100** on both `/ep/1` and `/` (FCP 0.4 s, LCP 0.5 s, TBT 0 ms,
 CLS 0), with no accessibility audit below 1 — including the zero-weight informational ones.
-Details in `specs/002-watch-hub-v2/quickstart.md` → Results.
+Details in `specs/002-watch-hub-v2/quickstart.md` → Results; re-measured for the crawler
+record in `specs/003-crawler-record/quickstart.md` → Results (`/ep/1` still 100/100, and the
+full record itself audits at accessibility 100 with zero axe violations).
 
 The budget holds because of three rules: no webfonts (`system-ui` stack only, nothing blocks
 first render), no render-blocking scripts (the bundle is a `type="module"` script, deferred by
@@ -320,8 +432,10 @@ Read in this order:
 3. `specs/001-watch-hub-v1/` — `spec.md` (requirements and success criteria), `plan.md`,
    `research.md` (the decisions and what was rejected), `data-model.md`, `contracts/`,
    `quickstart.md` (run + manual acceptance walkthrough + results), `tasks.md`.
-4. `specs/002-watch-hub-v2/` — the active feature: dossiers, the expanded map, resume and rank
-   sparklines. Same layout, plus `contracts/panels.md` and `contracts/resume-storage.md`.
+4. `specs/002-watch-hub-v2/` — dossiers, the expanded map, resume and rank sparklines. Same
+   layout, plus `contracts/panels.md` and `contracts/resume-storage.md`.
+5. `specs/003-crawler-record/` — the active feature: the rail's glance card and the modal full
+   record. Same layout, plus `contracts/dialog.md`.
 
 Three rules bite most often while editing:
 

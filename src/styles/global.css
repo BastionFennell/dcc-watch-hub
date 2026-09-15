@@ -26,6 +26,11 @@ body.panel-open {
   overflow: hidden;
 }
 
+/* The full record covers the stage at every width, so the page never scrolls behind it (FR-210). */
+body.dialog-open {
+  overflow: hidden;
+}
+
 h1,
 h2,
 h3,

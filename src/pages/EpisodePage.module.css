@@ -40,6 +40,48 @@
   font-size: var(--text-xs);
 }
 
+/*
+ * The slim caption row between the stage and the timeline (T340): what you are
+ * watching on the left, where you are on the right.
+ */
+.captionRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.captionTitle {
+  margin: 0;
+  min-width: 0;
+  color: var(--text-2);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.captionTime {
+  flex: none;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Two lines rather than a truncated title once the row runs out of width. */
+@media (max-width: 480px) {
+  .captionRow {
+    flex-wrap: wrap;
+  }
+
+  .captionTitle {
+    white-space: normal;
+  }
+}
+
 @media (min-width: 1400px) {
   .page {
     --below-stage: 260px;
@@ -66,10 +108,7 @@
   }
 }
 
-/*
- * The ended card sits above the toast and the minimap badge (both z-index 2) and
- * above the stage caption, which it is allowed to cover (T030).
- */
+/* The ended card sits above the toast and the minimap badge (both z-index 2). */
 .endedOverlay {
   position: absolute;
   inset: 0;

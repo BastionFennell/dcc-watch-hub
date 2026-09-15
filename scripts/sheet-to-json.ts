@@ -2,15 +2,17 @@
  * Editor sheet CSV → `ep{N}.json` (constitution: Author-Friendly Data Pipeline).
  *
  * Contract: specs/001-watch-hub-v1/contracts/sheet-csv.md, extended by
- * specs/002-watch-hub-v2/contracts/sheet-csv.md (skill / class / hotlist rows).
+ * specs/002-watch-hub-v2/contracts/sheet-csv.md (skill / class / hotlist rows) and by
+ * specs/003-crawler-record/data-model.md (equip / unequip rows: field1 slot, field2 item).
  *
  *   npm run sheet-to-json -- scripts/samples/ep1.csv --episode 1 --duration 240 \
  *     --initial-state scripts/samples/ep1.initial.json --out public/data/ep1.json
  *
  * Warnings (unknown actor, impossible HP, timecode past the duration, unknown type or
- * chapter kind) are reported and the file is still written. Only malformed input
- * (unparseable timecode, missing column, non-numeric numeric, empty required field)
- * is an error, and then nothing is written.
+ * chapter kind, an accessory unequip with no item) are reported and the file is still
+ * written. Only malformed input (unparseable timecode, missing column, non-numeric
+ * numeric, empty required field, an unknown gear slot) is an error, and then nothing
+ * is written.
  *
  * Everything here is a pure exported function except `main()`, which runs only when
  * this file is executed directly.
@@ -20,7 +22,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'csv-parse/sync';
 import type { Cell, EpisodeData, Hp, InitialState } from '../src/data/types';
-import { CHAPTER_KINDS } from '../src/data/types';
+import { CHAPTER_KINDS, GEAR_SLOTS } from '../src/data/types';
 import { normalizeEpisode, toNumber } from '../src/data/validate';
 
 /* ----------------------------------------------------------------- shapes */
@@ -74,17 +76,20 @@ export interface ConvertResult {
   errors: string[];
 }
 
-/** Types whose row is meaningless without an actor. `rank` depends on its scope. */
+/** Types whose row is meaningless without an actor (`rank` included since T334). */
 const ACTOR_EVENT_TYPES = new Set([
   'achievement',
   'loot',
   'hp',
   'level_up',
+  'rank',
   'status',
   'inventory',
   'skill',
   'class',
   'hotlist',
+  'equip',
+  'unequip',
 ]);
 
 /* -------------------------------------------------------------- timecodes */
@@ -209,8 +214,7 @@ export function rowToEvent(row: SheetRow, ctx: RowContext): RowResult {
   if (actor !== '' && !ctx.partyIds.has(actor)) {
     warnings.push(`unknown actor ${JSON.stringify(actor)} (not in initialState.party)`);
   }
-  const needsActor = ACTOR_EVENT_TYPES.has(type) || (type === 'rank' && field1 === 'crawler');
-  if (needsActor && actor === '') {
+  if (ACTOR_EVENT_TYPES.has(type) && actor === '') {
     warnings.push(`${type} row has no actor`);
   }
 
@@ -251,18 +255,22 @@ export function rowToEvent(row: SheetRow, ctx: RowContext): RowResult {
       break;
     }
     case 'rank': {
-      if (field1 !== 'party' && field1 !== 'crawler') {
+      // DCC has individual rank only (T334): field1 is the rank itself.
+      if (field1 === 'party') {
         errors.push(
-          `rank scope (field1) must be "party" or "crawler", got ${JSON.stringify(field1)}`,
+          'party rank is not a thing in DCC: a rank row names one crawler and their rank (field1)',
         );
         break;
       }
-      const rank = numericField(field2, 'rank', 'field2', errors);
-      if (rank === null) break;
-      event =
-        field1 === 'crawler'
-          ? { t, type, scope: field1, rank, actor }
-          : { t, type, scope: field1, rank };
+      if (field1 === 'crawler') {
+        // The pre-T334 sheet put the scope in field1 and the rank in field2.
+        warnings.push('legacy rank row: the scope column is gone, put the rank in field1');
+        const legacyRank = numericField(field2, 'rank', 'field2', errors);
+        if (legacyRank !== null) event = { t, type, rank: legacyRank, actor };
+        break;
+      }
+      const rank = numericField(field1, 'rank', 'field1', errors);
+      if (rank !== null) event = { t, type, rank, actor };
       break;
     }
     case 'map_reveal': {
@@ -327,6 +335,28 @@ export function rowToEvent(row: SheetRow, ctx: RowContext): RowResult {
         ...(rank === null ? {} : { rank }),
         ...(field3 === '' ? {} : { desc: field3 }),
       };
+      break;
+    }
+    case 'equip':
+    case 'unequip': {
+      if (!(GEAR_SLOTS as readonly string[]).includes(field1)) {
+        errors.push(
+          `${type} slot (field1) must be one of ${GEAR_SLOTS.join(', ')}, got ${JSON.stringify(field1)}`,
+        );
+        break;
+      }
+      if (type === 'equip') {
+        if (field2 === '') errors.push('empty required field: item (field2) on equip');
+        else event = { t, type, actor, slot: field1, item: field2 };
+        break;
+      }
+      if (field1 === 'accessory' && field2 === '') {
+        warnings.push('unequip of an accessory with no item (field2): the last one is removed');
+      }
+      event =
+        field2 === ''
+          ? { t, type, actor, slot: field1 }
+          : { t, type, actor, slot: field1, item: field2 };
       break;
     }
     case 'class': {
@@ -449,7 +479,7 @@ export const USAGE = `usage: npm run sheet-to-json -- <csv> --episode <n> --dura
   <csv>                   sheet export; header row ${REQUIRED_COLUMNS.join(',')}
   --episode <n>           episode id written into the output
   --duration <seconds>    episode duration; rows past it are warned about
-  --initial-state <path>  JSON file holding { party, partyRank, map }
+  --initial-state <path>  JSON file holding { party, map }
   --out <path>            where to write ep{N}.json
   --help                  print this message`;
 

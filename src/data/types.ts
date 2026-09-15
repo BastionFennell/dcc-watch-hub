@@ -56,6 +56,33 @@ export interface SkillEntry {
   rank?: number;
 }
 
+/**
+ * The sheet's gear slots (003 revision 2, R2-FR-220). `accessory` is the one
+ * slot that holds a list; every other slot holds at most one item.
+ */
+export type GearSlot = 'head' | 'torso' | 'arms' | 'hands' | 'legs' | 'feet' | 'accessory';
+
+export const GEAR_SLOTS = [
+  'head',
+  'torso',
+  'arms',
+  'hands',
+  'legs',
+  'feet',
+  'accessory',
+] as const satisfies readonly GearSlot[];
+
+/** A crawler's starting gear. Every field is optional; absent means empty. */
+export interface Gear {
+  head?: string;
+  torso?: string;
+  arms?: string;
+  hands?: string;
+  legs?: string;
+  feet?: string;
+  accessories?: string[];
+}
+
 /** The sheet's five stats. All five are present or the block is absent (v2, FR-113). */
 export interface CrawlerStats {
   str: number;
@@ -84,6 +111,12 @@ export interface Crawler {
   stats?: CrawlerStats;
   hotlist?: string[];
   skills?: SkillEntry[];
+
+  /* Optional gear and art (003 revision 2, R2-FR-220/224). */
+  /** Gear worn at t = 0; `equip`/`unequip` events move it from there. */
+  gear?: Gear;
+  /** Full-figure illustration path. The bust `portrait` stays for the rail. */
+  art?: string;
 }
 
 export interface Grid {
@@ -99,7 +132,6 @@ export interface MapState {
 
 export interface InitialState {
   party: Crawler[];
-  partyRank: number | null;
   map: MapState;
 }
 
@@ -148,13 +180,14 @@ export interface LevelUpEvent extends EventBase {
   level: number;
 }
 
-export type RankScope = 'party' | 'crawler';
-
+/**
+ * One crawler's standing on the leaderboard. DCC has individual rank only —
+ * there is no party rank (003 revision 2, T334; supersedes v1/v2 FR-141).
+ */
 export interface RankEvent extends EventBase {
   type: 'rank';
-  scope: RankScope;
+  actor: string;
   rank: number;
-  actor?: string;
 }
 
 export interface MapRevealEvent extends EventBase {
@@ -220,6 +253,24 @@ export interface HotlistEvent extends EventBase {
   remove: string[];
 }
 
+/* --- 003 revision 2 events (R2-FR-220). --- */
+
+/** Wears `item` in `slot`; `accessory` appends to the accessory list. */
+export interface EquipEvent extends EventBase {
+  type: 'equip';
+  actor: string;
+  slot: GearSlot;
+  item: string;
+}
+
+/** Clears `slot`; for `accessory`, removes `item` or the last accessory. */
+export interface UnequipEvent extends EventBase {
+  type: 'unequip';
+  actor: string;
+  slot: GearSlot;
+  item?: string;
+}
+
 /** A well-formed event of a type this version understands. */
 export type Event =
   | SystemMessageEvent
@@ -236,7 +287,9 @@ export type Event =
   | NoteEvent
   | SkillEvent
   | ClassEvent
-  | HotlistEvent;
+  | HotlistEvent
+  | EquipEvent
+  | UnequipEvent;
 
 /**
  * Anything the reducer, feed, toast, and timeline must ignore without crashing:
@@ -267,6 +320,8 @@ export const KNOWN_EVENT_TYPES = [
   'skill',
   'class',
   'hotlist',
+  'equip',
+  'unequip',
 ] as const satisfies readonly EventType[];
 
 export const CHAPTER_KINDS = ['boss', 'loot', 'achievement', 'levelup', 'story'] as const;

@@ -51,15 +51,33 @@ describe('normalizeEvent', () => {
     expect(clamped.t).toBe(0);
   });
 
-  it('accepts a crawler-scoped rank only with an actor', () => {
-    expect(normalizeEvent({ t: 1, type: 'rank', scope: 'crawler', rank: 5 }).type).toBe('unknown');
+  // DCC has individual rank only (T334).
+  it('accepts a rank only with an actor', () => {
+    expect(normalizeEvent({ t: 1, type: 'rank', rank: 5 }).type).toBe('unknown');
+    expect(normalizeEvent({ t: 1, type: 'rank', rank: 5, actor: 'xo' })).toEqual({
+      t: 1,
+      type: 'rank',
+      actor: 'xo',
+      rank: 5,
+    });
+  });
+
+  it('reads a legacy crawler-scoped rank row and drops the scope', () => {
     expect(normalizeEvent({ t: 1, type: 'rank', scope: 'crawler', rank: 5, actor: 'xo' })).toEqual({
       t: 1,
       type: 'rank',
-      scope: 'crawler',
-      rank: 5,
       actor: 'xo',
+      rank: 5,
     });
+  });
+
+  it('demotes a legacy party rank row to unknown', () => {
+    const legacy = normalizeEvent({ t: 1, type: 'rank', scope: 'party', rank: 61 });
+    expect(legacy.type).toBe('unknown');
+    // Even with an actor attached: a party rank is not a fact DCC has.
+    expect(normalizeEvent({ t: 1, type: 'rank', scope: 'party', rank: 61, actor: 'xo' }).type).toBe(
+      'unknown',
+    );
   });
 
   it('rejects a sponsor without a positive duration', () => {
@@ -96,6 +114,18 @@ describe('guards', () => {
     expect(isShow({})).toBe(false);
     expect(isEpisodeData({ episodeId: 1, events: [] })).toBe(false);
     expect(() => normalizeEpisode({ nope: true })).toThrow(DataError);
+  });
+
+  it('drops a legacy initialState.partyRank with a warning', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const episode = normalizeEpisode({
+      episodeId: 1,
+      initialState: { ...makeEpisode().initialState, partyRank: 61 },
+      events: [],
+    });
+    expect(episode.initialState).not.toHaveProperty('partyRank');
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
   });
 
   it('normalizeEpisode sorts and normalizes events', () => {
@@ -253,5 +283,110 @@ describe('normalizeCrawler — optional sheet fields', () => {
     expect(episode.initialState.party[2].skills).toEqual([{ name: 'Powerful Strike', rank: 1 }]);
     expect(warn).toHaveBeenCalled();
     warn.mockRestore();
+  });
+});
+
+/* ------------------------------------------ 003 revision 2: equip / unequip */
+
+describe('normalizeEvent — gear events (R2-FR-220)', () => {
+  it('keeps an equip event for every sheet slot', () => {
+    for (const slot of ['head', 'torso', 'arms', 'hands', 'legs', 'feet', 'accessory']) {
+      expect(normalizeEvent({ t: 152, type: 'equip', actor: 'harry', slot, item: 'Jacket' })).toEqual(
+        { t: 152, type: 'equip', actor: 'harry', slot, item: 'Jacket' },
+      );
+    }
+  });
+
+  it('demotes an equip with an unknown slot, no actor, or no item', () => {
+    expect(
+      normalizeEvent({ t: 152, type: 'equip', actor: 'harry', slot: 'cape', item: 'Cloak' }).type,
+    ).toBe('unknown');
+    expect(normalizeEvent({ t: 152, type: 'equip', slot: 'torso', item: 'Cloak' }).type).toBe(
+      'unknown',
+    );
+    expect(
+      normalizeEvent({ t: 152, type: 'equip', actor: 'harry', slot: 'torso', item: '' }).type,
+    ).toBe('unknown');
+  });
+
+  it('keeps an unequip with and without its optional item', () => {
+    expect(normalizeEvent({ t: 168, type: 'unequip', actor: 'harry', slot: 'hands' })).toEqual({
+      t: 168,
+      type: 'unequip',
+      actor: 'harry',
+      slot: 'hands',
+    });
+    expect(
+      normalizeEvent({
+        t: 168,
+        type: 'unequip',
+        actor: 'harry',
+        slot: 'accessory',
+        item: 'Lucky Rabbit Foot',
+      }),
+    ).toEqual({
+      t: 168,
+      type: 'unequip',
+      actor: 'harry',
+      slot: 'accessory',
+      item: 'Lucky Rabbit Foot',
+    });
+  });
+
+  it('demotes an unequip with an unknown slot or no actor', () => {
+    expect(
+      normalizeEvent({ t: 168, type: 'unequip', actor: 'harry', slot: 'backpack' }).type,
+    ).toBe('unknown');
+    expect(normalizeEvent({ t: 168, type: 'unequip', slot: 'hands' }).type).toBe('unknown');
+  });
+});
+
+describe('normalizeCrawler — gear and art (R2-FR-220/224)', () => {
+  const base = {
+    id: 'harry',
+    name: 'Harry',
+    handle: 'Harry',
+    player: 'Marcus',
+    level: 2,
+    hp: { current: 22, max: 22 },
+    portrait: '/img/crawlers/harry.svg',
+    class: null,
+    inventory: [],
+    rank: null,
+  };
+
+  it('keeps well-formed gear and art', () => {
+    const crawler = normalizeCrawler({
+      ...base,
+      gear: { hands: 'Enchanted Crowbar', accessories: ['Lucky Rabbit Foot'] },
+      art: '/img/crawlers/harry-art.svg',
+    });
+    expect(crawler.gear).toEqual({
+      hands: 'Enchanted Crowbar',
+      accessories: ['Lucky Rabbit Foot'],
+    });
+    expect(crawler.art).toBe('/img/crawlers/harry-art.svg');
+  });
+
+  it('drops malformed gear and art with a warning, never throwing', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const badSlot = normalizeCrawler({ ...base, gear: { torso: { name: 'Jacket' } } } as never);
+    const badList = normalizeCrawler({ ...base, gear: { accessories: 'Ring' } } as never);
+    const notAnObject = normalizeCrawler({ ...base, gear: 'a jacket' } as never);
+    const badArt = normalizeCrawler({ ...base, art: ['/img/a.svg'] } as never);
+    const emptyArt = normalizeCrawler({ ...base, art: '' });
+    expect(badSlot.gear).toBeUndefined();
+    expect(badList.gear).toBeUndefined();
+    expect(notAnObject.gear).toBeUndefined();
+    expect(badArt.art).toBeUndefined();
+    expect(emptyArt.art).toBeUndefined();
+    expect(warn).toHaveBeenCalledTimes(5);
+    warn.mockRestore();
+  });
+
+  it('leaves a crawler with neither field untouched', () => {
+    const crawler = normalizeCrawler({ ...base });
+    expect(crawler.gear).toBeUndefined();
+    expect(crawler.art).toBeUndefined();
   });
 });

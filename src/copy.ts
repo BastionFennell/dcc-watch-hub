@@ -53,6 +53,8 @@ export const copy = {
     skill: 'Skill',
     class: 'Class',
     hotlist: 'Hotlist',
+    equip: 'Equip',
+    unequip: 'Unequip',
   } as const,
 
   // Stage
@@ -80,7 +82,6 @@ export const copy = {
     hp: (actor: string, current: number, max: number) =>
       `${actor} holding at ${current}/${max} HP`,
     levelUp: (actor: string, level: number) => `${actor} reaches Lv ${level}`,
-    rankParty: (rank: number) => `Party climbs to #${rank} overall`,
     rankCrawler: (actor: string, rank: number) => `${actor} climbs to #${rank} overall`,
     mapReveal: (count: number, label?: string) =>
       label
@@ -111,9 +112,13 @@ export const copy = {
       if (remove.length > 0) parts.push(`clears ${remove.join(', ')} from the Hotlist`);
       return `${actor} ${parts.length > 0 ? parts.join(' and ') : 'leaves the Hotlist alone'}`;
     },
+    /* --- 003 revision 2 event types (R2-FR-220) --- */
+    equip: (actor: string, slot: string, item: string) => `${actor} equips ${item} (${slot})`,
+    unequip: (actor: string, slot: string, item?: string) =>
+      item === undefined
+        ? `${actor} clears the ${slot} slot`
+        : `${actor} stows ${item} (${slot})`,
     markerLevelUp: (actor: string, level: number) => `${actor} reaches Lv ${level}`,
-    stageCaption: (episodeId: number, floor: number, time: string) =>
-      `Ep ${episodeId} · Floor ${floor} · ${time}`,
   },
 
   /* --- appended by T025–T029 (archive navigation) --- */
@@ -162,8 +167,10 @@ export const copy = {
   /** Panels (FR-100..FR-104). One rail slot, one close control. */
   panelClose: 'Close',
 
-  /** Crawler dossier (FR-110/111) — the System's copy of the crawler sheet. */
-  dossierKicker: 'CRAWLER DOSSIER',
+  /**
+   * Crawler sheet copy (FR-110/111). Since 003 the rail's kicker is
+   * `glanceKicker` and the dialog's is `recordKicker`; the title is shared.
+   */
   dossierTitle: (name: string) => `${name} — System record`,
   dossierSections: {
     vitals: 'VITALS',
@@ -174,6 +181,10 @@ export const copy = {
     inventory: 'INVENTORY',
     achievements: 'ACHIEVEMENTS',
     history: 'HISTORY',
+    equipped: 'EQUIPPED',
+    gear: 'GEAR',
+    latestAchievement: 'LATEST ACHIEVEMENT',
+    recent: 'RECENT MOMENTS',
   } as const,
   sheetLabels: {
     race: 'Race',
@@ -201,6 +212,8 @@ export const copy = {
     inventory: 'Nothing carried.',
     achievements: 'No achievements yet.',
     history: 'No moments logged.',
+    equipped: 'Nothing equipped.',
+    gearSlot: '—',
   } as const,
   unranked: 'Unranked',
   unclassed: 'Unclassed',
@@ -237,8 +250,105 @@ export const copy = {
   resumeRejoin: 'Rejoin the broadcast',
   resumeStartOver: 'Start from the beginning',
 
-  /** Party rank line in the feed header (FR-141). */
-  partyRankLine: (rank: number) => `Party rank #${rank}`,
+  /* --- 003 crawler record --- */
+
+  /** The rail card (FR-200): a glance, not the whole sheet. */
+  glanceKicker: 'CRAWLER GLANCE',
+  openRecord: 'Open full record',
+
+  /** The full record dialog (FR-210). */
+  recordKicker: 'CRAWLER RECORD',
+  recordTitle: (name: string) => `${name} — full record`,
+  /** Debuff chips past the card's two-row cap. */
+  debuffsMore: (n: number) => `+${n}`,
+
+  /* --- 003 revision 2 --- */
+
+  /** One row per worn slot on the sheet and on the glance card (R2-FR-220). */
+  gearSlotLabels: {
+    head: 'Head',
+    torso: 'Torso',
+    arms: 'Arms',
+    hands: 'Hands',
+    legs: 'Legs',
+    feet: 'Feet',
+    accessory: 'Accessory',
+  } as const,
+
+  /** The record's MMO hotbar: ten numbered slots, then the overflow marker (R2-FR-221). */
+  hotbarSlot: (n: number) => `${n}`,
+  hotbarOverflow: (n: number) => `+${n}`,
+
+  /** Tile grids cap at eight; the rest live behind a list view (R2-FR-222/223). */
+  viewAll: (n: number) => `View all (${n})`,
+  backToRecord: 'Back to record',
+  recordListTitle: (name: string, category: string) => `${name} — ${category}`,
+
+  /** The full-figure art column (R2-FR-224). */
+  artAlt: (name: string) => `${name}, full figure`,
+
+  /* --- 003 revision 2, wave 3 (glance card polish: T338, T343, T344) --- */
+
+  /**
+   * The player behind the crawler, spelled out (review 0.8): "Harry · played by
+   * Marcus" reads as a credit instead of two names that look like a duplicate.
+   */
+  playedBy: (player: string) => `played by ${player}`,
+  /**
+   * The screen-reader half of a "·" separator (review 0.7): the dot itself is
+   * aria-hidden, and this sits beside it so the accessible name is "Harry,
+   * played by Marcus" and not "Harryplayed by Marcus".
+   */
+  srSeparator: ', ',
+
+  /** Mono caps label before the sheet's ten-segment strip (review 1.3, T344). */
+  hpLabel: 'HP',
+  /** Mono caps label before the rank numbers (review 1.4, T343). */
+  rankLabel: 'RANK',
+  /**
+   * Movement since the previous rank point (T343). A positive delta means the
+   * rank number fell, which is an improvement, so it points up.
+   */
+  rankDelta: (delta: number) =>
+    `${delta > 0 ? '↑' : '↓'} ${Math.abs(delta).toLocaleString('en-US')}`,
+  /** Worn slots past the glance card's seven-row cap. */
+  equippedMore: (n: number) => `+${n}`,
+
+  /* --- 003 revision 2, wave 3 (record: T324) --- */
+
+  /**
+   * The gear section's last row holds a list, so the sheet spells it plural;
+   * `gearSlotLabels.accessory` stays singular for one worn item (R2 US2.3).
+   */
+  gearAccessoriesLabel: 'Accessories',
+
+  /* --- 003 revision 2, wave 3 (empty states, caption row, feed seek: T335/T340/T342) --- */
+
+  /** The feed before the first event has elapsed (review 0.3, T335). */
+  feedStandby: 'Standing by. The System reports when the broadcast begins.',
+  /** The floor map before the first reveal (review 0.4, T335). */
+  mapEmpty: 'No sectors charted yet.',
+
+  /**
+   * The caption row between the stage and the timeline (review 0.11/0.13, T340).
+   * The episode title is finally visible, so this line is the page's `<h1>`.
+   */
+  captionLeft: (episodeId: number, floor: number, title: string) =>
+    `Ep ${episodeId} · Floor ${floor} — ${title}`,
+
+  /** A feed row is a seek control; its accessible name leads with the moment (T342). */
+  feedSeek: (time: string, text: string) => `${time} — ${text}`,
+
+  /* --- 003 revision 2, wave 3 (record polish: T330) --- */
+
+  /**
+   * A hotbar slot names itself (T330). The visible name is clamped to two
+   * lines inside a ~80 px key, so the slot carries the whole thing for
+   * assistive tech — and an empty key says it is empty instead of reading as a
+   * stray digit.
+   */
+  hotbarSlotAria: (n: number, name: string) => `Slot ${n}, ${name}`,
+  hotbarSlotEmptyAria: (n: number) => `Slot ${n}, empty`,
 } as const;
 
 export type Copy = typeof copy;

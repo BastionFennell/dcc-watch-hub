@@ -36,7 +36,12 @@
             "name": "Reckless Tumble",
             "rank": 1
           }
-        ]
+        ],
+        "gear": {
+          "head": "Scuffed Helmet",
+          "torso": "Padded Stunt Vest",
+          "feet": "Grip Boots"
+        }
       },
       {
         "id": "psychic",
@@ -70,7 +75,11 @@
             "name": "Static Read",
             "rank": 1
           }
-        ]
+        ],
+        "gear": {
+          "head": "Cracked Visor",
+          "torso": "Static Shawl"
+        }
       },
       {
         "id": "harry",
@@ -104,7 +113,12 @@
             "name": "Powerful Strike",
             "rank": 1
           }
-        ]
+        ],
+        "gear": {
+          "hands": "Bent Pry Bar",
+          "legs": "Work Trousers"
+        },
+        "art": "/img/crawlers/harry-art.svg"
       },
       {
         "id": "xo",
@@ -140,7 +154,13 @@
             "name": "Signal Discipline",
             "rank": 1
           }
-        ]
+        ],
+        "gear": {
+          "arms": "Signal Bracers",
+          "accessories": [
+            "Quartermaster Tag"
+          ]
+        }
       },
       {
         "id": "actress",
@@ -174,10 +194,14 @@
             "name": "Stage Presence",
             "rank": 1
           }
-        ]
+        ],
+        "gear": {
+          "torso": "Stage Corset",
+          "feet": "Character Shoes"
+        },
+        "art": "/img/crawlers/actress-art.svg"
       }
     ],
-    "partyRank": null,
     "map": {
       "floor": 1,
       "grid": {
@@ -212,6 +236,13 @@
       "source": "Bronze Adventurer Box"
     },
     {
+      "t": 78,
+      "type": "equip",
+      "actor": "harry",
+      "slot": "hands",
+      "item": "Enchanted Crowbar"
+    },
+    {
       "t": 90,
       "type": "inventory",
       "actor": "stuntman",
@@ -226,6 +257,14 @@
       "actor": "harry",
       "current": 12,
       "max": 22
+    },
+    {
+      "t": 118,
+      "type": "skill",
+      "actor": "xo",
+      "name": "Ledger Sense",
+      "rank": 1,
+      "desc": "Counts what the room owes."
     },
     {
       "t": 123,
@@ -256,6 +295,13 @@
       "remove": []
     },
     {
+      "t": 145,
+      "type": "skill",
+      "actor": "xo",
+      "name": "Cold Read",
+      "rank": 1
+    },
+    {
       "t": 154,
       "type": "achievement",
       "actor": "harry",
@@ -277,6 +323,13 @@
       "desc": "Opened the account early."
     },
     {
+      "t": 168,
+      "type": "skill",
+      "actor": "xo",
+      "name": "Tail Whip",
+      "rank": 1
+    },
+    {
       "t": 179,
       "type": "level_up",
       "actor": "harry",
@@ -291,7 +344,6 @@
     {
       "t": 200,
       "type": "rank",
-      "scope": "crawler",
       "actor": "xo",
       "rank": 6120
     },
@@ -309,6 +361,13 @@
       "text": "Attention crawlers. Quadrant C is now an active hunting ground. Enjoy."
     },
     {
+      "t": 225,
+      "type": "skill",
+      "actor": "xo",
+      "name": "Scale Guard",
+      "rank": 1
+    },
+    {
       "t": 236,
       "type": "chapter",
       "label": "The Bronze Box Run",
@@ -321,6 +380,13 @@
       "class": "Compensated Anarchist"
     },
     {
+      "t": 248,
+      "type": "skill",
+      "actor": "xo",
+      "name": "Deep Breath",
+      "rank": 1
+    },
+    {
       "t": 256,
       "type": "future_type",
       "headline": "A schema that does not exist yet",
@@ -329,9 +395,15 @@
     {
       "t": 260,
       "type": "rank",
-      "scope": "crawler",
       "actor": "harry",
       "rank": 8890
+    },
+    {
+      "t": 268,
+      "type": "skill",
+      "actor": "xo",
+      "name": "Death Roll",
+      "rank": 1
     },
     {
       "t": 276,
@@ -357,10 +429,32 @@
       "max": 22
     },
     {
+      "t": 300,
+      "type": "skill",
+      "actor": "xo",
+      "name": "Swamp Step",
+      "rank": 1
+    },
+    {
+      "t": 305,
+      "type": "equip",
+      "actor": "stuntman",
+      "slot": "legs",
+      "item": "Reinforced Chaps"
+    },
+    {
       "t": 317,
       "type": "rank",
-      "scope": "party",
-      "rank": 61
+      "actor": "stuntman",
+      "rank": 7480
+    },
+    {
+      "t": 330,
+      "type": "skill",
+      "actor": "xo",
+      "name": "Quartermaster Eye",
+      "rank": 1,
+      "desc": "Prices a corpse at a glance."
     },
     {
       "t": 335,
@@ -374,7 +468,6 @@
     {
       "t": 350,
       "type": "rank",
-      "scope": "crawler",
       "actor": "xo",
       "rank": 5004
     },
@@ -399,7 +492,6 @@
     {
       "t": 410,
       "type": "rank",
-      "scope": "crawler",
       "actor": "harry",
       "rank": 7215
     },
@@ -440,6 +532,20 @@
       ]
     },
     {
+      "t": 463,
+      "type": "unequip",
+      "actor": "harry",
+      "slot": "hands",
+      "item": "Enchanted Crowbar"
+    },
+    {
+      "t": 465,
+      "type": "equip",
+      "actor": "harry",
+      "slot": "hands",
+      "item": "Torch"
+    },
+    {
       "t": 470,
       "type": "class",
       "actor": "xo",
@@ -448,7 +554,6 @@
     {
       "t": 486,
       "type": "rank",
-      "scope": "crawler",
       "actor": "xo",
       "rank": 4188
     },
@@ -469,9 +574,15 @@
     {
       "t": 520,
       "type": "rank",
-      "scope": "crawler",
       "actor": "harry",
       "rank": 6402
+    },
+    {
+      "t": 528,
+      "type": "unequip",
+      "actor": "xo",
+      "slot": "accessory",
+      "item": "Quartermaster Tag"
     },
     {
       "t": 538,
@@ -495,6 +606,24 @@
       "t": 568,
       "type": "system_message",
       "text": "Floor One remains open. The System is, for now, entertained."
+    },
+    {
+      "t": 572,
+      "type": "hotlist",
+      "actor": "harry",
+      "add": [
+        "The Hoarder",
+        "The Doorway",
+        "Quadrant C",
+        "The Rot Market",
+        "The Gutter Stair",
+        "Grull Industries",
+        "The Butcher",
+        "Signal Tower",
+        "The Quartermaster",
+        "Floor Two"
+      ],
+      "remove": []
     },
     {
       "t": 580,

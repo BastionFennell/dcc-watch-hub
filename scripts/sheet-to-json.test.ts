@@ -16,7 +16,7 @@ import type { RowContext, SheetRow } from './sheet-to-json';
 
 const root = resolve(__dirname, '..');
 const samples = resolve(root, 'scripts/samples');
-const schemaPath = resolve(root, 'specs/002-watch-hub-v2/contracts/episode.schema.json');
+const schemaPath = resolve(root, 'specs/003-crawler-record/contracts/episode.schema.json');
 
 const ajv = new Ajv({ strict: false, allErrors: true });
 addFormats(ajv);
@@ -138,9 +138,20 @@ describe('convert(scripts/samples/ep1.csv)', () => {
       'skill',
       'class',
       'hotlist',
+      'equip',
+      'unequip',
     ]) {
       expect(types, `${type} appears in the sample`).toContain(type);
     }
+  });
+
+  // Individual rank only, and the rank itself lives in field1 (T334).
+  it('maps a rank row to one crawler, with no scope', () => {
+    const ranks = result.episode?.events.filter((event) => event.type === 'rank') ?? [];
+    expect(ranks).toHaveLength(2);
+    expect(ranks[0]).toEqual({ t: 124, type: 'rank', actor: 'harry', rank: 8890 });
+    expect(ranks[1]).toEqual({ t: 190, type: 'rank', actor: 'xo', rank: 4188 });
+    for (const rank of ranks) expect(rank).not.toHaveProperty('scope');
   });
 
   it('maps the v2 rows: skill, class and hotlist', () => {
@@ -165,6 +176,27 @@ describe('convert(scripts/samples/ep1.csv)', () => {
       actor: 'harry',
       add: ['Bronze Box Runner'],
       remove: ['The Hoarder'],
+    });
+  });
+
+  it('maps the gear rows: equip and unequip (R2-FR-220)', () => {
+    const equips = result.episode?.events.filter((event) => event.type === 'equip') ?? [];
+    expect(equips).toHaveLength(3);
+    expect(equips[0]).toMatchObject({
+      type: 'equip',
+      actor: 'harry',
+      slot: 'hands',
+      item: 'Enchanted Crowbar',
+    });
+    expect(equips[1]).toMatchObject({ slot: 'accessory', item: 'Lucky Rabbit Foot' });
+
+    const unequips = result.episode?.events.filter((event) => event.type === 'unequip') ?? [];
+    expect(unequips).toHaveLength(1);
+    expect(unequips[0]).toMatchObject({
+      type: 'unequip',
+      actor: 'harry',
+      slot: 'hands',
+      item: 'Enchanted Crowbar',
     });
   });
 
@@ -230,8 +262,21 @@ describe('convert(scripts/samples/ep1-broken.csv)', () => {
     });
   });
 
-  it('warns exactly four times', () => {
-    expect(result.warnings).toHaveLength(4);
+  it('names the accessory unequip that carries no item', () => {
+    expect(
+      warningFor(result.warnings, dataRow(csv, 'unequip'), 'accessory with no item'),
+    ).toBeDefined();
+  });
+
+  it('names the legacy rank row and still reads the rank out of field2', () => {
+    expect(warningFor(result.warnings, dataRow(csv, ',crawler,'), 'legacy rank row')).toBeDefined();
+    const rank = result.episode?.events.find((event) => event.type === 'rank');
+    expect(rank).toMatchObject({ type: 'rank', actor: 'xo', rank: 4188 });
+    expect(rank).not.toHaveProperty('scope');
+  });
+
+  it('warns exactly six times', () => {
+    expect(result.warnings).toHaveLength(6);
   });
 });
 
@@ -248,9 +293,22 @@ describe('convert(scripts/samples/ep1-error.csv)', () => {
   });
 
   it('reports the non-integer skill rank as the second error', () => {
-    expect(result.errors).toHaveLength(2);
+    expect(result.errors).toHaveLength(4);
     expect(result.errors[1]).toBe(
       `row ${dataRow(csv, ',high,')}: skill rank (field2) must be a non-negative integer, got "high"`,
+    );
+  });
+
+  it('reports the unknown gear slot as the third error', () => {
+    expect(result.errors[2]).toBe(
+      `row ${dataRow(csv, ',cape,')}: equip slot (field1) must be one of head, torso, arms, hands, legs, feet, accessory, got "cape"`,
+    );
+  });
+
+  // DCC has individual rank only (T334): a party rank row is malformed input.
+  it('reports a party rank row as the fourth error', () => {
+    expect(result.errors[3]).toBe(
+      `row ${dataRow(csv, ',party,')}: party rank is not a thing in DCC: a rank row names one crawler and their rank (field1)`,
     );
   });
 });
@@ -358,6 +416,71 @@ describe('rowToEvent', () => {
     expect(
       rowToEvent(sheetRow({ type: 'skill', field1: 'Powerful Strike' }), rowCtx()).warnings,
     ).toContain('skill row has no actor');
+  });
+
+  it('maps an equip row and errors without an item', () => {
+    expect(
+      rowToEvent(
+        sheetRow({ type: 'equip', actor: 'harry', field1: 'torso', field2: 'Patched Jacket' }),
+        rowCtx(),
+      ),
+    ).toMatchObject({
+      event: { t: 10, type: 'equip', actor: 'harry', slot: 'torso', item: 'Patched Jacket' },
+      errors: [],
+    });
+    const missing = rowToEvent(
+      sheetRow({ type: 'equip', actor: 'harry', field1: 'torso' }),
+      rowCtx(),
+    );
+    expect(missing.errors).toEqual(['empty required field: item (field2) on equip']);
+    expect(missing.event).toBeNull();
+  });
+
+  it('maps an unequip row with and without its item', () => {
+    expect(
+      rowToEvent(sheetRow({ type: 'unequip', actor: 'harry', field1: 'hands' }), rowCtx()).event,
+    ).toEqual({ t: 10, type: 'unequip', actor: 'harry', slot: 'hands' });
+    expect(
+      rowToEvent(
+        sheetRow({ type: 'unequip', actor: 'harry', field1: 'accessory', field2: 'Lucky Rabbit Foot' }),
+        rowCtx(),
+      ).event,
+    ).toEqual({
+      t: 10,
+      type: 'unequip',
+      actor: 'harry',
+      slot: 'accessory',
+      item: 'Lucky Rabbit Foot',
+    });
+  });
+
+  it('warns when an accessory unequip names no item, and still maps the row', () => {
+    const result = rowToEvent(
+      sheetRow({ type: 'unequip', actor: 'harry', field1: 'accessory' }),
+      rowCtx(),
+    );
+    expect(result.warnings.some((w) => w.includes('accessory with no item'))).toBe(true);
+    expect(result.errors).toEqual([]);
+    expect(result.event).toEqual({ t: 10, type: 'unequip', actor: 'harry', slot: 'accessory' });
+  });
+
+  it('errors on an unknown gear slot in either direction', () => {
+    for (const type of ['equip', 'unequip']) {
+      const result = rowToEvent(
+        sheetRow({ type, actor: 'harry', field1: 'cape', field2: 'Velvet Cloak' }),
+        rowCtx(),
+      );
+      expect(result.errors).toEqual([
+        `${type} slot (field1) must be one of head, torso, arms, hands, legs, feet, accessory, got "cape"`,
+      ]);
+      expect(result.event).toBeNull();
+    }
+  });
+
+  it('warns when a gear row has no actor', () => {
+    expect(
+      rowToEvent(sheetRow({ type: 'equip', field1: 'torso', field2: 'Jacket' }), rowCtx()).warnings,
+    ).toContain('equip row has no actor');
   });
 
   it('warns about an unknown chapter kind', () => {
