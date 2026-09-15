@@ -4,3 +4,7 @@ dist
 *.log
 .env*
 coverage
+
+# Author reference material (copyrighted; not part of the site)
+/Carl Character Sheet*.pdf
+*.pdf

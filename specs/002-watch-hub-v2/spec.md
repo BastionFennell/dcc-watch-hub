@@ -6,7 +6,9 @@
 **Input**: User description: "Continue to the next milestone: the v2 items parked in the handoff
 spec — click-open character sheets (inventory / skills / history), an interactive minimap with pan
 and labels, resume where you left off (localStorage), and per-crawler fame/rank sparklines.
-Stinger sounds and the roster page stay parked until real audio and art exist."
+Stinger sounds and the roster page stay parked until real audio and art exist." Reference: the
+author supplied the official Dungeon Crawler Carl RPG character sheet (Renegade Game Studios;
+kept out of the repo). The dossier borrows its vocabulary and section order, not its artwork.
 
 Builds on v1 (`specs/001-watch-hub-v1/`): the ambient view (stage, party rail, feed, timeline,
 toasts, badge, sponsors, header, archive, converter) is unchanged unless stated below.
@@ -16,9 +18,11 @@ toasts, badge, sponsors, header, archive, converter) is unchanged unless stated 
 ### User Story 1 - Open a crawler's dossier (Priority: P1)
 
 A viewer clicks (or keyboard-activates) a crawler frame in the party rail. The right rail swaps
-the event feed for that crawler's System dossier: portrait, name, handle, player, class, level,
-HP, statuses, current rank, current inventory, skills learned, achievements earned, and a
-history of that crawler's moments — all exactly as of the playhead. Scrubbing backward while
+the event feed for that crawler's System dossier, laid out like the official crawler sheet:
+header (portrait, name, handle, player, race, pronouns, crawler number, level, class, floor),
+vitals (a ten-segment HP bar, rank with sparkline, debuffs), stats when known, then Hotlist,
+Skills, Inventory, Achievements, and a history of that crawler's moments — all exactly as of
+the playhead. Scrubbing backward while
 the dossier is open removes items the crawler has not yet earned. A close control (or Escape,
 or clicking the same frame again) returns the feed. Clicking a different frame switches
 dossiers. On a phone the dossier is a full-screen panel over the stacked layout.
@@ -182,16 +186,25 @@ back to one; verify one point and the numbers update.
 
 **Crawler dossier (US1)**
 
-- **FR-110**: The dossier MUST show: portrait, name, handle, player, class (or "Unclassed"),
-  level, HP current/max with bar, statuses, current rank (or "Unranked"), inventory as of t,
-  skills learned as of t, achievements earned as of t (title, description, time), and a history
-  list of that crawler's elapsed events newest first (hp, loot, inventory, level, status,
-  achievement, skill, class, rank).
+- **FR-110**: The dossier MUST show, in this order (mirroring the official sheet): a header with
+  portrait, name, handle, player, race, pronouns, crawler number, level, class (or "Unclassed"),
+  and floor; vitals with a ten-segment HP bar (10%..100%, red through green) plus current/max,
+  current rank (or "Unranked") with the sparkline, and debuffs (statuses); a stats row (STR, INT,
+  CON, DEX, CHA) when the data provides one; Hotlist entries as of t; Skills as of t (name and
+  rank); Inventory as of t; Achievements earned as of t (title, description, time); and a
+  history list of that crawler's elapsed events newest first (hp, loot, inventory, level,
+  status, achievement, skill, class, hotlist, rank). Sections with nothing to show render a
+  one-line System empty state rather than disappearing.
 - **FR-111**: The dossier MUST be styled as a System document (mono caps section labels,
   System blue header) and MUST use the System voice for empty states.
-- **FR-112**: Two new event types MUST be supported end to end (types, reducer, feed label,
-  converter, schema, samples): `skill` `{ actor, name, desc? }` adds to the crawler's skills;
-  `class` `{ actor, class }` sets the crawler's class. Both appear in the feed and history.
+- **FR-112**: Three new event types MUST be supported end to end (types, reducer, feed label,
+  converter, schema, samples): `skill` `{ actor, name, rank?, desc? }` adds a skill or updates
+  its rank; `class` `{ actor, class }` sets the crawler's class; `hotlist` `{ actor, add[],
+  remove[] }` edits the crawler's Hotlist. All three appear in the feed and history.
+- **FR-113**: The crawler record in episode data MUST accept optional sheet fields — `race`,
+  `pronouns`, `crawlerNumber`, `stats { str, int, con, dex, cha }`, `hotlist[]`, `skills[]`
+  (`{ name, rank? }`) — and existing v1 files without them MUST keep working. The converter's
+  `--initial-state` file carries them; no new CSV columns.
 
 **Expanded map (US2)**
 
@@ -235,7 +248,8 @@ Lighthouse ≥ 90, desktop browsers and phone widths.
   persisted; resets on episode change.
 - **Crawler dossier (derived)**: everything in FR-110 computed from `reduceTo(episode, t)` plus
   the crawler's elapsed events.
-- **Skill / Class events (new)**: see FR-112; `CrawlerState` gains `skills: SkillEntry[]`.
+- **Skill / Class / Hotlist events (new)**: see FR-112; the crawler's derived state gains
+  `skills` and `hotlist` lists seeded from the optional initial fields (FR-113).
 - **Map label (derived)**: `{ label, row, col }` centroid per distinct label from reveals ≤ t.
 - **Map view (viewer state)**: `{ zoom, panX, panY }`; resets on close.
 - **Rank series (derived)**: ordered `{ t, rank }` points ≤ t for a crawler or the party.
@@ -262,8 +276,11 @@ Lighthouse ≥ 90, desktop browsers and phone widths.
 
 - "Hot list history" from the handoff is read as the crawler's chronological history of elapsed
   events; there is no separate "hot list" data.
-- Skills have no data in the v1 schema, so v2 adds `skill` and `class` events rather than a new
-  initial-state field; initial `skills` default to empty.
+- The official sheet has far more fields (evade, DR, mana, attacks, gear slots, pet, mount,
+  deity, clubs, sponsors, abilities). v2 carries only what an edit-pass event log can plausibly
+  keep current: identity, level, HP, class, rank, debuffs, stats, Hotlist, skills, inventory,
+  achievements. The rest is not shown rather than shown stale.
+- "Hot list history" in the handoff maps to the sheet's Hotlist section plus the history list.
 - Resume is device-local only (no accounts, per v3 fence).
 - The map has no crawler position data in the log, so it shows sectors and labels only.
 - Panel placement in the right rail (rather than a modal) is chosen to keep the stage
