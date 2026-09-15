@@ -206,7 +206,10 @@ export function useResume(
     }
 
     if (ended || inTail(t, durationSec)) {
-      // Finished: the saved position is worthless and must not come back.
+      // Finished: the saved position is worthless and must not come back — and
+      // neither may the offer to rejoin it, which would otherwise sit on the
+      // stage next to the ended card with nothing left to restore.
+      if (offerRef.current !== null) resolveOffer();
       if (!clearedRef.current) {
         safeClear(episodeId);
         clearedRef.current = true;

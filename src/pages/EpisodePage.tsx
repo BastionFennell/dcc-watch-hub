@@ -11,6 +11,7 @@ import {
   crawlerDossier,
   feedItems,
   mapCells,
+  mapLabels,
   partyFrames,
   rankSeries,
   recentlyRevealed,
@@ -18,6 +19,7 @@ import {
 } from '../engine/selectors';
 import type { TimeSource } from '../playback/TimeSource';
 import { usePlayhead } from '../playback/usePlayhead';
+import { useResume } from '../playback/useResume';
 import { usePanel } from '../hooks/usePanel';
 import { VideoStage } from '../components/VideoStage/VideoStage';
 import { AchievementToast } from '../components/AchievementToast/AchievementToast';
@@ -28,6 +30,8 @@ import { PartyRail } from '../components/PartyRail/PartyRail';
 import { EventFeed } from '../components/EventFeed/EventFeed';
 import { RailPanel } from '../components/RailPanel/RailPanel';
 import { CrawlerDossier } from '../components/CrawlerDossier/CrawlerDossier';
+import { FloorMap } from '../components/FloorMap/FloorMap';
+import { ResumeCard } from '../components/ResumeCard/ResumeCard';
 import { SystemNotice } from '../components/SystemNotice/SystemNotice';
 import { NotFoundPage } from './NotFoundPage';
 import { copy } from '../copy';
@@ -53,10 +57,13 @@ export function EpisodePage() {
   const episodeId = validId ? Number(id) : Number.NaN;
   const meta = show && validId ? findEpisode(show, episodeId) : undefined;
 
-  const { t, ended } = usePlayhead(source);
+  const playhead = usePlayhead(source);
+  const { t, ended } = playhead;
   // Viewer state, not overlay state: which record is open. Resets per episode.
   const panelApi = usePanel(meta?.id);
   const { panel } = panelApi;
+  // Persisted playhead only, never overlay state (constitution I, FR-133).
+  const resume = useResume(meta, source, playhead);
 
   useEffect(() => {
     if (!meta) return;
@@ -141,8 +148,23 @@ export function EpisodePage() {
           </RailPanel>
         );
       case 'map':
-        /* T125: RailPanel + FloorMap */
-        return null;
+        // As with the dossier: no cells means no episode data behind them, so
+        // the feed carries the System's unavailable notice (spec Edge Cases).
+        if (!cells || !episode) return feed;
+        return (
+          <RailPanel
+            kicker={copy.mapKicker}
+            title={copy.mapTitle(cells.floor)}
+            onClose={panelApi.close}
+          >
+            <FloorMap
+              cells={cells}
+              recent={recent}
+              labels={mapLabels(episode.events, t)}
+              floor={cells.floor}
+            />
+          </RailPanel>
+        );
       default:
         return feed;
     }
@@ -155,7 +177,21 @@ export function EpisodePage() {
         <div className={styles.main}>
           <VideoStage key={meta.id} meta={meta} t={t} onSource={setSource}>
             <AchievementToast toast={toast} />
-            {cells ? <MiniMapBadge cells={cells} recent={recent} /> : null}
+            {cells ? (
+              <MiniMapBadge
+                cells={cells}
+                recent={recent}
+                expanded={panel.kind === 'map'}
+                onActivate={(element) => panelApi.toggle({ kind: 'map' }, element)}
+              />
+            ) : null}
+            {resume.pending ? (
+              <ResumeCard
+                t={resume.pending.t}
+                onRejoin={resume.rejoin}
+                onStartOver={resume.startOver}
+              />
+            ) : null}
             {ended ? (
               <div className={styles.endedOverlay}>
                 <NextEpisodeCard next={next} />

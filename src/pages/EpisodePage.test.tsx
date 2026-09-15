@@ -13,6 +13,7 @@ import { copy } from '../copy';
 import { feedItems } from '../engine/selectors';
 import { formatTime } from '../engine/time';
 import { isKnownEvent } from '../data/types';
+import { resumeKey } from '../playback/resume';
 import { __fakeSources } from '../components/VideoStage/FakeStage';
 import { makeEpisode, makeEpisodeRaw, makeShow } from '../test/fixtures';
 
@@ -95,6 +96,7 @@ function textOf(index: number): string | undefined {
 describe('EpisodePage', () => {
   beforeEach(() => {
     __fakeSources.length = 0;
+    localStorage.clear();
     stubFetch();
   });
 
@@ -620,5 +622,184 @@ describe('EpisodePage', () => {
 
     seek(80);
     expect(screen.getByTestId('party-rank')).toHaveTextContent(copy.partyRankLine(61));
+  });
+
+  /* ------------------------------------------- v2 US2: the expanded floor map (T125) */
+
+  /** The minimap badge — the map panel's trigger (contracts/panels.md). */
+  function badge(): HTMLElement {
+    return screen.getByTestId('minimap-badge');
+  }
+
+  /** The labels currently drawn on the open map, in reveal order. */
+  function mapLabelText(): string[] {
+    return screen.queryAllByTestId('floormap-label').map((label) => label.textContent ?? '');
+  }
+
+  it('opens the expanded floor map from the badge and labels only elapsed reveals', async () => {
+    const { seek } = await mountEpisode();
+    seek(100);
+    expect(badge()).toHaveAttribute('aria-expanded', 'false');
+
+    fireEvent.click(badge());
+
+    const panel = screen.getByRole('region', { name: copy.mapTitle(1) });
+    expect(panel).toHaveAttribute('id', 'rail-panel');
+    expect(within(panel).getByText(copy.mapKicker)).toBeInTheDocument();
+    expect(within(panel).getByTestId('floormap')).toBeInTheDocument();
+    expect(badge()).toHaveAttribute('aria-expanded', 'true');
+    // One rail slot: the feed is gone while the map is open (FR-100).
+    expect(screen.queryByTestId('feed-items')).not.toBeInTheDocument();
+    expect(screen.getAllByTestId('rail-panel')).toHaveLength(1);
+
+    // The reveal at 90 has elapsed; the one at 175 has not (US2 scenario 2).
+    expect(mapLabelText()).toEqual(['The Meat District']);
+
+    seek(180);
+    expect(mapLabelText()).toEqual(['The Meat District', 'The Rot Market']);
+
+    // And backwards, with the panel still open (FR-103).
+    seek(100);
+    expect(mapLabelText()).toEqual(['The Meat District']);
+  });
+
+  it('lets a dossier replace the open map — one panel at a time', async () => {
+    const { seek } = await mountEpisode();
+    seek(100);
+
+    fireEvent.click(badge());
+    expect(screen.getByTestId('floormap')).toBeInTheDocument();
+
+    clickFrame('harry');
+
+    expect(screen.getAllByTestId('rail-panel')).toHaveLength(1);
+    expect(screen.queryByTestId('floormap')).not.toBeInTheDocument();
+    expect(screen.getByTestId('dossier-name')).toHaveTextContent('Harry');
+    expect(badge()).toHaveAttribute('aria-expanded', 'false');
+    expect(frame('harry')).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('closes the map on Escape and on the badge again, returning focus to the badge', async () => {
+    const { seek } = await mountEpisode();
+    seek(100);
+
+    fireEvent.click(badge());
+    pressEscape();
+    expect(screen.queryByTestId('rail-panel')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('floormap')).not.toBeInTheDocument();
+    expect(screen.getByTestId('feed-items')).toBeInTheDocument();
+    expect(document.activeElement).toBe(badge());
+    expect(badge()).toHaveAttribute('aria-expanded', 'false');
+
+    // The trigger toggles: the same badge again closes what it opened.
+    fireEvent.click(badge());
+    expect(screen.getByTestId('floormap')).toBeInTheDocument();
+    fireEvent.click(badge());
+    expect(screen.queryByTestId('floormap')).not.toBeInTheDocument();
+    expect(screen.getByTestId('feed-items')).toBeInTheDocument();
+    expect(badge()).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  /* ------------------------------------------------- v2 US3: resume (T129) */
+
+  /** Seeds a saved position the way the store writes one (contracts/resume-storage.md). */
+  function seedResume(episodeId: number, t: number): void {
+    localStorage.setItem(
+      resumeKey(episodeId),
+      JSON.stringify({ episodeId, t, savedAt: new Date('2026-09-15T12:00:00.000Z').toISOString() }),
+    );
+  }
+
+  it('offers the saved position over the stage and rejoins the broadcast there', async () => {
+    seedResume(1, 120);
+    const { source } = await mountEpisode();
+
+    const card = screen.getByTestId('resume-card');
+    expect(within(card).getByText(copy.resumeTitle('2:00'))).toBeInTheDocument();
+    expect(within(card).getByText(copy.resumeKicker)).toBeInTheDocument();
+    // The card lives over the stage, not in the rail (FR-131).
+    expect(within(screen.getByTestId('video-stage')).getByTestId('resume-card')).toBe(card);
+
+    fireEvent.click(within(card).getByRole('button', { name: copy.resumeRejoin }));
+
+    expect(source.getTime()).toBe(120);
+    expect(screen.getByText(copy.feedHeader('2:00'))).toBeInTheDocument();
+    expect(screen.queryByTestId('resume-card')).not.toBeInTheDocument();
+  });
+
+  it('discards the saved position when the viewer starts from the beginning', async () => {
+    seedResume(1, 120);
+    const { source } = await mountEpisode();
+
+    fireEvent.click(screen.getByRole('button', { name: copy.resumeStartOver }));
+
+    expect(screen.queryByTestId('resume-card')).not.toBeInTheDocument();
+    expect(localStorage.getItem(resumeKey(1))).toBeNull();
+    expect(source.getTime()).toBe(0);
+    expect(screen.getByText(copy.feedHeader('0:00'))).toBeInTheDocument();
+  });
+
+  it('clears the saved position when the broadcast ends, and never stacks the two cards', async () => {
+    seedResume(1, 120);
+    const { source } = await mountEpisode();
+    expect(screen.getByTestId('resume-card')).toBeInTheDocument();
+
+    act(() => source.end());
+
+    // The ended card owns the stage; the offer has nothing left to restore.
+    expect(screen.queryByTestId('resume-card')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: copy.nextEpisodeCard })).toBeInTheDocument();
+    expect(localStorage.getItem(resumeKey(1))).toBeNull();
+  });
+
+  it('clears the saved position once the playhead reaches the end', async () => {
+    seedResume(1, 120);
+    const { source, seek } = await mountEpisode();
+
+    seek(100); // the broadcast ran past the offer on its own: it is answered
+    expect(screen.queryByTestId('resume-card')).not.toBeInTheDocument();
+
+    act(() => source.end());
+    expect(localStorage.getItem(resumeKey(1))).toBeNull();
+  });
+
+  it('does not offer a position under 30 seconds', async () => {
+    seedResume(1, 10);
+    await mountEpisode();
+
+    expect(screen.queryByTestId('resume-card')).not.toBeInTheDocument();
+  });
+
+  it('keeps saved positions per episode', async () => {
+    seedResume(2, 120);
+    await mountEpisode('/ep/1?fake=1');
+
+    expect(screen.queryByTestId('resume-card')).not.toBeInTheDocument();
+  });
+
+  it('opens the dev scrubber at ?t= with no offer left standing', async () => {
+    seedResume(1, 120);
+    const { source } = await mountEpisode('/ep/1?fake=1&t=157');
+
+    // The scrubber starts past the grace window, which answers the offer itself.
+    expect(source.getTime()).toBe(157);
+    await waitFor(() => expect(screen.getByText(copy.feedHeader('2:37'))).toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByTestId('resume-card')).not.toBeInTheDocument());
+  });
+
+  it('never surfaces a card or an error when storage is blocked', async () => {
+    const blocked = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('storage disabled');
+    });
+    try {
+      const { seek } = await mountEpisode();
+      expect(screen.queryByTestId('resume-card')).not.toBeInTheDocument();
+
+      // …and the page keeps playing as if nothing had happened (FR-133).
+      seek(120);
+      expect(screen.getByText(copy.feedHeader('2:00'))).toBeInTheDocument();
+    } finally {
+      blocked.mockRestore();
+    }
   });
 });

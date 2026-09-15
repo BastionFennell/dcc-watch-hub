@@ -144,7 +144,7 @@ Everyone appends to `src/copy.ts` only at the end of the file. Nobody in wave 2 
 - [X] T124 [P] [US2] `src/components/MiniMapBadge/MiniMapBadge.tsx` + css: becomes a `<button>` trigger
   per `contracts/panels.md` (`aria-label` from copy, `aria-expanded`, pointer events on, hover/focus
   ring); decorative grid stays `aria-hidden`; props gain `expanded`, `onActivate(el)`.
-- [ ] T125 [US2] (wave 3) Wire the map into `EpisodePage.tsx`: badge trigger → `toggle({ kind: 'map' })`;
+- [X] T125 [US2] (wave 3) Wire the map into `EpisodePage.tsx`: badge trigger → `toggle({ kind: 'map' })`;
   `case 'map'` renders `RailPanel` + `FloorMap` with `mapCells(state)`, `recentlyRevealed`, `mapLabels(events, t)`.
   Extend `EpisodePage.test.tsx`: open map → labels "The Meat District" (at 100) and both (at 180);
   seek back → one label; one-panel rule (map open, click Harry → dossier replaces map); Escape closes
@@ -165,11 +165,11 @@ Everyone appends to `src/copy.ts` only at the end of the file. Nobody in wave 2 
   the stage (`z-index: 3`, above toast/badge, below nothing else), kicker/title/body from copy, two
   buttons (Rejoin primary in `--brand-2`, Start over secondary), `role="dialog"` `aria-labelledby`,
   initial focus on Rejoin, Escape = start over.
-- [ ] T129 [US3] (wave 3) Wire into `EpisodePage.tsx`: `const resume = useResume(meta, source, playhead)`;
+- [X] T129 [US3] (wave 3) Wire into `EpisodePage.tsx`: `const resume = useResume(meta, source, playhead)`;
   render `ResumeCard` inside `VideoStage` children when `resume.pending`; extend `EpisodePage.test.tsx`
   with an injected store: record `{t: 120}` → card; Rejoin → fake source at 120, feed header 2:00,
   card gone; Start over → store cleared; `fake.end()` → store cleared; record `{t: 10}` → no card.
-- [ ] T130 (wave 3) `README.md` + `specs/002-watch-hub-v2/quickstart.md`: document panels, map
+- [X] T130 (wave 3) `README.md` + `specs/002-watch-hub-v2/quickstart.md`: document panels, map
   controls, resume behavior and its storage key, new CSV rows, and the new sheet fields.
 
 ---
