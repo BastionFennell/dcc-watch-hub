@@ -296,3 +296,24 @@ export function mapCells(state: OverlayState): MapCellsView {
 export function stageCaption(meta: EpisodeMeta, t: number): string {
   return copy.feedText.stageCaption(meta.id, meta.floor, formatTime(t));
 }
+
+/**
+ * Cells whose `map_reveal` landed within the last `windowSec` seconds
+ * (`t_e <= t < t_e + windowSec`). The minimap uses it to tint just-revealed
+ * sectors — a pure function of the playhead, so a backward seek un-tints them
+ * without any timer (research R5, T034).
+ */
+export function recentlyRevealed(
+  events: readonly AnyEvent[],
+  t: number,
+  windowSec = 5,
+): Set<string> {
+  const recent = new Set<string>();
+  for (const event of events) {
+    if (event.type !== 'map_reveal') continue;
+    if (event.t <= t && t < event.t + windowSec) {
+      for (const cell of event.cells) recent.add(cellKey(cell[0], cell[1]));
+    }
+  }
+  return recent;
+}

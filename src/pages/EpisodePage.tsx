@@ -2,13 +2,25 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import { useShow } from '../data/ShowContext';
 import { fetchEpisode } from '../data/load';
-import { findEpisode } from '../data/show';
+import { findEpisode, prevNext } from '../data/show';
 import type { EpisodeData } from '../data/types';
 import { reduceTo } from '../engine/reducer';
-import { activeSponsor, feedItems, partyFrames } from '../engine/selectors';
+import {
+  activeSponsor,
+  activeToast,
+  feedItems,
+  mapCells,
+  partyFrames,
+  recentlyRevealed,
+  timelineMarkers,
+} from '../engine/selectors';
 import type { TimeSource } from '../playback/TimeSource';
 import { usePlayhead } from '../playback/usePlayhead';
 import { VideoStage } from '../components/VideoStage/VideoStage';
+import { AchievementToast } from '../components/AchievementToast/AchievementToast';
+import { MiniMapBadge } from '../components/MiniMapBadge/MiniMapBadge';
+import { NextEpisodeCard } from '../components/NextEpisodeCard/NextEpisodeCard';
+import { EventTimeline } from '../components/EventTimeline/EventTimeline';
 import { PartyRail } from '../components/PartyRail/PartyRail';
 import { EventFeed } from '../components/EventFeed/EventFeed';
 import { SystemNotice } from '../components/SystemNotice/SystemNotice';
@@ -17,6 +29,7 @@ import { copy } from '../copy';
 import styles from './EpisodePage.module.css';
 
 const EMPTY_PARTY = [] as const;
+const EMPTY_CELLS = new Set<string>();
 
 /**
  * The watch page. Everything below the stage is recomputed from `(episode, t)`
@@ -71,6 +84,11 @@ export function EpisodePage() {
   const frames = state && episode ? partyFrames(state, episode.events, t) : [];
   const items = episode ? feedItems(episode.events, t, 8, party) : [];
   const sponsor = episode ? activeSponsor(episode.events, t, party) : null;
+  const toast = episode ? activeToast(episode.events, t, party) : null;
+  const markers = episode ? timelineMarkers(episode.events, meta.durationSec, party) : [];
+  const cells = state ? mapCells(state) : null;
+  const recent = episode ? recentlyRevealed(episode.events, t) : EMPTY_CELLS;
+  const { next } = prevNext(show, meta.id);
 
   return (
     <div className={styles.page} data-ended={ended ? 'true' : undefined}>
@@ -78,10 +96,21 @@ export function EpisodePage() {
       <div className={styles.grid}>
         <div className={styles.main}>
           <VideoStage meta={meta} t={t} onSource={setSource}>
-            {/* Overlay slot: AchievementToast, MiniMapBadge, NextEpisodeCard (US3/US4, T030–T035). */}
+            <AchievementToast toast={toast} />
+            {cells ? <MiniMapBadge cells={cells} recent={recent} /> : null}
+            {ended ? (
+              <div className={styles.endedOverlay}>
+                <NextEpisodeCard next={next} />
+              </div>
+            ) : null}
           </VideoStage>
 
-          {/* Timeline slot: <EventTimeline markers={...} t={t} duration={meta.durationSec} onSeek={source?.seek} /> (US3, T031). */}
+          <EventTimeline
+            markers={markers}
+            t={t}
+            durationSec={meta.durationSec}
+            onSeek={(sec) => source?.seek(sec)}
+          />
 
           <PartyRail frames={frames} />
         </div>

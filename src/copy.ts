@@ -122,6 +122,11 @@ export const copy = {
   fakeStagePlay: 'Play',
   fakeStagePause: 'Pause',
   fakeStageScrub: 'Scrub the broadcast',
+
+  /* --- appended by T030–T035 (timeline, toast, minimap) --- */
+
+  /** The marker bar under the stage; each marker names itself (FR-040/041). */
+  timelineLabel: 'Episode timeline',
 } as const;
 
 export type Copy = typeof copy;

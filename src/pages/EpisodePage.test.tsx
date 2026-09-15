@@ -6,7 +6,7 @@
  * no video host — which is exactly the guarantee constitution II asks for.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { App } from '../App';
 import { copy } from '../copy';
@@ -30,8 +30,10 @@ function stubFetch(episodeOk = true) {
       );
     }
     if (!episodeOk) return Promise.resolve(new Response('gone', { status: 500 }));
+    // The loader checks `episodeId` against the meta, so answer for the episode asked for.
+    const episodeId = Number(/ep(\d+)\.json/.exec(url)?.[1] ?? 1);
     return Promise.resolve(
-      new Response(JSON.stringify(makeEpisodeRaw(1)), {
+      new Response(JSON.stringify(makeEpisodeRaw(episodeId)), {
         status: 200,
         headers: { 'content-type': 'application/json' },
       }),
@@ -39,10 +41,10 @@ function stubFetch(episodeOk = true) {
   });
 }
 
-/** Mounts `/ep/1?fake=1` and returns the stage's `FakeTimeSource`. */
-async function mountEpisode() {
+/** Mounts an episode route with the dev stage and returns its `FakeTimeSource`. */
+async function mountEpisode(entry = '/ep/1?fake=1') {
   render(
-    <MemoryRouter initialEntries={['/ep/1?fake=1']}>
+    <MemoryRouter initialEntries={[entry]}>
       <App />
     </MemoryRouter>,
   );
@@ -190,6 +192,151 @@ describe('EpisodePage', () => {
     await waitFor(() => expect(screen.getByText(copy.feedUnavailable)).toBeInTheDocument());
     expect(screen.getByTestId('video-stage')).toBeInTheDocument();
     expect(screen.getByTestId('fake-stage')).toBeInTheDocument();
+  });
+
+  /* ---------------------------------------------- US3: the event timeline (T032) */
+
+  it('marks every chapter, achievement, and level-up on the timeline', async () => {
+    await mountEpisode();
+
+    const expected = episode.events.filter((event) =>
+      ['chapter', 'achievement', 'level_up'].includes(event.type),
+    );
+    const markers = screen.getAllByTestId('timeline-marker');
+    expect(markers).toHaveLength(expected.length);
+
+    markers.forEach((marker, index) => {
+      const event = expected[index];
+      // Positioned by t / durationSec (FR-040) …
+      expect(parseFloat(marker.style.left)).toBeCloseTo((event.t / 240) * 100, 3);
+      // … and colored by kind, straight from the selector's token.
+      const kind =
+        event.type === 'achievement'
+          ? 'achievement'
+          : event.type === 'level_up'
+            ? 'levelup'
+            : 'boss';
+      expect(marker).toHaveAttribute('data-kind', kind);
+      expect(marker.getAttribute('style')).toContain(`var(--marker-${kind})`);
+    });
+
+    // Real buttons, named by their label, inside the labelled marker list.
+    expect(screen.getByRole('list', { name: copy.timelineLabel })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'The Hoarder Fight' })).toBeInTheDocument();
+  });
+
+  it('fills the timeline up to the playhead', async () => {
+    const { seek } = await mountEpisode();
+
+    expect(parseFloat(screen.getByTestId('timeline-fill').style.width)).toBeCloseTo(0, 3);
+    seek(60);
+    expect(parseFloat(screen.getByTestId('timeline-fill').style.width)).toBeCloseTo(25, 3);
+  });
+
+  it('seeks the source and the overlay when a marker is clicked', async () => {
+    const { source } = await mountEpisode();
+
+    expect(feedCount()).toBe(0);
+    fireEvent.click(screen.getByRole('button', { name: 'The Hoarder Fight' }));
+
+    expect(source.getTime()).toBe(120);
+    expect(screen.getByText(copy.feedHeader('2:00'))).toBeInTheDocument();
+    expect(within(screen.getByTestId('feed-items')).getByText('The Hoarder Fight')).toBeInTheDocument();
+
+    // And backwards: the click is a plain seek, so the feed rewinds too.
+    fireEvent.click(screen.getByRole('button', { name: 'Gate Crasher' }));
+    expect(source.getTime()).toBe(60);
+    expect(feedCount()).toBe(4); // 12, 30, 45, 60
+  });
+
+  /* ------------------------------ US4: toast, minimap, pinned sponsor (T035) */
+
+  it('shows one achievement toast at a time, in FIFO order', async () => {
+    const { seek } = await mountEpisode();
+
+    seek(59);
+    expect(screen.queryByTestId('achievement-toast')).not.toBeInTheDocument();
+
+    seek(60);
+    const toast = screen.getByTestId('achievement-toast');
+    expect(within(toast).getByText(copy.newAchievementTag)).toBeInTheDocument();
+    expect(within(toast).getByText('Gate Crasher')).toBeInTheDocument();
+
+    // The queue holds the first toast for its full 6 s window …
+    seek(65.9);
+    expect(within(screen.getByTestId('achievement-toast')).getByText('Gate Crasher')).toBeInTheDocument();
+
+    // … then hands over to the achievements that landed at 61 and 62.
+    seek(66);
+    expect(within(screen.getByTestId('achievement-toast')).getByText('Understudy')).toBeInTheDocument();
+    seek(72);
+    expect(within(screen.getByTestId('achievement-toast')).getByText('Stunt Double')).toBeInTheDocument();
+
+    seek(78);
+    expect(screen.queryByTestId('achievement-toast')).not.toBeInTheDocument();
+  });
+
+  it('reveals minimap sectors only once their map_reveal has elapsed', async () => {
+    const { seek } = await mountEpisode();
+
+    const lit = () =>
+      document.querySelectorAll('[data-testid="minimap-cell"]:not([data-state="hidden"])').length;
+    const recent = () =>
+      document.querySelectorAll('[data-testid="minimap-cell"][data-state="recent"]').length;
+
+    expect(screen.getAllByTestId('minimap-cell')).toHaveLength(96);
+    seek(89);
+    expect(lit()).toBe(0);
+    expect(screen.getByText(copy.sectorsRevealed(0, 96))).toBeInTheDocument();
+
+    seek(90);
+    expect(lit()).toBe(2);
+    expect(recent()).toBe(2);
+    expect(screen.getByText(copy.sectorsRevealed(2, 96))).toBeInTheDocument();
+
+    // The "just revealed" tint is a 5 s window; the reveal itself is permanent.
+    seek(96);
+    expect(lit()).toBe(2);
+    expect(recent()).toBe(0);
+
+    seek(50);
+    expect(lit()).toBe(0);
+  });
+
+  it('pins the sponsor for exactly its duration', async () => {
+    const { seek } = await mountEpisode();
+
+    seek(110);
+    expect(screen.getByTestId('active-sponsor')).toBeInTheDocument();
+
+    seek(130); // t + durationSec — the window is half-open
+    expect(screen.queryByTestId('active-sponsor')).not.toBeInTheDocument();
+  });
+
+  /* ----------------------------------------- US2 scenario 5: ended card (T030) */
+
+  it('offers the next recap episode when the broadcast ends', async () => {
+    const { source } = await mountEpisode();
+
+    expect(screen.queryByRole('link', { name: copy.nextEpisodeCard })).not.toBeInTheDocument();
+
+    act(() => source.end());
+
+    const stage = within(screen.getByTestId('video-stage'));
+    expect(stage.getByText('Episode 2 — The Meat District')).toBeInTheDocument();
+    expect(stage.getByRole('link', { name: copy.nextEpisodeCard })).toHaveAttribute(
+      'href',
+      '/ep/2',
+    );
+  });
+
+  it('offers the archive when the final episode ends', async () => {
+    const { source } = await mountEpisode('/ep/3?fake=1');
+
+    act(() => source.end());
+
+    expect(screen.queryByRole('link', { name: copy.nextEpisodeCard })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: copy.returnToArchive })).toHaveAttribute('href', '/');
   });
 
   it('shows the System not-found copy for a non-integer episode id', async () => {

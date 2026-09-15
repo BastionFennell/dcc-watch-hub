@@ -44,3 +44,13 @@
     padding: var(--space-5);
   }
 }
+
+/*
+ * The ended card sits above the toast and the minimap badge (both z-index 2) and
+ * above the stage caption, which it is allowed to cover (T030).
+ */
+.endedOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+}

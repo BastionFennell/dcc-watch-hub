@@ -6,6 +6,7 @@ import {
   feedItems,
   mapCells,
   partyFrames,
+  recentlyRevealed,
   stageCaption,
   timelineMarkers,
 } from './selectors';
@@ -222,5 +223,42 @@ describe('mapCells', () => {
 describe('stageCaption', () => {
   it('reads Ep n · Floor n · time', () => {
     expect(stageCaption(meta, 2482)).toBe('Ep 1 · Floor 1 · 41:22');
+  });
+});
+
+describe('recentlyRevealed', () => {
+  it('is empty before the reveal and inside a backward seek', () => {
+    expect(recentlyRevealed(episode.events, 0).size).toBe(0);
+    expect(recentlyRevealed(episode.events, 89.999).size).toBe(0);
+    expect(recentlyRevealed(episode.events, 50).size).toBe(0);
+  });
+
+  it('holds the revealed cells for the window after the event', () => {
+    const atReveal = recentlyRevealed(episode.events, 90);
+    expect([...atReveal].sort()).toEqual(['3,2', '4,2']);
+    expect(recentlyRevealed(episode.events, 94.999).size).toBe(2);
+  });
+
+  it('drops them once the window closes, while the cells stay revealed', () => {
+    expect(recentlyRevealed(episode.events, 95).size).toBe(0);
+    expect(recentlyRevealed(episode.events, 200).size).toBe(0);
+    expect(mapCells(reduceTo(episode, 200)).revealed.size).toBe(2);
+  });
+
+  it('honours a custom window', () => {
+    expect(recentlyRevealed(episode.events, 91, 1).size).toBe(0);
+    expect(recentlyRevealed(episode.events, 91, 2).size).toBe(2);
+  });
+
+  it('merges overlapping reveals and ignores unknown event types', () => {
+    const overlapping = withEvents([
+      { t: 10, type: 'map_reveal', cells: [[0, 0]] },
+      { t: 12, type: 'map_reveal', cells: [[0, 1], [0, 0]] },
+      { t: 12, type: 'future_type', payload: 'must never render' },
+    ]);
+    expect([...recentlyRevealed(overlapping.events, 12)].sort()).toEqual(['0,0', '0,1']);
+    // The first window has closed at 15.5; the second still covers both of its cells.
+    expect([...recentlyRevealed(overlapping.events, 15.5)].sort()).toEqual(['0,0', '0,1']);
+    expect(recentlyRevealed(overlapping.events, 17).size).toBe(0);
   });
 });

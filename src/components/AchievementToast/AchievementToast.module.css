@@ -1,0 +1,63 @@
+/*
+ * Wireframe: System blue box, 8 px inset from the stage's top-left, 11 px text,
+ * never wider than 65% of the stage. Fade-in only; it is removed, not animated out.
+ */
+.region {
+  position: absolute;
+  top: var(--space-4);
+  left: var(--space-4);
+  z-index: 2;
+  max-width: 65%;
+  pointer-events: none;
+}
+
+.toast {
+  background: var(--system-bg);
+  color: var(--system-fg);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  box-shadow: 0 1px 6px rgb(0 0 0 / 45%);
+  animation: toastIn 200ms ease-out;
+}
+
+.tag {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--system-pill-fg);
+}
+
+.body {
+  margin: 0;
+}
+
+.title {
+  font-weight: 600;
+  color: var(--brand-fg-2);
+}
+
+.desc {
+  color: var(--system-fg);
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+}

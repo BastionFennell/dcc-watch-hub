@@ -279,7 +279,7 @@ ends; ended card navigates; `/ep/999` shows System not-found.
   skip-to-content link, `<main id="main">` wrapper in `App.tsx`, and document title updates
   (`document.title = `${episode.title} · Dungeon Crawl Cast`` in EpisodePage via `useEffect`; hub
   sets "Broadcast archive · Dungeon Crawl Cast").
-- [ ] T030 [US2] (wave 3) Wire `NextEpisodeCard` into `EpisodePage.tsx`: render inside
+- [X] T030 [US2] (wave 3) Wire `NextEpisodeCard` into `EpisodePage.tsx`: render inside
   `VideoStage` children when `ended` is true with `next = prevNext(show, id).next`; extend
   `EpisodePage.test.tsx` with `fake.end()` → card visible with link to `/ep/2`, and on `/ep/3` the
   archive link.
@@ -295,12 +295,12 @@ ends; ended card navigates; `/ep/999` shows System not-found.
 **Independent Test**: Markers at `t/durationSec`, colored by kind; tooltip on hover; click seeks
 and overlay follows (assert via `FakeTimeSource.getTime()` in test).
 
-- [ ] T031 [P] [US3] Create `src/components/EventTimeline/EventTimeline.tsx` + `.module.css`: 18 px
+- [X] T031 [P] [US3] Create `src/components/EventTimeline/EventTimeline.tsx` + `.module.css`: 18 px
   tall track, 3 px hairline bar, elapsed fill `--brand-2` width `t/durationSec`, markers as 6×11 px
   rounded `<button>`s positioned `left: pos*100%` with `background: var(--marker-<kind>)`,
   `title` and `aria-label` = label, `onClick → onSeek(marker.t)`; keyboard focusable; `role="list"`
   semantics via `aria-label="Episode timeline"`. Props: `markers: Marker[]`, `t`, `durationSec`, `onSeek`.
-- [ ] T032 [US3] Wire into `EpisodePage.tsx` between stage and rail (both layouts), `onSeek = (t) => source?.seek(t)`.
+- [X] T032 [US3] Wire into `EpisodePage.tsx` between stage and rail (both layouts), `onSeek = (t) => source?.seek(t)`.
   Extend `EpisodePage.test.tsx`: markers count equals fixture chapters + achievements + level_ups;
   clicking a marker sets the fake source time to the marker `t` and the feed updates to that time.
 
@@ -316,18 +316,18 @@ and overlay follows (assert via `FakeTimeSource.getTime()` in test).
 achievements, gone after seek back; minimap cells revealed only after `map_reveal`; sponsor
 pinned during its window only.
 
-- [ ] T033 [P] [US4] Create `src/components/AchievementToast/AchievementToast.tsx` + `.module.css`:
+- [X] T033 [P] [US4] Create `src/components/AchievementToast/AchievementToast.tsx` + `.module.css`:
   absolutely positioned top-left (8 px inset), System blue box (`--system-bg`/`--system-fg`), mono
   caps "NEW ACHIEVEMENT" label, title bold + desc, max-width 65%, fade-in 200 ms (no exit
   animation — it is removed when the selector returns null), `role="status"` `aria-live="polite"`.
   Props: `toast: Toast | null`.
-- [ ] T034 [P] [US4] Create `src/components/MiniMapBadge/MiniMapBadge.tsx` + `.module.css`: bottom-right
+- [X] T034 [P] [US4] Create `src/components/MiniMapBadge/MiniMapBadge.tsx` + `.module.css`: bottom-right
   (8 px inset), 96×64 panel with hairline-2 border, header `IconMap` + "Floor {n}" (`--text-3` 11 px),
   grid `repeat(cols, 1fr)` of 1 px-gapped cells: unrevealed `--panel`, revealed `--brand-deep`, cells
   revealed within the last 5 s `--brand-2` (derived from events, pure), `pointer-events: none`,
   `aria-hidden` decorative plus an `sr-only` summary "{n} of {total} sectors revealed". Props:
   `cells: ReturnType<typeof mapCells>`, `recent: Set<string>`.
-- [ ] T035 [US4] Wire toast, minimap, and pinned `activeSponsor` into `EpisodePage.tsx` /
+- [X] T035 [US4] Wire toast, minimap, and pinned `activeSponsor` into `EpisodePage.tsx` /
   `VideoStage` children (sponsor pinned slot already supported by `EventFeed` props — pass
   `activeSponsor(events, t)`). Add `recentlyRevealed(events, t, windowSec = 5)` to
   `src/engine/selectors.ts` with a unit test. Extend `EpisodePage.test.tsx`: toast text at

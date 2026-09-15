@@ -1,0 +1,53 @@
+/*
+ * Wireframe: a 96×64 panel 8 px in from the stage's bottom-right, hairline-2
+ * border, a muted "Floor n" header and a 1 px-gapped grid of sector cells.
+ */
+.badge {
+  position: absolute;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  z-index: 2;
+  width: 96px;
+  min-height: 64px;
+  padding: var(--space-2);
+  background: var(--panel);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-md);
+  pointer-events: none;
+  cursor: default;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-1);
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  line-height: 1;
+}
+
+.icon {
+  width: 11px;
+  height: 11px;
+}
+
+.grid {
+  display: grid;
+  gap: 1px;
+}
+
+.cell {
+  height: 4px;
+  border-radius: 1px;
+  background: var(--panel);
+  transition: background-color 300ms ease;
+}
+
+.cell[data-state='revealed'] {
+  background: var(--brand-deep);
+}
+
+.cell[data-state='recent'] {
+  background: var(--brand-2);
+}
