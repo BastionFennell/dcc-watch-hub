@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import type { EpisodeMeta } from '../../data/types';
 import { copy } from '../../copy';
+import { useEpisodePath } from '../../hooks/useEpisodePath';
 import styles from './NextEpisodeCard.module.css';
 
 export interface NextEpisodeCardProps {
@@ -14,6 +15,7 @@ export interface NextEpisodeCardProps {
  * stage by tasks.md T030.
  */
 export function NextEpisodeCard({ next }: NextEpisodeCardProps) {
+  const episodePath = useEpisodePath();
   return (
     <div className={styles.backdrop}>
       <div className={styles.card} role="group" aria-label={copy.systemLabel}>
@@ -24,7 +26,7 @@ export function NextEpisodeCard({ next }: NextEpisodeCardProps) {
             <p className={styles.meta}>
               {copy.episodeShort(next.id)} · {copy.floorLabel(next.floor)}
             </p>
-            <Link to={`/ep/${next.id}`} className={styles.action}>
+            <Link to={episodePath(next.id)} className={styles.action}>
               {copy.nextEpisodeCard}
             </Link>
           </>

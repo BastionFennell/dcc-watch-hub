@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router';
 import type { Show } from '../../data/types';
 import { episodesByFloor } from '../../data/show';
+import { useEpisodePath } from '../../hooks/useEpisodePath';
 import { IconMenu } from '../icons';
 import { copy } from '../../copy';
 import styles from './SiteHeader.module.css';
@@ -25,6 +26,7 @@ export interface EpisodesMenuProps {
  * links the header hides.
  */
 export function EpisodesMenu({ show, currentId, children }: EpisodesMenuProps) {
+  const episodePath = useEpisodePath();
   const ref = useRef<HTMLDetailsElement>(null);
   const { pathname } = useLocation();
 
@@ -48,7 +50,7 @@ export function EpisodesMenu({ show, currentId, children }: EpisodesMenuProps) {
               {group.episodes.map((episode) => (
                 <li key={episode.id}>
                   <Link
-                    to={`/ep/${episode.id}`}
+                    to={episodePath(episode.id)}
                     className={styles.item}
                     aria-current={episode.id === currentId ? 'page' : undefined}
                   >

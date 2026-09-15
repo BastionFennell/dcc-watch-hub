@@ -59,7 +59,7 @@ describe('broadcast archive', () => {
     ).toEqual(['/ep/3']);
     expect(
       within(main).getByRole('link', { name: /Episode 2 — The Meat District/ }),
-    ).toHaveAttribute('href', '/ep/2');
+    ).toHaveAttribute('href', '/ep/2?fake=1');
   });
 
   it('titles the hub document in the System voice', async () => {
@@ -79,7 +79,7 @@ describe('broadcast archive', () => {
       expect(within(banner).getByText(copy.episodeLabel(1, 1, 1))).toBeInTheDocument(),
     );
     expect(within(banner).queryByLabelText(copy.prevEpisode)).toBeNull();
-    expect(within(banner).getByLabelText(copy.nextEpisode)).toHaveAttribute('href', '/ep/2');
+    expect(within(banner).getByLabelText(copy.nextEpisode)).toHaveAttribute('href', '/ep/2?fake=1');
   });
 
   it('hides the next arrow on the last episode', async () => {
@@ -88,7 +88,7 @@ describe('broadcast archive', () => {
     await waitFor(() =>
       expect(within(banner).getByText(copy.episodeLabel(1, 2, 3))).toBeInTheDocument(),
     );
-    expect(within(banner).getByLabelText(copy.prevEpisode)).toHaveAttribute('href', '/ep/2');
+    expect(within(banner).getByLabelText(copy.prevEpisode)).toHaveAttribute('href', '/ep/2?fake=1');
     expect(within(banner).queryByLabelText(copy.nextEpisode)).toBeNull();
   });
 
@@ -103,7 +103,7 @@ describe('broadcast archive', () => {
       .getAllByRole('link')
       .filter((link) => link.getAttribute('href')?.startsWith('/ep/'));
     expect(menuLinks.map((link) => link.getAttribute('href'))).toEqual(
-      expect.arrayContaining(['/ep/1', '/ep/2', '/ep/3']),
+      expect.arrayContaining(['/ep/1?fake=1', '/ep/2?fake=1', '/ep/3?fake=1']),
     );
 
     const open = within(banner).getByRole('link', { name: /Episode 2 — The Meat District/ });

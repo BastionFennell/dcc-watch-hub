@@ -4,14 +4,19 @@
  */
 .timeline {
   position: relative;
-  height: 18px;
+  height: 20px;
   min-width: 0;
+  cursor: pointer;
+}
+
+.timeline:hover .track {
+  background: var(--hairline-2);
 }
 
 .track,
 .fill {
   position: absolute;
-  top: 8px;
+  top: 9px;
   left: 0;
   height: 3px;
   border-radius: 2px;
@@ -39,7 +44,7 @@
 
 .marker {
   position: absolute;
-  top: 4px;
+  top: 5px;
   width: 6px;
   height: 11px;
   padding: 0;

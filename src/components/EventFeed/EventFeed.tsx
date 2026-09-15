@@ -17,7 +17,7 @@ export interface EventFeedProps {
   notice?: ReactNode;
 }
 
-/** The System's right-hand rail: header, pinned sponsor, events, footer. */
+/** The System's right-hand rail: header, pinned sponsor, events. */
 export function EventFeed({ items, sponsor, t, notice }: EventFeedProps) {
   return (
     <section className={styles.feed} aria-label={copy.feedLabel}>
@@ -31,7 +31,6 @@ export function EventFeed({ items, sponsor, t, notice }: EventFeedProps) {
           </li>
         ))}
       </ul>
-      <p className={styles.footer}>{copy.feedFooter}</p>
     </section>
   );
 }

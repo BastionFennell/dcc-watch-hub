@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import type { EpisodeMeta, Show } from '../../data/types';
 import { prevNext, seasonOf } from '../../data/show';
 import { useScrolled } from '../../hooks/useScrolled';
+import { useEpisodePath } from '../../hooks/useEpisodePath';
 import { IconBroadcast, IconChevronLeft, IconChevronRight } from '../icons';
 import { EpisodesMenu } from './EpisodesMenu';
 import { copy } from '../../copy';
@@ -32,6 +33,7 @@ function ShowLinks({ show, className }: { show: Show; className: string }) {
  * shrinking once the page scrolls so the stage stays dominant.
  */
 export function SiteHeader({ show, current }: SiteHeaderProps) {
+  const episodePath = useEpisodePath();
   const scrolled = useScrolled();
   const { prev, next } = show && current ? prevNext(show, current.id) : {};
   const season = show && current ? seasonOf(show, current.id) : 1;
@@ -57,7 +59,7 @@ export function SiteHeader({ show, current }: SiteHeaderProps) {
         {current ? (
           <>
             {prev ? (
-              <Link to={`/ep/${prev.id}`} className={styles.arrow} aria-label={copy.prevEpisode}>
+              <Link to={episodePath(prev.id)} className={styles.arrow} aria-label={copy.prevEpisode}>
                 <IconChevronLeft />
               </Link>
             ) : null}
@@ -65,7 +67,7 @@ export function SiteHeader({ show, current }: SiteHeaderProps) {
               {copy.episodeLabel(season, current.floor, current.id)}
             </span>
             {next ? (
-              <Link to={`/ep/${next.id}`} className={styles.arrow} aria-label={copy.nextEpisode}>
+              <Link to={episodePath(next.id)} className={styles.arrow} aria-label={copy.nextEpisode}>
                 <IconChevronRight />
               </Link>
             ) : null}

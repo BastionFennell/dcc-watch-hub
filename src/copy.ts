@@ -34,7 +34,6 @@ export const copy = {
 
   // Feed
   feedHeader: (time: string) => `Event feed · synced ${time}`,
-  feedFooter: 'scrubbing rewinds the feed',
   sponsored: 'Sponsored',
   sponsoredTag: 'SPONSORED',
   newAchievementTag: 'NEW ACHIEVEMENT',
@@ -127,6 +126,7 @@ export const copy = {
 
   /** The marker bar under the stage; each marker names itself (FR-040/041). */
   timelineLabel: 'Episode timeline',
+  timelineScrubHint: 'Jump to any point in the broadcast',
 
   /* --- polish pass (post-review) --- */
 

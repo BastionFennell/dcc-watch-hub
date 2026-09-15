@@ -104,23 +104,23 @@
   },
   "events": [
     {
-      "t": 5,
+      "t": 18,
       "type": "system_message",
       "text": "Crawlers. You survived the doorway. The Meat District will not be so polite."
     },
     {
-      "t": 13,
+      "t": 47,
       "type": "chapter",
       "label": "Recap — What the Door Cost",
       "kind": "story"
     },
     {
-      "t": 20,
+      "t": 72,
       "type": "note",
       "text": "Rae has stopped narrating her own thoughts. The audience objects."
     },
     {
-      "t": 27,
+      "t": 97,
       "type": "inventory",
       "actor": "actress",
       "add": [
@@ -129,21 +129,21 @@
       "remove": []
     },
     {
-      "t": 33,
+      "t": 119,
       "type": "loot",
       "actor": "xo",
       "item": "Ledger of Debts",
       "source": "Abandoned Kiosk"
     },
     {
-      "t": 40,
+      "t": 144,
       "type": "hp",
       "actor": "psychic",
       "current": 11,
       "max": 20
     },
     {
-      "t": 47,
+      "t": 170,
       "type": "map_reveal",
       "cells": [
         [
@@ -166,7 +166,7 @@
       "label": "The Butcher Row"
     },
     {
-      "t": 53,
+      "t": 191,
       "type": "status",
       "actor": "harry",
       "add": [
@@ -175,77 +175,77 @@
       "remove": []
     },
     {
-      "t": 60,
+      "t": 217,
       "type": "achievement",
       "actor": "psychic",
       "title": "Static Bloom",
       "desc": "Read a room that was not there."
     },
     {
-      "t": 61,
+      "t": 220,
       "type": "achievement",
       "actor": "actress",
       "title": "Second Billing",
       "desc": "Upstaged a mid-boss."
     },
     {
-      "t": 62,
+      "t": 224,
       "type": "achievement",
       "actor": "harry",
       "title": "Blood Tax",
       "desc": "Paid in advance, twice."
     },
     {
-      "t": 69,
+      "t": 249,
       "type": "level_up",
       "actor": "psychic",
       "level": 3
     },
     {
-      "t": 75,
+      "t": 271,
       "type": "sponsor",
       "text": "Meat District cuts, dressed by Grull Industries. Ask for the thoracic special.",
       "durationSec": 20
     },
     {
-      "t": 83,
+      "t": 300,
       "type": "system_message",
       "text": "A neighborhood boss has noticed you. This is excellent for engagement."
     },
     {
-      "t": 90,
+      "t": 325,
       "type": "chapter",
       "label": "The Hook Run",
       "kind": "loot"
     },
     {
-      "t": 100,
+      "t": 361,
       "type": "future_type",
       "headline": "Forward-compatibility probe",
       "tier": 7
     },
     {
-      "t": 107,
+      "t": 386,
       "type": "loot",
       "actor": "stuntman",
       "item": "Grappling Spool",
       "source": "Gold Adventurer Box"
     },
     {
-      "t": 114,
+      "t": 412,
       "type": "hp",
       "actor": "harry",
       "current": 5,
       "max": 22
     },
     {
-      "t": 121,
+      "t": 437,
       "type": "rank",
       "scope": "party",
       "rank": 48
     },
     {
-      "t": 128,
+      "t": 462,
       "type": "status",
       "actor": "harry",
       "add": [],
@@ -254,31 +254,31 @@
       ]
     },
     {
-      "t": 136,
+      "t": 491,
       "type": "note",
       "text": "Marcus asks whether the hooks are load-bearing. Nobody answers."
     },
     {
-      "t": 144,
+      "t": 520,
       "type": "chapter",
       "label": "The Butcher of Row Nine",
       "kind": "boss"
     },
     {
-      "t": 152,
+      "t": 549,
       "type": "hp",
       "actor": "harry",
       "current": 19,
       "max": 22
     },
     {
-      "t": 160,
+      "t": 578,
       "type": "level_up",
       "actor": "actress",
       "level": 3
     },
     {
-      "t": 169,
+      "t": 610,
       "type": "map_reveal",
       "cells": [
         [
@@ -297,7 +297,7 @@
       "label": "The Cold Locker"
     },
     {
-      "t": 177,
+      "t": 639,
       "type": "inventory",
       "actor": "psychic",
       "add": [
@@ -308,32 +308,32 @@
       ]
     },
     {
-      "t": 186,
+      "t": 671,
       "type": "rank",
       "scope": "crawler",
       "actor": "harry",
       "rank": 740
     },
     {
-      "t": 195,
+      "t": 704,
       "type": "sponsor",
       "text": "Ghaza Provisioners: ration bricks that outlive their owners.",
       "durationSec": 20
     },
     {
-      "t": 205,
+      "t": 740,
       "type": "achievement",
       "actor": "stuntman",
       "title": "Rigging Expert",
       "desc": "Nobody asked him to swing."
     },
     {
-      "t": 216,
+      "t": 780,
       "type": "system_message",
       "text": "Row Nine is cleared. The stairs down are no longer optional."
     },
     {
-      "t": 228,
+      "t": 823,
       "type": "note",
       "text": "The Actress requests a costume change. Denied."
     }

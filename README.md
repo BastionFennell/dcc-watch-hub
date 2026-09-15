@@ -66,7 +66,7 @@ Add `?fake=1` to an episode URL **in dev** and the stage is replaced by a black 
 range input and a play/pause button driving `FakeTimeSource`. It is the fastest way to scrub
 through an event log without the network, and it is compiled out of production builds
 (`import.meta.env.DEV` guard), so it can never reach a viewer.
-Add `&t=<seconds>` to open the scrubber mid-episode, e.g. `/ep/1?fake=1&t=63` lands on the first
+Add `&t=<seconds>` to open the scrubber mid-episode, e.g. `/ep/1?fake=1&t=157` lands on the first
 achievement toast with a populated feed.
 
 ### Layout of the source
@@ -151,18 +151,19 @@ Everything below is sample data so the site is runnable today. None of it is rea
 
 | What | Current placeholder | Replace with |
 |------|--------------------|--------------|
-| `episodes[0].youtubeId` (Episode 1) | `"M7lc1UVf-VE"` | the real YouTube video id |
-| `episodes[1].youtubeId` (Episode 2) | `"M7lc1UVf-VE"` | the real YouTube video id |
-| `episodes[2].youtubeId` (Episode 3) | `"M7lc1UVf-VE"` | the real YouTube video id |
-| `episodes[*].durationSec` | `240` (all three) | the real runtime of each final edit, in seconds |
+| `episodes[0].youtubeId` (Episode 1) | `"aqz-KE-bpKQ"` (Big Buck Bunny, Blender Foundation) | the real YouTube video id |
+| `episodes[1].youtubeId` (Episode 2) | `"eRsGyueVLvQ"` (Sintel, Blender Foundation) | the real YouTube video id |
+| `episodes[2].youtubeId` (Episode 3) | `"R6MlUcmOul8"` (Tears of Steel, Blender Foundation) | the real YouTube video id |
+| `episodes[*].durationSec` | `635` / `888` / `734` (the open movies' real lengths) | the real runtime of each final edit, in seconds |
 | `episodes[0].title` | `"Episode 1 — The World Dungeon"` | the real episode title |
 | `episodes[1].title` | `"Episode 2 — The Meat District"` | the real episode title |
 | `episodes[2].title` | `"Episode 3 — Descent"` | the real episode title |
 | `links.discord` | `"https://discord.gg/REPLACE_ME"` | the real invite |
 | `links.youtube` | `"https://www.youtube.com/@DungeonCrawlCast"` | confirm this is the real channel URL |
 
-`M7lc1UVf-VE` is the video Google itself uses in the IFrame API docs; `durationSec: 240` matches
-it so every sample event fires while it plays. Change the ids and the durations together.
+The three sample videos are the Blender Foundation's open movies: public, embeddable, and each a
+different video so switching episodes is visibly a fresh broadcast. Each `durationSec` is that
+video's real length and the sample events are spread across it. Change ids and durations together.
 
 **Crawler portraits** — all five are generated monochrome SVG busts, not art:
 

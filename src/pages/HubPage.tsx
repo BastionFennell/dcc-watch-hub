@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Link } from 'react-router';
 import { useShow } from '../data/ShowContext';
 import { episodesByFloor } from '../data/show';
+import { useEpisodePath } from '../hooks/useEpisodePath';
 import { IconPlay } from '../components/icons';
 import { copy } from '../copy';
 import styles from './HubPage.module.css';
@@ -12,6 +13,7 @@ import styles from './HubPage.module.css';
  */
 export function HubPage() {
   const { show, loading } = useShow();
+  const episodePath = useEpisodePath();
 
   useEffect(() => {
     document.title = copy.pageTitle(copy.archiveTitle);
@@ -35,7 +37,7 @@ export function HubPage() {
               <ul className={styles.cards}>
                 {group.episodes.map((episode) => (
                   <li key={episode.id}>
-                    <Link to={`/ep/${episode.id}`} className={styles.card}>
+                    <Link to={episodePath(episode.id)} className={styles.card}>
                       <span className={styles.cardId}>{copy.episodeShort(episode.id)}</span>
                       <span className={styles.cardTitle}>{episode.title}</span>
                       <span className={styles.cardPlay} aria-hidden="true">

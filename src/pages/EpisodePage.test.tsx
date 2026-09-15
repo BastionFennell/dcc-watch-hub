@@ -325,7 +325,7 @@ describe('EpisodePage', () => {
     expect(stage.getByText('Episode 2 — The Meat District')).toBeInTheDocument();
     expect(stage.getByRole('link', { name: copy.nextEpisodeCard })).toHaveAttribute(
       'href',
-      '/ep/2',
+      '/ep/2?fake=1',
     );
   });
 
@@ -345,5 +345,40 @@ describe('EpisodePage', () => {
       </MemoryRouter>,
     );
     await waitFor(() => expect(screen.getByText(copy.notFoundTitle)).toBeInTheDocument());
+  });
+
+  /* ------------------------------------------ polish: strip scrubbing + episode switch */
+
+  it('seeks to any point on the timeline strip, not just the markers', async () => {
+    const { source } = await mountEpisode();
+    const strip = screen.getByTestId('event-timeline');
+    vi.spyOn(strip, 'getBoundingClientRect').mockReturnValue({
+      x: 100, y: 0, left: 100, top: 0, width: 400, height: 20, right: 500, bottom: 20, toJSON: () => ({}),
+    } as DOMRect);
+
+    fireEvent.click(strip, { clientX: 200 }); // a quarter of the way along a 240 s episode
+    expect(source.getTime()).toBe(60);
+    expect(screen.getByText(copy.feedHeader('1:00'))).toBeInTheDocument();
+
+    // Clamped at both ends.
+    fireEvent.click(strip, { clientX: 900 });
+    expect(source.getTime()).toBe(240);
+    fireEvent.click(strip, { clientX: -50 });
+    expect(source.getTime()).toBe(0);
+  });
+
+  it('starts the next recap episode from the beginning', async () => {
+    const { seek } = await mountEpisode();
+    seek(100);
+    expect(screen.getByText(copy.feedHeader('1:40'))).toBeInTheDocument();
+    expect(feedCount()).toBeGreaterThan(0);
+
+    const header = screen.getByRole('banner');
+    fireEvent.click(within(header).getByRole('link', { name: copy.nextEpisode }));
+
+    await waitFor(() => expect(screen.getByText(copy.feedHeader('0:00'))).toBeInTheDocument());
+    await waitFor(() => expect(screen.getAllByTestId('crawler-frame')).toHaveLength(5));
+    expect(feedCount()).toBe(0);
+    expect(document.title).toBe(copy.pageTitle(makeShow().episodes[1].title));
   });
 });

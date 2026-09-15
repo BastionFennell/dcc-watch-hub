@@ -39,8 +39,8 @@
 }
 
 .portrait {
-  width: 40px;
-  height: 40px;
+  width: var(--portrait-size);
+  height: var(--portrait-size);
   flex: none;
   border-radius: 50%;
   background: var(--brand-deep);
@@ -75,7 +75,7 @@
 }
 
 .hpTrack {
-  height: 4px;
+  height: var(--hp-bar);
   margin-top: var(--space-2);
   background: var(--hairline);
   border-radius: 2px;
@@ -84,7 +84,7 @@
 
 .hpFill {
   display: block;
-  height: 4px;
+  height: var(--hp-bar);
   background: var(--hp);
   border-radius: 2px;
   transition: width 400ms ease;
@@ -102,7 +102,7 @@
 }
 
 .pip {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   line-height: 1.4;
   color: var(--amber-fg);
   background: var(--amber-bg);

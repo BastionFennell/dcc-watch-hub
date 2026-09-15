@@ -1,3 +1,4 @@
+import type { MouseEvent } from 'react';
 import type { Marker } from '../../engine/selectors';
 import { formatTime } from '../../engine/time';
 import { copy } from '../../copy';
@@ -9,7 +10,7 @@ export interface EventTimelineProps {
   /** The playhead, for the elapsed fill (FR-042) and label reveal. */
   t: number;
   durationSec: number;
-  /** Clicking a marker seeks playback to its time (FR-041). */
+  /** Clicking a marker — or anywhere on the strip — seeks playback (FR-041). */
   onSeek: (t: number) => void;
 }
 
@@ -26,15 +27,28 @@ function labelFor(marker: Marker, t: number): string {
 /**
  * The marker bar under the stage (US3): a 3 px hairline track with a brand fill
  * up to the playhead and one focusable button per chapter, achievement, and
- * level-up. It holds no state — the fill, the markers, and their labels are
- * functions of `t` and the event log.
+ * level-up. The whole strip is a scrub target: a click anywhere seeks to that
+ * fraction of the episode. It holds no state — the fill, the markers, and their
+ * labels are functions of `t` and the event log.
  */
 export function EventTimeline({ markers, t, durationSec, onSeek }: EventTimelineProps) {
   const span = durationSec > 0 ? durationSec : 1;
   const progress = Math.min(1, Math.max(0, t / span));
 
+  const seekToPointer = (event: MouseEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    const fraction = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+    onSeek(Math.round(fraction * span));
+  };
+
   return (
-    <div className={styles.timeline} data-testid="event-timeline">
+    <div
+      className={styles.timeline}
+      data-testid="event-timeline"
+      onClick={seekToPointer}
+      title={copy.timelineScrubHint}
+    >
       <div className={styles.track} aria-hidden="true" />
       <div
         className={styles.fill}
@@ -56,7 +70,10 @@ export function EventTimeline({ markers, t, durationSec, onSeek }: EventTimeline
                 data-elapsed={marker.t <= t ? 'true' : undefined}
                 title={label}
                 aria-label={label}
-                onClick={() => onSeek(marker.t)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onSeek(marker.t);
+                }}
               />
             </li>
           );

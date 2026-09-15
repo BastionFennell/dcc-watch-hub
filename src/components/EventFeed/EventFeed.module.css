@@ -62,7 +62,7 @@
 
 .systemTag {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   opacity: 0.85;
@@ -83,7 +83,7 @@
 
 .sponsorTag {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--brand-fg-2);
@@ -109,10 +109,4 @@
 
 .text {
   min-width: 0;
-}
-
-.footer {
-  color: var(--text-3);
-  font-size: var(--text-xs);
-  margin-top: var(--space-1);
 }

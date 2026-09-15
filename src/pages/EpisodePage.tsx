@@ -97,7 +97,7 @@ export function EpisodePage() {
       <h1 className="sr-only">{meta.title}</h1>
       <div className={styles.grid}>
         <div className={styles.main}>
-          <VideoStage meta={meta} t={t} onSource={setSource}>
+          <VideoStage key={meta.id} meta={meta} t={t} onSource={setSource}>
             <AchievementToast toast={toast} />
             {cells ? <MiniMapBadge cells={cells} recent={recent} /> : null}
             {ended ? (

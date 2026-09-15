@@ -26,25 +26,25 @@
     {
       "id": 1,
       "title": "Episode 1 — The World Dungeon",
-      "youtubeId": "M7lc1UVf-VE",
+      "youtubeId": "aqz-KE-bpKQ",
       "floor": 1,
-      "durationSec": 240,
+      "durationSec": 635,
       "dataUrl": "/data/ep1.json"
     },
     {
       "id": 2,
       "title": "Episode 2 — The Meat District",
-      "youtubeId": "M7lc1UVf-VE",
+      "youtubeId": "eRsGyueVLvQ",
       "floor": 1,
-      "durationSec": 240,
+      "durationSec": 888,
       "dataUrl": "/data/ep2.json"
     },
     {
       "id": 3,
       "title": "Episode 3 — Descent",
-      "youtubeId": "M7lc1UVf-VE",
+      "youtubeId": "R6MlUcmOul8",
       "floor": 2,
-      "durationSec": 240,
+      "durationSec": 734,
       "dataUrl": "/data/ep3.json"
     }
   ],
