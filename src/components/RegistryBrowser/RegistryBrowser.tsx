@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
-import type { EntityKind } from '../../data/types';
+import type { EntityKind, EpisodeData } from '../../data/types';
 import { useShow } from '../../data/ShowContext';
+import { useRegistry } from '../../data/RegistryContext';
 import { useRegistryIndex } from '../../data/RegistryIndexContext';
 import { orderedEpisodes } from '../../data/show';
 import type { RegistryScope } from '../../engine/registry';
 import {
   matchesRegistryQuery,
   parseRegistryScope,
+  registryIndexAt,
   registrySections,
   scopeParam,
   scopeRegistry,
@@ -21,6 +23,17 @@ import styles from './RegistryBrowser.module.css';
 export interface RegistryBrowserProps {
   /** The episode being watched: the default scope, and which appearances seek. */
   currentEpisodeId: number;
+  /**
+   * The current episode's data, straight from the page — `null` while its file
+   * is still landing, because the panel opens without waiting for it (R3
+   * scenario 4). The shared index loads lazily over the network, but the page
+   * already holds *this* episode, so laying it over the cached map makes the
+   * panel correct the moment it opens; the earlier episodes fill in underneath
+   * when they arrive.
+   */
+  currentEpisode: EpisodeData | null;
+  /** The playhead. The current episode's contribution stops here (R4-FR-651). */
+  t: number;
   /** Open the panel on this entity, expanded and scrolled to (R3-FR-643). */
   focusId?: string;
   /** Seeks the broadcast to an appearance in the current episode. */
@@ -42,17 +55,23 @@ export interface RegistryBrowserProps {
  * - the scope lives here rather than in the URL (R3-FR-641) — changing it must
  *   not navigate, because navigating would take the stage with it.
  *
- * Nothing here is playhead-aware: the panel is publication-scoped, so a seek
- * behind it changes the strip and leaves this exactly as it was (R3 scenario 5).
+ * Revision 4 adds the third: the current episode follows the playhead
+ * (R4-FR-651). Earlier episodes are published history and read whole, but this
+ * one is being watched, so it contributes only the beats that have elapsed —
+ * recomputed from `(episode, t)` on every render like everything else below the
+ * stage, which makes a scrub backwards correct for free (constitution I).
  */
 export function RegistryBrowser({
   currentEpisodeId,
+  currentEpisode,
+  t,
   focusId,
   onSeek,
   onShare,
 }: RegistryBrowserProps) {
   const { show } = useShow();
-  const { index, load } = useRegistryIndex();
+  const { registry, loading: registryLoading } = useRegistry();
+  const { episodes, load } = useRegistryIndex();
 
   // The first thing the panel does on open; idempotent, so re-opening is free.
   useEffect(() => {
@@ -98,6 +117,22 @@ export function RegistryBrowser({
     },
     [show],
   );
+
+  /*
+   * The index, rebuilt every render (it is a few hundred events; no memo). The
+   * cached map is whatever has landed so far, with the page's own copy of the
+   * current episode laid over it — clipped to the playhead by `registryIndexAt`.
+   * Until the rest of the archive arrives, `archived` is false and the episodes
+   * the show lists but the map lacks are reported as "still indexing" rather
+   * than as failures.
+   */
+  const archived = episodes !== null;
+  const inputs = new Map(episodes ?? []);
+  if (currentEpisode !== null) inputs.set(currentEpisodeId, currentEpisode);
+  const index =
+    show === null || registryLoading
+      ? null
+      : registryIndexAt(show, registry, inputs, currentEpisodeId, t);
 
   const ready = show !== null && index !== null;
   const scoped = ready ? scopeRegistry(index.entries, scope, show) : [];
@@ -162,14 +197,15 @@ export function RegistryBrowser({
         />
       ) : null}
 
-      {/* The archive is being pulled in the background; the video never stopped. */}
-      {ready ? null : (
+      {/* The other episodes are being pulled in the background; the video never
+          stopped, and this episode is already listed above. */}
+      {ready && archived ? null : (
         <p className={styles.loading} data-testid="registry-browser-loading">
           {copy.registryLoading}
         </p>
       )}
 
-      {ready && index.missingEpisodes.length > 0 ? (
+      {ready && archived && index.missingEpisodes.length > 0 ? (
         <div data-testid="registry-missing" data-count={index.missingEpisodes.length}>
           <SystemNotice>
             <p>{copy.registryMissing(index.missingEpisodes.length)}</p>
@@ -177,9 +213,10 @@ export function RegistryBrowser({
         </div>
       ) : null}
 
-      {ready && sections.length === 0 ? (
+      {ready && archived && sections.length === 0 ? (
         <p className={styles.empty} data-testid="registry-empty">
-          {copy.registryNoMatch}
+          {/* Nothing filtered away and nothing aired yet reads as the strip's standby line. */}
+          {query.trim() === '' && kinds.size === 0 ? copy.encounterEmpty : copy.registryNoMatch}
         </p>
       ) : null}
 

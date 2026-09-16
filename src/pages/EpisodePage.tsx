@@ -328,10 +328,16 @@ export function EpisodePage() {
    * The Registry panel's contents. Its two controls are the only things in it
    * that touch the broadcast, and both are explicit: a moment in this episode
    * seeks, and the share icon copies its link (R3-FR-642).
+   *
+   * It is handed this episode and the playhead, so its current-episode half
+   * follows the broadcast the way the strip does (R4-FR-651) while the earlier
+   * episodes it pulls for itself stay whole.
    */
   const registryBrowser = (
     <RegistryBrowser
       currentEpisodeId={currentEpisodeId}
+      currentEpisode={episode}
+      t={t}
       focusId={panel.kind === 'registry' ? panel.focusId : undefined}
       onSeek={(sec) => source?.seek(sec)}
       onShare={(sec) => void share.share(sec)}
@@ -367,9 +373,10 @@ export function EpisodePage() {
       case 'registry':
         /*
          * The whole Registry beside the stage (007 R3). Unlike every other
-         * panel it needs no episode data at all — it reads the published
+         * panel it needs no episode data to open — it reads the published
          * archive — so it opens while the episode file is still landing, and
-         * opening it neither seeks nor pauses (R3 scenario 4).
+         * opening it neither seeks nor pauses (R3 scenario 4). What this
+         * episode contributes arrives with the file, clipped to the playhead.
          */
         return (
           <RailPanel

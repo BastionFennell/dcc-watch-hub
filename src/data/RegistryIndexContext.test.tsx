@@ -50,7 +50,7 @@ function episodeFetches(): number {
  * times it calls `load()` on mount — twice proves the call is idempotent.
  */
 function Probe({ ask = true, loads = 1 }: { ask?: boolean; loads?: number }) {
-  const { index, loading, error, load } = useRegistryIndex();
+  const { index, episodes, loading, error, load } = useRegistryIndex();
   useEffect(() => {
     if (!ask) return;
     for (let i = 0; i < loads; i += 1) load();
@@ -63,6 +63,13 @@ function Probe({ ask = true, loads = 1 }: { ask?: boolean; loads?: number }) {
       data-entries={index === null ? '' : index.entries.map((e) => e.entity.id).join(',')}
       data-missing={index === null ? '' : index.missingEpisodes.join(',')}
       data-ready={index === null ? 'false' : 'true'}
+      data-episodes={
+        episodes === null
+          ? ''
+          : [...episodes.entries()]
+              .map(([id, data]) => `${id}:${data === null ? 'null' : data.events.length}`)
+              .join(',')
+      }
     />
   );
 }
@@ -122,6 +129,33 @@ describe('RegistryIndexProvider', () => {
     );
     await waitFor(() => expect(probe()).toHaveAttribute('data-ready', 'true'));
     expect(episodeFetches()).toBe(3);
+  });
+
+  /*
+   * Revision 4: the panel re-indexes from the same inputs with the episode on
+   * the stage clipped to the playhead, so the raw map has to come out of the
+   * context alongside the index it was built from (R4-FR-651).
+   */
+  it('exposes the episodes the index was built from, failures included', async () => {
+    vi.unstubAllGlobals();
+    requested = [];
+    stubFetch({ failing: [2] });
+
+    renderProbes(<Probe />);
+
+    await waitFor(() => expect(probe()).toHaveAttribute('data-ready', 'true'));
+    const events = makeEpisodeRaw(1) as { events: unknown[] };
+    expect(probe()).toHaveAttribute(
+      'data-episodes',
+      `1:${events.events.length},2:null,3:${events.events.length}`,
+    );
+  });
+
+  it('carries no episodes until a consumer asks', async () => {
+    renderProbes(<Probe ask={false} />);
+
+    await waitFor(() => expect(requested.some((url) => url.includes('npcs.json'))).toBe(true));
+    expect(probe()).toHaveAttribute('data-episodes', '');
   });
 
   it('reports a loading pass between the request and the index', async () => {

@@ -2077,18 +2077,21 @@ describe('EpisodePage', () => {
     expect(pauseSpy).not.toHaveBeenCalled();
     expect(source.playing).toBe(false);
 
-    // "Through this episode" by default (R3-FR-641).
+    // "Through this episode" by default (R3-FR-641), newest debut first and
+    // nothing the playhead has not reached (R4-FR-650/651).
     expect(within(panel).getByTestId('registry-scope')).toHaveValue('through-1');
     expect(
       within(panel)
         .getAllByTestId('registry-entry')
         .map((element) => element.getAttribute('data-npc')),
-    ).toEqual(['grull-rep', 'hoarder', 'quartermaster']);
+    ).toEqual(['quartermaster', 'hoarder', 'grull-rep']);
   });
 
   it('seeks from an appearance in this episode and links to one in another', async () => {
-    const { source } = await mountEpisode();
+    const { source, seek } = await mountEpisode();
 
+    // Past the Hoarder's last beat, so the panel carries its whole episode 1 run.
+    seek(200);
     fireEvent.click(browseButton());
     const panel = await browser();
 
@@ -2145,16 +2148,70 @@ describe('EpisodePage', () => {
     fireEvent.click(browseButton());
     await browser();
 
+    // Nothing has elapsed yet, so the panel has nothing to file (R4-FR-651).
+    expect(screen.queryAllByTestId('registry-entry')).toHaveLength(0);
+
     // The strip under the panel is still the playhead's (R3 scenario 5) …
     seek(200);
     expect(chipIds()).toEqual(['hoarder', 'quartermaster', 'grull-rep']);
-    // … while the panel itself does not move: publication-scoped, not playhead-scoped.
+    // … and so, from revision 4, is the panel: the scope the viewer chose stays
+    // put, and this episode's half of it follows the broadcast.
     expect(screen.getByTestId('registry-scope')).toHaveValue('through-1');
+    expect(
+      screen.getAllByTestId('registry-entry').map((element) => element.getAttribute('data-npc')),
+    ).toEqual(['quartermaster', 'hoarder', 'grull-rep']);
     expect(screen.getByTestId('registry-browser')).toBeInTheDocument();
 
     fireEvent.click(browseButton());
     expect(screen.queryByTestId('registry-browser')).not.toBeInTheDocument();
     expect(document.activeElement).toBe(browseButton());
+  });
+
+  it('follows the playhead while it is open, forwards and back', async () => {
+    const { seek } = await mountEpisode();
+
+    seek(117);
+    fireEvent.click(browseButton());
+    await browser();
+
+    // 1:57: grull-rep has been met, the Hoarder has not (R4 scenario 2).
+    expect(
+      screen.getAllByTestId('registry-entry').map((element) => element.getAttribute('data-npc')),
+    ).toEqual(['grull-rep']);
+
+    seek(122);
+    expect(entry('hoarder')).toBeInTheDocument();
+    fireEvent.click(within(entry('hoarder')).getByRole('button', { expanded: false }));
+    expect(
+      within(entry('hoarder'))
+        .getAllByTestId('registry-fact')
+        .map((fact) => fact.getAttribute('data-fact')),
+    ).toEqual(['lair']);
+    expect(within(entry('hoarder')).queryByTestId('registry-defeated')).toBeNull();
+
+    seek(200);
+    expect(
+      within(entry('hoarder'))
+        .getAllByTestId('registry-fact')
+        .map((fact) => fact.getAttribute('data-fact')),
+    ).toEqual(['lair', 'weakness']);
+    expect(within(entry('hoarder')).getByTestId('registry-defeated')).toHaveTextContent(
+      copy.registryDefeatedIn(1),
+    );
+
+    // Back to 2:30: the weakness and the defeat are un-told again.
+    seek(150);
+    expect(
+      within(entry('hoarder'))
+        .getAllByTestId('registry-fact')
+        .map((fact) => fact.getAttribute('data-fact')),
+    ).toEqual(['lair']);
+    expect(within(entry('hoarder')).queryByTestId('registry-defeated')).toBeNull();
+
+    // And before the first beat there is nobody at all.
+    seek(100);
+    expect(screen.queryAllByTestId('registry-entry')).toHaveLength(0);
+    expect(screen.getByTestId('registry-browser')).toBeInTheDocument();
   });
 
   it('opens the Registry panel on load from the DEV `?panel=registry:` flag', async () => {

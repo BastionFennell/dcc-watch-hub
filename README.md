@@ -44,6 +44,10 @@ npm run dev -- --open  # opens the archive
   <http://localhost:5180/ep/1?fake=1&t=560&panel=registry> — the rail panel, scoped to this
   episode; <http://localhost:5180/ep/1?fake=1&t=560&panel=registry:the-hoarder> opens it on one
   entity (`panel=registry` and `panel=registry:<id>` are DEV-only, like `panel=npc:<id>`).
+- The Registry panel following the playhead: <http://localhost:5180/ep/1?fake=1&t=129&panel=registry>
+  holds nobody, <http://localhost:5180/ep/1?fake=1&t=130&panel=registry> holds The Hoarder alone,
+  and <http://localhost:5180/ep/1?fake=1&t=540&panel=registry:the-hoarder> has its fact and its
+  "Defeated in episode 1." Drag the scrubber back and the panel gives them up again.
 - The System Registry page: <http://localhost:5180/registry>, deep into one entry:
   <http://localhost:5180/registry#the-hoarder>, and scoped to an episode:
   <http://localhost:5180/registry?scope=ep-2> (see **Entities and the Registry** below).
@@ -53,7 +57,7 @@ npm run dev -- --open  # opens the archive
 ```sh
 npm run typecheck      # tsc --noEmit
 npm run lint           # eslint .
-npm test               # vitest run  (818 tests)
+npm test               # vitest run  (862 tests)
 npm run build          # vite build + copies dist/index.html → dist/404.html
 npm run preview        # serves dist/ at http://localhost:4173/
 ```
@@ -570,9 +574,11 @@ registry. It loads `show.json`, `npcs.json` and **every** episode file in parall
 index itself, so it needs no new data and no build step. If one episode file fails, the rest still
 render and the page says so ("1 recap episode could not be indexed.").
 
-- **Sections, in broadcast order**, one per episode that introduces somebody, headed with that
-  episode's title and a count. An entity is filed under the episode it *first* appears in, however
-  many times it comes back.
+- **Sections, newest episode first** — Episode 3, then 2, then 1 — one per episode that introduces
+  somebody, headed with that episode's title and a count. An entity is filed under the episode it
+  *first* appears in, however many times it comes back, and inside a section the entity introduced
+  **latest** leads (same episode: later timecode first). Reading down the page is reading backwards
+  through the archive, so the newest material is the material you land on.
 - **Search** over name **and** aliases, case-insensitive substring — "crate king" finds The
   Hoarder. No match: "The Registry has no such entity."
 - **Kind chips** with counts, combining as any-of: Boss + Ally shows both.
@@ -600,7 +606,8 @@ works. An unreadable scope opens the whole archive rather than an error.
   this episode".
 
 Search, the kind chips (whose counts follow the scope), and `#<id>` all combine with it, and the
-empty state still reads "The Registry has no such entity." with the scope left selected.
+empty state still reads "The Registry has no such entity." with the scope left selected. The order
+is the same at every scope: newest episode first, latest debut first inside it.
 
 The episode page carries the same scopes: the Registry panel opens at **Through Episode N** for
 the episode being watched, and its footer link hands that scope (and the open entity) to the full
@@ -630,9 +637,13 @@ there.
   beside it), not a link: activating it moves the playhead and nothing else. Appearances in other
   episodes stay links to `/ep/N?t=…`.
 
-The panel is publication-scoped, not playhead-scoped: while it is open the playhead can run or be
-scrubbed and its contents do not change — the strip beneath it still does. Opening it never seeks
-and never pauses.
+One more difference, from revision 4: **in the panel, the current episode follows the playhead**.
+Earlier episodes are published history and are listed whole, but the episode on the stage
+contributes only what has already aired — an entity met later in it is not listed, a fact unlocked
+later is not shown, and "Defeated in episode N" waits for the defeat. Scrub back and the panel
+gives it up again; the facts, the appearances and the defeated line are recomputed from
+`(episode, t)` on every frame, exactly like the strip beneath it. Everything else about the panel
+is still publication-scoped, and opening it never seeks and never pauses.
 
 The episode files it needs are fetched **once per visit**, lazily, the first time either the panel
 or `/registry` asks — `RegistryIndexProvider` (`src/data/RegistryIndexContext.tsx`) holds the

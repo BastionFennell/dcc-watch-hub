@@ -12,9 +12,11 @@ import { orderedEpisodeIds } from '../data/show';
 import { makeEpisode, makeRegistry, makeShow } from '../test/fixtures';
 import type { RegistryEntry } from './registry';
 import {
+  clipEpisodeToPlayhead,
   matchesRegistryQuery,
   parseRegistryScope,
   registryIndex,
+  registryIndexAt,
   registrySections,
   scopeParam,
   scopeRegistry,
@@ -479,15 +481,16 @@ describe('scopeRegistry over public/data', () => {
 /* --- Revision 3 (T723): the shelving and the search the page and panel share --- */
 
 describe('registrySections', () => {
-  it('files entries under the episode they debut in, skipping empty shelves', () => {
+  it('files entries under the episode they debut in, newest shelf first', () => {
     const entries = scopedIndex();
     const sections = registrySections(entries, { kind: 'all' }, show);
 
-    expect(sections.map((section) => section.episodeId)).toEqual([1, 2]);
-    expect(sections[0].title).toBe(show.episodes[0].title);
+    // R4-FR-650: episode 2 leads, and inside episode 1 the entity met last does.
+    expect(sections.map((section) => section.episodeId)).toEqual([2, 1]);
+    expect(sections[0].title).toBe(show.episodes[1].title);
     expect(sections.map((section) => ids(section.entries))).toEqual([
-      ['hoarder', 'grull-rep'],
       ['quartermaster'],
+      ['grull-rep', 'hoarder'],
     ]);
   });
 
@@ -496,17 +499,35 @@ describe('registrySections', () => {
     const sections = registrySections(entries, { kind: 'through', episodeId: 1 }, show);
 
     expect(sections.map((section) => section.episodeId)).toEqual([1]);
-    expect(ids(sections[0].entries)).toEqual(['hoarder', 'grull-rep']);
+    expect(ids(sections[0].entries)).toEqual(['grull-rep', 'hoarder']);
   });
 
-  it('puts the whole cast under one bar in only N', () => {
+  it('puts the whole cast under one bar in only N, latest debut first', () => {
     const entries = scopeRegistry(scopedIndex(), { kind: 'only', episodeId: 2 }, show);
     const sections = registrySections(entries, { kind: 'only', episodeId: 2 }, show);
 
     expect(sections).toHaveLength(1);
     expect(sections[0].episodeId).toBe(2);
-    // The Hoarder debuts in episode 1 and still shelves here (R2 scenario 3).
-    expect(ids(sections[0].entries)).toEqual(['hoarder', 'quartermaster']);
+    // The Hoarder debuts in episode 1 and still shelves here (R2 scenario 3) —
+    // below the ally this episode introduced.
+    expect(ids(sections[0].entries)).toEqual(['quartermaster', 'hoarder']);
+  });
+
+  it('breaks a same-second tie on the id, and never mutates its input', () => {
+    const ep1 = episodeWith(1, [
+      { t: 40, type: 'npc', id: 'quartermaster', action: 'met' },
+      { t: 40, type: 'npc', id: 'grull-rep', action: 'met' },
+      { t: 40, type: 'npc', id: 'hoarder', action: 'met' },
+    ]);
+    const entries = registryIndex(show, registry, map([[1, ep1]])).entries;
+    const before = ids(entries);
+
+    expect(ids(registrySections(entries, { kind: 'all' }, show)[0].entries)).toEqual([
+      'grull-rep',
+      'hoarder',
+      'quartermaster',
+    ]);
+    expect(ids(entries)).toEqual(before);
   });
 
   it('shelves nothing for an episode the show does not list', () => {
@@ -526,5 +547,159 @@ describe('matchesRegistryQuery', () => {
     expect(matchesRegistryQuery(hoarder, 'HOARD')).toBe(true);
     expect(matchesRegistryQuery(hoarder, 'crate king')).toBe(true);
     expect(matchesRegistryQuery(hoarder, 'quartermaster')).toBe(false);
+  });
+});
+
+/* --- Revision 4 (T726): newest first, and the panel's clipped current episode --- */
+
+describe('registrySections over public/data', () => {
+  const root = resolve(__dirname, '../..');
+  const readJson = (name: string): unknown =>
+    JSON.parse(readFileSync(resolve(root, 'public/data', name), 'utf8')) as unknown;
+  const publishedShow = normalizeShow(readJson('show.json'));
+  const published = registryIndex(
+    publishedShow,
+    normalizeRegistry(readJson('npcs.json')),
+    new Map<number, EpisodeData | null>(
+      orderedEpisodeIds(publishedShow).map((id) => [id, normalizeEpisode(readJson(`ep${id}.json`))]),
+    ),
+  ).entries;
+
+  it('reads Episode 3, Episode 2, Episode 1 top to bottom (R4 acceptance 1)', () => {
+    const sections = registrySections(published, { kind: 'all' }, publishedShow);
+
+    expect(sections.map((section) => section.episodeId)).toEqual([3, 2, 1]);
+    expect(sections.map((section) => ids(section.entries))).toEqual([
+      // Episode 3 debuts: 310, 230, 90.
+      ['ghaza-provisioner', 'the-lamplighter', 'the-tollkeeper'],
+      // Episode 2 debuts: 810, 100.
+      ['signal-choir', 'mother-of-pipes'],
+      // Episode 1 debuts: 205, 165, 130 — the entity met last leads.
+      ['quartermaster-vel', 'grull-rep', 'the-hoarder'],
+    ]);
+  });
+
+  it('keeps the index itself in broadcast order', () => {
+    // Only the shelving is reversed; every scope still reads oldest first.
+    expect(ids(published).slice(0, 3)).toEqual([
+      'the-hoarder',
+      'grull-rep',
+      'quartermaster-vel',
+    ]);
+  });
+});
+
+describe('clipEpisodeToPlayhead', () => {
+  const ep1 = makeEpisode(1);
+
+  it('keeps every event at or before t, and drops the rest', () => {
+    expect(clipEpisodeToPlayhead(ep1, 117).events.every((event) => event.t <= 117)).toBe(true);
+    expect(clipEpisodeToPlayhead(ep1, 117).events).toEqual(
+      ep1.events.filter((event) => event.t <= 117),
+    );
+    expect(clipEpisodeToPlayhead(ep1, 0).events).toEqual([]);
+  });
+
+  it('returns the episode itself when nothing is after the playhead', () => {
+    expect(clipEpisodeToPlayhead(ep1, 10_000)).toBe(ep1);
+  });
+
+  it('never mutates the episode it is handed', () => {
+    const before = ep1.events.length;
+    clipEpisodeToPlayhead(ep1, 100);
+    expect(ep1.events).toHaveLength(before);
+    expect(clipEpisodeToPlayhead(ep1, 100).initialState).toBe(ep1.initialState);
+  });
+});
+
+describe('registryIndexAt', () => {
+  const episodes = map([[1, makeEpisode(1)]]);
+  const at = (t: number) => registryIndexAt(show, registry, episodes, 1, t).entries;
+  const hoarderAt = (t: number) => at(t).find((entry) => entry.entity.id === 'hoarder');
+
+  /*
+   * The fixture's episode 1 npc beats: grull-rep met @112, the hoarder met @118,
+   * its lair unlocked @122, the quartermaster seen @135, an unknown id @140, the
+   * weakness unlocked @185, the hoarder defeated @195.
+   */
+  it('lists nobody before the first beat', () => {
+    expect(at(0)).toEqual([]);
+    expect(at(111)).toEqual([]);
+  });
+
+  it('adds an entity on the second it is met', () => {
+    expect(ids(at(112))).toEqual(['grull-rep']);
+    expect(hoarderAt(117)).toBeUndefined();
+
+    const hoarder = hoarderAt(118);
+    expect(hoarder?.appearances).toHaveLength(1);
+    expect(hoarder?.facts).toEqual([]);
+    expect(hoarder).not.toHaveProperty('defeatedIn');
+  });
+
+  it('releases a fact only once its unlock has elapsed', () => {
+    expect(hoarderAt(121)?.facts.map((fact) => fact.id)).toEqual([]);
+    expect(hoarderAt(122)?.facts.map((fact) => fact.id)).toEqual(['lair']);
+    expect(hoarderAt(184)?.facts.map((fact) => fact.id)).toEqual(['lair']);
+    expect(hoarderAt(185)?.facts.map((fact) => fact.id)).toEqual(['lair', 'weakness']);
+    // The fact tag still names the episode that released it.
+    expect(hoarderAt(185)?.facts.every((fact) => fact.episodeId === 1)).toBe(true);
+  });
+
+  it('announces a defeat only once it has elapsed', () => {
+    expect(hoarderAt(194)).not.toHaveProperty('defeatedIn');
+    expect(hoarderAt(195)?.defeatedIn).toBe(1);
+  });
+
+  it('is symmetric: scrubbing back is only a smaller t', () => {
+    // Every step of R4-SC-609's sweep, forward and then back again.
+    const sweep = [112, 118, 122, 135, 185, 195, 150, 117];
+    const seen = sweep.map((t) => ids(at(t)));
+
+    expect(seen).toEqual([
+      ['grull-rep'],
+      ['grull-rep', 'hoarder'],
+      ['grull-rep', 'hoarder'],
+      ['grull-rep', 'hoarder', 'quartermaster'],
+      ['grull-rep', 'hoarder', 'quartermaster'],
+      ['grull-rep', 'hoarder', 'quartermaster'],
+      ['grull-rep', 'hoarder', 'quartermaster'],
+      ['grull-rep'],
+    ]);
+    // 5:00 after 9:00: the weakness and the defeat are gone again (R4 scenario 2).
+    expect(hoarderAt(150)?.facts.map((fact) => fact.id)).toEqual(['lair']);
+    expect(hoarderAt(150)).not.toHaveProperty('defeatedIn');
+    expect(at(10_000)).toEqual(registryIndex(show, registry, episodes).entries);
+  });
+
+  it('reads every other episode whole', () => {
+    const both = map([
+      [1, makeEpisode(1)],
+      [2, episodeWith(2, [{ t: 900, type: 'npc', id: 'quartermaster', action: 'met' }])],
+    ]);
+    // Watching episode 2 at 0:00: episode 1 is complete, episode 2 is not yet.
+    const watching2 = registryIndexAt(show, registry, both, 2, 0).entries;
+    expect(ids(watching2)).toEqual(['grull-rep', 'hoarder', 'quartermaster']);
+    expect(find(watching2, 'quartermaster').appearances.map((a) => a.episodeId)).toEqual([1]);
+    expect(find(watching2, 'hoarder').defeatedIn).toBe(1);
+  });
+
+  it('falls back to the plain index when the current episode is missing', () => {
+    const missing = map([
+      [1, makeEpisode(1)],
+      [2, null],
+    ]);
+    expect(registryIndexAt(show, registry, missing, 2, 0)).toEqual(
+      registryIndex(show, registry, missing),
+    );
+    expect(registryIndexAt(show, registry, missing, 99, 0).entries).toEqual(
+      registryIndex(show, registry, missing).entries,
+    );
+  });
+
+  it('never mutates the map it is handed', () => {
+    const before = new Map(episodes);
+    registryIndexAt(show, registry, episodes, 1, 120);
+    expect(episodes).toEqual(before);
   });
 });

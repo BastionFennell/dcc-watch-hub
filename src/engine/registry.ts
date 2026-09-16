@@ -296,13 +296,20 @@ export interface RegistrySection {
 }
 
 /**
- * File already-scoped, already-filtered entries under episode bars, in
- * broadcast order (R2-FR-630, R3-FR-641).
+ * File already-scoped, already-filtered entries under episode bars, **newest
+ * episode first** (R2-FR-630, R3-FR-641, R4-FR-650).
  *
  * Under "all" and "through N" an entry sits under the episode it debuts in; an
  * episode that debuts nobody has no bar at all. Under "only N" there is exactly
  * one bar — the episode being watched — and the whole cast sits under it,
  * because that is what the view is about.
+ *
+ * Revision 4 turns both orders around. The archive grows at its far end, so what
+ * a viewer is most likely to be looking for is what the show added last: the
+ * latest episode leads, and inside a shelf the entity introduced latest leads.
+ * `registryIndex` still returns broadcast order — reversing here keeps that
+ * index (and every scope built from it) a plain chronology, with the
+ * presentation order living in the one function that lays the shelves out.
  */
 export function registrySections(
   entries: readonly RegistryEntry[],
@@ -322,14 +329,73 @@ export function registrySections(
         ? metas.slice(0, scopeIndex + 1)
         : metas.slice(scopeIndex, scopeIndex + 1);
 
+  // Debut order, latest first: the episode an entity was introduced in, then its
+  // timecode inside that episode, then the id so two beats on the same second
+  // never swap places between renders.
+  const rank = new Map<number, number>();
+  metas.forEach((meta, index) => rank.set(meta.id, index));
+  const rankOf = (id: number) => rank.get(id) ?? -1;
+  const latestFirst = (a: RegistryEntry, b: RegistryEntry) => {
+    const byEpisode = rankOf(b.firstEpisode) - rankOf(a.firstEpisode);
+    if (byEpisode !== 0) return byEpisode;
+    if (a.firstT !== b.firstT) return b.firstT - a.firstT;
+    return a.entity.id.localeCompare(b.entity.id);
+  };
+
   return shelves
+    .slice()
+    .reverse()
     .map((meta) => ({
       episodeId: meta.id,
       title: meta.title,
-      entries:
-        scope.kind === 'only'
-          ? entries.slice()
-          : entries.filter((entry) => entry.firstEpisode === meta.id),
+      entries: (scope.kind === 'only'
+        ? entries.slice()
+        : entries.filter((entry) => entry.firstEpisode === meta.id)
+      ).sort(latestFirst),
     }))
     .filter((section) => section.entries.length > 0);
+}
+
+/* --- Revision 4 (T726): the panel's view of the episode being watched --- */
+
+/**
+ * The current episode as of the playhead (R4-FR-651).
+ *
+ * Everywhere else in the Registry an episode is read whole — the glossary is
+ * publication-scoped, not watch-scoped. The panel beside the broadcast is the
+ * exception: it sits next to a running video, so listing an entity the viewer
+ * has not reached yet would spoil the very episode they are watching. Clipping
+ * the event log is the whole mechanism: every rule about appearances, facts and
+ * defeats then falls out of `registryIndex` unchanged, in both directions,
+ * because a scrub back is only a smaller `t`.
+ *
+ * Pure, and free in the common case: an episode with nothing after the playhead
+ * comes back as itself.
+ */
+export function clipEpisodeToPlayhead(episode: EpisodeData, t: number): EpisodeData {
+  const events = episode.events.filter((event) => event.t <= t);
+  if (events.length === episode.events.length) return episode;
+  return { ...episode, events };
+}
+
+/**
+ * `registryIndex` with the current episode clipped to the playhead (R4-FR-651).
+ *
+ * Every other episode is read whole, exactly as the page reads it — only the
+ * episode on the stage follows the viewer. The map is copied rather than
+ * mutated, so the cached index inputs stay the archive's own.
+ */
+export function registryIndexAt(
+  show: Show,
+  registry: Registry | null,
+  episodes: ReadonlyMap<number, EpisodeData | null>,
+  currentEpisodeId: number,
+  t: number,
+): RegistryIndexResult {
+  const current = episodes.get(currentEpisodeId);
+  if (current === null || current === undefined) return registryIndex(show, registry, episodes);
+
+  const clipped = new Map(episodes);
+  clipped.set(currentEpisodeId, clipEpisodeToPlayhead(current, t));
+  return registryIndex(show, registry, clipped);
 }

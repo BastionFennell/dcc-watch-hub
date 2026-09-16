@@ -144,8 +144,9 @@ describe('the System Registry', () => {
     );
     expect(within(section).getByText(copy.registryCount(3))).toBeInTheDocument();
 
-    // Fixture episode 1: grull-rep @112, hoarder @118, quartermaster @135.
-    expect(visibleIds()).toEqual(['grull-rep', 'hoarder', 'quartermaster']);
+    // Fixture episode 1: quartermaster @135, hoarder @118, grull-rep @112 —
+    // the entity met last leads the shelf (R4-FR-650).
+    expect(visibleIds()).toEqual(['quartermaster', 'hoarder', 'grull-rep']);
   });
 
   it('omits an episode that debuts nobody', async () => {
@@ -197,7 +198,7 @@ describe('the System Registry', () => {
     expect(visibleIds()).toEqual(['hoarder']);
 
     fireEvent.click(ally);
-    expect(visibleIds()).toEqual(['hoarder', 'quartermaster']);
+    expect(visibleIds()).toEqual(['quartermaster', 'hoarder']);
 
     fireEvent.click(boss);
     fireEvent.click(ally);
@@ -294,7 +295,7 @@ describe('the System Registry', () => {
     const missing = await screen.findByTestId('registry-missing');
     expect(missing).toHaveTextContent(copy.registryMissing(1));
     expect(missing).toHaveAttribute('data-count', '1');
-    expect(visibleIds()).toEqual(['grull-rep', 'hoarder', 'quartermaster']);
+    expect(visibleIds()).toEqual(['quartermaster', 'hoarder', 'grull-rep']);
   });
 
   it('stands down entirely for a show that publishes no registry', async () => {
@@ -371,7 +372,7 @@ describe('scoping the Registry by episode', () => {
 
     expect(scopeSelect().value).toBe('through-1');
     // All three debut in episode 1, so the cast is unchanged...
-    expect(visibleIds()).toEqual(['grull-rep', 'hoarder', 'quartermaster']);
+    expect(visibleIds()).toEqual(['quartermaster', 'hoarder', 'grull-rep']);
 
     // ...but the Quartermaster's only fact is released in episode 2.
     const quartermaster = entry('quartermaster');
@@ -418,7 +419,8 @@ describe('scoping the Registry by episode', () => {
 
     expect(scopeSelect().value).toBe('ep-2');
     // Episode 2 sights the vendor and amends the ally; the boss is not in it.
-    expect(visibleIds()).toEqual(['grull-rep', 'quartermaster']);
+    // Both debut in episode 1, so the later debut (the ally @135) still leads.
+    expect(visibleIds()).toEqual(['quartermaster', 'grull-rep']);
 
     const section = screen.getByTestId('registry-section-2');
     expect(screen.queryByTestId('registry-section-1')).toBeNull();
@@ -441,7 +443,7 @@ describe('scoping the Registry by episode', () => {
     await waitForEntries();
 
     fireEvent.change(scopeSelect(), { target: { value: 'ep-2' } });
-    await waitFor(() => expect(visibleIds()).toEqual(['grull-rep', 'quartermaster']));
+    await waitFor(() => expect(visibleIds()).toEqual(['quartermaster', 'grull-rep']));
     expect(screen.getByTestId('loc')).toHaveAttribute('data-search', '?scope=ep-2');
 
     fireEvent.change(scopeSelect(), { target: { value: 'all' } });
@@ -465,7 +467,7 @@ describe('scoping the Registry by episode', () => {
     await waitForEntries();
 
     expect(scopeSelect().value).toBe('all');
-    expect(visibleIds()).toEqual(['grull-rep', 'hoarder', 'quartermaster']);
+    expect(visibleIds()).toEqual(['quartermaster', 'hoarder', 'grull-rep']);
   });
 
   it('says the Registry has no such entity when a scope and a search agree', async () => {
@@ -486,5 +488,65 @@ describe('scoping the Registry by episode', () => {
 
     await waitFor(() => expect(entry('grull-rep')).toHaveAttribute('data-expanded', 'true'));
     expect(entry('grull-rep')).toHaveAttribute('data-target');
+  });
+});
+
+/* --- Revision 4 (T727): newest episode first (R4-FR-650, R4 acceptance 1) --- */
+
+describe('the Registry reads newest first', () => {
+  /** One episode carrying exactly the `npc` beats a shelf needs. */
+  function episodeRawWith(episodeId: number, events: unknown[]): unknown {
+    const raw = makeEpisodeRaw(episodeId) as RawEpisode;
+    return {
+      episodeId,
+      initialState: raw.initialState,
+      events: [...raw.events.filter((event) => event.type !== 'npc'), ...events],
+    };
+  }
+
+  beforeEach(() => {
+    // Each episode introduces one entity, so every shelf exists and can be read
+    // off in order: 3, 2, 1.
+    const beats: Record<number, unknown[]> = {
+      1: [{ t: 40, type: 'npc', id: 'hoarder', action: 'met' }],
+      2: [{ t: 40, type: 'npc', id: 'grull-rep', action: 'met' }],
+      3: [{ t: 40, type: 'npc', id: 'quartermaster', action: 'met' }],
+    };
+    vi.stubGlobal('fetch', (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('show.json')) return json(makeShow());
+      if (url.includes('npcs.json')) return json(makeRegistry());
+      const episodeId = Number(/ep(\d+)\.json/.exec(url)?.[1] ?? 1);
+      return json(episodeRawWith(episodeId, beats[episodeId] ?? []));
+    });
+  });
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  it('stacks the episode shelves latest first', async () => {
+    renderRegistry();
+    await waitForIndex();
+
+    expect(
+      [...document.querySelectorAll('[data-testid^="registry-section-"]')].map((section) =>
+        section.getAttribute('data-testid'),
+      ),
+    ).toEqual(['registry-section-3', 'registry-section-2', 'registry-section-1']);
+    // Reading down the page is reading backwards through the archive.
+    expect(visibleIds()).toEqual(['quartermaster', 'grull-rep', 'hoarder']);
+  });
+
+  it('keeps the newest shelf first under through N as well', async () => {
+    renderRegistry('/registry?scope=through-2');
+    await waitForIndex();
+
+    expect(
+      [...document.querySelectorAll('[data-testid^="registry-section-"]')].map((section) =>
+        section.getAttribute('data-testid'),
+      ),
+    ).toEqual(['registry-section-2', 'registry-section-1']);
+    expect(visibleIds()).toEqual(['grull-rep', 'hoarder']);
   });
 });

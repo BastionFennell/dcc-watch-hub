@@ -40,9 +40,28 @@ sheet over the stage. The tab exists only when the show has a `registryUrl`.
 | `http://localhost:5199/ep/1?fake=1&t=560&panel=registry:the-hoarder` | what the record's **Open in the Registry** does: the panel opens with that entry expanded, scrolled into view and on the brand ground, and the footer link carries it out as `/registry?scope=through-1#the-hoarder` |
 
 Escape, the panel's close control and a second press of **Browse the Registry** all close it, and
-focus returns to whatever opened it. While it is open, drag the dev scrubber: the **ENCOUNTERED**
-strip beneath changes with the playhead and the panel does not — it lists what the archive has
-published, not what this device has watched.
+focus returns to whatever opened it.
+
+## The panel follows the playhead (R4)
+
+Revision 4 answers the other half of that: while the panel is open, drag the dev scrubber and the
+**current episode's** contribution moves with it. Earlier episodes stay whole — they are published
+history — but nothing this episode has not aired yet is listed.
+
+| URL | What to see |
+|-----|-------------|
+| `http://localhost:5199/ep/1?fake=1&t=129&panel=registry` | the panel is up (kicker, title, footer link) and **holds nobody**: episode 1's first `npc` beat is at 2:10 and the scope is "Through Episode 1" |
+| `http://localhost:5199/ep/1?fake=1&t=130&panel=registry` | one second later: one bar, "1 entity", The Hoarder — met on the stroke of 2:10 |
+| `http://localhost:5199/ep/1?fake=1&t=205&panel=registry` | three entities, **newest first** — Quartermaster Vel (3:25), Grull Industries Representative (2:45), The Hoarder (2:10): the entity introduced last leads |
+| `http://localhost:5199/ep/1?fake=1&t=379&panel=registry:the-hoarder` | The Hoarder open with **no facts** — "The System has released nothing further." — because `lair` is unlocked at 6:20 |
+| `http://localhost:5199/ep/1?fake=1&t=380&panel=registry:the-hoarder` | the `Ep 1` lair fact, one second later; still no "Defeated in episode 1." |
+| `http://localhost:5199/ep/1?fake=1&t=540&panel=registry:the-hoarder` | the defeat has aired: the name is struck through and the entry closes with "Defeated in episode 1." |
+| `http://localhost:5199/ep/2?fake=1&t=99&panel=registry` | watching episode 2 at 1:39, scope "Through Episode 2": **only episode 1's bar**, complete — its three entities, The Hoarder's `lair` fact and its defeat — because episode 2 has aired nothing yet |
+| `http://localhost:5199/ep/2?fake=1&t=330&panel=registry:the-hoarder` | the episode 2 bar has appeared above it, and The Hoarder — filed under episode 1, where it debuts — now carries **both** `Ep 1` lair and `Ep 2` ledger, the second released by the beat that just aired. At `t=329` the ledger is not there |
+
+Drag back and the panel gives it up again: at 9:20 The Hoarder reads defeated with its fact, at
+5:00 it is alive with the fact, at 2:00 it is not listed at all. The scope, the search and the
+chips do not move — only what the playhead has released.
 
 **Phone.** The same two URLs at 400 × 800 render the panel as a bottom sheet over the tabs with
 the stage still visible above it, drag-to-dismiss and backdrop-tap included. **Browse the
@@ -52,13 +71,13 @@ Registry** sits in the **NPCS** pane's header.
 
 | URL | What to see |
 |-----|-------------|
-| `http://localhost:5180/registry` | three sections — "Episode 1 — The World Dungeon" (3 entities), "Episode 2 — The Meat District" (2), "Episode 3 — Descent" (3) — with search and three kind chips (Boss 3, Vendor / Guide 2, Ally / Faction 3) |
+| `http://localhost:5180/registry` | three sections, **newest first** — "Episode 3 — Descent" (3 entities), "Episode 2 — The Meat District" (2), "Episode 1 — The World Dungeon" (3) — with search and three kind chips (Boss 3, Vendor / Guide 2, Ally / Faction 3). Inside each, the latest debut leads: Ghaza Provisioner / The Lamplighter / The Tollkeeper, then The Signal Choir / Mother of Pipes, then Quartermaster Vel / Grull Industries Representative / The Hoarder |
 | `http://localhost:5180/registry#the-hoarder` | that entry already expanded and scrolled clear of the sticky header: facts tagged `Ep 1` and `Ep 2`, four appearances linking to `/ep/1?t=130`, `/ep/1?t=380`, `/ep/1?t=540` and `/ep/2?t=330`, closing with "Defeated in episode 1." |
 | search `crate king` | one entry, The Hoarder — matched on an alias, not the name |
 | search `zzz` | "The Registry has no such entity." |
 | kind chips Vendor + Ally | five entries across all three sections (any-of) |
-| `http://localhost:5180/registry?scope=through-1#the-hoarder` | the **Scope** select reading "Through Episode 1 — The World Dungeon"; one section, three entities (The Hoarder, Grull Industries Representative, Quartermaster Vel), The Hoarder open with the `lair` fact only — no `Ep 2` tag, no `/ep/2?t=330` appearance — and still "Defeated in episode 1." |
-| `http://localhost:5180/registry?scope=ep-2` | "Only Episode 2 — The Meat District": one section headed with that title, four entities (The Hoarder, Grull Industries Representative, Mother of Pipes, The Signal Choir), each entry's appearances all `/ep/2?t=…`, and The Hoarder still carrying its episode 1 facts and defeat |
+| `http://localhost:5180/registry?scope=through-1#the-hoarder` | the **Scope** select reading "Through Episode 1 — The World Dungeon"; one section, three entities (Quartermaster Vel, Grull Industries Representative, The Hoarder), The Hoarder open with the `lair` fact only — no `Ep 2` tag, no `/ep/2?t=330` appearance — and still "Defeated in episode 1." |
+| `http://localhost:5180/registry?scope=ep-2` | "Only Episode 2 — The Meat District": one section headed with that title, four entities in debut order, latest first (The Signal Choir and Mother of Pipes, who debut here, then Grull Industries Representative and The Hoarder, who debut in episode 1), each entry's appearances all `/ep/2?t=…`, and The Hoarder still carrying its episode 1 facts and defeat |
 | `?scope=ep-2` + search `toll` | "The Registry has no such entity." with the scope still selected |
 
 The same page at 400 × 800: one column, the search full width on its own row with the three chips
@@ -459,3 +478,96 @@ subtree, which fixes the panel and the page's `#<id>` landing together.
   the panel on a cold page shows "The System is indexing the archive." for as long as the episode
   files take, then fills in; a file that fails still yields "N recap episodes could not be
   indexed." inside the panel.
+
+---
+
+## Results (revision 4)
+
+Measured 2026-09-16 on Node 20.9.0. The panel sweeps below were read out of the real app —
+`npm run dev` on port 5199, Chrome 152 headless (`--dump-dom --virtual-time-budget=6000`), the
+DEV `?panel=` flag and the fake time source — against `public/data`, not against the test
+fixtures. No screenshots this round: nothing moved visually, only what is listed and in what
+order.
+
+### Gates (T728)
+
+```
+npm run typecheck   tsc --noEmit            clean
+npm run lint        eslint .                clean
+npm test            45 files, 862 tests     all passing  (841 before revision 4)
+npm run build       vite build + postbuild  ✓ built, dist/404.html written
+```
+
+| Asset | Raw | Gzipped |
+|-------|-----|---------|
+| `dist/assets/index-*.js` | 400.11 kB | **125.26 kB** |
+| `dist/assets/index-*.css` | 76.58 kB | 12.71 kB |
+
+Revision 4 costs 0.29 kB gzipped of JS and nothing in CSS over revision 3 (124.97 / 12.71), adds
+no dependency, and stays well inside the 150 kB gzipped budget.
+
+The 21 new tests: `registry.test.ts` (+13 — newest-first shelving on the fixture and on
+`public/data`, the same-second tie-break, `clipEpisodeToPlayhead`, and eight `registryIndexAt`
+cases across the fixture's boundaries), `RegistryIndexContext` (+2 — the raw episodes map, empty
+until someone asks), `RegistryBrowser` (+2 — the forward sweep and the scrub back),
+`RegistryPage` (+2 — shelves stacked latest first, under `all` and under `through N`) and
+`EpisodePage` (+1 — the panel following the playhead on the page itself, 1:57 → 2:02 → 3:20 →
+2:30 → 1:40). Every existing ordering assertion in the four suites was reversed rather than
+duplicated.
+
+### R4-FR-650 — newest episode first, latest debut first
+
+`/registry`, read off the rendered DOM:
+
+| Section, top to bottom | Entries, in order |
+|------------------------|-------------------|
+| Episode 3 — Descent | ghaza-provisioner (5:10), the-lamplighter (3:50), the-tollkeeper (1:30) |
+| Episode 2 — The Meat District | signal-choir (13:30), mother-of-pipes (1:40) |
+| Episode 1 — The World Dungeon | quartermaster-vel (3:25), grull-rep (2:45), the-hoarder (2:10) |
+
+Scoping does not re-sort: `?scope=through-1` is episode 1's shelf in the same order, and
+`?scope=ep-2` is one shelf holding signal-choir, mother-of-pipes, grull-rep, the-hoarder — the
+two that debut in episode 2 above the two that debut in episode 1. The index itself is untouched:
+`registryIndex` still returns broadcast order, and only `registrySections` lays it out backwards.
+
+### R4-SC-609 — the panel's sweep across the sample's `npc` boundaries
+
+`/ep/1?fake=1&t=<T>&panel=registry` (or `panel=registry:the-hoarder` where facts are read),
+scope "Through Episode 1":
+
+| T | Entries in the panel | The Hoarder's facts | Defeated line |
+|---|----------------------|---------------------|---------------|
+| 129 (2:09) | — (the panel is up and empty) | – | – |
+| 130 (2:10) | the-hoarder | none | no |
+| 205 (3:25) | quartermaster-vel, grull-rep, the-hoarder | none | no |
+| 379 (6:19) | quartermaster-vel, grull-rep, the-hoarder | none | no |
+| 380 (6:20) | quartermaster-vel, grull-rep, the-hoarder | `Ep 1` lair | no |
+| 539 (8:59) | quartermaster-vel, grull-rep, the-hoarder | `Ep 1` lair | no |
+| 540 (9:00) | quartermaster-vel, grull-rep, the-hoarder | `Ep 1` lair | **yes** |
+
+Every step matches `events.filter(e => e.t <= t)` for episode 1, and a smaller `T` is all a scrub
+backwards is: 9:20 → 5:00 takes the defeated line back, 5:00 → 2:00 takes the entity itself back.
+
+Episode 2, where the current episode is *not* the one an entity debuts in:
+
+| URL | What the panel holds |
+|-----|----------------------|
+| `/ep/2?fake=1&t=99&panel=registry` | one shelf, Episode 1, complete: its three entities, the-hoarder's `lair` fact and "Defeated in episode 1." Episode 2 has aired nothing, so it has no shelf |
+| `/ep/2?fake=1&t=100&panel=registry` | an Episode 2 shelf appears above it with mother-of-pipes |
+| `/ep/2?fake=1&t=329&panel=registry:the-hoarder` | the-hoarder, still filed under Episode 1, carrying `Ep 1` lair only |
+| `/ep/2?fake=1&t=330&panel=registry:the-hoarder` | the same entry now carries `Ep 1` lair **and** `Ep 2` ledger, plus a fourth appearance row — the one in this episode, which is a seek button while the three episode 1 rows stay links to `/ep/1?t=130`, `/ep/1?t=380`, `/ep/1?t=540` |
+| `/ep/2?fake=1&t=810&panel=registry` | signal-choir joins the Episode 2 shelf, above mother-of-pipes |
+
+That is R4 acceptance 3 exactly: earlier episodes contribute in full, the current one contributes
+only what has elapsed.
+
+### Notes for the author
+
+- The standalone `/registry` page is deliberately **not** playhead-aware — there is no playhead on
+  it. It is publication-scoped, as it has been since revision 1; only the panel follows a video.
+- The panel now needs the current episode's data, which the page already holds, so it is correct
+  the moment it opens even though the other episode files are still in flight. Those fill in
+  underneath when they land, and "The System is indexing the archive." stands only for them.
+- With nothing yet aired the panel shows its empty line ("The Registry has no such entity.") —
+  literally true of a scope that holds nobody, but if a "nothing tagged yet" line in the strip's
+  voice would read better there, it is one copy key and one condition in `RegistryBrowser`.

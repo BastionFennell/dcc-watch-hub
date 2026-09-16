@@ -15,7 +15,17 @@ import { RegistryProvider } from '../../data/RegistryContext';
 import { RegistryIndexProvider } from '../../data/RegistryIndexContext';
 import { RegistryBrowser } from './RegistryBrowser';
 import { copy } from '../../copy';
-import { makeEpisodeRaw, makeRegistry, makeShow } from '../../test/fixtures';
+import { makeEpisode, makeEpisodeRaw, makeRegistry, makeShow } from '../../test/fixtures';
+
+/*
+ * The fixture's episode 1 npc beats, which every playhead case below quotes:
+ * 112 grull-rep met, 118 the hoarder met, 122 its lair unlocked, 135 the
+ * quartermaster seen, 140 an id the registry does not carry, 185 the weakness
+ * unlocked, 195 the hoarder defeated.
+ */
+const EP1 = makeEpisode(1);
+/** Past every beat: the panel then shows the whole episode, as R3 did. */
+const WHOLE = 10_000;
 
 interface RawEpisode {
   episodeId: number;
@@ -64,16 +74,18 @@ function LocationProbe() {
   return <span data-testid="loc" data-path={`${location.pathname}${location.search}`} />;
 }
 
-async function mountBrowser(focusId?: string) {
+async function mountBrowser(focusId?: string, t = WHOLE) {
   const onSeek = vi.fn();
   const onShare = vi.fn();
-  render(
+  const tree = (at: number) => (
     <MemoryRouter initialEntries={['/ep/1']}>
       <ShowProvider>
         <RegistryProvider>
           <RegistryIndexProvider>
             <RegistryBrowser
               currentEpisodeId={1}
+              currentEpisode={EP1}
+              t={at}
               focusId={focusId}
               onSeek={onSeek}
               onShare={onShare}
@@ -82,10 +94,13 @@ async function mountBrowser(focusId?: string) {
         </RegistryProvider>
       </ShowProvider>
       <LocationProbe />
-    </MemoryRouter>,
+    </MemoryRouter>
   );
+  const { rerender } = render(tree(t));
   await waitFor(() => expect(screen.getByTestId('registry-section-1')).toBeInTheDocument());
-  return { onSeek, onShare };
+  // Moving the playhead is the only thing the page does to this panel.
+  const seekTo = (at: number) => rerender(tree(at));
+  return { onSeek, onShare, seekTo };
 }
 
 function entry(id: string): HTMLElement {
@@ -115,7 +130,13 @@ describe('RegistryBrowser', () => {
         <ShowProvider>
           <RegistryProvider>
             <RegistryIndexProvider>
-              <RegistryBrowser currentEpisodeId={1} onSeek={vi.fn()} onShare={vi.fn()} />
+              <RegistryBrowser
+                currentEpisodeId={1}
+                currentEpisode={EP1}
+                t={WHOLE}
+                onSeek={vi.fn()}
+                onShare={vi.fn()}
+              />
             </RegistryIndexProvider>
           </RegistryProvider>
         </ShowProvider>
@@ -133,10 +154,11 @@ describe('RegistryBrowser', () => {
 
     const scope = screen.getByTestId('registry-scope');
     expect(scope).toHaveValue('through-1');
-    // Episode 1's cast, filed under episode 1 (R3 scenario 1).
+    // Episode 1's cast, filed under episode 1 (R3 scenario 1), latest debut
+    // first: the quartermaster @135, the hoarder @118, grull-rep @112 (R4-FR-650).
     expect(
       screen.getAllByTestId('registry-entry').map((el) => el.getAttribute('data-npc')),
-    ).toEqual(['grull-rep', 'hoarder', 'quartermaster']);
+    ).toEqual(['quartermaster', 'hoarder', 'grull-rep']);
     expect(screen.queryByTestId('registry-section-2')).toBeNull();
   });
 
@@ -219,5 +241,71 @@ describe('RegistryBrowser', () => {
       '/registry?scope=through-1#hoarder',
     );
     expect(screen.getByTestId('registry-browser-full')).toHaveTextContent(copy.registryOpenFull);
+  });
+
+  /* --- Revision 4: the panel follows the playhead (R4-FR-651, R4-SC-609) --- */
+
+  /** Whoever the panel lists, in the order it lists them. */
+  const listed = () =>
+    screen.queryAllByTestId('registry-entry').map((el) => el.getAttribute('data-npc'));
+  const facts = (id: string) =>
+    within(entry(id))
+      .queryAllByTestId('registry-fact')
+      .map((el) => el.getAttribute('data-fact'));
+
+  it('lists only what the playhead has reached, and keeps up as it moves', async () => {
+    const { seekTo } = await mountBrowser(undefined, 112);
+
+    // 1:52 — grull-rep and nobody else.
+    expect(listed()).toEqual(['grull-rep']);
+
+    // 1:57 — still nothing new; the hoarder is five seconds away (R4 scenario 2).
+    seekTo(117);
+    expect(listed()).toEqual(['grull-rep']);
+
+    // 1:58 — met, with one appearance and no facts yet.
+    seekTo(118);
+    expect(listed()).toEqual(['hoarder', 'grull-rep']);
+    expand('hoarder');
+    expect(appearances('hoarder')).toHaveLength(1);
+    expect(facts('hoarder')).toEqual([]);
+    expect(within(entry('hoarder')).queryByTestId('registry-defeated')).toBeNull();
+
+    // 2:02 — the lair is released.
+    seekTo(122);
+    expect(facts('hoarder')).toEqual(['lair']);
+
+    // 2:15 — the quartermaster is sighted and leads the shelf; the unknown id
+    // at 2:20 never appears, registry or no registry.
+    seekTo(140);
+    expect(listed()).toEqual(['quartermaster', 'hoarder', 'grull-rep']);
+
+    // 3:05 — the weakness; 3:15 — defeated.
+    seekTo(185);
+    expect(facts('hoarder')).toEqual(['lair', 'weakness']);
+    expect(within(entry('hoarder')).queryByTestId('registry-defeated')).toBeNull();
+    seekTo(195);
+    expect(within(entry('hoarder')).getByTestId('registry-defeated')).toHaveTextContent(
+      copy.registryDefeatedIn(1),
+    );
+    expect(appearances('hoarder')).toHaveLength(4);
+  });
+
+  it('gives back what a scrub backwards un-watches', async () => {
+    const { seekTo } = await mountBrowser(undefined, 200);
+
+    expand('hoarder');
+    expect(facts('hoarder')).toEqual(['lair', 'weakness']);
+
+    // 2:30, after 3:20: the weakness and the defeat are un-told (R4 scenario 2).
+    seekTo(150);
+    expect(facts('hoarder')).toEqual(['lair']);
+    expect(within(entry('hoarder')).queryByTestId('registry-defeated')).toBeNull();
+    expect(appearances('hoarder')).toHaveLength(2);
+
+    // All the way back before the first beat: the shelf itself goes.
+    seekTo(0);
+    expect(listed()).toEqual([]);
+    expect(screen.getByTestId('registry-empty')).toHaveTextContent(copy.encounterEmpty);
   });
 });

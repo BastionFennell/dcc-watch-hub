@@ -25,6 +25,13 @@ import { useRegistry } from './RegistryContext';
 export interface RegistryIndexContextValue {
   /** `null` until `load()` has been called and every file has settled. */
   index: RegistryIndexResult | null;
+  /**
+   * The index's own inputs: episode id → data, or `null` for a file that failed
+   * (007 R4). `null` until the fetches settle. The Registry *panel* re-indexes
+   * from these with the current episode clipped to the playhead (R4-FR-651),
+   * which is only possible if it can see what the index was built from.
+   */
+  episodes: ReadonlyMap<number, EpisodeData | null> | null;
   /** True between the first `load()` and the index landing. */
   loading: boolean;
   error: Error | null;
@@ -34,6 +41,7 @@ export interface RegistryIndexContextValue {
 
 const RegistryIndexContext = createContext<RegistryIndexContextValue>({
   index: null,
+  episodes: null,
   loading: false,
   error: null,
   load: () => {},
@@ -92,6 +100,7 @@ export function RegistryIndexProvider({ children }: { children: ReactNode }) {
     <RegistryIndexContext.Provider
       value={{
         index,
+        episodes,
         loading: requested && index === null && error === null,
         error: error ?? registryError,
         load,
