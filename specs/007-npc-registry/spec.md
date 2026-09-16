@@ -165,3 +165,49 @@ episode vs tying it only to the event."
 ## R2 Success Criteria
 - **R2-SC-605**: Scoped views match hand-computed subsets for the sample data at every scope.
 - **R2-SC-606**: Links from the episode page land scoped and expanded; a11y stays 100.
+
+---
+
+# Revision 3 (2026-09-16) — browse the Registry without stopping the video
+
+Author: "Ideally they can look at this registry without stopping the video."
+
+## R3 User Story - The Registry as a panel beside the broadcast (P1)
+
+**Acceptance Scenarios**
+1. **Given** the episode page, **When** the viewer activates "Browse the Registry" on the
+   Encountered strip (or in the NPCs tab), **Then** the rail (a bottom sheet on phones) shows the
+   Registry scoped to **Through this episode** by default, with the scope select, search, kind
+   chips, and expandable entries — and the video keeps playing.
+2. **Given** the panel, **When** the viewer expands an entry and activates an appearance from the
+   **current** episode, **Then** playback seeks to that moment (no navigation); appearances from
+   other episodes are links that open that episode at the moment.
+3. **Given** an entity record open in the rail, **When** the viewer activates "Open in the
+   Registry", **Then** the Registry panel replaces it with that entity expanded and scrolled into
+   view (still on the episode page); the panel footer offers "Open the full Registry" (scoped link).
+4. **Given** the panel, **Then** Escape, the close control, or the trigger close it and focus
+   returns; opening the panel never pauses or seeks playback by itself.
+5. **Given** the panel is open, **When** the playhead moves, **Then** the panel's content does
+   not change (it is publication-scoped, not playhead-scoped) — the strip beneath still does.
+6. **Given** the registry index needs other episodes' files, **Then** they are fetched once,
+   lazily, when the panel first opens, with a System-voice loading line; a failed file yields the
+   existing "could not be indexed" notice inside the panel.
+
+## R3 Requirements
+- **R3-FR-640**: New panel kind `registry` (`{ kind: 'registry'; focusId?: string }`) in the
+  rail/sheet system; one panel at a time as before.
+- **R3-FR-641**: A `RegistryBrowser` component reusing the scope/search/chips/entries of the
+  page in a narrow layout; default scope `through-<current episode>`; scope changes are panel
+  state (not URL) here.
+- **R3-FR-642**: Appearances in the current episode render as seek buttons (share too); other
+  episodes as links.
+- **R3-FR-643**: The record's "Open in the Registry" opens the panel with `focusId`; the strip's
+  control is a panel trigger with `aria-expanded`; the panel footer links to the full page with
+  the same scope.
+- **R3-FR-644**: Episode files for the index are loaded lazily and cached for the visit
+  (`RegistryIndexProvider`), shared by the page and the panel.
+
+## R3 Success Criteria
+- **R3-SC-607**: Opening the panel leaves `source` untouched (no seek/pause) and the stage rect
+  unchanged; entries, scope, search, chips behave as on the page.
+- **R3-SC-608**: Current-episode appearances seek the fake source; others are links; a11y 100.

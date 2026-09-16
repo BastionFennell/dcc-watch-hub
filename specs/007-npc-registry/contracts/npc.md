@@ -32,3 +32,11 @@
 - RegistryPage: `<select aria-label={copy.registryScope} data-testid="registry-scope">` with options `all`, then `through-N` per episode ("Through {title}"), then `ep-N` ("Only {title}"); reads/writes `?scope=` via `useSearchParams`; empty state `registry-empty` when nothing remains.
 - Episode page: `NpcRecord` link → `/registry?scope=through-<episodeId>#<id>` (new prop `episodeId`); `EncounterRail` gains `registryHref?: string` rendering a `Link` "Registry for this episode" (`data-testid="encounter-registry-link"`).
 - Copy: `registryScope` "Scope", `registryScopeAll` "All episodes", `registryScopeThrough(title)` → `Through {title}`, `registryScopeOnly(title)` → `Only {title}`, `encounterRegistryLink` "Registry for this episode".
+
+## Revision 3 — Registry panel
+- `usePanel`: kind `{ kind: 'registry'; focusId?: string }`.
+- `src/data/RegistryIndexContext.tsx`: `RegistryIndexProvider`, `useRegistryIndex(): { index: RegistryIndexResult | null; loading; error; load(): void }` — loads show + registry + all episodes once (`Promise.allSettled`), cached for the visit; `load()` is idempotent.
+- `RegistryBrowser({ currentEpisodeId, focusId?, onSeek(t), onShare(t) })` — testids `registry-browser`, reuses `registry-scope`, `registry-search`, `registry-chip-*`, `registry-entry`, `registry-appearance` (current episode → `<button data-current>`; other → `Link`), footer `registry-browser-full` link to `/registry?scope=…`.
+- `EncounterRail` prop `onBrowse?(el)` renders `<button data-testid="encounter-browse" aria-expanded aria-controls="rail-panel" data-panel-trigger="registry">` (replaces the plain link inside the strip; the link moves to the panel footer).
+- `NpcRecord` prop `onOpenRegistry?(id)` → button (`npc-registry-open`) instead of the link when provided.
+- Copy: `registryBrowse` "Browse the Registry", `registryOpenFull` "Open the full Registry", `registryPanelKicker` "SYSTEM REGISTRY".
