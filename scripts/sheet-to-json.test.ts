@@ -10,13 +10,14 @@ import { join, resolve } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
-import type { InitialState } from '../src/data/types';
+import type { InitialState, Registry } from '../src/data/types';
 import { convert, parseArgs, parseTimecode, rowToEvent } from './sheet-to-json';
 import type { RowContext, SheetRow } from './sheet-to-json';
+import { normalizeRegistry } from '../src/data/validate';
 
 const root = resolve(__dirname, '..');
 const samples = resolve(root, 'scripts/samples');
-const schemaPath = resolve(root, 'specs/003-crawler-record/contracts/episode.schema.json');
+const schemaPath = resolve(root, 'specs/007-npc-registry/contracts/episode.schema.json');
 
 const ajv = new Ajv({ strict: false, allErrors: true });
 addFormats(ajv);
@@ -34,6 +35,19 @@ function ctx() {
   return { episodeId: 1, durationSec: 240, initialState };
 }
 
+/**
+ * The shipped registry, which is what `--registry public/data/npcs.json` loads —
+ * the same file the sample rows name (007 R6).
+ */
+const sampleRegistry: Registry = normalizeRegistry(
+  JSON.parse(readFileSync(resolve(root, 'public/data/npcs.json'), 'utf8')) as unknown,
+);
+
+/** The same context, plus the registry `--registry` would have loaded. */
+function ctxWithRegistry() {
+  return { ...ctx(), registry: sampleRegistry };
+}
+
 /** 1-based data row (header excluded) of the first line containing `needle`. */
 function dataRow(csv: string, needle: string): number {
   const lines = csv.trimEnd().split('\n').slice(1);
@@ -46,8 +60,9 @@ function warningFor(warnings: string[], row: number, needle: string): string | u
   return warnings.find((w) => w.startsWith(`row ${row}:`) && w.includes(needle));
 }
 
-function rowCtx(): RowContext {
+function rowCtx(registry?: Registry): RowContext {
   return {
+    ...(registry === undefined ? {} : { registry }),
     partyIds: new Set(initialState.party.map((crawler) => crawler.id)),
     durationSec: 240,
     hpState: new Map(
@@ -140,6 +155,7 @@ describe('convert(scripts/samples/ep1.csv)', () => {
       'hotlist',
       'equip',
       'unequip',
+      'npc',
     ]) {
       expect(types, `${type} appears in the sample`).toContain(type);
     }
@@ -212,6 +228,34 @@ describe('convert(scripts/samples/ep1.csv)', () => {
     });
   });
 
+  it('maps the npc rows, parsing action[:fact,fact] out of field2 (FR-601)', () => {
+    const npcs = result.episode?.events.filter((event) => event.type === 'npc') ?? [];
+    expect(npcs).toHaveLength(3);
+    expect(npcs[0]).toEqual({
+      t: 128,
+      type: 'npc',
+      id: 'the-hoarder',
+      action: 'met',
+      note: 'Something is stacking crates in Quadrant C.',
+    });
+    expect(npcs[1]).toEqual({
+      t: 150,
+      type: 'npc',
+      id: 'the-hoarder',
+      action: 'update',
+      unlock: ['lair'],
+      note: 'It nests behind the wall it builds.',
+    });
+    expect(npcs[2]).toMatchObject({ id: 'grull-rep', action: 'seen' });
+    for (const npc of npcs) expect(npc).not.toHaveProperty('actor');
+  });
+
+  it('stays clean when the registry is supplied too', () => {
+    const checked = convert(read('ep1.csv'), ctxWithRegistry());
+    expect(checked.errors).toEqual([]);
+    expect(checked.warnings).toEqual([]);
+  });
+
   it('keeps a comma inside a quoted cell and splits map cells', () => {
     const achievement = result.episode?.events.find(
       (event) => event.type === 'achievement' && event.title === 'Gate Crasher',
@@ -278,6 +322,27 @@ describe('convert(scripts/samples/ep1-broken.csv)', () => {
   it('warns exactly six times', () => {
     expect(result.warnings).toHaveLength(6);
   });
+
+  // 007 R6: with no registry there is nothing to check an id against, so the
+  // two deliberately wrong npc rows pass in silence.
+  it('says nothing about the npc ids without --registry', () => {
+    expect(result.warnings.filter((w) => w.includes('entity'))).toEqual([]);
+    expect(result.warnings.filter((w) => w.includes('fact'))).toEqual([]);
+  });
+
+  it('names the unknown entity and the unknown fact once --registry is given', () => {
+    const checked = convert(csv, ctxWithRegistry());
+    expect(checked.errors).toEqual([]);
+    expect(
+      warningFor(checked.warnings, dataRow(csv, 'the-listener-below'), 'unknown entity'),
+    ).toBeDefined();
+    expect(
+      warningFor(checked.warnings, dataRow(csv, 'lantern'), '"lantern"'),
+    ).toBeDefined();
+    // The known fact on the same row is not a finding; only `lantern` is.
+    expect(checked.warnings.filter((w) => w.includes('ledger'))).toEqual([]);
+    expect(checked.warnings).toHaveLength(8);
+  });
 });
 
 /* ---------------------------------------------------------- error sample */
@@ -293,7 +358,7 @@ describe('convert(scripts/samples/ep1-error.csv)', () => {
   });
 
   it('reports the non-integer skill rank as the second error', () => {
-    expect(result.errors).toHaveLength(4);
+    expect(result.errors).toHaveLength(5);
     expect(result.errors[1]).toBe(
       `row ${dataRow(csv, ',high,')}: skill rank (field2) must be a non-negative integer, got "high"`,
     );
@@ -309,6 +374,13 @@ describe('convert(scripts/samples/ep1-error.csv)', () => {
   it('reports a party rank row as the fourth error', () => {
     expect(result.errors[3]).toBe(
       `row ${dataRow(csv, ',party,')}: party rank is not a thing in DCC: a rank row names one crawler and their rank (field1)`,
+    );
+  });
+
+  // 007: an action outside met/seen/update/defeated is malformed, not a warning.
+  it('reports the unknown npc action as the fifth error', () => {
+    expect(result.errors[4]).toBe(
+      `row ${dataRow(csv, 'befriended')}: npc action (field2) must be one of met, seen, update, defeated, got "befriended"`,
     );
   });
 });
@@ -483,6 +555,71 @@ describe('rowToEvent', () => {
     ).toContain('equip row has no actor');
   });
 
+  it('maps an npc row, with and without unlocked facts', () => {
+    expect(
+      rowToEvent(sheetRow({ type: 'npc', field1: 'the-hoarder', field2: 'met' }), rowCtx()).event,
+    ).toEqual({ t: 10, type: 'npc', id: 'the-hoarder', action: 'met' });
+    expect(
+      rowToEvent(
+        sheetRow({
+          type: 'npc',
+          actor: 'harry',
+          field1: 'the-hoarder',
+          field2: 'update: lair , weakness',
+          field3: 'It cannot see red.',
+        }),
+        rowCtx(),
+      ).event,
+    ).toEqual({
+      t: 10,
+      type: 'npc',
+      id: 'the-hoarder',
+      action: 'update',
+      unlock: ['lair', 'weakness'],
+      note: 'It cannot see red.',
+      actor: 'harry',
+    });
+  });
+
+  it('errors on an npc row with no id, no action, or an unknown action', () => {
+    expect(rowToEvent(sheetRow({ type: 'npc', field2: 'met' }), rowCtx()).errors).toEqual([
+      'empty required field: id (field1) on npc',
+    ]);
+    expect(rowToEvent(sheetRow({ type: 'npc', field1: 'the-hoarder' }), rowCtx()).errors).toEqual([
+      'empty required field: action (field2) on npc',
+    ]);
+    const unknown = rowToEvent(
+      sheetRow({ type: 'npc', field1: 'the-hoarder', field2: 'befriended:lair' }),
+      rowCtx(),
+    );
+    expect(unknown.errors).toEqual([
+      'npc action (field2) must be one of met, seen, update, defeated, got "befriended"',
+    ]);
+    expect(unknown.event).toBeNull();
+  });
+
+  it('warns about an unknown entity or fact only when a registry is at hand', () => {
+    const silent = rowToEvent(
+      sheetRow({ type: 'npc', field1: 'nobody', field2: 'update:ghost' }),
+      rowCtx(),
+    );
+    expect(silent.warnings).toEqual([]);
+    expect(silent.event).not.toBeNull();
+
+    const checked = rowToEvent(
+      sheetRow({ type: 'npc', field1: 'nobody', field2: 'met' }),
+      rowCtx(sampleRegistry),
+    );
+    expect(checked.warnings).toEqual(['unknown entity "nobody" (not in the registry)']);
+    // A known entity with a fact it does not carry is warned about per fact.
+    expect(
+      rowToEvent(
+        sheetRow({ type: 'npc', field1: 'the-hoarder', field2: 'update:lair,ghost' }),
+        rowCtx(sampleRegistry),
+      ).warnings,
+    ).toEqual(['unknown fact "ghost" on entity "the-hoarder"']);
+  });
+
   it('warns about an unknown chapter kind', () => {
     const result = rowToEvent(
       sheetRow({ type: 'chapter', field1: 'The Hoarder', field2: 'interlude' }),
@@ -508,6 +645,20 @@ describe('parseArgs', () => {
     expect(parseArgs(['in.csv', '--episode=2', '--duration=10', '--initial-state=s', '--out=o'])).toEqual(
       { options: { csv: 'in.csv', episode: 2, duration: 10, initialState: 's', out: 'o' } },
     );
+  });
+
+  it('accepts the optional --registry flag and omits it otherwise', () => {
+    expect(parseArgs([...ok, '--registry', 'public/data/npcs.json'])).toEqual({
+      options: {
+        csv: 'in.csv',
+        episode: 1,
+        duration: 240,
+        initialState: 's.json',
+        out: 'o.json',
+        registry: 'public/data/npcs.json',
+      },
+    });
+    expect(parseArgs(ok)).not.toHaveProperty('options.registry');
   });
 
   it('reports --help', () => {

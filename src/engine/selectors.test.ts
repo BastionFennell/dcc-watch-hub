@@ -5,6 +5,7 @@ import {
   crawlerDossier,
   crawlerGlance,
   crawlerHistory,
+  encounteredNpcs,
   hotbarSlots,
   activeToast,
   elapsed,
@@ -15,6 +16,8 @@ import {
   logItems,
   mapCells,
   mapLabels,
+  npcMoments,
+  npcRecord,
   partyFrames,
   rankSeries,
   recentlyRevealed,
@@ -24,9 +27,9 @@ import { reduceTo } from './reducer';
 import { copy } from '../copy';
 import { formatTime } from './time';
 import { normalizeEpisode } from '../data/validate';
-import type { EpisodeData, EventType } from '../data/types';
+import type { EpisodeData, EventType, Registry } from '../data/types';
 import { isKnownEvent } from '../data/types';
-import { makeEpisode, makeEpisodeRaw } from '../test/fixtures';
+import { makeEpisode, makeEpisodeRaw, makeRegistry } from '../test/fixtures';
 
 const episode = makeEpisode();
 const party = episode.initialState.party;
@@ -867,5 +870,158 @@ describe('applyLogFilters', () => {
     const filter = { types: new Set<EventType>(['achievement']), actors: new Set<string>() };
     expect(applyLogFilters(early, filter)).toHaveLength(3);
     expect(applyLogFilters(logItems(episode.events, 60, party), filter)).toHaveLength(1);
+  });
+});
+
+/* ------------------------------------------------- 007 encounters + record */
+
+describe('npc feed rows (FR-612)', () => {
+  const registry = makeRegistry();
+  const rows = (t: number, reg: Registry | null = registry) =>
+    logItems(episode.events, t, party, reg).filter((item) => item.kind === 'npc');
+
+  it('labels every entity row "Entity" and carries the id', () => {
+    for (const row of rows(200)) {
+      expect(row.label).toBe(copy.labels.npc);
+      expect(row.npcId).toBeDefined();
+    }
+    expect(rows(200).map((row) => row.npcId)).toEqual([
+      'grull-rep',
+      'hoarder',
+      'hoarder',
+      'quartermaster',
+      'unknown-id',
+      'hoarder',
+      'hoarder',
+    ]);
+  });
+
+  it('narrates each action in the System voice, resolving the name', () => {
+    const texts = rows(200).map((row) => row.text);
+    expect(texts[0]).toBe(copy.feedText.npcMet('Grull Industries Representative'));
+    expect(texts[1]).toBe(
+      copy.feedText.npcMet('The Hoarder', 'Something is stacking crates in Quadrant C.'),
+    );
+    // An update with no note still says something.
+    expect(texts[2]).toBe(copy.feedText.npcUpdate('The Hoarder'));
+    expect(texts[3]).toBe(copy.feedText.npcSeen('The Quartermaster'));
+    expect(texts[5]).toBe(copy.feedText.npcUpdate('The Hoarder', 'It cannot see red.'));
+    expect(texts[6]).toBe(copy.feedText.npcDefeated('The Hoarder'));
+  });
+
+  it('falls back to the raw id, with or without a registry', () => {
+    expect(rows(200)[4].text).toBe(copy.feedText.npcMet('unknown-id'));
+    const nameless = rows(200, null);
+    expect(nameless[1].text).toBe(
+      copy.feedText.npcMet('hoarder', 'Something is stacking crates in Quadrant C.'),
+    );
+    expect(logItems(episode.events, 200, party).filter((i) => i.kind === 'npc')).toEqual(nameless);
+  });
+
+  it('reaches the capped feed the same way', () => {
+    const feed = feedItems(episode.events, 200, 100, party, registry);
+    expect(feed.find((item) => item.npcId === 'hoarder')?.text).toBe(
+      copy.feedText.npcDefeated('The Hoarder'),
+    );
+  });
+});
+
+describe('encounteredNpcs (FR-610)', () => {
+  const registry = makeRegistry();
+  const at = (t: number) => encounteredNpcs(reduceTo(episode, t), registry);
+
+  it('is empty before the first npc event', () => {
+    expect(at(111)).toEqual([]);
+  });
+
+  it('lists entities newest first and omits ids the registry lacks', () => {
+    expect(at(140).map((e) => e.id)).toEqual(['quartermaster', 'hoarder', 'grull-rep']);
+    expect(at(140).map((e) => e.id)).not.toContain('unknown-id');
+  });
+
+  it('carries the registry facts, kind and portrait alongside the elapsed state', () => {
+    const [hoarder] = at(122);
+    expect(hoarder).toMatchObject({
+      id: 'hoarder',
+      name: 'The Hoarder',
+      kind: 'boss',
+      floor: 1,
+      portrait: '/img/npcs/hoarder.svg',
+    });
+    expect(hoarder.unlockedFacts.map((fact) => fact.id)).toEqual(['lair']);
+    expect(hoarder.state.defeated).toBe(false);
+  });
+
+  it('unlocks facts in registry order and strikes the defeated', () => {
+    expect(at(185)[0].unlockedFacts.map((f) => f.id)).toEqual(['lair', 'weakness']);
+    expect(at(195)[0].state.defeated).toBe(true);
+    // Backward: the second fact and the defeat both undo.
+    expect(at(184).find((e) => e.id === 'hoarder')?.unlockedFacts.map((f) => f.id)).toEqual([
+      'lair',
+    ]);
+    expect(at(184).find((e) => e.id === 'hoarder')?.state.defeated).toBe(false);
+  });
+
+  it('never shows an entity or a fact before its time (every npc boundary)', () => {
+    const npcEvents = episode.events.filter((event) => event.type === 'npc');
+    expect(npcEvents.length).toBeGreaterThan(0);
+    for (const event of npcEvents) {
+      if (event.type !== 'npc') continue;
+      const before = at(event.t - 0.001);
+      const now = at(event.t);
+      const known = registry.entities.some((entity) => entity.id === event.id);
+      if (!known) {
+        expect(before.map((e) => e.id)).not.toContain(event.id);
+        expect(now.map((e) => e.id)).not.toContain(event.id);
+        continue;
+      }
+      expect(now.map((e) => e.id)).toContain(event.id);
+      for (const fact of event.unlock ?? []) {
+        expect(before.find((e) => e.id === event.id)?.unlockedFacts.map((f) => f.id) ?? []).not.toContain(fact);
+        expect(now.find((e) => e.id === event.id)?.unlockedFacts.map((f) => f.id)).toContain(fact);
+      }
+      if (event.action === 'defeated') {
+        expect(before.find((e) => e.id === event.id)?.state.defeated).toBe(false);
+        expect(now.find((e) => e.id === event.id)?.state.defeated).toBe(true);
+      }
+    }
+  });
+
+  it('shows nothing at all without a registry', () => {
+    expect(encounteredNpcs(reduceTo(episode, 200), null)).toEqual([]);
+    expect(encounteredNpcs(reduceTo(episode, 200), undefined)).toEqual([]);
+  });
+});
+
+describe('npcMoments and npcRecord (FR-611)', () => {
+  const registry = makeRegistry();
+
+  it('lists one entity’s elapsed rows, newest first', () => {
+    expect(npcMoments(episode.events, 200, 'hoarder', party, registry).map((m) => m.t)).toEqual([
+      195, 185, 122, 118,
+    ]);
+    expect(npcMoments(episode.events, 122, 'hoarder', party, registry).map((m) => m.t)).toEqual([
+      122, 118,
+    ]);
+    expect(npcMoments(episode.events, 117, 'hoarder', party, registry)).toEqual([]);
+  });
+
+  it('builds the record from the registry and the elapsed log', () => {
+    const record = npcRecord(reduceTo(episode, 200), episode.events, registry, 'hoarder', party, 200);
+    expect(record).toMatchObject({ id: 'hoarder', name: 'The Hoarder', kind: 'boss' });
+    expect(record?.unlockedFacts.map((f) => f.text)).toEqual([
+      'It nests behind the crate wall it builds.',
+      'It cannot see red.',
+    ]);
+    expect(record?.state).toMatchObject({ firstMet: 118, encounters: 4, defeated: true });
+    expect(record?.moments.map((m) => m.t)).toEqual([195, 185, 122, 118]);
+  });
+
+  it('is null for an entity nobody has met, or one the registry lacks', () => {
+    const state = reduceTo(episode, 200);
+    expect(npcRecord(state, episode.events, registry, 'unknown-id', party, 200)).toBeNull();
+    expect(npcRecord(state, episode.events, registry, 'nobody', party, 200)).toBeNull();
+    expect(npcRecord(reduceTo(episode, 111), episode.events, registry, 'hoarder', party, 111)).toBeNull();
+    expect(npcRecord(state, episode.events, null, 'hoarder', party, 200)).toBeNull();
   });
 });

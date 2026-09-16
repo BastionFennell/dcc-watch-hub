@@ -38,6 +38,45 @@ export interface Show {
   seasons: Season[];
   episodes: EpisodeMeta[];
   links: ShowLinks;
+  /**
+   * Optional show-level entity registry (007, FR-600). A leading slash, resolved
+   * against `BASE_URL` at fetch time exactly like `EpisodeMeta.dataUrl`. Absent
+   * means the show has no registry: no strip, no tab, no `/registry` link.
+   */
+  registryUrl?: string;
+}
+
+/* -------------------------------------------------------------- registry */
+
+/**
+ * The three kinds the author fixed (007 assumptions). Ordinary mobs are not
+ * registry entities; `vendor` reads "Vendor / Guide" and `ally` "Ally / Faction".
+ */
+export type EntityKind = 'boss' | 'vendor' | 'ally';
+
+export const ENTITY_KINDS = ['boss', 'vendor', 'ally'] as const satisfies readonly EntityKind[];
+
+/** One unlockable line of an entity's file. `id` is what an `unlock` names. */
+export interface EntityFact {
+  id: string;
+  text: string;
+}
+
+/** A registry entity (FR-600). `intro` is spoiler-free: it may show on first sight. */
+export interface Entity {
+  id: string;
+  name: string;
+  kind: EntityKind;
+  portrait?: string;
+  floor?: number;
+  aliases?: string[];
+  intro: string;
+  facts: EntityFact[];
+}
+
+/** The whole `npcs.json` file: nothing but entities. */
+export interface Registry {
+  entities: Entity[];
 }
 
 /* --------------------------------------------------------------- episode */
@@ -271,6 +310,33 @@ export interface UnequipEvent extends EventBase {
   item?: string;
 }
 
+/* --- 007 events (FR-601). Old files simply do not carry them. --- */
+
+/** What the System filed about an entity at this moment (research R2). */
+export type NpcAction = 'met' | 'seen' | 'update' | 'defeated';
+
+export const NPC_ACTIONS = [
+  'met',
+  'seen',
+  'update',
+  'defeated',
+] as const satisfies readonly NpcAction[];
+
+/**
+ * One beat about a registry entity. `id` points at `Registry.entities[].id`;
+ * an id the registry does not carry still renders in the feed under its raw id
+ * (spec US1 scenario 5). `unlock` names facts on that entity.
+ */
+export interface NpcEvent extends EventBase {
+  type: 'npc';
+  id: string;
+  action: NpcAction;
+  note?: string;
+  unlock?: string[];
+  /** The crawler the beat belongs to, when it belongs to one. */
+  actor?: string;
+}
+
 /** A well-formed event of a type this version understands. */
 export type Event =
   | SystemMessageEvent
@@ -289,7 +355,8 @@ export type Event =
   | ClassEvent
   | HotlistEvent
   | EquipEvent
-  | UnequipEvent;
+  | UnequipEvent
+  | NpcEvent;
 
 /**
  * Anything the reducer, feed, toast, and timeline must ignore without crashing:
@@ -322,6 +389,7 @@ export const KNOWN_EVENT_TYPES = [
   'hotlist',
   'equip',
   'unequip',
+  'npc',
 ] as const satisfies readonly EventType[];
 
 export const CHAPTER_KINDS = ['boss', 'loot', 'achievement', 'levelup', 'story'] as const;

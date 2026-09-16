@@ -1,0 +1,105 @@
+{
+  "entities": [
+    {
+      "id": "the-hoarder",
+      "name": "The Hoarder",
+      "kind": "boss",
+      "floor": 1,
+      "portrait": "/img/npcs/the-hoarder.svg",
+      "aliases": ["Hoarder", "The Crate King"],
+      "intro": "Something in Quadrant C has been stacking crates into walls, and the walls are getting closer together.",
+      "facts": [
+        { "id": "lair", "text": "It nests behind the crate wall it builds, and it builds every night." },
+        { "id": "weakness", "text": "It cannot see red. The System considers this fair warning." },
+        { "id": "ledger", "text": "It keeps a tally of everything taken from its floor. The tally is long." }
+      ]
+    },
+    {
+      "id": "mother-of-pipes",
+      "name": "Mother of Pipes",
+      "kind": "boss",
+      "floor": 1,
+      "aliases": ["The Plumbing"],
+      "intro": "The Meat District's drains answer to something, and it is not the drains.",
+      "facts": [
+        { "id": "pipes", "text": "The pipes are not plumbing. They are the mouth." },
+        { "id": "brood", "text": "It seeds a new district every time the water runs clear." }
+      ]
+    },
+    {
+      "id": "the-tollkeeper",
+      "name": "The Tollkeeper",
+      "kind": "boss",
+      "floor": 2,
+      "intro": "It sits at the only stair down and it has never once been in a hurry.",
+      "facts": [
+        { "id": "toll", "text": "The toll is measured in names, and it always gets the price it names." },
+        { "id": "count", "text": "It counts aloud. Crawlers who reach zero do not reach the stair." },
+        { "id": "bridge", "text": "The stair is a bridge. The Tollkeeper is what holds it up." }
+      ]
+    },
+    {
+      "id": "grull-rep",
+      "name": "Grull Industries Representative",
+      "kind": "vendor",
+      "floor": 1,
+      "portrait": "/img/npcs/grull-rep.svg",
+      "aliases": ["Grull", "The Rep"],
+      "intro": "A licensed window in the wall. It sells, it smiles, and it files a report either way.",
+      "facts": [
+        { "id": "quota", "text": "It has a quota. The quota is not in credits." },
+        { "id": "terms", "text": "Every deal carries terms. The terms are read out after the deal." },
+        { "id": "window", "text": "The window follows the party down a floor exactly once." }
+      ]
+    },
+    {
+      "id": "ghaza-provisioner",
+      "name": "Ghaza Provisioner",
+      "kind": "vendor",
+      "floor": 2,
+      "aliases": ["Ghaza"],
+      "intro": "Sells crawler life insurance out of a cart. Terms apply posthumously.",
+      "facts": [
+        { "id": "stock", "text": "The cart carries whatever the last customer failed to need." },
+        { "id": "premiums", "text": "Premiums rise the moment a crawler reads the policy." },
+        { "id": "fineprint", "text": "The fine print is broadcast. Nobody has ever asked for it to be read." }
+      ]
+    },
+    {
+      "id": "quartermaster-vel",
+      "name": "Quartermaster Vel",
+      "kind": "ally",
+      "floor": 1,
+      "aliases": ["Vel"],
+      "intro": "Keeps the ledger of everything this floor still owes, and lends against it.",
+      "facts": [
+        { "id": "debt", "text": "Vel never forgives a debt. Vel defers one, at interest." },
+        { "id": "rounds", "text": "Vel walks the same route nightly, and notices what has moved." }
+      ]
+    },
+    {
+      "id": "the-lamplighter",
+      "name": "The Lamplighter",
+      "kind": "ally",
+      "floor": 2,
+      "intro": "Lights the stair lamps ahead of the party and asks for nothing, which is itself alarming.",
+      "facts": [
+        { "id": "lamps", "text": "A lit lamp means the sector has been walked and found survivable." },
+        { "id": "route", "text": "The route is fixed. The Lamplighter will not be argued off it." },
+        { "id": "curfew", "text": "Every lamp goes out at once, once per floor. That is the curfew." }
+      ]
+    },
+    {
+      "id": "signal-choir",
+      "name": "The Signal Choir",
+      "kind": "ally",
+      "floor": 1,
+      "aliases": ["The Choir"],
+      "intro": "A faction of crawlers who hold a frequency open so the rest of the floor can hear itself think.",
+      "facts": [
+        { "id": "frequency", "text": "The frequency is held by voice. Someone is always singing." },
+        { "id": "hymn", "text": "The hymn names every crawler the floor has lost, in order." }
+      ]
+    }
+  ]
+}

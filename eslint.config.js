@@ -80,7 +80,7 @@ export default tseslint.config(
   },
   {
     // Context providers legitimately export a provider component and its hook.
-    files: ['src/data/ShowContext.tsx'],
+    files: ['src/data/ShowContext.tsx', 'src/data/RegistryContext.tsx'],
     rules: {
       'react-refresh/only-export-components': 'off',
     },

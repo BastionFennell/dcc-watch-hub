@@ -55,6 +55,8 @@ export const copy = {
     hotlist: 'Hotlist',
     equip: 'Equip',
     unequip: 'Unequip',
+    /* --- appended by 007 (FR-612): every entity row is filed as an Entity. --- */
+    npc: 'Entity',
   } as const,
 
   // Stage
@@ -119,6 +121,16 @@ export const copy = {
         ? `${actor} clears the ${slot} slot`
         : `${actor} stows ${item} (${slot})`,
     markerLevelUp: (actor: string, level: number) => `${actor} reaches Lv ${level}`,
+    /* --- appended by 007 (research R2): the System narrates an encounter --- */
+    npcMet: (name: string, note?: string) =>
+      note ? `${name} enters the broadcast — ${note}` : `${name} enters the broadcast`,
+    npcSeen: (name: string, note?: string) =>
+      note ? `${name} is sighted — ${note}` : `${name} is sighted`,
+    /** An update carries its note as the amendment itself, so it is never appended. */
+    npcUpdate: (name: string, note?: string) =>
+      note ? `${name}: ${note}` : `The System amends its file on ${name}`,
+    npcDefeated: (name: string, note?: string) =>
+      note ? `${name} is no more — ${note}` : `${name} is no more`,
   },
 
   /* --- appended by T025–T029 (archive navigation) --- */
@@ -408,6 +420,45 @@ export const copy = {
 
   /** How the phone sheet's grab handle is dismissed, announced in its header (FR-504). */
   sheetHandle: 'Drag down to close',
+
+  /* --- appended by 007 (NPC encounters + System Registry: T707) --- */
+
+  /** The three kinds the author fixed; the labels are the System's, not the code's. */
+  kindLabels: {
+    boss: 'Boss',
+    vendor: 'Vendor / Guide',
+    ally: 'Ally / Faction',
+  } as const,
+
+  /** The Encountered strip under the party rail (FR-610). */
+  encounterTitle: 'ENCOUNTERED',
+  encounterEmpty: 'No entities tagged yet.',
+
+  /** The entity record in the rail panel / phone sheet (FR-611). */
+  npcKicker: 'ENTITY RECORD',
+  npcFacts: 'FACTS',
+  npcFactsEmpty: 'The System has released nothing further.',
+  npcMoments: 'MOMENTS',
+  npcDefeated: 'DEFEATED',
+  npcActive: 'ACTIVE',
+  npcOpenRegistry: 'Open in the Registry',
+
+  /** The fifth phone tab, which exists only when the show has a registry. */
+  tabNpcs: 'NPCs',
+
+  /** The glossary at /registry (FR-620): everything published, by episode. */
+  registry: 'Registry',
+  registryTitle: 'System Registry',
+  registryKicker: 'ENTITY RECORDS',
+  registryLead:
+    'Every entity the System has filed across the broadcast archive, in the order the galaxy met them.',
+  registrySearch: 'Search the Registry',
+  registryNoMatch: 'The Registry has no such entity.',
+  registryMissing: (n: number) =>
+    `${n} recap episode${n === 1 ? '' : 's'} could not be indexed.`,
+  registryEpisodeSection: (n: number, title: string) => `Episode ${n} — ${title}`,
+  /** Tags a fact with the episode that released it. */
+  registryFactTag: (n: number) => `Ep ${n}`,
 } as const;
 
 export type Copy = typeof copy;

@@ -8,15 +8,20 @@ import type {
   ChapterKind,
   Crawler,
   CrawlerStats,
+  Entity,
+  EntityFact,
+  EntityKind,
   Event,
   EventType,
   GearSlot,
   Hp,
+  NpcEvent,
+  Registry,
   SkillEntry,
 } from '../data/types';
 import { isKnownEvent } from '../data/types';
 import { copy } from '../copy';
-import type { GearState, OverlayState } from './state';
+import type { GearState, NpcState, OverlayState } from './state';
 import { cellKey } from './state';
 
 /* ------------------------------------------------------------------ types */
@@ -52,6 +57,8 @@ export interface FeedItem {
   actorId?: string;
   /** Sponsor only. */
   durationSec?: number;
+  /** The entity an `npc` row is about, registry-known or not (007, FR-612). */
+  npcId?: string;
 }
 
 export interface Toast {
@@ -216,10 +223,33 @@ export function partyFrames(
   });
 }
 
+/**
+ * Names an entity the way the feed must: the registry's name when it carries the
+ * id, the raw id otherwise, so an unknown entity still reads as a row and never
+ * as a blank (spec US1 scenario 5).
+ */
+function entityName(registry: Registry | null | undefined, id: string): string {
+  return registry?.entities.find((entity) => entity.id === id)?.name ?? id;
+}
+
+function npcText(event: NpcEvent, name: string): string {
+  switch (event.action) {
+    case 'met':
+      return copy.feedText.npcMet(name, event.note);
+    case 'seen':
+      return copy.feedText.npcSeen(name, event.note);
+    case 'update':
+      return copy.feedText.npcUpdate(name, event.note);
+    case 'defeated':
+      return copy.feedText.npcDefeated(name, event.note);
+  }
+}
+
 function toFeedItem(
   event: Event,
   id: number,
   party: PartyNames,
+  registry?: Registry | null,
 ): FeedItem | null {
   const label = copy.labels[event.type];
   const actorId = 'actor' in event ? event.actor : undefined;
@@ -278,6 +308,13 @@ function toFeedItem(
         actorName,
         text: copy.feedText.unequip(who, copy.gearSlotLabels[event.slot], event.item),
       };
+    case 'npc':
+      return {
+        ...base,
+        ...(actorName === undefined ? {} : { actorName }),
+        npcId: event.id,
+        text: npcText(event, entityName(registry, event.id)),
+      };
     default:
       return null;
   }
@@ -289,13 +326,14 @@ export function feedItems(
   t: number,
   n = 8,
   party: PartyNames = [],
+  registry?: Registry | null,
 ): FeedItem[] {
   const items: FeedItem[] = [];
   for (let i = 0; i < events.length; i += 1) {
     const event = events[i];
     if (event.t > t) continue;
     if (!isKnownEvent(event)) continue;
-    const item = toFeedItem(event, i, party);
+    const item = toFeedItem(event, i, party, registry);
     if (item) items.push(item);
   }
   return items.slice(-n).reverse();
@@ -428,6 +466,7 @@ export function crawlerHistory(
   t: number,
   actorId: string,
   party: PartyNames = [],
+  registry?: Registry | null,
 ): FeedItem[] {
   const items: FeedItem[] = [];
   for (let i = 0; i < events.length; i += 1) {
@@ -435,7 +474,7 @@ export function crawlerHistory(
     if (event.t > t) continue;
     if (!isKnownEvent(event)) continue;
     if (!('actor' in event) || event.actor !== actorId) continue;
-    const item = toFeedItem(event, i, party);
+    const item = toFeedItem(event, i, party, registry);
     if (item) items.push(item);
   }
   return items.reverse();
@@ -691,13 +730,14 @@ export function logItems(
   events: readonly AnyEvent[],
   t: number,
   party: PartyNames = [],
+  registry?: Registry | null,
 ): FeedItem[] {
   const items: FeedItem[] = [];
   for (let i = 0; i < events.length; i += 1) {
     const event = events[i];
     if (event.t > t) continue;
     if (!isKnownEvent(event)) continue;
-    const item = toFeedItem(event, i, party);
+    const item = toFeedItem(event, i, party, registry);
     if (item) items.push(item);
   }
   return items;
@@ -731,4 +771,104 @@ export function applyLogFilters(
       (types.size === 0 || types.has(item.kind)) &&
       (actors.size === 0 || (item.actorId !== undefined && actors.has(item.actorId))),
   );
+}
+
+/* ------------------------------------------- 007 encounters + entity record */
+
+/**
+ * One chip on the Encountered strip, and the head of the entity record: what the
+ * registry says about an entity joined to what the elapsed log says (FR-610).
+ * Only facts unlocked at or before the playhead are carried, in registry order.
+ */
+export interface Encounter {
+  id: string;
+  name: string;
+  kind: EntityKind;
+  portrait?: string;
+  floor?: number;
+  intro: string;
+  state: NpcState;
+  unlockedFacts: EntityFact[];
+}
+
+/** The record panel (FR-611): an encounter plus every moment about it so far. */
+export interface NpcRecordView extends Encounter {
+  /** `npc` rows for this entity at or before the playhead, newest first. */
+  moments: FeedItem[];
+}
+
+function toEncounter(entity: Entity, state: NpcState): Encounter {
+  return {
+    id: entity.id,
+    name: entity.name,
+    kind: entity.kind,
+    ...(entity.portrait === undefined ? {} : { portrait: entity.portrait }),
+    ...(entity.floor === undefined ? {} : { floor: entity.floor }),
+    intro: entity.intro,
+    state,
+    unlockedFacts: entity.facts.filter((fact) => state.unlocked.includes(fact.id)),
+  };
+}
+
+/**
+ * The strip's chips, newest encounter first (FR-610). Entity state is already a
+ * pure function of the playhead, so this inherits time-truth for free; an id the
+ * registry does not carry has nothing to show and is left out — it stays in the
+ * feed under its raw id (spec US1 scenario 5).
+ */
+export function encounteredNpcs(
+  state: OverlayState,
+  registry: Registry | null | undefined,
+): Encounter[] {
+  if (!registry) return [];
+  const encounters: Encounter[] = [];
+  for (const entity of registry.entities) {
+    const npc = state.npcs[entity.id];
+    if (npc === undefined) continue;
+    encounters.push(toEncounter(entity, npc));
+  }
+  // Newest first; two entities touched in the same beat fall back to the newer
+  // first meeting, then to the id, so the order never depends on object keys.
+  return encounters.sort(
+    (a, b) =>
+      b.state.lastT - a.state.lastT ||
+      b.state.firstMet - a.state.firstMet ||
+      a.id.localeCompare(b.id),
+  );
+}
+
+/** Every elapsed `npc` row about one entity, newest first (FR-611, research R4). */
+export function npcMoments(
+  events: readonly AnyEvent[],
+  t: number,
+  id: string,
+  party: PartyNames = [],
+  registry?: Registry | null,
+): FeedItem[] {
+  const moments: FeedItem[] = [];
+  for (let i = 0; i < events.length; i += 1) {
+    const event = events[i];
+    if (event.type !== 'npc' || event.t > t || event.id !== id) continue;
+    const item = toFeedItem(event, i, party, registry);
+    if (item) moments.push(item);
+  }
+  return moments.reverse();
+}
+
+/**
+ * Everything the record panel renders as of `t`; `null` for an entity the
+ * registry does not carry, or one the party has not met yet (FR-611).
+ */
+export function npcRecord(
+  state: OverlayState,
+  events: readonly AnyEvent[],
+  registry: Registry | null | undefined,
+  id: string,
+  party: PartyNames = [],
+  t = 0,
+): NpcRecordView | null {
+  const entity = registry?.entities.find((candidate) => candidate.id === id);
+  const npc = state.npcs[id];
+  if (entity === undefined || npc === undefined) return null;
+  return { ...toEncounter(entity, npc), moments: npcMoments(events, t, id, party, registry) };
 }

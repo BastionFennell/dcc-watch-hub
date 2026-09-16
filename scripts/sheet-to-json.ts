@@ -3,16 +3,17 @@
  *
  * Contract: specs/001-watch-hub-v1/contracts/sheet-csv.md, extended by
  * specs/002-watch-hub-v2/contracts/sheet-csv.md (skill / class / hotlist rows) and by
- * specs/003-crawler-record/data-model.md (equip / unequip rows: field1 slot, field2 item).
+ * specs/003-crawler-record/data-model.md (equip / unequip rows: field1 slot, field2 item) and by
+ * specs/007-npc-registry/contracts/npc.md (npc row: field1 id, field2 action[:fact,fact], field3 note).
  *
  *   npm run sheet-to-json -- scripts/samples/ep1.csv --episode 1 --duration 240 \
  *     --initial-state scripts/samples/ep1.initial.json --out public/data/ep1.json
  *
  * Warnings (unknown actor, impossible HP, timecode past the duration, unknown type or
- * chapter kind, an accessory unequip with no item) are reported and the file is still
- * written. Only malformed input (unparseable timecode, missing column, non-numeric
- * numeric, empty required field, an unknown gear slot) is an error, and then nothing
- * is written.
+ * chapter kind, an accessory unequip with no item, and — only with `--registry` — an
+ * unknown entity or fact id) are reported and the file is still written. Only malformed
+ * input (unparseable timecode, missing column, non-numeric numeric, empty required field,
+ * an unknown gear slot, an unknown npc action) is an error, and then nothing is written.
  *
  * Everything here is a pure exported function except `main()`, which runs only when
  * this file is executed directly.
@@ -21,9 +22,9 @@ import { mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'csv-parse/sync';
-import type { Cell, EpisodeData, Hp, InitialState } from '../src/data/types';
-import { CHAPTER_KINDS, GEAR_SLOTS } from '../src/data/types';
-import { normalizeEpisode, toNumber } from '../src/data/validate';
+import type { Cell, EpisodeData, Hp, InitialState, Registry } from '../src/data/types';
+import { CHAPTER_KINDS, GEAR_SLOTS, NPC_ACTIONS } from '../src/data/types';
+import { normalizeEpisode, normalizeRegistry, toNumber } from '../src/data/validate';
 
 /* ----------------------------------------------------------------- shapes */
 
@@ -55,6 +56,12 @@ export interface RowContext {
   durationSec: number;
   /** Seeded from `initialState.party`, updated by each `hp` row. */
   hpState: Map<string, Hp>;
+  /**
+   * The show's entity registry, when the editor passed `--registry` (007 R6).
+   * Absent means no id checking at all: the registry is show-level data an
+   * episode conversion is not required to have on hand.
+   */
+  registry?: Registry | null;
 }
 
 export interface RowResult {
@@ -67,6 +74,8 @@ export interface ConvertContext {
   episodeId: number;
   durationSec: number;
   initialState: InitialState;
+  /** Optional: enables the `npc` row's id and fact-id warnings (007 R6). */
+  registry?: Registry | null;
 }
 
 export interface ConvertResult {
@@ -177,6 +186,27 @@ function hpWarnings(actor: string, current: number, max: number, ctx: RowContext
     warnings.push(
       `hp for ${who} dropped ${prior.current} → ${current}, more than max ${max} in one step`,
     );
+  }
+  return warnings;
+}
+
+/**
+ * Id checks the converter can only make with `--registry` (007 R6). Without one
+ * there is nothing to check against, so an unchecked row is not a finding.
+ */
+function npcWarnings(id: string, unlock: readonly string[], ctx: RowContext): string[] {
+  const registry = ctx.registry;
+  if (!registry) return [];
+  const warnings: string[] = [];
+  const entity = registry.entities.find((candidate) => candidate.id === id);
+  if (entity === undefined) {
+    warnings.push(`unknown entity ${JSON.stringify(id)} (not in the registry)`);
+    return warnings;
+  }
+  for (const fact of unlock) {
+    if (!entity.facts.some((candidate) => candidate.id === fact)) {
+      warnings.push(`unknown fact ${JSON.stringify(fact)} on entity ${JSON.stringify(id)}`);
+    }
   }
   return warnings;
 }
@@ -364,6 +394,44 @@ export function rowToEvent(row: SheetRow, ctx: RowContext): RowResult {
       else event = { t, type, actor, class: field1 };
       break;
     }
+    case 'npc': {
+      // field2 is `action` or `action:fact-id,fact-id` (contracts/npc.md).
+      if (field1 === '') {
+        errors.push('empty required field: id (field1) on npc');
+        break;
+      }
+      if (field2 === '') {
+        errors.push('empty required field: action (field2) on npc');
+        break;
+      }
+      const colon = field2.indexOf(':');
+      const action = (colon === -1 ? field2 : field2.slice(0, colon)).trim();
+      const unlock =
+        colon === -1
+          ? []
+          : field2
+              .slice(colon + 1)
+              .split(',')
+              .map((entry) => entry.trim())
+              .filter((entry) => entry !== '');
+      if (!(NPC_ACTIONS as readonly string[]).includes(action)) {
+        errors.push(
+          `npc action (field2) must be one of ${NPC_ACTIONS.join(', ')}, got ${JSON.stringify(action)}`,
+        );
+        break;
+      }
+      warnings.push(...npcWarnings(field1, unlock, ctx));
+      event = {
+        t,
+        type,
+        id: field1,
+        action,
+        ...(unlock.length === 0 ? {} : { unlock }),
+        ...(field3 === '' ? {} : { note: field3 }),
+        ...(actor === '' ? {} : { actor }),
+      };
+      break;
+    }
     default: {
       warnings.push(`unknown event type ${JSON.stringify(type)} (row passed through verbatim)`);
       event =
@@ -426,6 +494,7 @@ export function convert(csvText: string, ctx: ConvertContext): ConvertResult {
         { current: crawler.hp.current, max: crawler.hp.max } satisfies Hp,
       ]),
     ),
+    ...(ctx.registry === undefined ? {} : { registry: ctx.registry }),
   };
 
   const errors: string[] = [];
@@ -469,6 +538,8 @@ export interface CliOptions {
   duration: number;
   initialState: string;
   out: string;
+  /** Optional path to the show's registry; enables the `npc` id warnings. */
+  registry?: string;
 }
 
 export type ArgsResult = { help: true } | { options: CliOptions } | { error: string };
@@ -481,6 +552,8 @@ export const USAGE = `usage: npm run sheet-to-json -- <csv> --episode <n> --dura
   --duration <seconds>    episode duration; rows past it are warned about
   --initial-state <path>  JSON file holding { party, map }
   --out <path>            where to write ep{N}.json
+  --registry <path>       optional npcs.json; npc rows naming an entity or fact
+                          it does not carry are warned about
   --help                  print this message`;
 
 export function parseArgs(argv: string[]): ArgsResult {
@@ -531,7 +604,22 @@ export function parseArgs(argv: string[]): ArgsResult {
   const out = flags.get('out');
   if (out === undefined || out === '') return { error: '--out <path> is required' };
 
-  return { options: { csv: positional[0], episode, duration, initialState, out } };
+  const registry = flags.get('registry');
+  if (registry !== undefined && registry === '') {
+    return { error: '--registry <path> must name a file' };
+  }
+
+  return {
+    options: {
+      csv: positional[0],
+      episode,
+      duration,
+      initialState,
+      out,
+      // Absent unless asked for, so "no registry" and "an empty one" stay distinct.
+      ...(registry === undefined ? {} : { registry }),
+    },
+  };
 }
 
 /** Returns the process exit code; does not exit itself. */
@@ -565,10 +653,25 @@ export function main(argv: string[]): number {
     return 2;
   }
 
+  let registry: Registry | null = null;
+  if (options.registry !== undefined) {
+    try {
+      registry = normalizeRegistry(
+        JSON.parse(readFileSync(resolve(options.registry), 'utf8')) as unknown,
+      );
+    } catch (error) {
+      process.stderr.write(
+        `error: cannot read --registry ${options.registry}: ${(error as Error).message}\n`,
+      );
+      return 2;
+    }
+  }
+
   const result = convert(csvText, {
     episodeId: options.episode,
     durationSec: options.duration,
     initialState,
+    ...(options.registry === undefined ? {} : { registry }),
   });
 
   for (const warning of result.warnings) process.stderr.write(`WARN ${warning}\n`);

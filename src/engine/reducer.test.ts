@@ -422,3 +422,83 @@ describe('applyEvent — gear (R2-FR-220)', () => {
     expect(reduceTo(broken, 10).party).toEqual(fromInitialState(broken.initialState).party);
   });
 });
+
+/* ------------------------------------------------- 007: entity encounters */
+
+describe('npc events (FR-602)', () => {
+  const npcs = (t: number) => reduceTo(episode, t).npcs;
+
+  it('starts with nobody met', () => {
+    expect(init().npcs).toEqual({});
+    expect(npcs(0)).toEqual({});
+  });
+
+  it('creates the entry on the first event of any action', () => {
+    // The fixture's quartermaster is only ever `seen` — it still counts (R2).
+    expect(npcs(134)).not.toHaveProperty('quartermaster');
+    expect(npcs(135).quartermaster).toEqual({
+      firstMet: 135,
+      encounters: 1,
+      unlocked: [],
+      defeated: false,
+      lastT: 135,
+    });
+  });
+
+  it('keeps firstMet, counts encounters and moves lastT', () => {
+    expect(npcs(118).hoarder).toMatchObject({ firstMet: 118, encounters: 1, lastT: 118 });
+    expect(npcs(122).hoarder).toMatchObject({ firstMet: 118, encounters: 2, lastT: 122 });
+    expect(npcs(200).hoarder).toMatchObject({ firstMet: 118, encounters: 4, lastT: 195 });
+  });
+
+  it('accumulates unlocked facts in order, and never twice', () => {
+    expect(npcs(121).hoarder.unlocked).toEqual([]);
+    expect(npcs(122).hoarder.unlocked).toEqual(['lair']);
+    expect(npcs(185).hoarder.unlocked).toEqual(['lair', 'weakness']);
+
+    const repeated = withEvents([
+      { t: 10, type: 'npc', id: 'hoarder', action: 'update', unlock: ['lair', 'lair'] },
+      { t: 20, type: 'npc', id: 'hoarder', action: 'update', unlock: ['lair', 'weakness'] },
+    ]);
+    expect(reduceTo(repeated, 20).npcs.hoarder.unlocked).toEqual(['lair', 'weakness']);
+  });
+
+  it('marks defeated at its event and never un-marks it', () => {
+    expect(npcs(194.999).hoarder.defeated).toBe(false);
+    expect(npcs(195).hoarder.defeated).toBe(true);
+
+    const after = withEvents([
+      { t: 10, type: 'npc', id: 'hoarder', action: 'defeated' },
+      { t: 20, type: 'npc', id: 'hoarder', action: 'update', note: 'Still filed.' },
+    ]);
+    expect(reduceTo(after, 20).npcs.hoarder.defeated).toBe(true);
+  });
+
+  it('tracks an id the registry has never heard of, like any other', () => {
+    expect(npcs(140)['unknown-id']).toMatchObject({ firstMet: 140, encounters: 1 });
+  });
+
+  it('rewinds: a backward seek drops entities and facts alike', () => {
+    expect(Object.keys(npcs(200)).sort()).toEqual([
+      'grull-rep',
+      'hoarder',
+      'quartermaster',
+      'unknown-id',
+    ]);
+    expect(Object.keys(npcs(119))).toEqual(['grull-rep', 'hoarder']);
+    expect(npcs(119).hoarder.unlocked).toEqual([]);
+    expect(npcs(111)).toEqual({});
+  });
+
+  it('never mutates the prior entity map', () => {
+    const before = reduceTo(episode, 122);
+    const snapshot = JSON.parse(JSON.stringify(before.npcs));
+    applyEvent(before, { t: 130, type: 'npc', id: 'hoarder', action: 'update', unlock: ['x'] });
+    expect(before.npcs).toEqual(snapshot);
+  });
+
+  it('ignores a malformed npc row (demoted to unknown)', () => {
+    const broken = withEvents([{ t: 5, type: 'npc', id: 'hoarder', action: 'befriended' }]);
+    expect(reduceTo(broken, 10).npcs).toEqual({});
+  });
+});

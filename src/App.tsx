@@ -1,5 +1,6 @@
 import { Route, Routes, useMatch } from 'react-router';
 import { ShowProvider, useShow } from './data/ShowContext';
+import { RegistryProvider } from './data/RegistryContext';
 import { findEpisode } from './data/show';
 import { SiteHeader } from './components/SiteHeader/SiteHeader';
 import { SystemNotice } from './components/SystemNotice/SystemNotice';
@@ -50,7 +51,10 @@ function AppShell() {
 export function App() {
   return (
     <ShowProvider>
-      <AppShell />
+      {/* The registry needs the show's `registryUrl`, so it nests inside (007 R1). */}
+      <RegistryProvider>
+        <AppShell />
+      </RegistryProvider>
     </ShowProvider>
   );
 }

@@ -9,12 +9,16 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { App } from './App';
 import { copy } from './copy';
-import { makeEpisodeRaw, makeShow } from './test/fixtures';
+import { makeEpisodeRaw, makeRegistry, makeShow } from './test/fixtures';
 
 function stubFetch() {
   vi.stubGlobal('fetch', (input: RequestInfo | URL) => {
     const url = String(input);
-    const body = url.includes('show.json') ? makeShow() : makeEpisodeRaw(1);
+    const body = url.includes('show.json')
+      ? makeShow()
+      : url.includes('npcs.json')
+        ? makeRegistry()
+        : makeEpisodeRaw(1);
     return Promise.resolve(
       new Response(JSON.stringify(body), {
         status: 200,

@@ -286,6 +286,13 @@
       "label": "The Meat District"
     },
     {
+      "t": 130,
+      "type": "npc",
+      "id": "the-hoarder",
+      "action": "met",
+      "note": "Something is stacking crates in Quadrant C."
+    },
+    {
       "t": 138,
       "type": "status",
       "actor": "psychic",
@@ -323,6 +330,13 @@
       "desc": "Opened the account early."
     },
     {
+      "t": 165,
+      "type": "npc",
+      "id": "grull-rep",
+      "action": "met",
+      "note": "A window opens in the wall, and it is open for business."
+    },
+    {
       "t": 168,
       "type": "skill",
       "actor": "xo",
@@ -346,6 +360,12 @@
       "type": "rank",
       "actor": "xo",
       "rank": 6120
+    },
+    {
+      "t": 205,
+      "type": "npc",
+      "id": "quartermaster-vel",
+      "action": "seen"
     },
     {
       "t": 210,
@@ -378,6 +398,13 @@
       "type": "class",
       "actor": "harry",
       "class": "Compensated Anarchist"
+    },
+    {
+      "t": 245,
+      "type": "npc",
+      "id": "the-listener-below",
+      "action": "met",
+      "note": "Unfiled. The System has no record of this one."
     },
     {
       "t": 248,
@@ -481,6 +508,16 @@
       "type": "chapter",
       "label": "The Hoarder",
       "kind": "boss"
+    },
+    {
+      "t": 380,
+      "type": "npc",
+      "id": "the-hoarder",
+      "action": "update",
+      "unlock": [
+        "lair"
+      ],
+      "note": "It nests behind the wall it builds."
     },
     {
       "t": 394,
@@ -590,6 +627,13 @@
       "actor": "actress",
       "title": "Scene Stealer",
       "desc": "Held the room for a full minute."
+    },
+    {
+      "t": 540,
+      "type": "npc",
+      "id": "the-hoarder",
+      "action": "defeated",
+      "note": "The crate wall comes down with it."
     },
     {
       "t": 550,

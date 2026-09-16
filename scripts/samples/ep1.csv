@@ -23,6 +23,9 @@ timecode,type,actor,field1,field2,field3
 1:56,hp,harry,4,22,
 2:04,rank,harry,8890,,
 2:18,note,,The System declines to comment on the smell.,,
+2:08,npc,,the-hoarder,met,Something is stacking crates in Quadrant C.
+2:30,npc,,the-hoarder,update:lair,It nests behind the wall it builds.
+3:46,npc,,grull-rep,seen,A window opens in the wall. It is open for business.
 2:11,status,psychic,,Poisoned,
 0:02:26,chapter,,The Hoarder,boss,
 2:34,hp,harry,18,22,

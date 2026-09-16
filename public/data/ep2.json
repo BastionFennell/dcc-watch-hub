@@ -279,6 +279,13 @@
       "remove": []
     },
     {
+      "t": 100,
+      "type": "npc",
+      "id": "mother-of-pipes",
+      "action": "met",
+      "note": "The drains answer back."
+    },
+    {
       "t": 119,
       "type": "loot",
       "actor": "xo",
@@ -352,6 +359,13 @@
       "class": "Reckless Stuntman"
     },
     {
+      "t": 240,
+      "type": "npc",
+      "id": "grull-rep",
+      "action": "seen",
+      "note": "The Rep is back, one floor later, taking notes."
+    },
+    {
       "t": 249,
       "type": "level_up",
       "actor": "psychic",
@@ -396,6 +410,16 @@
       "type": "chapter",
       "label": "The Hook Run",
       "kind": "loot"
+    },
+    {
+      "t": 330,
+      "type": "npc",
+      "id": "the-hoarder",
+      "action": "update",
+      "unlock": [
+        "ledger"
+      ],
+      "note": "Its tally surfaces in the Meat District."
     },
     {
       "t": 350,
@@ -451,6 +475,16 @@
       "remove": [
         "Bleeding"
       ]
+    },
+    {
+      "t": 470,
+      "type": "npc",
+      "id": "mother-of-pipes",
+      "action": "update",
+      "unlock": [
+        "pipes"
+      ],
+      "note": "The pipes are the mouth."
     },
     {
       "t": 491,
@@ -552,6 +586,12 @@
       "rank": 2
     },
     {
+      "t": 700,
+      "type": "npc",
+      "id": "mother-of-pipes",
+      "action": "defeated"
+    },
+    {
       "t": 704,
       "type": "sponsor",
       "text": "Ghaza Provisioners: ration bricks that outlive their owners.",
@@ -589,6 +629,13 @@
         ]
       ],
       "label": "The Brine Stairs"
+    },
+    {
+      "t": 810,
+      "type": "npc",
+      "id": "signal-choir",
+      "action": "met",
+      "note": "Someone is singing on an open frequency."
     },
     {
       "t": 823,

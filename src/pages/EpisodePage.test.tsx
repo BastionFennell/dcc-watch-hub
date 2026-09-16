@@ -17,7 +17,7 @@ import { resumeKey } from '../playback/resume';
 import { parseDeepLinkT } from '../playback/deepLink';
 import { LOG_OPEN_KEY } from '../prefs/logOpen';
 import { __fakeSources } from '../components/VideoStage/FakeStage';
-import { makeEpisode, makeEpisodeRaw, makeShow } from '../test/fixtures';
+import { makeEpisode, makeEpisodeRaw, makeRegistry, makeShow } from '../test/fixtures';
 
 const episode = makeEpisode(1);
 const party = episode.initialState.party;
@@ -30,6 +30,14 @@ function stubFetch(episodeOk = true) {
     if (url.includes('show.json')) {
       return Promise.resolve(
         new Response(JSON.stringify(makeShow()), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
+    }
+    if (url.includes('npcs.json')) {
+      return Promise.resolve(
+        new Response(JSON.stringify(makeRegistry()), {
           status: 200,
           headers: { 'content-type': 'application/json' },
         }),
@@ -240,7 +248,9 @@ describe('EpisodePage', () => {
     expect(screen.getByTestId('active-sponsor')).toBeInTheDocument();
     expect(within(screen.getByTestId('feed-items')).queryByTestId('sponsor')).toBeNull();
 
-    seek(135);
+    // Just past the sponsor's 110 + 20 window. 007 filled 112..140 with entity
+    // beats, so a later playhead pushes the sponsor out of the eight-row feed.
+    seek(131);
     expect(screen.queryByTestId('active-sponsor')).not.toBeInTheDocument();
     expect(screen.getAllByTestId('sponsor').length).toBeGreaterThan(0);
   });

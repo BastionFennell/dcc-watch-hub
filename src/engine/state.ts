@@ -49,10 +49,29 @@ export interface CrawlerState extends Omit<Crawler, 'gear'> {
   gear: GearState;
 }
 
+/**
+ * What the elapsed log says about one entity (007, FR-602). Created by the first
+ * `npc` event of any action — a `seen` before a `met` still counts as an
+ * encounter (research R2) — and, like everything here, recomputed on every seek.
+ */
+export interface NpcState {
+  /** `t` of the first event about this entity, whatever its action. */
+  firstMet: number;
+  /** How many `npc` events about it have elapsed. */
+  encounters: number;
+  /** Fact ids unlocked so far, in unlock order, deduped. */
+  unlocked: string[];
+  defeated: boolean;
+  /** `t` of the most recent elapsed event about it; the strip orders by this. */
+  lastT: number;
+}
+
 export interface OverlayState {
   /** Same order as `initialState.party`. */
   party: CrawlerState[];
   map: MapState;
+  /** Keyed by entity id, including ids the registry does not carry (007). */
+  npcs: Record<string, NpcState>;
 }
 
 export function fromInitialState(init: InitialState): OverlayState {
@@ -72,6 +91,8 @@ export function fromInitialState(init: InitialState): OverlayState {
       grid: { ...init.map.grid },
       revealed: init.map.revealed.map((cell) => [cell[0], cell[1]] as [number, number]),
     },
+    // Nobody has been met at t = 0: the initial-state schema has no entity field.
+    npcs: {},
   };
 }
 
