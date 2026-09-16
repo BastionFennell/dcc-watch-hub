@@ -83,7 +83,8 @@ describe('EncounterRail', () => {
     expect(portrait).toHaveAttribute('src', '/img/npcs/hoarder.svg');
     expect(portrait).toHaveAttribute('alt', '');
 
-    expect(within(quartermaster).getByText('T')).toHaveAttribute('aria-hidden', 'true');
+    // "The Quartermaster" skips its article: the disc reads "Q".
+    expect(within(quartermaster).getByText('Q')).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('is a panel trigger, exactly as a crawler frame is', () => {
