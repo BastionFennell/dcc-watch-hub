@@ -6,6 +6,7 @@ import { SiteHeader } from './components/SiteHeader/SiteHeader';
 import { SystemNotice } from './components/SystemNotice/SystemNotice';
 import { HubPage } from './pages/HubPage';
 import { EpisodePage } from './pages/EpisodePage';
+import { RegistryPage } from './pages/RegistryPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { copy } from './copy';
 import styles from './App.module.css';
@@ -40,6 +41,7 @@ function AppShell() {
           <Routes>
             <Route path="/" element={<HubPage />} />
             <Route path="/ep/:id" element={<EpisodePage />} />
+            <Route path="/registry" element={<RegistryPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         )}

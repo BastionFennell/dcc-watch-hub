@@ -1,0 +1,288 @@
+// @vitest-environment jsdom
+/**
+ * User Story 2 (T714): the System Registry at `/registry`. The page is mounted
+ * through `<App/>`, because the route, the providers and the header link are
+ * part of what is under test.
+ *
+ * The stub gives episode 2 its own `npc` beats — one sighting of an entity that
+ * debuts in episode 1, and the only unlock of the Quartermaster's `debt` — so
+ * the cross-episode rules (section by *first* appearance, fact tagged with the
+ * episode that released it) have something to prove.
+ */
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
+import { App } from './../App';
+import { copy } from '../copy';
+import { makeEpisodeRaw, makeRegistry, makeShow } from '../test/fixtures';
+
+interface RawEpisode {
+  episodeId: number;
+  initialState: unknown;
+  events: { type: string }[];
+}
+
+/**
+ * Episode 2's own beats (this file's helper, not the shared fixture): a second
+ * sighting of the vendor that debuts in episode 1, and the one unlock of
+ * `debt` — the only fact in the sample whose tag is not "Ep 1".
+ */
+function makeEpisode2Raw(): unknown {
+  const raw = makeEpisodeRaw(2) as RawEpisode;
+  return {
+    episodeId: 2,
+    initialState: raw.initialState,
+    events: [
+      ...raw.events.filter((event) => event.type !== 'npc'),
+      { t: 100, type: 'npc', id: 'grull-rep', action: 'seen' },
+      {
+        t: 300,
+        type: 'npc',
+        id: 'quartermaster',
+        action: 'update',
+        unlock: ['debt'],
+        note: 'The ledger is open.',
+      },
+    ],
+  };
+}
+
+interface StubOptions {
+  /** Episode ids whose fetch rejects, to exercise the missing-episode notice. */
+  failing?: number[];
+  /** Swaps the show for one that declares no registry. */
+  withoutRegistry?: boolean;
+}
+
+function json(body: unknown): Promise<Response> {
+  return Promise.resolve(
+    new Response(JSON.stringify(body), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    }),
+  );
+}
+
+function stubFetch({ failing = [], withoutRegistry = false }: StubOptions = {}) {
+  vi.stubGlobal('fetch', (input: RequestInfo | URL) => {
+    const url = String(input);
+
+    if (url.includes('show.json')) {
+      const show = makeShow();
+      if (withoutRegistry) delete (show as { registryUrl?: string }).registryUrl;
+      return json(show);
+    }
+    if (url.includes('npcs.json')) return json(makeRegistry());
+
+    const episodeId = Number(/ep(\d+)\.json/.exec(url)?.[1] ?? 1);
+    if (failing.includes(episodeId)) return Promise.reject(new Error('transmission lost'));
+    return json(episodeId === 2 ? makeEpisode2Raw() : makeEpisodeRaw(episodeId));
+  });
+}
+
+function renderRegistry(path = '/registry') {
+  return render(
+    <MemoryRouter initialEntries={[path]}>
+      <App />
+    </MemoryRouter>,
+  );
+}
+
+/** Every rendered entry, keyed by entity id. */
+function entry(id: string): HTMLElement {
+  const element = document.querySelector(`[data-testid="registry-entry"][data-npc="${id}"]`);
+  if (element === null) throw new Error(`no registry entry for ${id}`);
+  return element as HTMLElement;
+}
+
+function visibleIds(): string[] {
+  return screen
+    .getAllByTestId('registry-entry')
+    .map((element) => element.getAttribute('data-npc') ?? '');
+}
+
+async function waitForIndex() {
+  await waitFor(() => expect(screen.getByTestId('registry-section-1')).toBeInTheDocument());
+}
+
+describe('the System Registry', () => {
+  beforeEach(() => stubFetch());
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  it('files every entity under the episode it first appears in, with a count', async () => {
+    renderRegistry();
+    await waitForIndex();
+
+    const section = screen.getByTestId('registry-section-1');
+    expect(within(section).getByRole('heading', { level: 2 })).toHaveTextContent(
+      copy.registryEpisodeSection(1, makeShow().episodes[0].title),
+    );
+    expect(within(section).getByText(copy.registryCount(3))).toBeInTheDocument();
+
+    // Fixture episode 1: grull-rep @112, hoarder @118, quartermaster @135.
+    expect(visibleIds()).toEqual(['grull-rep', 'hoarder', 'quartermaster']);
+  });
+
+  it('omits an episode that debuts nobody', async () => {
+    renderRegistry();
+    await waitForIndex();
+
+    // Episode 2 only re-sights entities episode 1 introduced.
+    expect(screen.queryByTestId('registry-section-2')).toBeNull();
+    expect(screen.queryByTestId('registry-section-3')).toBeNull();
+  });
+
+  it('titles the document in the System voice', async () => {
+    renderRegistry();
+    await waitFor(() => expect(document.title).toBe(copy.pageTitle(copy.registryTitle)));
+  });
+
+  it('searches names and aliases, and says so when nothing matches', async () => {
+    renderRegistry();
+    await waitForIndex();
+
+    const search = screen.getByTestId('registry-search');
+    expect(search).toHaveAttribute('type', 'search');
+    expect(search).toHaveAccessibleName(copy.registrySearch);
+
+    // "The Crate King" is an alias of The Hoarder, and of nothing else.
+    fireEvent.change(search, { target: { value: 'Crate' } });
+    expect(visibleIds()).toEqual(['hoarder']);
+
+    fireEvent.change(search, { target: { value: 'zzz' } });
+    expect(screen.queryAllByTestId('registry-entry')).toHaveLength(0);
+    expect(screen.getByTestId('registry-empty')).toHaveTextContent(copy.registryNoMatch);
+
+    fireEvent.change(search, { target: { value: '' } });
+    expect(visibleIds()).toHaveLength(3);
+  });
+
+  it('filters by kind chips, which carry counts and combine as any-of', async () => {
+    renderRegistry();
+    await waitForIndex();
+
+    const boss = screen.getByTestId('registry-chip-boss');
+    const ally = screen.getByTestId('registry-chip-ally');
+    expect(boss).toHaveTextContent(copy.kindLabels.boss);
+    expect(boss).toHaveTextContent('1');
+    expect(boss).toHaveAttribute('aria-pressed', 'false');
+
+    fireEvent.click(boss);
+    expect(boss).toHaveAttribute('aria-pressed', 'true');
+    expect(visibleIds()).toEqual(['hoarder']);
+
+    fireEvent.click(ally);
+    expect(visibleIds()).toEqual(['hoarder', 'quartermaster']);
+
+    fireEvent.click(boss);
+    fireEvent.click(ally);
+    expect(visibleIds()).toHaveLength(3);
+  });
+
+  it('expands an entry onto its facts, tagged with the episode that released them', async () => {
+    renderRegistry();
+    await waitForIndex();
+
+    const hoarder = entry('hoarder');
+    expect(hoarder).toHaveAttribute('data-expanded', 'false');
+    const trigger = within(hoarder).getByRole('button');
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+
+    fireEvent.click(trigger);
+    expect(hoarder).toHaveAttribute('data-expanded', 'true');
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+    const facts = within(hoarder).getAllByTestId('registry-fact');
+    expect(facts.map((fact) => fact.getAttribute('data-fact'))).toEqual(['lair', 'weakness']);
+    // Both of the Hoarder's facts are released in episode 1.
+    for (const fact of facts) {
+      expect(fact).toHaveAttribute('data-episode', '1');
+      expect(fact).toHaveTextContent(copy.registryFactTag(1));
+    }
+
+    // The Quartermaster's only fact is unlocked in episode 2, though it debuts
+    // in episode 1 — the tag follows the release, not the debut.
+    const quartermaster = entry('quartermaster');
+    fireEvent.click(within(quartermaster).getByRole('button'));
+    const debt = within(quartermaster).getByTestId('registry-fact');
+    expect(debt).toHaveAttribute('data-episode', '2');
+    expect(debt).toHaveTextContent(copy.registryFactTag(2));
+
+    fireEvent.click(trigger);
+    expect(hoarder).toHaveAttribute('data-expanded', 'false');
+  });
+
+  it('says so when no published episode has released a fact', async () => {
+    renderRegistry();
+    await waitForIndex();
+
+    const vendor = entry('grull-rep');
+    fireEvent.click(within(vendor).getByRole('button'));
+    expect(within(vendor).queryAllByTestId('registry-fact')).toHaveLength(0);
+    expect(vendor).toHaveTextContent(copy.npcFactsEmpty);
+  });
+
+  it('deep-links every appearance to its moment, and marks a defeat', async () => {
+    renderRegistry();
+    await waitForIndex();
+
+    const hoarder = entry('hoarder');
+    fireEvent.click(within(hoarder).getByRole('button'));
+
+    const appearances = within(hoarder).getAllByTestId('registry-appearance');
+    expect(appearances[0]).toHaveAttribute('href', '/ep/1?t=118');
+    expect(appearances[0]).toHaveTextContent(makeShow().episodes[0].title);
+    expect(appearances[0]).toHaveTextContent('1:58');
+    expect(appearances[0]).toHaveTextContent(copy.registryActions.met);
+
+    expect(within(hoarder).getByTestId('registry-defeated')).toHaveTextContent(
+      copy.registryDefeatedIn(1),
+    );
+
+    const vendor = entry('grull-rep');
+    fireEvent.click(within(vendor).getByRole('button'));
+    expect(within(vendor).queryByTestId('registry-defeated')).toBeNull();
+    // Episode 2's own sighting, from this file's helper.
+    expect(
+      within(vendor)
+        .getAllByTestId('registry-appearance')
+        .map((link) => link.getAttribute('href')),
+    ).toContain('/ep/2?t=100');
+  });
+
+  it('opens and marks the entry /registry#<id> names', async () => {
+    renderRegistry('/registry#hoarder');
+    await waitForIndex();
+
+    await waitFor(() => expect(entry('hoarder')).toHaveAttribute('data-expanded', 'true'));
+    expect(entry('hoarder')).toHaveAttribute('data-target');
+    expect(entry('hoarder')).toHaveAttribute('id', 'hoarder');
+    expect(entry('grull-rep')).toHaveAttribute('data-expanded', 'false');
+    expect(entry('grull-rep')).not.toHaveAttribute('data-target');
+  });
+
+  it('renders the episodes it could index and names the one it could not', async () => {
+    stubFetch({ failing: [3] });
+    renderRegistry();
+    await waitForIndex();
+
+    const missing = await screen.findByTestId('registry-missing');
+    expect(missing).toHaveTextContent(copy.registryMissing(1));
+    expect(missing).toHaveAttribute('data-count', '1');
+    expect(visibleIds()).toEqual(['grull-rep', 'hoarder', 'quartermaster']);
+  });
+
+  it('stands down entirely for a show that publishes no registry', async () => {
+    stubFetch({ withoutRegistry: true });
+    renderRegistry();
+
+    await waitFor(() =>
+      expect(screen.getByText(copy.registryUnavailable)).toBeInTheDocument(),
+    );
+    expect(screen.queryByTestId('registry-search')).toBeNull();
+    expect(screen.queryAllByTestId('registry-entry')).toHaveLength(0);
+  });
+});

@@ -96,6 +96,28 @@ describe('usePanel', () => {
     expect(result.current.panel).toEqual({ kind: 'none' });
   });
 
+  it('opens, matches and toggles an entity record (007 FR-611)', () => {
+    const chip = makeTrigger('hoarder-chip');
+    const { result } = renderHook(() => usePanel(1));
+
+    act(() => result.current.open({ kind: 'npc', npcId: 'hoarder' }, chip));
+    expect(result.current.panel).toEqual({ kind: 'npc', npcId: 'hoarder' });
+    expect(result.current.isOpen('npc')).toBe(true);
+    expect(result.current.isOpen('npc', 'hoarder')).toBe(true);
+    expect(result.current.isOpen('npc', 'grull-rep')).toBe(false);
+    // One slot: a record and a dossier are never open at once (FR-100).
+    expect(result.current.isOpen('dossier', 'harry')).toBe(false);
+
+    // Another entity replaces it; the same one toggles closed, and focus goes
+    // back to the chip that opened it.
+    act(() => result.current.toggle({ kind: 'npc', npcId: 'grull-rep' }, null));
+    expect(result.current.panel).toEqual({ kind: 'npc', npcId: 'grull-rep' });
+
+    act(() => result.current.toggle({ kind: 'npc', npcId: 'grull-rep' }, chip));
+    expect(result.current.panel).toEqual({ kind: 'none' });
+    expect(document.activeElement).toBe(chip);
+  });
+
   it('returns focus to the trigger that opened the panel', () => {
     const harry = makeTrigger('harry');
     const { result } = renderHook(() => usePanel(1));

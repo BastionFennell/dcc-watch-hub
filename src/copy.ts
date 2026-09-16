@@ -459,6 +459,28 @@ export const copy = {
   registryEpisodeSection: (n: number, title: string) => `Episode ${n} — ${title}`,
   /** Tags a fact with the episode that released it. */
   registryFactTag: (n: number) => `Ep ${n}`,
+
+  /* --- appended by 007 (System Registry page: T713) --- */
+
+  /** While the page is pulling the show, the registry and every episode file. */
+  registryLoading: 'The System is indexing the archive.',
+  /** The show declares no registry, or the file could not be read (spec edge case). */
+  registryUnavailable: 'The Registry has not been transmitted.',
+  /** Names the kind chip group for a screen reader. */
+  registryKinds: 'Filter by kind',
+  /** How many entities a section holds. */
+  registryCount: (n: number) => `${n} ${n === 1 ? 'entity' : 'entities'}`,
+  /** The expanded entry's second block; the first reuses `npcFacts` ("FACTS"). */
+  registryAppearances: 'APPEARANCES',
+  /** What an appearance was, in one word, beside its timecode. */
+  registryActions: {
+    met: 'Met',
+    seen: 'Sighted',
+    update: 'Amended',
+    defeated: 'Defeated',
+  } as const,
+  /** Closes an entry that does not survive the archive. */
+  registryDefeatedIn: (n: number) => `Defeated in episode ${n}.`,
 } as const;
 
 export type Copy = typeof copy;

@@ -1,0 +1,203 @@
+/*
+ * The entity record (FR-611, research R4). Same sheet vocabulary as the crawler
+ * glance — header band, mono caps block labels, quiet empty lines — with the
+ * kind's tint carrying the band instead of the System blue.
+ *
+ * The tint is a rule and a disc, never a text colour: --danger on a panel
+ * measures 4.24:1, while --canvas on --danger measures 4.68:1 (and 12.6:1 on
+ * --amber-fg, 9.2:1 on --marker-levelup).
+ */
+.record {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+/* --- header band --- */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  background: var(--panel-deep);
+  border-left: 3px solid var(--tint, var(--hairline-2));
+  border-radius: var(--radius-md);
+  min-width: 0;
+}
+
+.header[data-kind='boss'] {
+  --tint: var(--danger);
+}
+
+.header[data-kind='vendor'] {
+  --tint: var(--amber-fg);
+}
+
+.header[data-kind='ally'] {
+  --tint: var(--marker-levelup);
+}
+
+.portrait,
+.disc {
+  width: var(--portrait-size);
+  height: var(--portrait-size);
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.portrait {
+  background: var(--canvas);
+  border: 1px solid var(--tint, var(--hairline-2));
+}
+
+.disc {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--tint, var(--brand-deep));
+  color: var(--canvas);
+  font-size: var(--text-md);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.headerMeta {
+  min-width: 0;
+}
+
+.name {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.kindLine {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  font-size: var(--text-2xs);
+  color: var(--text-2);
+}
+
+/* The separator carries its own spacing: flex trims literal spaces (T330). */
+.dot {
+  color: var(--text-4);
+  margin: 0 0.35em;
+}
+
+/* --- intro and status --- */
+
+.intro {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+.status {
+  margin: 0;
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  line-height: 1.6;
+  color: var(--text-2);
+  background: var(--panel-deep);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-pill);
+  padding: 0 8px;
+}
+
+.status[data-defeated] {
+  color: var(--canvas);
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+/* --- labelled blocks --- */
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.blockLabel {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.empty {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--text-3);
+}
+
+.facts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+
+.fact {
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--text);
+  border-left: 2px solid var(--hairline-2);
+  padding-left: var(--space-4);
+}
+
+/* --- moments: feed rows, newest first --- */
+
+.moments {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+
+.moment {
+  min-width: 0;
+}
+
+/* --- the way into the glossary --- */
+
+.registryLink {
+  align-self: flex-start;
+  font-size: var(--text-xs);
+  color: var(--brand-fg);
+  text-decoration: none;
+  border-bottom: 1px solid var(--brand-line);
+  padding-bottom: 1px;
+}
+
+.registryLink:hover {
+  color: var(--brand-fg-2);
+}
+
+.registryLink:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}

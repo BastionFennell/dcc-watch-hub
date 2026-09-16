@@ -11,11 +11,17 @@ import { App } from './App';
 import { copy } from './copy';
 import { makeEpisodeRaw, makeRegistry, makeShow } from './test/fixtures';
 
-function stubFetch() {
+function showFixture(withoutRegistry: boolean) {
+  const show = makeShow();
+  if (withoutRegistry) delete (show as { registryUrl?: string }).registryUrl;
+  return show;
+}
+
+function stubFetch({ withoutRegistry = false }: { withoutRegistry?: boolean } = {}) {
   vi.stubGlobal('fetch', (input: RequestInfo | URL) => {
     const url = String(input);
     const body = url.includes('show.json')
-      ? makeShow()
+      ? showFixture(withoutRegistry)
       : url.includes('npcs.json')
         ? makeRegistry()
         : makeEpisodeRaw(1);
@@ -128,6 +134,30 @@ describe('broadcast archive', () => {
       'href',
       makeShow().links.discord,
     );
+  });
+
+  /*
+   * The System Registry link (007, FR-620). It appears twice in the DOM — the
+   * right cluster and the phone menu — and CSS picks which one is on screen, so
+   * the assertion is about every copy of it.
+   */
+  it('links to the System Registry when the show publishes one', async () => {
+    renderAt('/');
+    const banner = screen.getByRole('banner');
+    const links = await within(banner).findAllByRole('link', { name: copy.registry });
+    expect(links.length).toBeGreaterThan(0);
+    for (const link of links) expect(link).toHaveAttribute('href', '/registry');
+  });
+
+  it('omits the Registry link for a show that publishes no registry', async () => {
+    stubFetch({ withoutRegistry: true });
+    renderAt('/');
+    const banner = screen.getByRole('banner');
+    // The header has landed once the show links are there.
+    await waitFor(() =>
+      expect(within(banner).getAllByRole('link', { name: copy.youtube }).length).toBeGreaterThan(0),
+    );
+    expect(within(banner).queryByRole('link', { name: copy.registry })).toBeNull();
   });
 
   it('shows the System not-found copy for an unknown episode id', async () => {

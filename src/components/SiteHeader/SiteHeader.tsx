@@ -79,8 +79,23 @@ export function SiteHeader({ show, current }: SiteHeaderProps) {
         {show ? (
           <>
             <EpisodesMenu show={show} currentId={current?.id}>
+              {/*
+                The glossary rides in the phone menu beside the show links, for
+                the same reason they do: the header has no room for it (FR-052).
+              */}
+              {show.registryUrl ? (
+                <Link to="/registry" className={styles.menuRegistry}>
+                  {copy.registry}
+                </Link>
+              ) : null}
               <ShowLinks show={show} className={styles.menuLinks} />
             </EpisodesMenu>
+            {/* Only a show that publishes a registry links to one (FR-600). */}
+            {show.registryUrl ? (
+              <Link to="/registry" className={styles.registryLink}>
+                {copy.registry}
+              </Link>
+            ) : null}
             <ShowLinks show={show} className={styles.links} />
           </>
         ) : null}

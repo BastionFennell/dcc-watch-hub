@@ -118,6 +118,36 @@
   color: var(--brand-fg-2);
 }
 
+/*
+ * The System Registry link (007, FR-620). It sits in the right cluster beside
+ * the show links and, like them, moves into the phone menu rather than
+ * crowding a 360 px header.
+ */
+.registryLink {
+  color: var(--text-2);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+.registryLink:hover {
+  color: var(--brand-fg-2);
+}
+
+/* The same link inside the phone menu: a panel row, like an episode. */
+.menuRegistry {
+  display: none;
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+.menuRegistry:hover {
+  background: var(--panel-deep);
+  color: var(--brand-fg-2);
+}
+
 /* --------------------------------------------------------- episodes menu */
 
 .menu {
@@ -258,11 +288,16 @@
     border: 0;
   }
 
-  .links {
+  .links,
+  .registryLink {
     display: none;
   }
 
   .menuLinks {
+    display: flex;
+  }
+
+  .menuRegistry {
     display: flex;
   }
 

@@ -1,0 +1,349 @@
+/*
+ * A glossary entry (007, FR-620). It borrows the hub card's box — panel fill,
+ * hairline border, large radius — because both are "one filed thing you can
+ * open", and the kind tints are the same three the Encountered strip uses:
+ * boss --danger, vendor --amber-fg, ally --marker-levelup. The tint carries the
+ * disc and a left strip only, with --canvas text on it; informational text
+ * stays --text/--text-2/--text-3, which clear AA on --panel.
+ */
+.entry {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-6);
+  padding-left: calc(var(--space-6) + 3px);
+  background: var(--panel);
+  border: var(--border-hairline);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* The kind strip: the same three tints the disc uses, as the entry's spine. */
+.entry::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--tint, var(--hairline-2));
+}
+
+.entry[data-kind='boss'] {
+  --tint: var(--danger);
+}
+
+.entry[data-kind='vendor'] {
+  --tint: var(--amber-fg);
+}
+
+.entry[data-kind='ally'] {
+  --tint: var(--marker-levelup);
+}
+
+/* The entry `/registry#<id>` named, so the landing is obvious (US2 scenario 5). */
+.entry[data-target] {
+  border-color: var(--brand-line);
+  background: var(--brand-deep);
+}
+
+/* --- the disclosure header --- */
+
+.heading {
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  min-width: 0;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.trigger:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
+.portrait,
+.disc {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.portrait {
+  background: var(--panel-deep);
+  border: 1px solid var(--tint, var(--hairline-2));
+}
+
+.disc {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--tint, var(--brand-deep));
+  color: var(--canvas);
+  font-size: var(--text-md);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.disc[data-kind='boss'],
+.portrait[data-kind='boss'] {
+  --tint: var(--danger);
+}
+
+.disc[data-kind='vendor'],
+.portrait[data-kind='vendor'] {
+  --tint: var(--amber-fg);
+}
+
+.disc[data-kind='ally'],
+.portrait[data-kind='ally'] {
+  --tint: var(--marker-levelup);
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.name {
+  color: var(--text);
+  font-size: var(--text-md);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.name[data-defeated] {
+  text-decoration: line-through;
+  color: var(--text-2);
+}
+
+.tags {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.kind,
+.floor {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.dot {
+  color: var(--text-3);
+}
+
+.defeatedTag {
+  flex: none;
+  margin-left: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+  color: var(--canvas);
+  background: var(--danger);
+  border-radius: var(--radius-pill);
+  padding: 0 6px;
+  white-space: nowrap;
+}
+
+.chevron {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  color: var(--text-3);
+  transition: transform 200ms ease;
+}
+
+.entry[data-expanded='true'] .chevron {
+  transform: rotate(90deg);
+}
+
+.intro {
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+/* --- the disclosed region --- */
+
+/* `display: flex` would otherwise beat the UA's `[hidden] { display: none }`. */
+.body[hidden] {
+  display: none;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+  padding-top: var(--space-5);
+  border-top: var(--border-hairline);
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.blockTitle {
+  margin: 0;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.empty {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+}
+
+.facts,
+.appearances {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+
+.fact {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.factTag {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--brand-fg);
+  background: var(--brand-deep);
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+
+.factText {
+  min-width: 0;
+  color: var(--text-2);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.appearanceItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.appearance {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+.appearance:hover {
+  background: var(--panel-deep);
+  color: var(--brand-fg-2);
+}
+
+.appearance:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.appearanceTitle {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.appearanceTime {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-3);
+}
+
+.appearanceAction {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.appearanceNote {
+  min-width: 0;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  overflow-wrap: anywhere;
+}
+
+.defeatedLine {
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .entry {
+    padding: var(--space-5);
+    padding-left: calc(var(--space-5) + 3px);
+  }
+}
