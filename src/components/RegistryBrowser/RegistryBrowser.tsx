@@ -116,9 +116,13 @@ export function RegistryBrowser({
     const element = [
       ...(containerRef.current?.querySelectorAll('[data-testid="registry-entry"]') ?? []),
     ].find((node) => node.getAttribute('data-npc') === focusId);
-    // jsdom has no layout, so it has no scrollIntoView.
-    if (element instanceof HTMLElement && typeof element.scrollIntoView === 'function') {
-      element.scrollIntoView({ block: 'start' });
+    // Scroll only the panel's own body: `scrollIntoView` would also move the document
+    // (and the stage) under the viewer. jsdom has no layout, so guard on the numbers.
+    if (element instanceof HTMLElement) {
+      const scroller = element.closest<HTMLElement>('[data-testid="rail-panel-body"]');
+      if (scroller && Number.isFinite(element.offsetTop) && Number.isFinite(scroller.offsetTop)) {
+        scroller.scrollTop = Math.max(0, element.offsetTop - scroller.offsetTop - 8);
+      }
     }
   }, [focusId, ready]);
 
