@@ -1,0 +1,38 @@
+---
+description: "Task list for NPC encounters + System Registry"
+---
+# Tasks: NPC encounters + System Registry
+
+## Waves
+| Wave | Tasks | Ownership |
+|------|-------|-----------|
+| 1 | T701–T707 | one agent: data/engine/loader/converter/schemas/samples/fixtures/copy |
+| 2 | T708–T711 ∥ T712–T714 | "episode": `src/components/EncounterRail/**`, `src/components/NpcRecord/**`, `src/hooks/usePanel.ts`, `src/components/MobileTabs/**` (TabId only), `src/pages/EpisodePage*`. "registry": `src/engine/registry.ts` (+test), `src/pages/RegistryPage*`, `src/components/RegistryEntry/**`, `src/App.tsx` (route), `src/components/SiteHeader/**` (link). Both append to `src/copy.ts` at the END. |
+| 3 | T715–T717 | one agent: docs, visual/a11y, verification |
+
+## Phase 1: Foundation
+- [ ] T701 `src/data/types.ts`: `EntityKind`/`ENTITY_KINDS` (`boss`, `vendor`, `ally`), `Entity`, `Registry`, `Show.registryUrl?`, `NpcAction`/`NPC_ACTIONS`, `NpcEvent`; extend `Event`, `EventType`, `KNOWN_EVENT_TYPES`.
+- [ ] T702 `src/data/validate.ts`: `normalizeEvent` for `npc` (id + action required; `unlock` string list; `note` optional; `actor` optional), `normalizeRegistry`/`isRegistry` (drop malformed entities/facts with warn; `kind` must be known), `normalizeShow` keeps `registryUrl`. Tests.
+- [ ] T703 `src/data/load.ts`: `fetchRegistry(show)` (null when absent; resolves against BASE_URL; `DataError` on failure). `src/data/RegistryContext.tsx`: `RegistryProvider` (fetches when the show is available), `useRegistry()`. Wire the provider in `src/App.tsx` inside `ShowProvider` (App.tsx edit allowed in wave 1 only for the provider). Tests for `fetchRegistry`.
+- [ ] T704 `src/engine/state.ts` + `reducer.ts`: `OverlayState.npcs`, `NpcState`; `npc` transitions per research R2. Tests.
+- [ ] T705 `src/engine/selectors.ts`: `FeedItem.npcId?`; `toFeedItem` for `npc` (names resolved from an optional `registry` param — add `registry?: Registry | null` as a trailing optional param to `feedItems`, `logItems`, `crawlerHistory`? Only `feedItems`/`logItems`/`npcMoments` need names; keep signatures backward compatible by appending the param); `encounteredNpcs`, `npcMoments`, `npcRecord`. Tests incl. never-early sweep for encounters and facts, missing-registry id omitted from encounters but present in feed with the raw id.
+- [ ] T706 Contracts + converter + samples: `specs/007-npc-registry/contracts/{episode,show,npcs}.schema.json` (copy prior schemas, add `npc` branch, `registryUrl`, and the registry schema); repoint `samples.test.ts`/`sheet-to-json.test.ts`; converter `npc` row (field2 `action[:fact,fact]`), `--registry <path>` optional validation (WARN unknown id/fact); `scripts/samples/*` rows (clean + a warning case with `--registry`); `public/data/npcs.json` (8 invented entities across the 3 sample episodes: ≥ 3 bosses, 2 vendors/guides, 3 allies/factions, diegetic intros, 2–4 facts each, a few aliases, 2 with placeholder portraits under `public/img/npcs/`); `public/data/ep{1,2,3}.json` `npc` events (each episode ≥ 4: met/seen/update with unlock/defeated; one entity spans two episodes; one `update` in ep2 unlocks a fact for an ep1 entity); `show.json` `registryUrl`; samples test extended (registry validates; every `npc` id in samples exists in the registry except one deliberate unknown in ep1; every `unlock` fact exists).
+- [ ] T707 `src/test/fixtures.ts` (data-model fixture facts + `makeRegistry()`), copy keys per `contracts/npc.md` (append at END; `labels.npc` and `feedText.npc*` inside the nested objects).
+
+**Checkpoint**: gates green; existing tests untouched.
+
+## Phase 2a: Episode page (US1)
+- [ ] T708 `src/components/EncounterRail/**` per research R3 + contract (row and grid layouts, kind tints, defeated marker, trigger semantics, empty line).
+- [ ] T709 `src/components/NpcRecord/**` per research R4 + contract (glance-style; moments reuse `FeedItemView` with seek + share; registry link uses `useEpisodePath`-like base handling → plain `Link to={\`/registry#\${id}\`}`).
+- [ ] T710 `usePanel` kind `npc`; `MobileTabs` `TabId` gains `'npcs'`; `EpisodePage.tsx`: strip under the party rail (desktop) / NPCs tab (phone, only when a registry exists), panel kind `npc` → `RailPanel` (kicker `npcKicker`, title entity name) + `NpcRecord`; feed/log get the registry for names; `data-panel-trigger="npc:<id>"` focus return works.
+- [ ] T711 Page tests: strip after the party rail; standby before the first npc event; chip order and defeated marker at fixture times; chip → panel with facts at t and after a backward seek; unknown id absent from the strip, present in the feed; phone NPCs tab; registry absent → no strip/tab.
+
+## Phase 2b: Registry page (US2)
+- [ ] T712 `src/engine/registry.ts`: `registryIndex` per research R5 + tests (ordering by first appearance across episodes, fact tags = first unlocking episode, appearances sorted, omitted entities, missing episode reported).
+- [ ] T713 `src/pages/RegistryPage.tsx` (+css) and `src/components/RegistryEntry/**`: loads show (context), registry (context), all episodes (`Promise.allSettled(fetchEpisode)`); sections per episode with counts; search input (`aria-label`), kind chips (`aria-pressed`, counts), expandable entries (button + region, `id=<entity id>`), facts with `Ep N` tags, appearances as `Link`s to `/ep/N?t=`, `registry-missing` notice, empty state, hash handling (`location.hash` → expand + `scrollIntoView` after load). Route `/registry` in `App.tsx`; header link (desktop right cluster + phone menu) only when `show.registryUrl`; document title.
+- [ ] T714 Tests: `RegistryPage.test.tsx` (stubbed fetch for show/registry/episodes: sections, search incl. alias, chips, expand, hash, missing episode notice, empty); `App.test.tsx` link presence/absence.
+
+## Phase 3: Polish
+- [ ] T715 README ("Entities and the Registry" section: data file, event/CSV row, strip, record, registry) + quickstart URLs verified against the samples; test count and bundle.
+- [ ] T716 Headless Chrome: strip at 1440 (chips, tints, defeated), record panel, NPCs tab at 400 px, registry page at 1440 and 400 (sections, chips wrapping, expanded entry, hash landing); contrast of kind tints ≥ 3:1 / text ≥ 4.5:1; Lighthouse a11y 100 on `/registry` and `/ep/1`; axe on the record and registry.
+- [ ] T717 Final: gates green; SC-601..604 under quickstart `## Results`; all tasks `[X]`.
