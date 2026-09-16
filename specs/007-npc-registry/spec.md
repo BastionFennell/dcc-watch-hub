@@ -211,3 +211,34 @@ Author: "Ideally they can look at this registry without stopping the video."
 - **R3-SC-607**: Opening the panel leaves `source` untouched (no seek/pause) and the stage rect
   unchanged; entries, scope, search, chips behave as on the page.
 - **R3-SC-608**: Current-episode appearances seek the fake source; others are links; a11y 100.
+
+---
+
+# Revision 4 (2026-09-16) — newest episode first; the panel follows the playhead
+
+Author: "Reverse the order of the registry so the current episode is on top; tie things showing
+up in the registry to events/timestamps in the actual show as well."
+
+## R4 Requirements
+- **R4-FR-650**: Registry sections (page and panel) are ordered **newest episode first**; within a
+  section, entries are ordered by first appearance **latest first**. Scope semantics are unchanged.
+- **R4-FR-651**: In the Registry **panel** on an episode page, the current episode's contribution
+  (appearances, fact unlocks, defeated) is limited to events with `t ≤ playhead`; earlier episodes
+  contribute in full. An entity whose only appearances are later in the current episode is not
+  listed; a fact unlocked later is not listed; the panel updates as the playhead moves (forward
+  and back). The standalone page is unchanged (publication-scoped).
+- **R4-FR-652**: Appearance rows keep their `mm:ss` timestamps; in the panel, current-episode
+  appearances still seek in place.
+
+## R4 Acceptance
+1. **Given** `/registry` with three episodes, **Then** sections read Episode 3, Episode 2,
+   Episode 1 top to bottom; within Episode 1 the entity met last appears first.
+2. **Given** the panel on episode 1 at 2:00 (The Hoarder is met at 2:10), **Then** The Hoarder is
+   absent; at 2:10 it appears with one appearance; at 6:20 its `lair` fact appears; at 9:00 it
+   reads Defeated; scrubbing back to 5:00 removes the fact and the defeated line.
+3. **Given** the panel scoped "Through Episode 2" while watching episode 2 at 1:00, **Then**
+   episode 1's entities and facts are all present, and episode 2's are limited to ≤ 1:00.
+
+## R4 Success Criteria
+- **R4-SC-609**: A scripted sweep across the fixture's `npc` boundaries shows the panel's entries,
+  facts, and defeated lines matching `events ≤ t` for the current episode at every step.
