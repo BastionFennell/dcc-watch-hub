@@ -5,7 +5,10 @@ import { copy } from '../../copy';
 import styles from './EpisodeLog.module.css';
 
 export interface LogFiltersProps {
-  /** Elapsed counts over the *unfiltered* log, so a chip says what it would find. */
+  /**
+   * Elapsed counts over the *unfiltered* log, so a chip says what it would
+   * find — and so a kind with nothing elapsed has no chip at all.
+   */
   counts: LogCounts;
   party: readonly { id: string; name: string }[];
   types: ReadonlySet<EventType>;
@@ -25,9 +28,9 @@ interface ChipProps {
 
 /**
  * One filter chip. A toggle button, so the keyboard gets the state for free
- * (005 FR-406). A chip with nothing elapsed behind it is dimmed but still
- * pressable: the set of chips must not reshuffle as the broadcast runs
- * (research R3).
+ * (005 FR-406). Every chip drawn has something behind it: a chip whose count is
+ * zero is not rendered at all, so the viewer is never offered a filter that
+ * would empty the log.
  */
 function Chip({ testId, label, count, pressed, onToggle }: ChipProps) {
   return (
@@ -35,7 +38,6 @@ function Chip({ testId, label, count, pressed, onToggle }: ChipProps) {
       type="button"
       className={styles.chip}
       data-testid={testId}
-      data-empty={count === 0 ? 'true' : undefined}
       aria-pressed={pressed}
       onClick={onToggle}
     >
@@ -46,9 +48,12 @@ function Chip({ testId, label, count, pressed, onToggle }: ChipProps) {
 }
 
 /**
- * The log's two chip groups: every known event type, and every crawler in the
- * party (005 FR-402). Selection combines as type-any AND crawler-any, which is
- * `applyLogFilters`' job — this component only says what is pressed.
+ * The log's two chip groups: the event types and the crawlers the log actually
+ * holds (005 FR-402). A kind with nothing elapsed has no chip — the chips are a
+ * reading of the log so far, not a catalogue of what an episode might contain,
+ * and they arrive as the broadcast produces them. Selection combines as
+ * type-any AND crawler-any, which is `applyLogFilters`' job; this component
+ * only says what is pressed.
  */
 export function LogFilters({
   counts,
@@ -60,40 +65,49 @@ export function LogFilters({
   onClear,
 }: LogFiltersProps) {
   const filtering = types.size > 0 || actors.size > 0;
+  const elapsedTypes = KNOWN_EVENT_TYPES.filter((kind) => (counts.byType[kind] ?? 0) > 0);
+  const elapsedParty = party.filter((crawler) => (counts.byActor[crawler.id] ?? 0) > 0);
+
+  // Nothing has elapsed: the standby line is the whole of the open log.
+  if (elapsedTypes.length === 0 && elapsedParty.length === 0) return null;
 
   return (
     <div className={styles.filters} data-testid="log-filters">
-      <div className={styles.group}>
-        <h3 className={styles.groupTitle}>{copy.logFiltersTypes}</h3>
-        <div className={styles.chips}>
-          {KNOWN_EVENT_TYPES.map((kind) => (
-            <Chip
-              key={kind}
-              testId={`log-chip-type-${kind}`}
-              label={copy.labels[kind]}
-              count={counts.byType[kind] ?? 0}
-              pressed={types.has(kind)}
-              onToggle={() => onToggleType(kind)}
-            />
-          ))}
+      {elapsedTypes.length > 0 ? (
+        <div className={styles.group}>
+          <h3 className={styles.groupTitle}>{copy.logFiltersTypes}</h3>
+          <div className={styles.chips}>
+            {elapsedTypes.map((kind) => (
+              <Chip
+                key={kind}
+                testId={`log-chip-type-${kind}`}
+                label={copy.labels[kind]}
+                count={counts.byType[kind] ?? 0}
+                pressed={types.has(kind)}
+                onToggle={() => onToggleType(kind)}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      ) : null}
 
-      <div className={styles.group}>
-        <h3 className={styles.groupTitle}>{copy.logFiltersCrawlers}</h3>
-        <div className={styles.chips}>
-          {party.map((crawler) => (
-            <Chip
-              key={crawler.id}
-              testId={`log-chip-actor-${crawler.id}`}
-              label={crawler.name}
-              count={counts.byActor[crawler.id] ?? 0}
-              pressed={actors.has(crawler.id)}
-              onToggle={() => onToggleActor(crawler.id)}
-            />
-          ))}
+      {elapsedParty.length > 0 ? (
+        <div className={styles.group}>
+          <h3 className={styles.groupTitle}>{copy.logFiltersCrawlers}</h3>
+          <div className={styles.chips}>
+            {elapsedParty.map((crawler) => (
+              <Chip
+                key={crawler.id}
+                testId={`log-chip-actor-${crawler.id}`}
+                label={crawler.name}
+                count={counts.byActor[crawler.id] ?? 0}
+                pressed={actors.has(crawler.id)}
+                onToggle={() => onToggleActor(crawler.id)}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      ) : null}
 
       {/*
         Always present, so pressing the first chip never reflows the filter

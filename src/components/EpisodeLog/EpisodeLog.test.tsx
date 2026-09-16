@@ -228,12 +228,39 @@ describe('EpisodeLog — filters', () => {
     expect(chipType('achievement')).toHaveAttribute('aria-pressed', 'false');
   });
 
-  it('keeps a chip with nothing elapsed visible and pressable, only dimmed', () => {
+  it('draws no chip for a kind with nothing elapsed', () => {
     renderLog({ items: at(12), t: 12 });
-    const chip = chipType('achievement');
-    expect(chip).toHaveTextContent('0');
-    expect(chip).toHaveAttribute('data-empty', 'true');
-    expect(chip).toBeEnabled();
+
+    expect(screen.queryByTestId('log-chip-type-achievement')).not.toBeInTheDocument();
+    // Only what the log actually holds is offered.
+    const shown = screen.getAllByTestId(/^log-chip-type-/);
+    const kinds = new Set(at(12).map((item) => item.kind));
+    expect(shown).toHaveLength(kinds.size);
+  });
+
+  it('retires a chip, and the selection on it, when a backward seek empties it', () => {
+    const { rerender } = renderLog();
+
+    fireEvent.click(chipType('achievement'));
+    expect(rows()).toHaveLength(3);
+
+    // Back before the first achievement: the chip goes, and so does the filter
+    // standing on it — the log reads as the whole elapsed log again, not empty.
+    act(() => {
+      rerender({ items: at(12), t: 12 });
+    });
+
+    expect(screen.queryByTestId('log-chip-type-achievement')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('log-empty')).not.toBeInTheDocument();
+    expect(rows()).toHaveLength(at(12).length);
+    expect(screen.getByTestId('log-clear')).toBeDisabled();
+  });
+
+  it('shows no filters at all before the first moment', () => {
+    renderLog({ items: [], t: 0 });
+
+    expect(screen.queryByTestId('log-filters')).not.toBeInTheDocument();
+    expect(screen.getByTestId('log-empty')).toHaveTextContent(copy.feedStandby);
   });
 
   it('filters by type and reports "N of M moments"', () => {

@@ -337,7 +337,7 @@ export const copy = {
     `Ep ${episodeId} · Floor ${floor} — ${title}`,
 
   /** A feed row is a seek control; its accessible name leads with the moment (T342). */
-  feedSeek: (time: string, text: string) => `${time} — ${text}`,
+  feedSeek: (time: string, text: string) => `${time} ${text}`,
 
   /* --- 003 revision 2, wave 3 (record polish: T330) --- */
 

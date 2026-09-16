@@ -18,8 +18,9 @@
 - **Decision**: chips as `<button aria-pressed>`, two groups (Types, Crawlers) with per-chip
   elapsed counts from `logCounts(items)` (counts are computed on the unfiltered elapsed items so a
   viewer can see what else is available); combination = `(types.size === 0 || types.has(kind)) &&
-  (actors.size === 0 || (actorId && actors.has(actorId)))`. Chips with a zero count are still
-  shown but disabled? No — shown enabled but dimmed at 0 so the set is stable. `Clear` resets.
+  (actors.size === 0 || (actorId && actors.has(actorId)))`. Chips with a zero elapsed count are
+  hidden (author decision, 2026-09-16); a selected chip whose count drops to zero on a backward
+  seek disappears and is pruned from the selection so nothing is silently filtered out. `Clear` resets.
   State is component `useState` (per visit).
 - **Type set**: every known type except `unknown`; labels from `copy.labels`.
 

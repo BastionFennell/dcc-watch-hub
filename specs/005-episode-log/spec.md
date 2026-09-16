@@ -43,7 +43,7 @@ scrubbing back removes rows. The viewer's open/closed choice is remembered on th
 
 Above the list, the viewer can toggle categories (system, achievement, loot, vitals, level up,
 rank, map, sponsor, chapter, status, inventory, note, skill, class, hotlist, equip) and crawlers.
-Each chip shows the elapsed count for that filter. Filters combine as "any selected type AND any
+Each chip shows the elapsed count for that filter; chips with nothing elapsed yet are not shown. Filters combine as "any selected type AND any
 selected crawler"; nothing selected means everything. A "Clear" action resets.
 
 **Acceptance Scenarios**:

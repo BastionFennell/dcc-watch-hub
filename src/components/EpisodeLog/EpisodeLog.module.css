@@ -153,15 +153,6 @@
     border-color 200ms ease;
 }
 
-/*
- * Nothing of this kind has elapsed yet. Dimmed by colour rather than opacity —
- * the chip is still a real control, and its label still has to pass AA.
- */
-.chip[data-empty] {
-  color: var(--text-2);
-  border-color: var(--hairline);
-}
-
 .chip:hover {
   border-color: var(--brand-line);
 }

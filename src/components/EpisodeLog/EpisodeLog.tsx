@@ -51,6 +51,19 @@ function toggled<T>(set: ReadonlySet<T>, value: T): Set<T> {
 }
 
 /**
+ * Drop a selection whose chip no longer exists. A chip is only drawn while
+ * something of its kind has elapsed, so a backward seek can retire one; leaving
+ * it selected would filter the log down to nothing with no visible reason why.
+ * Returns the same set when nothing was removed, so the sync below is a no-op
+ * on every ordinary render.
+ */
+function prune<T>(selected: ReadonlySet<T>, elapsed: (value: T) => boolean): ReadonlySet<T> {
+  if (selected.size === 0) return selected;
+  const kept = [...selected].filter(elapsed);
+  return kept.length === selected.size ? selected : new Set(kept);
+}
+
+/**
  * The broadcast log (005 US1/US2): the whole elapsed transcript under the party
  * rail, filterable by type and by crawler, every row a seek control.
  *
@@ -83,9 +96,18 @@ export function EpisodeLog({
   const bodyId = useId();
 
   const counts = logCounts(items);
-  const filtered = applyLogFilters(items, { types, actors });
-  const filtering = types.size > 0 || actors.size > 0;
+  // A backward seek can take the last event of a kind off the log; its chip
+  // goes with it, and so does any selection standing on it (FR-402).
+  const liveTypes = prune(types, (kind) => (counts.byType[kind] ?? 0) > 0);
+  const liveActors = prune(actors, (id) => (counts.byActor[id] ?? 0) > 0);
+  const filtered = applyLogFilters(items, { types: liveTypes, actors: liveActors });
+  const filtering = liveTypes.size > 0 || liveActors.size > 0;
   const rows = filtered.length;
+
+  useEffect(() => {
+    if (liveTypes !== types) setTypes(liveTypes);
+    if (liveActors !== actors) setActors(liveActors);
+  }, [liveTypes, types, liveActors, actors]);
 
   const countText = filtering
     ? copy.logCountFiltered(rows, items.length)
@@ -116,10 +138,14 @@ export function EpisodeLog({
     setFollowing(list.scrollTop + list.clientHeight >= list.scrollHeight - FOLLOW_SLACK_PX);
   }, []);
 
+  // Opening (or mounting open) lands the viewer at the newest moment, paused or not.
+  useEffect(() => {
+    if (open) scrollToEnd(false);
+  }, [open, scrollToEnd]);
+
   function toggleOpen() {
     const next = !open;
     setOpen(next);
-    // Opening lands the viewer at the newest moment, as the bar promised.
     if (next) setFollowing(true);
     onOpenChange?.(next);
   }
@@ -163,8 +189,8 @@ export function EpisodeLog({
           <LogFilters
             counts={counts}
             party={party}
-            types={types}
-            actors={actors}
+            types={liveTypes}
+            actors={liveActors}
             onToggleType={(kind) => setTypes((current) => toggled(current, kind))}
             onToggleActor={(id) => setActors((current) => toggled(current, id))}
             onClear={() => {
