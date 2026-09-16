@@ -126,3 +126,42 @@ episode are not listed.
 - No "mob" kind: ordinary mobs are not registry entities (the author's choice).
 - Portraits are optional; an initial on a kind-colored disc stands in.
 - The registry page loads every episode file; at tens of episodes this is a few small JSON fetches.
+
+---
+
+# Revision 2 (2026-09-16) — episode-scoped Registry views
+
+Author: "I want something like the registry to look at NPCs for a given episode or seen up to this
+episode vs tying it only to the event."
+
+## R2 User Story - Scope the Registry by episode (P1)
+
+**Acceptance Scenarios**
+1. **Given** `/registry`, **Then** a scope control offers **All episodes**, **Through Episode N**
+   (one entry per published episode), and **Only Episode N** (one per episode); default All.
+2. **Given** "Through Episode 2", **Then** only entities whose first appearance is in episode ≤ 2
+   are listed; facts revealed in episodes > 2 and appearances in episodes > 2 are omitted; a
+   "Defeated in episode N" line shows only when N ≤ 2; chip counts and section counts follow.
+3. **Given** "Only Episode 2", **Then** only entities that appear in episode 2 (any action) are
+   listed, grouped under that one section, with appearances limited to episode 2 and facts
+   revealed through episode 2 (so context from earlier episodes is kept, nothing later leaks).
+4. **Given** a scope, **Then** the URL carries it (`?scope=through-2` / `?scope=ep-2`; absent =
+   all) so the view is shareable; search, chips, and `#<id>` combine with it.
+5. **Given** an entity record on episode N's page, **When** the viewer activates "Open in the
+   Registry", **Then** the Registry opens at `?scope=through-N#<id>`.
+6. **Given** the Encountered strip on episode N's page, **Then** it offers "Registry for this
+   episode" → `/registry?scope=ep-N`.
+7. **Given** a scope that removes every entry, **Then** the empty state reads "The Registry has
+   no such entity." with the scope still selected.
+
+## R2 Requirements
+- **R2-FR-630**: A pure `scopeRegistry(entries, scope, episodeOrder)` trims entries, facts,
+  appearances, and defeated lines per scenarios 2–3.
+- **R2-FR-631**: Scope is URL state (`scope` search param), parsed leniently (unknown → all).
+- **R2-FR-632**: The record's Registry link and a new strip link carry the episode scope.
+- **R2-FR-633**: The control is a labelled `<select>` (System voice), keyboard-first, with the
+  episode title in each option.
+
+## R2 Success Criteria
+- **R2-SC-605**: Scoped views match hand-computed subsets for the sample data at every scope.
+- **R2-SC-606**: Links from the episode page land scoped and expanded; a11y stays 100.

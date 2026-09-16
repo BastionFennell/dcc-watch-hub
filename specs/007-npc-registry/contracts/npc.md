@@ -24,3 +24,11 @@
 
 ## Copy (System voice)
 `registryTitle` "System Registry", `registryKicker` "ENTITY RECORDS", `registryLead`, `registrySearch` "Search the Registry", `registryNoMatch` "The Registry has no such entity.", `registryMissing(n)`, `kindLabels { boss: 'Boss', vendor: 'Vendor / Guide', ally: 'Ally / Faction' }`, `labels.npc` "Entity", `feedText.npcMet/npcSeen/npcUpdate/npcDefeated`, `encounterTitle` "ENCOUNTERED", `encounterEmpty` "No entities tagged yet.", `npcKicker`, `npcFacts` "FACTS", `npcFactsEmpty` "The System has released nothing further.", `npcMoments` "MOMENTS", `npcDefeated` "DEFEATED", `npcActive` "ACTIVE", `npcOpenRegistry` "Open in the Registry", `tabNpcs` "NPCs", `registryEpisodeSection(n, title)`, `registryFactTag(n)` → `Ep N`.
+
+## Revision 2 — scope
+- `src/engine/registry.ts`: `type RegistryScope = { kind: 'all' } | { kind: 'through'; episodeId: number } | { kind: 'only'; episodeId: number }`;
+  `parseRegistryScope(param: string | null, show): RegistryScope` (`through-N`, `ep-N`; unknown/invalid → all);
+  `scopeParam(scope): string | null`; `scopeRegistry(entries, scope, show): RegistryEntry[]` (pure; uses `orderedEpisodeIds(show)` for ordering).
+- RegistryPage: `<select aria-label={copy.registryScope} data-testid="registry-scope">` with options `all`, then `through-N` per episode ("Through {title}"), then `ep-N` ("Only {title}"); reads/writes `?scope=` via `useSearchParams`; empty state `registry-empty` when nothing remains.
+- Episode page: `NpcRecord` link → `/registry?scope=through-<episodeId>#<id>` (new prop `episodeId`); `EncounterRail` gains `registryHref?: string` rendering a `Link` "Registry for this episode" (`data-testid="encounter-registry-link"`).
+- Copy: `registryScope` "Scope", `registryScopeAll` "All episodes", `registryScopeThrough(title)` → `Through {title}`, `registryScopeOnly(title)` → `Only {title}`, `encounterRegistryLink` "Registry for this episode".

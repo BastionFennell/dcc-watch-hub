@@ -36,3 +36,9 @@ description: "Task list for NPC encounters + System Registry"
 - [X] T715 README ("Entities and the Registry" section: data file, event/CSV row, strip, record, registry) + quickstart URLs verified against the samples; test count and bundle.
 - [X] T716 Headless Chrome: strip at 1440 (chips, tints, defeated), record panel, NPCs tab at 400 px, registry page at 1440 and 400 (sections, chips wrapping, expanded entry, hash landing); contrast of kind tints ≥ 3:1 / text ≥ 4.5:1; Lighthouse a11y 100 on `/registry` and `/ep/1`; axe on the record and registry.
 - [X] T717 Final: gates green; SC-601..604 under quickstart `## Results`; all tasks `[X]`.
+
+## Revision 2 — episode-scoped Registry (single wave)
+- [ ] T718 `src/engine/registry.ts`: `RegistryScope`, `parseRegistryScope`, `scopeParam`, `scopeRegistry` per contract; tests (through/only on the fixture + on `public/data` via the samples).
+- [ ] T719 RegistryPage: scope `<select>` bound to `?scope=`; index → `scopeRegistry` → search/chips; option labels with episode titles; tests (scope from URL, select changes URL, subsets/counts, empty).
+- [ ] T720 Episode page: `NpcRecord` `episodeId` prop and scoped link; `EncounterRail` `registryHref` link (desktop strip header and phone NPCs tab); page tests for both hrefs.
+- [ ] T721 README (scope paragraph), quickstart (scoped URLs), Results addendum; gates green; all ticked.
