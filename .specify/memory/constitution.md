@@ -97,8 +97,8 @@ to a single-page broadcast overlay.
 ### V. Scope Discipline
 - The active feature spec (`.specify/feature.json` → `specs/<feature>/spec.md`) defines scope.
   Items the handoff spec parks beyond the active feature MUST NOT be built, stubbed, or partially
-  wired, even "for later." As of 2026-09-15 (late) the active feature is 005 (`specs/005-episode-log`): the full broadcast
-  log with filters. v1, v2, 003, and 004 are merged. Still parked: stinger sounds, roster page,
+  wired, even "for later." As of 2026-09-16 the active feature is 006 (`specs/006-mobile-pass`): the phone layout — sticky
+  mini-player, tabs beneath it, bottom-sheet panels. v1, v2, 003, 004, and 005 are merged. Still parked: stinger sounds, roster page,
   tooltips/explanations inside the record, and all v3 items.
 - Optimizations not required to meet an acceptance item (memoization, virtualization, caching)
   MUST NOT be added. The spec explicitly says recompute from `initialState` on seek.
