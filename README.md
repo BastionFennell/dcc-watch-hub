@@ -5,7 +5,8 @@
 > frame ahead of it.
 
 A static watch-along site for the Dungeon Crawl Cast actual play show. One page per recap
-episode, one archive page, no backend, no accounts, no database.
+episode, one archive page, one System Registry of everyone the party has met, no backend, no
+accounts, no database.
 
 - **Stack**: Vite 6 + React 19 + TypeScript (strict) + react-router 7 + CSS Modules + Vitest 3.
 - **Runtime deps**: `react`, `react-dom`, `react-router`. Nothing else ships to the browser.
@@ -35,13 +36,19 @@ npm run dev -- --open  # opens the archive
 - The phone layout: the same <http://localhost:5180/ep/1?fake=1&t=580> in Chrome DevTools device
   mode at 400 × 800 — tabs under the timeline, scroll down for the mini-player, tap a crawler on
   the Party tab for the bottom sheet (see **On a phone** below).
+- Entities mid-episode: <http://localhost:5180/ep/1?fake=1&t=560> — the **Encountered** strip
+  under the party rail has three entities, the first struck through and tagged `DEFEATED`.
+- Straight to an entity record: <http://localhost:5180/ep/1?fake=1&t=560&panel=npc:the-hoarder>
+  (one fact released so far; `panel=npc:<id>` is DEV-only, like `panel=dossier:<id>`).
+- The System Registry: <http://localhost:5180/registry>, and deep into one entry:
+  <http://localhost:5180/registry#the-hoarder> (see **Entities and the Registry** below).
 
 ### Verify
 
 ```sh
 npm run typecheck      # tsc --noEmit
 npm run lint           # eslint .
-npm test               # vitest run  (663 tests)
+npm test               # vitest run  (787 tests)
 npm run build          # vite build + copies dist/index.html → dist/404.html
 npm run preview        # serves dist/ at http://localhost:4173/
 ```
@@ -86,17 +93,17 @@ with a populated feed and no network.
 
 | Path | What lives there |
 |------|------------------|
-| `src/engine/` | reducer, selectors, time formatting — pure, framework-free |
+| `src/engine/` | reducer, selectors, time formatting, the cross-episode registry index — pure, framework-free |
 | `src/data/` | schema types, guards/normalization, fetching, show ordering |
 | `src/playback/` | `TimeSource` interface, YouTube adapter, fake, `usePlayhead`, resume store + `useResume`, `?t=` deep links (`deepLink`, `useDeepLink`) |
 | `src/share/` | the moment URL, the share-sheet → clipboard → shown ladder, `useShare` |
 | `src/hooks/` | `usePanel` — the right rail's one-panel state machine; `useModalDialog` — the full record's focus trap; `useThrottledValue` — the log count's once-a-second cadence; `useIsPhone` + `useMiniPlayer` — the ≤ 900 px layout and the docked stage |
 | `src/prefs/` | viewer preferences that are not playback: `logOpen` (the broadcast log's open state) |
-| `src/components/` | stage, party rail, event feed, timeline, toast, minimap, header, rail panel, glance card, full record, dossier sections, floor map, resume card, share button + notice, broadcast log, phone tab strip |
-| `src/pages/` | `EpisodePage`, `HubPage`, `NotFoundPage` |
+| `src/components/` | stage, party rail, event feed, timeline, toast, minimap, header, rail panel, glance card, full record, dossier sections, floor map, resume card, share button + notice, broadcast log, phone tab strip, Encountered strip, entity record, registry entry |
+| `src/pages/` | `EpisodePage`, `HubPage`, `RegistryPage`, `NotFoundPage` |
 | `src/copy.ts` | **every** user-facing string, in the System's voice |
 | `src/styles/tokens.css` | the colour/spacing/type tokens from spec §6 |
-| `public/data/` | `show.json` + `ep{N}.json` (static, fetched at load) |
+| `public/data/` | `show.json` + `ep{N}.json` + `npcs.json` (static, fetched at load) |
 | `scripts/sheet-to-json.ts` | editor CSV → `ep{N}.json` converter |
 
 ---
@@ -433,6 +440,141 @@ or any resize that stays on one side of 900 px, does neither: the same stage ele
 selected tab survive — verified at 400 × 800 → 800 × 400 → 880 px. Only a desktop window being
 dragged across the breakpoint pays that cost, and it pays it once.
 
+## Entities and the Registry
+
+NPCs are the one thing the show has that the episode files could not hold: a boss met on floor 1
+comes back three episodes later, and a viewer wants both "who is this, right now" and "who is
+this, ever". So 007 (`specs/007-npc-registry/`) splits them in two, and the split *is* the
+spoiler policy:
+
+- **On the episode page, what you see is tied to the playhead.** The Encountered strip only lists
+  entities the broadcast has already met, and a record only shows the facts already released. Scrub
+  back and both shrink. This is the same rule as every other overlay surface (constitution I).
+- **The System Registry is not tied to the playhead, or to this device at all.** It lists every
+  entity that appears in any **published** episode, ordered by the episode that introduced it, with
+  every fact any published episode has released. Opening `/registry` before watching episode 3 will
+  tell you how episode 3 ends for The Tollkeeper. That is deliberate: a glossary you have to earn is
+  not a glossary. Nothing device-specific gates it — no "visited" list, no local storage.
+
+The line between them is **published**, not **watched**: an entity in `npcs.json` that no episode
+in `show.json` mentions is not listed at all.
+
+### The registry file
+
+`show.json` gains one optional field, `registryUrl` (`"/data/npcs.json"` in the sample). Without
+it there is no strip, no NPCs tab, no header link and no `/registry` route — the episode page
+works exactly as it did, and `npc` events still show in the feed under their raw id.
+
+```jsonc
+{
+  "entities": [
+    {
+      "id": "the-hoarder",              // stable; the anchor in /registry#<id>
+      "name": "The Hoarder",
+      "kind": "boss",                   // boss | vendor | ally — exactly these three
+      "floor": 1,                       // optional
+      "portrait": "/img/npcs/the-hoarder.svg",  // optional; an initial disc stands in
+      "aliases": ["Hoarder", "The Crate King"], // optional; searched with the name
+      "intro": "Something in Quadrant C has been stacking crates into walls…",
+      "facts": [                        // 0..n; revealed one at a time by `unlock`
+        { "id": "lair", "text": "It nests behind the crate wall it builds…" },
+        { "id": "weakness", "text": "It cannot see red." }
+      ]
+    }
+  ]
+}
+```
+
+`intro` is the **spoiler-free** line: it is shown the moment an entity is met, so it must not
+contain anything an episode later reveals. Everything that *is* a reveal belongs in `facts`, which
+are released by name. Malformed entities and facts are dropped with a console warning rather than
+breaking the page (`normalizeRegistry`), and the JSON Schema is
+`specs/007-npc-registry/contracts/npcs.schema.json`.
+
+Kind decides the tint everywhere: **boss** `--danger` (red), **vendor / guide** `--amber-fg`
+(amber), **ally / faction** `--marker-levelup` (green). There is no "mob" kind — ordinary mobs are
+not registry entities.
+
+### The `npc` event and its CSV row
+
+```jsonc
+{ "t": 380, "type": "npc", "id": "the-hoarder", "action": "update",
+  "unlock": ["lair"], "note": "It nests behind the wall it builds." }
+```
+
+`action` is one of `met` (enters the broadcast), `seen` (sighted), `update` (the System amends the
+file — this is what carries `unlock`) and `defeated`. `unlock` names fact ids on that entity;
+`note` is the System's line for the moment. Any action creates the encounter, so a `seen` before a
+`met` still counts.
+
+In the editor's sheet it is one row — field2 carries the action and, after a colon, the facts it
+releases:
+
+| type | field1 | field2 | field3 |
+|------|--------|--------|--------|
+| `npc` | entity id | `action`, optionally `action:fact-id,fact-id` | note |
+
+```csv
+2:08,npc,,the-hoarder,met,Something is stacking crates in Quadrant C.
+2:30,npc,,the-hoarder,update:lair,It nests behind the wall it builds.
+3:46,npc,,grull-rep,seen,A window opens in the wall. It is open for business.
+```
+
+The converter cannot check ids on its own — the registry is show-level data it is not given.
+Pass `--registry` and it will:
+
+```sh
+npm run sheet-to-json -- scripts/samples/ep1-broken.csv --episode 1 --duration 240 \
+  --initial-state scripts/samples/ep1.initial.json \
+  --registry public/data/npcs.json --out /tmp/ep1-broken.json
+# WARN row 16: unknown entity "the-listener-below" (not in the registry)
+# WARN row 17: unknown fact "lantern" on entity "the-hoarder"
+```
+
+Both are **warnings, not errors**: the row is still written. An unfiled entity is a real editorial
+case — the feed says "the-listener-below enters the broadcast" and the strip simply has nothing to
+file, which is what `ep1.json` at 4:05 does on purpose. Without `--registry` no id is checked at all.
+
+### The Encountered strip and the entity record
+
+Under the party rail (and as a fifth **NPCs** tab on phones, a two-column grid) sits
+**ENCOUNTERED**: one chip per entity met so far, newest first, each a portrait or a kind-tinted
+initial disc, the name, and the kind in mono caps. Defeated strikes the name through and adds a
+red `DEFEATED` tag. Before the first `npc` event the strip says "No entities tagged yet." The
+chips are panel triggers like the crawler frames — same `aria-expanded` / `aria-controls`, same
+focus return when the panel closes.
+
+Tapping one opens the **entity record** in the right rail (a bottom sheet on a phone): the
+kind-tinted header with portrait, name, kind and floor; the intro; `DEFEATED` or `ACTIVE`;
+**FACTS** — only those unlocked at or before the playhead, "The System has released nothing
+further." when there are none; and **MOMENTS**, every `npc` event about this entity so far,
+newest first, each one a seek control with the same share button the feed rows carry. Seeking
+back takes facts away, and seeking before the entity was met closes the record outright, because
+there is nothing left to show.
+
+At the bottom, **Open in the Registry** — a plain link to `/registry#<id>`. It is the one way out
+of the episode, and unlike an episode link it carries no playback flags.
+
+### The System Registry page
+
+`/registry`, linked from the header (desktop cluster and phone menu) whenever the show has a
+registry. It loads `show.json`, `npcs.json` and **every** episode file in parallel and builds the
+index itself, so it needs no new data and no build step. If one episode file fails, the rest still
+render and the page says so ("1 recap episode could not be indexed.").
+
+- **Sections, in broadcast order**, one per episode that introduces somebody, headed with that
+  episode's title and a count. An entity is filed under the episode it *first* appears in, however
+  many times it comes back.
+- **Search** over name **and** aliases, case-insensitive substring — "crate king" finds The
+  Hoarder. No match: "The Registry has no such entity."
+- **Kind chips** with counts, combining as any-of: Boss + Ally shows both.
+- **Expanding an entry** reveals its **FACTS**, each tagged `Ep N` with the episode that first
+  released it (a fact no published episode unlocks is not listed), and its **APPEARANCES** —
+  every moment, as `Episode N — Title · 5:30 · AMENDED`, linking to `/ep/N?t=330`. A defeated
+  entity closes with "Defeated in episode N."
+- **`/registry#<id>`** opens that entry expanded and scrolled clear of the sticky header, which is
+  where "Open in the Registry" lands.
+
 ## Authoring episode data
 
 The editor logs events in a Google Sheet during the edit pass and exports CSV. Header row
@@ -463,6 +605,7 @@ required; columns are `timecode,type,actor,field1,field2,field3`
 | `equip` | slot (`head`/`torso`/`arms`/`hands`/`legs`/`feet`/`accessory`) | item | – |
 | `unequip` | slot (as above) | item (accessory only; optional) | – |
 | `note` | text | – | – |
+| `npc` | entity id | `action` (`met`/`seen`/`update`/`defeated`), optionally `action:fact-id,fact-id` | note |
 
 Convert:
 
@@ -470,8 +613,13 @@ Convert:
 npm run sheet-to-json -- path/to/ep4.csv \
   --episode 4 --duration 5400 \
   --initial-state scripts/samples/ep1.initial.json \
+  --registry public/data/npcs.json \
   --out public/data/ep4.json
 ```
+
+`--registry` is optional and names the show's `npcs.json`; give it and every `npc` row's entity
+id and fact ids are checked (warnings only — see **Entities and the Registry** above). Without
+it no id is checked, because the registry is show-level data the converter is not otherwise given.
 
 `--initial-state` is a JSON file holding the episode's `initialState` (`party` and `map`).
 Each crawler there may carry the optional sheet fields the dossier renders — `race`, `pronouns`,
@@ -483,7 +631,8 @@ The converter sorts events by `t`, normalizes them, and prints a summary such as
 `wrote public/data/ep4.json (42 events, 2 warnings)`. **Warnings still produce output** (unknown
 actor, impossible HP, timecode past `--duration`, unknown type, bad `chapter.kind`, an
 accessory `unequip` with no item — the last one worn comes off, a legacy `rank` row with
-`crawler` in field1 — the rank is read out of field2); **errors write nothing and
+`crawler` in field1 — the rank is read out of field2, and — only with `--registry` — an `npc`
+row naming an entity or a fact the registry does not have); **errors write nothing and
 exit 1** (unparseable timecode, missing header column, non-numeric numeric field, empty required
 field, an `equip`/`unequip` slot that is not one of the seven, a `rank` row with `party` in
 field1 — DCC has no party rank).
@@ -557,8 +706,36 @@ A crawler's `art` field names one of these; the sample data gives art to two cra
 episode so the bust fallback stays visible. Real art may be any aspect ratio — the column
 contains it rather than cropping it.
 
+**Entity portraits** — two of the eight entities have one; the rest fall back to a kind-tinted
+initial disc, which is the intended default:
+
+- `public/img/npcs/the-hoarder.svg` (The Hoarder — boss)
+- `public/img/npcs/grull-rep.svg` (Grull Industries Representative — vendor)
+
+Same rule as the crawler busts: keep the filenames or update each entity's `portrait` path in
+`public/data/npcs.json`. They render at 32 px in the strip and 48 px in the record, so square art
+crops best.
+
+**`public/data/npcs.json`** — all eight entities are invented, written to cover the three kinds
+and the sample episodes, and every line of them is placeholder copy:
+
+| Entity | Kind | Filed under |
+|--------|------|-------------|
+| The Hoarder | boss | Episode 1 (defeated there; amended again in episode 2) |
+| Grull Industries Representative | vendor | Episode 1 (returns in episode 2) |
+| Quartermaster Vel | ally | Episode 1 |
+| Mother of Pipes | boss | Episode 2 (defeated there) |
+| The Signal Choir | ally | Episode 2 |
+| The Tollkeeper | boss | Episode 3 (defeated there) |
+| The Lamplighter | ally | Episode 3 |
+| Ghaza Provisioner | vendor | Episode 3 |
+
+`ep1.json` also carries one **deliberately unfiled** id, `the-listener-below` at 4:05: it proves
+the feed still names an entity the registry has never heard of, and that the strip files nothing
+for it. Keep a case like it if you replace the samples.
+
 **Also placeholder**: `public/img/dcc-mark.svg` and `public/favicon.svg` (the circular "DC" mark),
-and the event logs in `public/data/ep1.json`, `ep2.json`, `ep3.json` — 57 / 47 / 47 invented
+and the event logs in `public/data/ep1.json`, `ep2.json`, `ep3.json` — 63 / 53 / 53 invented
 events, written to exercise every event type. Regenerate them from real sheets with `sheet-to-json`.
 
 ---
@@ -589,15 +766,18 @@ Measured on the production build (`npm run build`, Node 20.9.0):
 
 | Asset | Raw | Gzipped |
 |-------|-----|---------|
-| `dist/assets/index-*.js` | 369.2 kB | **116.3 kB** |
-| `dist/assets/index-*.css` | 59.2 kB | 10.6 kB |
-| `dist/index.html` | 0.7 kB | 0.4 kB |
+| `dist/assets/index-*.js` | 391.02 kB | **122.42 kB** |
+| `dist/assets/index-*.css` | 73.93 kB | 12.59 kB |
+| `dist/index.html` | 0.72 kB | 0.42 kB |
 
 That is React 19 + react-router 7 + the whole app — v1 plus the v2 panels, dossier, floor map
 and resume, plus the glance card, full record, deep links, share, the broadcast log and the
-mobile pass — comfortably under the 150 kB gzipped budget. Deep links and share cost ~1.9 kB
-gzipped of JS; the broadcast log cost 2.1 kB gzipped of JS and 0.6 kB of CSS; the mobile pass
-(mini-player, tabs, bottom sheet) cost 2.2 kB gzipped of JS and 0.8 kB of CSS. None of the four
+mobile pass, plus the NPC encounters and the System Registry — comfortably under the 150 kB
+gzipped budget. Deep links and share cost ~1.9 kB gzipped of JS; the broadcast log cost 2.1 kB
+gzipped of JS and 0.6 kB of CSS; the mobile pass (mini-player, tabs, bottom sheet) cost 2.2 kB
+gzipped of JS and 0.8 kB of CSS; entities and the Registry (strip, record, NPCs tab, the
+`/registry` page and the cross-episode index) cost 6.1 kB gzipped of JS and 2.0 kB of CSS —
+the largest single feature since v2, and the only one that adds a page. None of the five
 adds a dependency.
 
 Lighthouse 11.7.1, desktop preset, against `npm run preview` with the real YouTube embed loading:
@@ -607,6 +787,16 @@ record in `specs/003-crawler-record/quickstart.md` → Results, again for deep l
 `specs/004-deep-links/quickstart.md` → Results, and again with the broadcast log open in
 `specs/005-episode-log/quickstart.md` → Results (**100 / 100** either side of the log's toggle,
 and the log adds no scored audit of its own).
+
+`/registry` was measured the same way for 007: **performance 100, accessibility 100,
+best-practices 100** on the desktop preset (FCP 0.4 s, LCP 0.6 s, TBT 0 ms, CLS 0), and
+**performance 98, accessibility 100** on the mobile preset (FCP 1.5 s, LCP 2.3 s, TBT 0 ms,
+CLS 0). It fetches `show.json`, `npcs.json` and every episode file, and still paints in under half
+a second on desktop, because those are four small JSON files behind one render. `/ep/1` re-scored
+**performance 100, accessibility 100** with the Encountered strip and an entity record on the page.
+axe-core 4.13 with every rule enabled finds **no violations** on the Encountered strip, the entity
+record (rail and phone sheet), the NPCs tab, or `/registry` collapsed and expanded, at 1440 × 900
+and 400 × 800. Details in `specs/007-npc-registry/quickstart.md` → Results.
 
 The **mobile** preset on the same build scores `/ep/1` **accessibility 100, performance 99**
 (FCP 1.5 s, LCP 2.0 s, TBT 0 ms, CLS 0 — the mini-player's placeholder is what keeps that zero).
@@ -651,8 +841,13 @@ Read in this order:
    plus `contracts/dialog.md`.
 6. `specs/004-deep-links/` — `?t=` deep links and "Share this moment". Same layout, plus
    `contracts/deep-link.md`.
-7. `specs/005-episode-log/` — the active feature: the broadcast log under the rail, its filters,
-   follow control and open-state preference. Same layout, plus `contracts/log.md`.
+7. `specs/005-episode-log/` — the broadcast log under the rail, its filters, follow control and
+   open-state preference. Same layout, plus `contracts/log.md`.
+8. `specs/006-mobile-pass/` — the phone composition: the docked mini-player, the four tabs and
+   the bottom sheets, all under the existing 900 px breakpoint.
+9. `specs/007-npc-registry/` — the active feature: `npc` events, the Encountered strip and the
+   entity record on the episode page, and the System Registry at `/registry`. Same layout, plus
+   `contracts/npc.md` and `contracts/npcs.schema.json`.
 
 Three rules bite most often while editing:
 
@@ -671,8 +866,10 @@ Parked, from the handoff spec §8 and constitution 1.1.0. Do not build, stub, or
 these — not even "for later". In particular, do not *tease* them: no hover affordances, pointer
 cursors, or tooltips on elements that do nothing. The interactive triggers are exactly: crawler
 frames (dossier), the minimap badge (floor map), the timeline, the resume card's two buttons,
-every feed row (seek, 003), the share controls in the caption row and on each feed row (004), and
-the broadcast log's own bar, filter chips, Clear, rows and follow control (005).
+every feed row (seek, 003), the share controls in the caption row and on each feed row (004),
+the broadcast log's own bar, filter chips, Clear, rows and follow control (005), the phone tab
+strip (006), and the Encountered chips, the entity record's moments and registry link, and the
+registry page's search, kind chips, entry disclosures and appearance links (007).
 
 **Shipped in v2** (the four items below left the fence; see "Lean-forward (v2)" above)
 

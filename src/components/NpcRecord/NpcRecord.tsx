@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { initialOf } from '../../engine/initial';
 import type { NpcRecordView } from '../../engine/selectors';
 import { copy } from '../../copy';
 import { FeedItemView } from '../EventFeed/FeedItem';
@@ -29,10 +30,6 @@ function Separator() {
 }
 
 /** The disc's stand-in when an entity has no portrait (spec Assumptions). */
-function initialOf(name: string): string {
-  return name.trim().charAt(0).toUpperCase();
-}
-
 /**
  * The entity record (FR-611, research R4): the glance card's vocabulary applied
  * to an entity — a kind-tinted header, the spoiler-free intro, its status, the
@@ -86,14 +83,13 @@ export function NpcRecord({ record, onSeek, onShare }: NpcRecordProps) {
         {record.intro}
       </p>
 
-      {/* STATUS: one line, and the same word the strip's tag uses (research R4). */}
-      <p
-        className={styles.status}
-        data-testid="npc-status"
-        data-defeated={defeated ? 'true' : undefined}
-      >
-        {defeated ? copy.npcDefeated : copy.npcActive}
-      </p>
+      {/* STATUS appears only when this episode's log has defeated the entity: overlay state is
+          per episode, so an "active" line could contradict an earlier episode's outcome. */}
+      {defeated ? (
+        <p className={styles.status} data-testid="npc-status" data-defeated="true">
+          {copy.npcDefeated}
+        </p>
+      ) : null}
 
       <section className={styles.block} data-testid="npc-facts">
         <h4 className={styles.blockLabel}>{copy.npcFacts}</h4>

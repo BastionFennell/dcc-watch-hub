@@ -89,7 +89,7 @@ describe('NpcRecord', () => {
 
   it('turns the status line over once the entity is defeated', () => {
     const { rerender } = renderRecord(recordAt(190));
-    expect(screen.getByTestId('npc-status')).toHaveTextContent(copy.npcActive);
+    expect(screen.queryByTestId('npc-status')).toBeNull();
     expect(screen.getByTestId('npc-record')).not.toHaveAttribute('data-defeated');
 
     rerender(

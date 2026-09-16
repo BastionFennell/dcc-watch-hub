@@ -117,8 +117,20 @@ describe('the System Registry', () => {
     await waitForIndex();
 
     const section = screen.getByTestId('registry-section-1');
+    // The sample titles already carry "Episode N — ", so the bar must not say it
+    // twice (007 fix).
     expect(within(section).getByRole('heading', { level: 2 })).toHaveTextContent(
-      copy.registryEpisodeSection(1, makeShow().episodes[0].title),
+      'Episode 1 — The World Dungeon',
+    );
+    expect(copy.registryEpisodeSection(1, makeShow().episodes[0].title)).toBe(
+      'Episode 1 — The World Dungeon',
+    );
+    expect(copy.registryEpisodeSection(4, 'The Meat District')).toBe(
+      'Episode 4 — The Meat District',
+    );
+    // "Episode 10 — …" must not be mistaken for episode 1's own prefix.
+    expect(copy.registryEpisodeSection(1, 'Episode 10 — Deeper')).toBe(
+      'Episode 1 — Episode 10 — Deeper',
     );
     expect(within(section).getByText(copy.registryCount(3))).toBeInTheDocument();
 

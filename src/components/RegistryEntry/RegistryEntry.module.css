@@ -18,6 +18,12 @@
   border: var(--border-hairline);
   border-radius: var(--radius-lg);
   overflow: hidden;
+  /*
+   * `/registry#<id>` scrolls the entry to the top of the viewport, where the
+   * sticky header would otherwise cover it: hold it clear of the header plus
+   * the page gutter (007 fix, US2 scenario 5).
+   */
+  scroll-margin-top: calc(var(--header-h) + var(--space-6));
 }
 
 /* The kind strip: the same three tints the disc uses, as the entry's spine. */

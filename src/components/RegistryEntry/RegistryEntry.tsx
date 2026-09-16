@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { initialOf } from '../../engine/initial';
 import type { RegistryEntry as RegistryEntryModel } from '../../engine/registry';
 import { formatTime } from '../../engine/time';
 import { IconChevronRight } from '../icons';
@@ -17,10 +18,6 @@ export interface RegistryEntryProps {
 }
 
 /** The disc's stand-in when an entity has no portrait (spec Assumptions). */
-function initialOf(name: string): string {
-  return name.trim().charAt(0).toUpperCase();
-}
-
 /**
  * One glossary entry: the spoiler-free face of an entity, and a disclosure onto
  * everything the published archive has released about it (FR-620).

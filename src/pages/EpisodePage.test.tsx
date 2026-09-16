@@ -1953,11 +1953,19 @@ describe('EpisodePage', () => {
     // 185 unlocks the weakness, 122 the lair: seeking back takes each away.
     seek(150);
     expect(factIds()).toEqual(['lair']);
-    expect(screen.getByTestId('npc-status')).toHaveTextContent(copy.npcActive);
+    expect(screen.queryByTestId('npc-status')).toBeNull();
 
     seek(120);
     expect(factIds()).toEqual([]);
     expect(screen.getByTestId('npc-facts-empty')).toHaveTextContent(copy.npcFactsEmpty);
+  });
+
+  it('opens the entity record on load from the DEV `?panel=npc:` flag', async () => {
+    await mountEpisode('/ep/1?fake=1&t=200&panel=npc:hoarder');
+
+    await waitFor(() =>
+      expect(screen.getByTestId('npc-record')).toHaveAttribute('data-npc', 'hoarder'),
+    );
   });
 
   it('says nothing further about an entity whose file has no facts', async () => {

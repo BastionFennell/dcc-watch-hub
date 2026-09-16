@@ -95,7 +95,8 @@ export function EpisodePage() {
   const [record, setRecord] = useState<string | null>(null);
   /** The "Open full record" button, so the dialog can hand focus back (FR-210). */
   const recordTrigger = useRef<HTMLElement | null>(null);
-  // DEV only: `?panel=dossier:<id>` or `?panel=map` opens a panel on load (screenshots, manual QA).
+  // DEV only: `?panel=dossier:<id>`, `?panel=npc:<id>` or `?panel=map` opens a panel on
+  // load (screenshots, manual QA).
   const [searchParams] = useSearchParams();
   const devPanel = import.meta.env.DEV ? searchParams.get('panel') : null;
   const devRecord = import.meta.env.DEV && searchParams.get('record') === '1';
@@ -105,6 +106,7 @@ export function EpisodePage() {
     if (!devPanel || !partyLoaded) return;
     if (devPanel === 'map') panelApi.open({ kind: 'map' }, null);
     else if (devPanel.startsWith('dossier:')) panelApi.open({ kind: 'dossier', crawlerId: devPanel.slice(8) }, null);
+    else if (devPanel.startsWith('npc:')) panelApi.open({ kind: 'npc', npcId: devPanel.slice(4) }, null);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- open once per episode load
   }, [devPanel, partyLoaded, meta?.id]);
 

@@ -456,7 +456,19 @@ export const copy = {
   registryNoMatch: 'The Registry has no such entity.',
   registryMissing: (n: number) =>
     `${n} recap episode${n === 1 ? '' : 's'} could not be indexed.`,
-  registryEpisodeSection: (n: number, title: string) => `Episode ${n} — ${title}`,
+  /**
+   * Titles a registry section. The author's episode titles usually already read
+   * "Episode N — …", so prefixing unconditionally said it twice; the digits must
+   * match exactly, or "Episode 10 — …" would swallow the prefix for episode 1.
+   */
+  registryEpisodeSection: (n: number, title: string) => {
+    const prefix = `episode ${n}`;
+    const lower = title.toLowerCase();
+    const next = lower.charAt(prefix.length);
+    return lower.startsWith(prefix) && !(next >= '0' && next <= '9')
+      ? title
+      : `Episode ${n} — ${title}`;
+  },
   /** Tags a fact with the episode that released it. */
   registryFactTag: (n: number) => `Ep ${n}`,
 

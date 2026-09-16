@@ -1,4 +1,5 @@
 import type { Encounter } from '../../engine/selectors';
+import { initialOf } from '../../engine/initial';
 import { copy } from '../../copy';
 import styles from './EncounterRail.module.css';
 
@@ -20,10 +21,6 @@ export interface EncounterRailProps {
 }
 
 /** The disc's stand-in when an entity has no portrait (spec Assumptions). */
-function initialOf(name: string): string {
-  return name.trim().charAt(0).toUpperCase();
-}
-
 /**
  * One chip: who the party has met, and the trigger for that entity's record.
  * Mirrors `CrawlerFrame`'s semantics exactly — a real `<button>` carrying

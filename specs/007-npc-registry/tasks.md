@@ -33,6 +33,6 @@ description: "Task list for NPC encounters + System Registry"
 - [X] T714 Tests: `RegistryPage.test.tsx` (stubbed fetch for show/registry/episodes: sections, search incl. alias, chips, expand, hash, missing episode notice, empty); `App.test.tsx` link presence/absence.
 
 ## Phase 3: Polish
-- [ ] T715 README ("Entities and the Registry" section: data file, event/CSV row, strip, record, registry) + quickstart URLs verified against the samples; test count and bundle.
-- [ ] T716 Headless Chrome: strip at 1440 (chips, tints, defeated), record panel, NPCs tab at 400 px, registry page at 1440 and 400 (sections, chips wrapping, expanded entry, hash landing); contrast of kind tints ≥ 3:1 / text ≥ 4.5:1; Lighthouse a11y 100 on `/registry` and `/ep/1`; axe on the record and registry.
-- [ ] T717 Final: gates green; SC-601..604 under quickstart `## Results`; all tasks `[X]`.
+- [X] T715 README ("Entities and the Registry" section: data file, event/CSV row, strip, record, registry) + quickstart URLs verified against the samples; test count and bundle.
+- [X] T716 Headless Chrome: strip at 1440 (chips, tints, defeated), record panel, NPCs tab at 400 px, registry page at 1440 and 400 (sections, chips wrapping, expanded entry, hash landing); contrast of kind tints ≥ 3:1 / text ≥ 4.5:1; Lighthouse a11y 100 on `/registry` and `/ep/1`; axe on the record and registry.
+- [X] T717 Final: gates green; SC-601..604 under quickstart `## Results`; all tasks `[X]`.
