@@ -44,6 +44,12 @@ export interface FeedItem {
   label: string;
   text: string;
   actorName?: string;
+  /**
+   * The crawler the event belongs to, when it has one. The display name is for
+   * reading; this is what the log's crawler filter matches on (005 FR-402), so a
+   * rename in the data never changes which rows a filter keeps.
+   */
+  actorId?: string;
   /** Sponsor only. */
   durationSec?: number;
 }
@@ -216,9 +222,18 @@ function toFeedItem(
   party: PartyNames,
 ): FeedItem | null {
   const label = copy.labels[event.type];
+  const actorId = 'actor' in event ? event.actor : undefined;
   const actorName = 'actor' in event ? nameOf(party, event.actor) : undefined;
   const who = actorName ?? '';
-  const base = { id, t: event.t, kind: event.type, label } as const;
+  const base = {
+    id,
+    t: event.t,
+    kind: event.type,
+    label,
+    // Only actor events carry the key at all, so a party-scoped row is
+    // unambiguously "no crawler" to the log's filter (005 FR-402).
+    ...(actorId === undefined ? {} : { actorId }),
+  } as const;
 
   switch (event.type) {
     case 'system_message':
@@ -647,4 +662,73 @@ export function crawlerGlance(dossier: Dossier): Glance {
     ...(lastAchievement === undefined ? {} : { latestAchievement: lastAchievement }),
     recentHistory: dossier.history.slice(0, GLANCE_HISTORY_ROWS),
   };
+}
+
+/* ---------------------------------------------------- 005 broadcast log */
+
+/** Per-chip elapsed counts behind the log's filters (005 FR-402). */
+export interface LogCounts {
+  total: number;
+  byType: Partial<Record<EventType, number>>;
+  byActor: Record<string, number>;
+}
+
+/** What the viewer has selected. Empty sets mean "everything" (005 FR-402). */
+export interface LogFilters {
+  types: ReadonlySet<EventType>;
+  actors: ReadonlySet<string>;
+}
+
+/**
+ * Every elapsed known event, oldest first and uncapped — the broadcast log
+ * (005 FR-401). The feed is a rolling eight-item window read newest-first; the
+ * log is the whole transcript read top-down, so it is its own loop rather than
+ * `feedItems` reversed: nothing here may ever be capped.
+ *
+ * Events arrive stable-sorted by `t` (`sortEvents`), so ties keep file order.
+ */
+export function logItems(
+  events: readonly AnyEvent[],
+  t: number,
+  party: PartyNames = [],
+): FeedItem[] {
+  const items: FeedItem[] = [];
+  for (let i = 0; i < events.length; i += 1) {
+    const event = events[i];
+    if (event.t > t) continue;
+    if (!isKnownEvent(event)) continue;
+    const item = toFeedItem(event, i, party);
+    if (item) items.push(item);
+  }
+  return items;
+}
+
+/**
+ * How many elapsed rows each chip would match, counted on the *unfiltered*
+ * elapsed log so the viewer can see what else is on offer (research R3).
+ */
+export function logCounts(items: readonly FeedItem[]): LogCounts {
+  const byType: Partial<Record<EventType, number>> = {};
+  const byActor: Record<string, number> = {};
+  for (const item of items) {
+    byType[item.kind] = (byType[item.kind] ?? 0) + 1;
+    if (item.actorId !== undefined) byActor[item.actorId] = (byActor[item.actorId] ?? 0) + 1;
+  }
+  return { total: items.length, byType, byActor };
+}
+
+/**
+ * Type-any AND crawler-any (005 FR-402). An empty set is no constraint; once a
+ * crawler is selected, party-scoped rows (system, sponsor, chapter, map, note)
+ * belong to nobody and drop out.
+ */
+export function applyLogFilters(
+  items: readonly FeedItem[],
+  { types, actors }: LogFilters,
+): FeedItem[] {
+  return items.filter(
+    (item) =>
+      (types.size === 0 || types.has(item.kind)) &&
+      (actors.size === 0 || (item.actorId !== undefined && actors.has(item.actorId))),
+  );
 }

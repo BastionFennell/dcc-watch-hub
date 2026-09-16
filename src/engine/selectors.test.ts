@@ -10,6 +10,9 @@ import {
   elapsed,
   feedItems,
   hpSegments,
+  applyLogFilters,
+  logCounts,
+  logItems,
   mapCells,
   mapLabels,
   partyFrames,
@@ -21,7 +24,8 @@ import { reduceTo } from './reducer';
 import { copy } from '../copy';
 import { formatTime } from './time';
 import { normalizeEpisode } from '../data/validate';
-import type { EpisodeData } from '../data/types';
+import type { EpisodeData, EventType } from '../data/types';
+import { isKnownEvent } from '../data/types';
 import { makeEpisode, makeEpisodeRaw } from '../test/fixtures';
 
 const episode = makeEpisode();
@@ -689,5 +693,179 @@ describe('crawlerGlance — equipped and latest achievement', () => {
     expect(glanceAt(59).latestAchievement).toBeUndefined();
     expect(glanceAt(59)).not.toHaveProperty('latestAchievement');
     expect(glanceAt(62, 'stuntman').latestAchievement?.title).toBe('Stunt Double');
+  });
+});
+
+/* ---------------------------------------------------- 005 broadcast log */
+
+const NO_FILTER = { types: new Set<EventType>(), actors: new Set<string>() };
+
+describe('logItems', () => {
+  it('is empty at t = 0', () => {
+    expect(logItems(episode.events, 0, party)).toEqual([]);
+  });
+
+  it('reads oldest first — the transcript order, not the feed order', () => {
+    const items = logItems(episode.events, 62, party);
+    expect(items.map((i) => i.t)).toEqual([12, 30, 45, 60, 61, 62]);
+    expect(items.map((i) => i.t)).toEqual([...items.map((i) => i.t)].sort((a, b) => a - b));
+  });
+
+  it('keeps file order for events sharing a second', () => {
+    const items = logItems(episode.events, 150, party);
+    const at150 = items.filter((i) => i.t === 150);
+    expect(at150.map((i) => i.kind)).toEqual(['inventory', 'rank']);
+    // Ids are event indices, so file order is ascending ids.
+    expect(at150[0].id).toBeLessThan(at150[1].id);
+  });
+
+  it('is uncapped: it holds every elapsed known event, not the feed’s eight', () => {
+    const items = logItems(episode.events, 240, party);
+    const known = episode.events.filter((event) => isKnownEvent(event));
+    expect(items).toHaveLength(known.length);
+    expect(items.length).toBeGreaterThan(8);
+    expect(feedItems(episode.events, 240, 8, party)).toHaveLength(8);
+  });
+
+  it('never includes an unknown event type', () => {
+    const items = logItems(episode.events, 240, party);
+    const unknownIds = episode.events
+      .map((event, index) => (event.type === 'unknown' ? index : -1))
+      .filter((index) => index !== -1);
+    expect(unknownIds.length).toBeGreaterThan(0);
+    expect(items.some((item) => unknownIds.includes(item.id))).toBe(false);
+  });
+
+  it('never shows an event before its t (checked at every event boundary)', () => {
+    for (const event of episode.events) {
+      const before = logItems(episode.events, event.t - 0.001, party);
+      const at = logItems(episode.events, event.t, party);
+      expect(before.some((i) => i.t === event.t)).toBe(false);
+      expect(before.every((i) => i.t <= event.t - 0.001)).toBe(true);
+      expect(at.every((i) => i.t <= event.t)).toBe(true);
+      if (event.type !== 'unknown') {
+        expect(at.some((i) => i.t === event.t)).toBe(true);
+      }
+      // …and the row set is exactly the elapsed known events, both ways (SC-401).
+      expect(at.map((i) => i.id)).toEqual(
+        episode.events
+          .map((e, index) => (e.t <= event.t && isKnownEvent(e) ? index : -1))
+          .filter((index) => index !== -1),
+      );
+    }
+  });
+
+  it('shrinks on a backward seek', () => {
+    const late = logItems(episode.events, 200, party);
+    const early = logItems(episode.events, 62, party);
+    expect(early.length).toBeLessThan(late.length);
+    expect(late.slice(0, early.length).map((i) => i.id)).toEqual(early.map((i) => i.id));
+  });
+
+  it('carries the actor id beside the display name, and nothing for party-scoped rows', () => {
+    const items = logItems(episode.events, 200, party);
+    const loot = items.find((i) => i.t === 30);
+    expect(loot?.actorId).toBe('harry');
+    expect(loot?.actorName).toBe('Harry');
+    const system = items.find((i) => i.kind === 'system_message');
+    expect(system).not.toHaveProperty('actorId');
+    expect(items.find((i) => i.kind === 'map_reveal')).not.toHaveProperty('actorId');
+    expect(items.find((i) => i.kind === 'sponsor')).not.toHaveProperty('actorId');
+  });
+});
+
+describe('logCounts', () => {
+  it('counts the elapsed log by type and by crawler', () => {
+    const items = logItems(episode.events, 200, party);
+    const counts = logCounts(items);
+
+    expect(counts.total).toBe(items.length);
+    expect(counts.byType.achievement).toBe(3);
+    expect(counts.byType.rank).toBe(3);
+    expect(counts.byType.system_message).toBe(1);
+    expect(counts.byActor.harry).toBe(items.filter((i) => i.actorId === 'harry').length);
+    expect(counts.byActor.xo).toBe(items.filter((i) => i.actorId === 'xo').length);
+    // Party-scoped rows belong to no crawler, so the actor counts do not sum to the total.
+    const actorTotal = Object.values(counts.byActor).reduce((sum, n) => sum + n, 0);
+    expect(actorTotal).toBeLessThan(counts.total);
+  });
+
+  it('omits types and crawlers with nothing elapsed yet', () => {
+    const counts = logCounts(logItems(episode.events, 12, party));
+    expect(counts.total).toBe(1);
+    expect(counts.byType.system_message).toBe(1);
+    expect(counts.byType.achievement).toBeUndefined();
+    expect(counts.byActor).toEqual({});
+  });
+
+  it('is empty for an empty log', () => {
+    expect(logCounts([])).toEqual({ total: 0, byType: {}, byActor: {} });
+  });
+});
+
+describe('applyLogFilters', () => {
+  const items = logItems(episode.events, 200, party);
+
+  it('returns everything when nothing is selected', () => {
+    expect(applyLogFilters(items, NO_FILTER)).toEqual(items);
+  });
+
+  it('keeps any selected type', () => {
+    const achievements = applyLogFilters(items, {
+      types: new Set<EventType>(['achievement']),
+      actors: new Set<string>(),
+    });
+    expect(achievements).toHaveLength(3);
+    expect(achievements.every((i) => i.kind === 'achievement')).toBe(true);
+
+    const two = applyLogFilters(items, {
+      types: new Set<EventType>(['achievement', 'rank']),
+      actors: new Set<string>(),
+    });
+    expect(two).toHaveLength(6);
+    expect(two.map((i) => i.t)).toEqual([...two.map((i) => i.t)].sort((a, b) => a - b));
+  });
+
+  it('keeps any selected crawler and drops rows with no crawler', () => {
+    const harry = applyLogFilters(items, {
+      types: new Set<EventType>(),
+      actors: new Set<string>(['harry']),
+    });
+    expect(harry.every((i) => i.actorId === 'harry')).toBe(true);
+    expect(harry.some((i) => i.kind === 'system_message')).toBe(false);
+    expect(harry.some((i) => i.kind === 'sponsor')).toBe(false);
+    expect(harry.some((i) => i.kind === 'map_reveal')).toBe(false);
+    expect(harry.some((i) => i.kind === 'chapter')).toBe(false);
+    expect(harry).toHaveLength(logCounts(items).byActor.harry);
+  });
+
+  it('combines type-any AND crawler-any', () => {
+    const both = applyLogFilters(items, {
+      types: new Set<EventType>(['achievement']),
+      actors: new Set<string>(['harry']),
+    });
+    expect(both.map((i) => i.t)).toEqual([60]);
+
+    const twoCrawlers = applyLogFilters(items, {
+      types: new Set<EventType>(['achievement']),
+      actors: new Set<string>(['harry', 'xo']),
+    });
+    expect(twoCrawlers.map((i) => i.t)).toEqual([60, 61]);
+  });
+
+  it('can yield nothing without throwing', () => {
+    expect(
+      applyLogFilters(items, {
+        types: new Set<EventType>(['system_message']),
+        actors: new Set<string>(['harry']),
+      }),
+    ).toEqual([]);
+  });
+
+  it('follows the playhead: the same filter yields less earlier on', () => {
+    const early = logItems(episode.events, 62, party);
+    const filter = { types: new Set<EventType>(['achievement']), actors: new Set<string>() };
+    expect(applyLogFilters(early, filter)).toHaveLength(3);
+    expect(applyLogFilters(logItems(episode.events, 60, party), filter)).toHaveLength(1);
   });
 });
