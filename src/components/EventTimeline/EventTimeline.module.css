@@ -78,6 +78,13 @@
   transition: transform 120ms ease;
 }
 
+/* A 24 × 27 px hit target around the 6 × 11 px mark (WCAG 2.5.8); the visual stays small. */
+.marker::before {
+  content: '';
+  position: absolute;
+  inset: -8px -9px;
+}
+
 .marker:hover {
   transform: translateX(-50%) scaleY(1.18);
 }

@@ -3,6 +3,7 @@ import type { FeedItem } from '../../engine/selectors';
 import { formatTime } from '../../engine/time';
 import { copy } from '../../copy';
 import { IconLoot, IconMap, IconRank } from '../icons';
+import { ShareButton } from '../ShareButton/ShareButton';
 import { SponsorSlot } from './SponsorSlot';
 import styles from './EventFeed.module.css';
 
@@ -14,6 +15,11 @@ export interface FeedItemViewProps {
    * pointer cursor honest (constitution III).
    */
   onSeek?: (t: number) => void;
+  /**
+   * Shares a link to this moment (004 FR-303). Omitted alongside `onSeek`
+   * wherever the row is inert.
+   */
+  onShare?: (t: number) => void;
 }
 
 /** Category label color per T021 / wireframe. */
@@ -44,9 +50,9 @@ function iconFor(kind: string): ReactNode {
  * seek in either direction cannot leave a stale style behind. With `onSeek` the
  * whole row is a button that jumps the broadcast to the moment it names (T342).
  */
-export function FeedItemView({ item, onSeek }: FeedItemViewProps) {
+export function FeedItemView({ item, onSeek, onShare }: FeedItemViewProps) {
   if (item.kind === 'sponsor') {
-    return <SponsorSlot item={item} onSeek={onSeek} />;
+    return <SponsorSlot item={item} onSeek={onSeek} onShare={onShare} />;
   }
 
   const time = formatTime(item.t);
@@ -91,17 +97,33 @@ export function FeedItemView({ item, onSeek }: FeedItemViewProps) {
     );
   }
 
-  return (
+  const seek = (
     <button
       type="button"
       className={`${box} ${styles.seek}`}
       data-kind={item.kind}
       data-note={item.kind === 'note' || undefined}
-      aria-label={copy.feedSeek(time, item.text)}
+      aria-label={copy.feedSeek(time, `${item.label} · ${item.text}`)}
       onClick={() => onSeek(item.t)}
     >
       {inner}
     </button>
+  );
+
+  if (onShare === undefined) return seek;
+
+  // Siblings, never nested: a button inside a button is invalid HTML and the
+  // inner one would never receive a click (FR-303).
+  return (
+    <div className={styles.rowInner}>
+      {seek}
+      <ShareButton
+        size="sm"
+        label={copy.shareRow(time)}
+        testId="share-row"
+        onClick={() => onShare(item.t)}
+      />
+    </div>
   );
 }
 

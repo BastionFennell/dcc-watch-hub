@@ -1,6 +1,7 @@
 import type { FeedItem } from '../../engine/selectors';
 import { formatTime } from '../../engine/time';
 import { copy } from '../../copy';
+import { ShareButton } from '../ShareButton/ShareButton';
 import styles from './EventFeed.module.css';
 
 export interface SponsorSlotProps {
@@ -9,10 +10,12 @@ export interface SponsorSlotProps {
   pinned?: boolean;
   /** Seeks the broadcast back to the break (T342); omitted where rows are inert. */
   onSeek?: (t: number) => void;
+  /** Shares a link to the break (004 FR-303); omitted where rows are inert. */
+  onShare?: (t: number) => void;
 }
 
 /** The purple sponsor slot. "Sponsored", never "ad" (constitution III). */
-export function SponsorSlot({ item, pinned = false, onSeek }: SponsorSlotProps) {
+export function SponsorSlot({ item, pinned = false, onSeek, onShare }: SponsorSlotProps) {
   const time = formatTime(item.t);
   const testid = pinned ? 'active-sponsor' : 'sponsor';
   const inner = (
@@ -39,17 +42,32 @@ export function SponsorSlot({ item, pinned = false, onSeek }: SponsorSlotProps) 
     );
   }
 
-  return (
+  const seek = (
     <button
       type="button"
       className={`${styles.box} ${styles.sponsor} ${styles.seek}`}
       data-testid={testid}
       data-pinned={pinned ? 'true' : undefined}
-      aria-label={copy.feedSeek(time, item.text)}
+      aria-label={copy.feedSeek(time, `${copy.sponsoredTag} · ${item.text}`)}
       onClick={() => onSeek(item.t)}
     >
       {inner}
     </button>
+  );
+
+  if (onShare === undefined) return seek;
+
+  // The share icon is the seek button's sibling, never its child (FR-303).
+  return (
+    <div className={styles.rowInner}>
+      {seek}
+      <ShareButton
+        size="sm"
+        label={copy.shareRow(time)}
+        testId="share-row"
+        onClick={() => onShare(item.t)}
+      />
+    </div>
   );
 }
 

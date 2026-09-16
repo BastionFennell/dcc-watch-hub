@@ -40,6 +40,17 @@ export interface ResumeOffer {
   t: number;
 }
 
+export interface ResumeOptions {
+  /**
+   * Suppress the offer for this visit (004 FR-301): a deep link already names
+   * the moment the viewer asked for, so a card offering another one would be
+   * arguing with them. The stored record is left alone — not read, not cleared
+   * — and ordinary saving carries on, so the next plain visit resumes from
+   * wherever this one got to (spec US1 scenario 2).
+   */
+  suppressOffer?: boolean;
+}
+
 export interface ResumeApi {
   /** The unanswered offer, or null when there is nothing to ask. */
   pending: ResumeOffer | null;
@@ -74,10 +85,12 @@ export function useResume(
   source: TimeSource | null,
   playhead: Playhead,
   store: ResumeStore = resumeStore,
+  options: ResumeOptions = {},
 ): ResumeApi {
   const [pending, setPending] = useState<ResumeOffer | null>(null);
   const episodeId = meta?.id ?? null;
   const durationSec = meta?.durationSec ?? 0;
+  const suppressOffer = options.suppressOffer === true;
 
   const storeRef = useRef<ResumeStore>(store);
   const latestRef = useRef<LatestPlayback>({
@@ -106,6 +119,12 @@ export function useResume(
   const seenEpisodeRef = useRef(false);
   /** A rejoin answered before the source existed. */
   const queuedSeekRef = useRef<number | null>(null);
+  /**
+   * `suppressOffer` for the load effect, which must not re-run when the flag
+   * changes — it is read at the moment the record would be loaded, and the
+   * guard effect below covers the (page-impossible) late flip.
+   */
+  const suppressRef = useRef(suppressOffer);
 
   /* ------------------------------------------------------------ store calls */
 
@@ -151,6 +170,7 @@ export function useResume(
   // episode change the cleanup still sees the previous episode's playhead.
   useEffect(() => {
     storeRef.current = store;
+    suppressRef.current = suppressOffer;
     latestRef.current = {
       episodeId,
       durationSec,
@@ -172,7 +192,11 @@ export function useResume(
 
     let saved: number | null = null;
     try {
-      saved = episodeId === null ? null : (storeRef.current.load(episodeId)?.t ?? null);
+      // A deep-linked visit never even reads the record (004 FR-301).
+      saved =
+        episodeId === null || suppressRef.current
+          ? null
+          : (storeRef.current.load(episodeId)?.t ?? null);
     } catch {
       saved = null;
     }
@@ -190,6 +214,14 @@ export function useResume(
     // from the ref, which this render's sync effect has not touched yet.
     return flushLatest;
   }, [episodeId, durationSec, flushLatest]);
+
+  // The page knows about a deep link on its first render, so in practice the
+  // load effect above already saw the flag. This covers a caller that learns
+  // about one later: the standing offer goes away without touching the record.
+  useEffect(() => {
+    if (!suppressOffer || offerRef.current === null) return;
+    resolveOffer();
+  }, [suppressOffer, resolveOffer]);
 
   /* ------------------------------------------------- save / clear on ticks */
 

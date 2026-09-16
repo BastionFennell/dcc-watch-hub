@@ -349,6 +349,23 @@ export const copy = {
    */
   hotbarSlotAria: (n: number, name: string) => `Slot ${n}, ${name}`,
   hotbarSlotEmptyAria: (n: number) => `Slot ${n}, empty`,
+
+  /* --- appended by 004 (deep links + share: T404) --- */
+
+  /** The caption row's control: the viewer marks a moment, the System files it. */
+  shareMoment: 'Share this moment',
+  /** The same control on a feed row, which already names its own time. */
+  shareRow: (time: string) => `Share the moment at ${time}`,
+  /** The three outcomes of a share, in the System's voice (research R5). */
+  shareCopied: 'Moment marked. The link is on your clipboard.',
+  shareShared: 'Moment marked.',
+  shareShown: 'Moment marked. Copy the link below.',
+  /** The native share sheet's title: the episode, then the moment. */
+  shareTitle: (episodeTitle: string, time: string) => `${episodeTitle} — ${time}`,
+  /** Names the read-only field the fallback notice offers (FR-304). */
+  shareUrlLabel: 'Link to this moment',
+  /** Dismisses the notice by hand. */
+  shareDismiss: 'Dismiss',
 } as const;
 
 export type Copy = typeof copy;

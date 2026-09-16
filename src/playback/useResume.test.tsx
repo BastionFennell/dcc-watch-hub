@@ -17,7 +17,7 @@ import type { TimeSource } from './TimeSource';
 import type { ResumeRecord, ResumeStore } from './resume';
 import { FakeTimeSource } from './FakeTimeSource';
 import { usePlayhead } from './usePlayhead';
-import { useResume } from './useResume';
+import { RESUME_SAVE_INTERVAL_MS, useResume } from './useResume';
 
 const DURATION = 600;
 const T0 = new Date('2026-09-15T12:00:00.000Z').getTime();
@@ -504,5 +504,125 @@ describe('useResume', () => {
     unmount();
     first.destroy();
     second.destroy();
+  });
+
+  /* ------------------------------------- 004 US1: a deep link wins this visit */
+
+  describe('suppressOffer (004 FR-301)', () => {
+    interface SuppressProps extends HarnessProps {
+      suppressOffer: boolean;
+    }
+
+    function mountSuppressed(store: ResumeStore, props: SuppressProps) {
+      return renderHook(
+        ({ meta, source, suppressOffer }: SuppressProps) => {
+          const playhead = usePlayhead(source);
+          return {
+            playhead,
+            resume: useResume(meta, source, playhead, store, { suppressOffer }),
+          };
+        },
+        { initialProps: props },
+      );
+    }
+
+    it('never offers, and never even reads the record', () => {
+      const store = makeStore([[1, 120]]);
+      const source = new FakeTimeSource(0, DURATION);
+      const { result, unmount } = mountSuppressed(store, {
+        meta: makeMeta(),
+        source,
+        suppressOffer: true,
+      });
+
+      expect(result.current.resume.pending).toBeNull();
+      expect(store.load).not.toHaveBeenCalled();
+      expect(store.save).not.toHaveBeenCalled();
+      expect(store.clear).not.toHaveBeenCalled();
+      expect(store.records.get(1)?.t).toBe(120);
+
+      unmount();
+      source.destroy();
+    });
+
+    it('still offers when the flag is off (the ordinary visit)', () => {
+      const store = makeStore([[1, 120]]);
+      const source = new FakeTimeSource(0, DURATION);
+      const { result, unmount } = mountSuppressed(store, {
+        meta: makeMeta(),
+        source,
+        suppressOffer: false,
+      });
+
+      expect(result.current.resume.pending).toEqual({ t: 120 });
+      unmount();
+      source.destroy();
+    });
+
+    it('keeps saving as normal, so the next plain visit resumes from here', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(T0);
+      const store = makeStore([[1, 120]]);
+      const source = new FakeTimeSource(0, DURATION);
+      const { unmount } = mountSuppressed(store, {
+        meta: makeMeta(),
+        source,
+        suppressOffer: true,
+      });
+
+      // The deep link put the playhead at 2:36 and playback carried on.
+      act(() => source.set(156));
+      act(() => source.play());
+      act(() => source.set(157)); // inside the 5 s throttle: no second write
+      expect(savesFor(store)).toEqual([[1, 156]]);
+
+      vi.setSystemTime(T0 + RESUME_SAVE_INTERVAL_MS);
+      act(() => source.set(162));
+      expect(savesFor(store)).toEqual([
+        [1, 156],
+        [1, 162],
+      ]);
+
+      unmount();
+      source.destroy();
+    });
+
+    it('still clears a finished episode', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(T0);
+      const store = makeStore([[1, 120]]);
+      const source = new FakeTimeSource(0, DURATION);
+      const { unmount } = mountSuppressed(store, {
+        meta: makeMeta(),
+        source,
+        suppressOffer: true,
+      });
+
+      act(() => source.end());
+      expect(store.clear).toHaveBeenCalledWith(1);
+      expect(store.records.has(1)).toBe(false);
+
+      unmount();
+      source.destroy();
+    });
+
+    it('takes a standing offer away if the flag arrives late, record intact', () => {
+      const store = makeStore([[1, 120]]);
+      const source = new FakeTimeSource(0, DURATION);
+      const { result, rerender, unmount } = mountSuppressed(store, {
+        meta: makeMeta(),
+        source,
+        suppressOffer: false,
+      });
+      expect(result.current.resume.pending).toEqual({ t: 120 });
+
+      rerender({ meta: makeMeta(), source, suppressOffer: true });
+      expect(result.current.resume.pending).toBeNull();
+      expect(store.clear).not.toHaveBeenCalled();
+      expect(store.records.get(1)?.t).toBe(120);
+
+      unmount();
+      source.destroy();
+    });
   });
 });

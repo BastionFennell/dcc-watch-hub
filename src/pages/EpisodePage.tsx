@@ -20,8 +20,10 @@ import {
 import type { TimeSource } from '../playback/TimeSource';
 import { formatTime } from '../engine/time';
 import { usePlayhead } from '../playback/usePlayhead';
+import { useDeepLink } from '../playback/useDeepLink';
 import { useResume } from '../playback/useResume';
 import { usePanel } from '../hooks/usePanel';
+import { useShare } from '../share/useShare';
 import { VideoStage } from '../components/VideoStage/VideoStage';
 import { AchievementToast } from '../components/AchievementToast/AchievementToast';
 import { MiniMapBadge } from '../components/MiniMapBadge/MiniMapBadge';
@@ -34,6 +36,8 @@ import { CrawlerGlance } from '../components/CrawlerGlance/CrawlerGlance';
 import { FullRecordDialog } from '../components/FullRecord/FullRecordDialog';
 import { FloorMap } from '../components/FloorMap/FloorMap';
 import { ResumeCard } from '../components/ResumeCard/ResumeCard';
+import { ShareButton } from '../components/ShareButton/ShareButton';
+import { ShareNotice } from '../components/ShareNotice/ShareNotice';
 import { SystemNotice } from '../components/SystemNotice/SystemNotice';
 import { NotFoundPage } from './NotFoundPage';
 import { copy } from '../copy';
@@ -104,8 +108,28 @@ export function EpisodePage() {
     devRecordOpened.current = true;
     setRecord(panel.crawlerId);
   }, [devRecord, panel]);
+  /*
+   * A production deep link (`?t=`) moves the playhead once per visit and wins
+   * over the saved position for that visit (004 FR-300/301). Everything below
+   * the stage recomputes from the new time like it does after any other seek.
+   */
+  const { linkedT } = useDeepLink(meta, source);
   // Persisted playhead only, never overlay state (constitution I, FR-133).
-  const resume = useResume(meta, source, playhead);
+  const resume = useResume(meta, source, playhead, undefined, {
+    suppressOffer: linkedT !== null,
+  });
+
+  /*
+   * Sharing a moment (004 US2). Viewer state, not overlay state: a transient
+   * System notice with its own short timer (spec Assumptions). It reads the
+   * playhead and never moves it (FR-306).
+   */
+  const share = useShare({ episodeId: meta?.id ?? 0, episodeTitle: meta?.title ?? '' });
+  const dismissShare = share.dismiss;
+  // A confirmation belongs to the episode it was raised on.
+  useEffect(() => {
+    dismissShare();
+  }, [meta?.id, dismissShare]);
 
   useEffect(() => {
     if (!meta) return;
@@ -162,6 +186,7 @@ export function EpisodePage() {
       sponsor={sponsor}
       t={t}
       onSeek={(sec) => source?.seek(sec)}
+      onShare={(sec) => void share.share(sec)}
       notice={
         failed ? (
           <SystemNotice tone="error">{copy.feedUnavailable}</SystemNotice>
@@ -251,16 +276,31 @@ export function EpisodePage() {
             title never appeared at all. Out here it is legible at every width,
             and its left half is the page's one `<h1>`.
           */}
-          <div className={styles.captionRow} data-testid="stage-caption-row">
-            <h1 className={styles.captionTitle}>
-              {copy.captionLeft(meta.id, meta.floor, meta.title)}
-            </h1>
-            <span
-              className={styles.captionTime}
-              data-testid="stage-caption-time"
-            >
-              {formatTime(t)}
-            </span>
+          <div className={styles.captionBlock}>
+            <div className={styles.captionRow} data-testid="stage-caption-row">
+              <h1 className={styles.captionTitle}>
+                {copy.captionLeft(meta.id, meta.floor, meta.title)}
+              </h1>
+              <div className={styles.captionRight}>
+                <span
+                  className={styles.captionTime}
+                  data-testid="stage-caption-time"
+                >
+                  {formatTime(t)}
+                </span>
+                {/* "Share this moment", beside the time it is about (004 FR-302). */}
+                <ShareButton
+                  testId="share-moment"
+                  onClick={() => void share.share(t)}
+                />
+              </div>
+            </div>
+            {/*
+              The confirmation sits directly under the row that raised it. Its
+              live region is always mounted and weightless until it has
+              something to say, so the stage above never moves (T407).
+            */}
+            <ShareNotice status={share.status} url={share.url} onDismiss={share.dismiss} />
           </div>
 
           <EventTimeline

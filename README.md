@@ -23,6 +23,7 @@ npm run dev -- --open  # opens the archive
 
 - Archive: <http://localhost:5180/>
 - Episode with the real embed: <http://localhost:5180/ep/1>
+- A shared moment (the real embed, seeks to 2:36): <http://localhost:5180/ep/1?t=156>
 - Episode with the dev scrubber, no network: <http://localhost:5180/ep/1?fake=1>
 - The panels mid-episode: <http://localhost:5180/ep/1?fake=1&t=580> (click a crawler, then
   the floor-map badge)
@@ -35,7 +36,7 @@ npm run dev -- --open  # opens the archive
 ```sh
 npm run typecheck      # tsc --noEmit
 npm run lint           # eslint .
-npm test               # vitest run  (444 tests)
+npm test               # vitest run  (526 tests)
 npm run build          # vite build + copies dist/index.html → dist/404.html
 npm run preview        # serves dist/ at http://localhost:4173/
 ```
@@ -71,8 +72,10 @@ Add `?fake=1` to an episode URL **in dev** and the stage is replaced by a black 
 range input and a play/pause button driving `FakeTimeSource`. It is the fastest way to scrub
 through an event log without the network, and it is compiled out of production builds
 (`import.meta.env.DEV` guard), so it can never reach a viewer.
-Add `&t=<seconds>` to open the scrubber mid-episode, e.g. `/ep/1?fake=1&t=157` lands on the first
-achievement toast with a populated feed.
+`?t=<seconds>` is no longer a dev-only convenience: since 004 it is a real deep link that works in
+production on its own, and it is what the share controls hand out (see **Share a moment** below).
+The dev scrubber still honours it, so `/ep/1?fake=1&t=157` lands on the first achievement toast
+with a populated feed and no network.
 
 ### Layout of the source
 
@@ -80,9 +83,10 @@ achievement toast with a populated feed.
 |------|------------------|
 | `src/engine/` | reducer, selectors, time formatting — pure, framework-free |
 | `src/data/` | schema types, guards/normalization, fetching, show ordering |
-| `src/playback/` | `TimeSource` interface, YouTube adapter, fake, `usePlayhead`, resume store + `useResume` |
+| `src/playback/` | `TimeSource` interface, YouTube adapter, fake, `usePlayhead`, resume store + `useResume`, `?t=` deep links (`deepLink`, `useDeepLink`) |
+| `src/share/` | the moment URL, the share-sheet → clipboard → shown ladder, `useShare` |
 | `src/hooks/` | `usePanel` — the right rail's one-panel state machine; `useModalDialog` — the full record's focus trap |
-| `src/components/` | stage, party rail, event feed, timeline, toast, minimap, header, rail panel, glance card, full record, dossier sections, floor map, resume card |
+| `src/components/` | stage, party rail, event feed, timeline, toast, minimap, header, rail panel, glance card, full record, dossier sections, floor map, resume card, share button + notice |
 | `src/pages/` | `EpisodePage`, `HubPage`, `NotFoundPage` |
 | `src/copy.ts` | **every** user-facing string, in the System's voice |
 | `src/styles/tokens.css` | the colour/spacing/type tokens from spec §6 |
@@ -243,6 +247,69 @@ field dropped, a row with `scope: "party"` is ignored like any unknown event, an
 
 ---
 
+## Share a moment
+
+A link can name a second of an episode, and the page can hand one out. Both halves are 004
+(`specs/004-deep-links/`).
+
+### The link
+
+```
+https://<host><base>ep/<id>?t=<seconds>
+```
+
+`t` is whole seconds into the final edit — `…/ep/1?t=156` is 2:36. That is the only parameter
+the feature owns, and it is the only thing a shared link ever carries: the dev flags (`fake`,
+`panel`, `record`) are never emitted, because the URL is built from parts (origin, base, episode
+id, `t`) rather than copied out of the address bar. On GitHub Pages the base is
+`/dcc-watch-hub/`, so the same share reads `https://bastionfennell.github.io/dcc-watch-hub/ep/1?t=156`.
+
+**On load**, `useDeepLink` parses `t` once per visit — one visit being one `(episode, ?search)`
+pair, so a re-render is not a new one — and seeks the `TimeSource` to it exactly once, as soon as
+a source exists. The YouTube adapter queues a seek issued before the player is ready (time-source
+contract §6), so the link works even if it is followed cold. The overlay is not special-cased at
+all: it recomputes from `initialState` at the new time like it does after any other seek, so the
+party rail, feed, map and timeline are already at 2:36 when the frame lands. Seeking a cued
+YouTube player also starts it, so a shared clip plays; if the host refuses autoplay the player
+sits at `t` paused, and the overlay is correct either way.
+
+**Invalid values are ignored, never an error**: negative, non-numeric, empty, or past the
+episode's `durationSec` all behave as if no `t` were given. Decimals floor, so `?t=156.9` is the
+second the viewer was watching, 2:36. `?t=0` is valid.
+
+**Resume steps aside for that visit.** A deep link is a more specific request than a saved
+position, so no "Rejoin the broadcast" card is offered when one is in play (the record itself is
+left untouched, and saving resumes as normal the moment the viewer keeps watching). An ordinary
+visit still gets the card. Opening another episode from the header starts it at 0:00 — the link
+applies to one visit of one episode.
+
+### The controls
+
+- **Caption row** — "Share this moment" sits at the right of the slim row under the stage,
+  beside the playhead it is about. It shares the current whole second.
+- **Feed rows** — every row (and the pinned sponsor) carries its own share icon for the moment
+  that row names, as the seek button's *sibling*, never nested inside it: sharing a row does not
+  seek to it. The label says which moment, e.g. "Share the moment at 2:34".
+- Sharing never pauses, seeks, or otherwise touches playback. It reads the playhead.
+- Timeline markers deliberately have no share control of their own — click one to seek, then
+  share from the caption row. It keeps the strip uncluttered.
+
+### Where the link goes
+
+One ladder, in `src/share/share.ts`, and the last rung cannot fail:
+
+| Rung | When | What the viewer gets |
+|------|------|----------------------|
+| `navigator.share` | the browser has it **and** the device wants it — a coarse pointer or a viewport ≤ 900 px, i.e. phones and tablets | the OS share sheet, with the link and `{episode title} — {time}` as its title. Dismissing it is **silent**: no notice at all |
+| `navigator.clipboard.writeText` | a mouse and a wide window, or the share sheet was unavailable | the link on the clipboard, confirmed by "Moment marked. The link is on your clipboard." |
+| shown | neither worked — an insecure context, a denied permission, an unfocused document | "Moment marked. Copy the link below." with the link in a read-only field, selected on arrival so one keystroke copies it, and a **Dismiss** control |
+
+The confirmation is a System notice directly under the caption row, inside a `role="status"`
+polite live region that is **always mounted and weightless** — so it announces once, and the
+stage above it never moves when it appears. A copy or a native share clears itself after two
+seconds; the fallback stands until it is dismissed, because it is holding the only copy of the
+link the viewer has.
+
 ## Authoring episode data
 
 The editor logs events in a Google Sheet during the edit pass and exports CSV. Header row
@@ -399,19 +466,31 @@ Measured on the production build (`npm run build`, Node 20.9.0):
 
 | Asset | Raw | Gzipped |
 |-------|-----|---------|
-| `dist/assets/index-*.js` | 350.0 kB | **110.1 kB** |
-| `dist/assets/index-*.css` | 47.6 kB | 8.8 kB |
+| `dist/assets/index-*.js` | 355.4 kB | **112.0 kB** |
+| `dist/assets/index-*.css` | 50.1 kB | 9.2 kB |
 | `dist/index.html` | 0.7 kB | 0.4 kB |
 
 That is React 19 + react-router 7 + the whole app — v1 plus the v2 panels, dossier, floor map
-and resume, plus the glance card and full record — comfortably under the 150 kB gzipped budget.
+and resume, plus the glance card, full record, deep links and share — comfortably under the
+150 kB gzipped budget. Deep links and share cost ~1.9 kB gzipped of JS.
 
 Lighthouse 11.7.1, desktop preset, against `npm run preview` with the real YouTube embed loading:
-**performance 100, accessibility 100** on both `/ep/1` and `/` (FCP 0.4 s, LCP 0.5 s, TBT 0 ms,
-CLS 0), with no accessibility audit below 1 — including the zero-weight informational ones.
-Details in `specs/002-watch-hub-v2/quickstart.md` → Results; re-measured for the crawler
-record in `specs/003-crawler-record/quickstart.md` → Results (`/ep/1` still 100/100, and the
-full record itself audits at accessibility 100 with zero axe violations).
+**performance 100, accessibility 100** on `/ep/1` and `/` (FCP 0.4 s, LCP 0.5 s, TBT 0 ms,
+CLS 0). Details in `specs/002-watch-hub-v2/quickstart.md` → Results, re-measured for the crawler
+record in `specs/003-crawler-record/quickstart.md` → Results, and again for deep links in
+`specs/004-deep-links/quickstart.md` → Results.
+
+A deep-linked page is the one exception worth knowing about. `/ep/1?t=156` audits
+**accessibility 100, performance 79**: the seek starts the embed, and the YouTube player's own
+iframe paints and un-paints a 984×553 layer while it does, which Chrome bills to us as
+CLS 0.482. It is entirely sub-frame — our own document measures CLS 0 there (`is_main_frame:
+false` in the trace; see the 004 Results) — and there is no CSS on our side that can reserve
+space inside someone else's iframe. Two zero-weight accessibility audits are also worth
+recording rather than hiding: `label-content-name-mismatch` on the feed's seek buttons
+(a 003 surface a deep link is simply the first thing to show at first paint — the visible
+category word, "Achievement", is not part of the row's accessible name), and axe's WCAG 2.2
+`target-size` on the 6×11 px timeline markers (a 002 surface). Neither is scored by Lighthouse;
+both are listed in `specs/004-deep-links/quickstart.md` → Results with the fix each would need.
 
 The budget holds because of three rules: no webfonts (`system-ui` stack only, nothing blocks
 first render), no render-blocking scripts (the bundle is a `type="module"` script, deferred by
@@ -434,8 +513,10 @@ Read in this order:
    `quickstart.md` (run + manual acceptance walkthrough + results), `tasks.md`.
 4. `specs/002-watch-hub-v2/` — dossiers, the expanded map, resume and rank sparklines. Same
    layout, plus `contracts/panels.md` and `contracts/resume-storage.md`.
-5. `specs/003-crawler-record/` — the active feature: the rail's glance card and the modal full
-   record. Same layout, plus `contracts/dialog.md`.
+5. `specs/003-crawler-record/` — the rail's glance card and the modal full record. Same layout,
+   plus `contracts/dialog.md`.
+6. `specs/004-deep-links/` — the active feature: `?t=` deep links and "Share this moment". Same
+   layout, plus `contracts/deep-link.md`.
 
 Three rules bite most often while editing:
 
@@ -452,9 +533,9 @@ Three rules bite most often while editing:
 
 Parked, from the handoff spec §8 and constitution 1.1.0. Do not build, stub, or partially wire
 these — not even "for later". In particular, do not *tease* them: no hover affordances, pointer
-cursors, or tooltips on elements that do nothing. The only interactive triggers are the ones v2
-ships: crawler frames (dossier), the minimap badge (floor map), the timeline, and the resume
-card's two buttons.
+cursors, or tooltips on elements that do nothing. The interactive triggers are exactly: crawler
+frames (dossier), the minimap badge (floor map), the timeline, the resume card's two buttons,
+every feed row (seek, 003), and the share controls in the caption row and on each feed row (004).
 
 **Shipped in v2** (the four items below left the fence; see "Lean-forward (v2)" above)
 

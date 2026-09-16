@@ -42,6 +42,24 @@
   min-width: 0;
 }
 
+/*
+ * Since 004 a row is two controls side by side: the seek button and the share
+ * icon (T407). They are siblings — a button inside a button is invalid — and
+ * the seek button keeps the row's full width minus the icon and its gap.
+ */
+.rowInner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.rowInner .seek {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+}
+
 .box {
   display: flex;
   align-items: baseline;
