@@ -35,10 +35,14 @@ function selected(): string | null {
 }
 
 /** jsdom has no `PointerEvent`; a bubbling MouseEvent carries the fields React reads. */
-function firePointer(type: string, clientX: number, clientY: number) {
+function firePointerOn(target: Element, type: string, clientX: number, clientY: number) {
   const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX, clientY });
   Object.defineProperty(event, 'pointerId', { value: 7 });
-  fireEvent(screen.getByTestId('mobile-tabpanels'), event);
+  fireEvent(target, event);
+}
+
+function firePointer(type: string, clientX: number, clientY: number) {
+  firePointerOn(screen.getByTestId('mobile-tabpanels'), type, clientX, clientY);
 }
 
 /** One whole gesture: down at the origin, move by (dx, dy), up. */
@@ -54,6 +58,10 @@ describe('MobileTabs', () => {
     const list = screen.getByTestId('mobile-tabs');
     expect(list).toHaveAttribute('role', 'tablist');
     expect(list).toHaveAttribute('aria-label', copy.tabsLabel);
+    // The strip is the sticky bar the docked mini-player is positioned under
+    // (T611); jsdom cannot compute the rule, so the class it hangs on is what
+    // is asserted here and the geometry is measured in the 006 Results.
+    expect(list.className).toMatch(/strip/);
     expect(screen.getAllByRole('tab')).toHaveLength(4);
     for (const entry of tabs) {
       expect(tab(entry.id)).toHaveAttribute('aria-controls', `tabpanel-${entry.id}`);
@@ -177,6 +185,41 @@ describe('MobileTabs', () => {
     swipe(-80, 60);
     expect(selected()).toBe(copy.tabFeed);
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('leaves a gesture alone when it starts inside a `data-swipe-ignore` pane', () => {
+    // The map pane drags to pan (FloorMap's viewport): that drag is the map's,
+    // not the strip's, so it must not also flick to the next tab.
+    const onChange = vi.fn();
+    render(
+      <MobileTabs
+        tabs={[
+          tabs[0],
+          {
+            id: 'map' as const,
+            label: copy.tabMap,
+            content: (
+              <div data-swipe-ignore="" data-testid="pan-surface">
+                <span data-testid="pan-child">map</span>
+              </div>
+            ),
+          },
+        ]}
+        initial="map"
+        onChange={onChange}
+      />,
+    );
+    const child = screen.getByTestId('pan-child');
+    firePointerOn(child, 'pointerdown', 200, 300);
+    firePointerOn(child, 'pointermove', 200 - (SWIPE_PX + 60), 300);
+    firePointerOn(child, 'pointerup', 200 - (SWIPE_PX + 60), 300);
+    expect(screen.getByTestId('tab-map')).toHaveAttribute('aria-selected', 'true');
+    expect(onChange).not.toHaveBeenCalled();
+    // The same swipe starting on the pane's own background still switches.
+    firePointer('pointerdown', 200, 300);
+    firePointer('pointermove', 200 + SWIPE_PX + 60, 300);
+    firePointer('pointerup', 200 + SWIPE_PX + 60, 300);
+    expect(screen.getByTestId('tab-feed')).toHaveAttribute('aria-selected', 'true');
   });
 
   it('drops a gesture that is cancelled', () => {

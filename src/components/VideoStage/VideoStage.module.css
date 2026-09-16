@@ -134,9 +134,25 @@
   --mini-bar-h: 28px;
 }
 
+/*
+ * A landscape phone cannot spare 45 vw: at 844 × 390 the capped 260 px frame is
+ * 174 px tall — 45% of the screen — and it reached down over the tab strip.
+ * Short viewports get a frame sized by the height they actually have (T611).
+ */
+@media (max-height: 500px) {
+  .slot[data-mini='true'] {
+    --mini-w: min(45vw, 170px);
+  }
+}
+
 .slot[data-mini='true'] .stage {
   position: fixed;
-  top: calc(var(--header-h) + 8px);
+  /*
+   * Under the compact header *and* under the phone tab strip, which is sticky
+   * there (T611): the frame is fixed and the strip is the page's navigation, so
+   * the frame yields the strip's height rather than covering its right half.
+   */
+  top: calc(var(--header-h-compact) + var(--tabstrip-h) + 8px);
   right: 8px;
   bottom: auto;
   left: auto;

@@ -92,6 +92,15 @@ export function MobileTabs({ tabs, initial, onChange, label }: MobileTabsProps) 
   }
 
   const startSwipe = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    // Panes may own the horizontal axis themselves — the floor map is dragged
+    // to pan, and a pan that crossed the 40 px threshold would also flick the
+    // strip to the next tab. A pane opts out by marking its gesture surface
+    // `data-swipe-ignore`; the gesture is then simply never started.
+    const target = event.target;
+    if (target instanceof Element && target.closest('[data-swipe-ignore]') !== null) {
+      swipeRef.current = null;
+      return;
+    }
     swipeRef.current = {
       pointerId: event.pointerId,
       x: event.clientX,
