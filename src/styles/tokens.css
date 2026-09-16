@@ -111,6 +111,12 @@
   /* Chrome */
   --header-h: 48px;
   --header-h-compact: 36px;
+  /*
+   * The phone tab strip's height (006). It is sticky under the compact header,
+   * and the docked mini-player is offset by it, so both need the same number:
+   * this is the one place it is written down.
+   */
+  --tabstrip-h: 44px;
   --border-hairline: 1px solid var(--hairline);
   --border-hairline-2: 1px solid var(--hairline-2);
 }

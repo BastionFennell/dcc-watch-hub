@@ -156,6 +156,19 @@
   -webkit-user-select: none;
 }
 
+/*
+ * On a phone the map is a whole pane, not a corner of the rail, and its zoom
+ * controls are thumb targets: 26 px tall was fine for a mouse and short of the
+ * 32 px this pass measured for (006 T611). Desktop keeps the compact row.
+ */
+@media (max-width: 900px) {
+  .control {
+    min-height: 32px;
+    padding-top: var(--space-2);
+    padding-bottom: var(--space-2);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .control,
   .scene {

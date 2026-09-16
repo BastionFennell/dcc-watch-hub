@@ -314,6 +314,11 @@ export function FloorMap({ cells, recent, labels, floor }: FloorMapProps) {
         aria-label={copy.mapViewportLabel}
         data-testid="floormap-viewport"
         data-dragging={dragging ? 'true' : undefined}
+        /*
+         * Drag-to-pan owns the horizontal axis here, so the phone tab strip
+         * must not read the same gesture as a swipe between panes (006 T610).
+         */
+        data-swipe-ignore=""
         style={{ aspectRatio: `${cols} / ${rows}` } as CSSProperties}
         onKeyDown={handleKeyDown}
         onDoubleClick={handleDoubleClick}

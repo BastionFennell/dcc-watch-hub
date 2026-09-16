@@ -32,13 +32,16 @@ npm run dev -- --open  # opens the archive
 - Straight to a full record: <http://localhost:5180/ep/1?fake=1&t=580&panel=dossier:harry&record=1>
   (Harry's hotbar overflows at 9:32) and `…&panel=dossier:xo&record=1` (X.O.'s skills fill the
   eight-tile grid and offer "View all (10)"). The `panel` / `record` flags are DEV-only.
+- The phone layout: the same <http://localhost:5180/ep/1?fake=1&t=580> in Chrome DevTools device
+  mode at 400 × 800 — tabs under the timeline, scroll down for the mini-player, tap a crawler on
+  the Party tab for the bottom sheet (see **On a phone** below).
 
 ### Verify
 
 ```sh
 npm run typecheck      # tsc --noEmit
 npm run lint           # eslint .
-npm test               # vitest run  (526 tests)
+npm test               # vitest run  (663 tests)
 npm run build          # vite build + copies dist/index.html → dist/404.html
 npm run preview        # serves dist/ at http://localhost:4173/
 ```
@@ -87,9 +90,9 @@ with a populated feed and no network.
 | `src/data/` | schema types, guards/normalization, fetching, show ordering |
 | `src/playback/` | `TimeSource` interface, YouTube adapter, fake, `usePlayhead`, resume store + `useResume`, `?t=` deep links (`deepLink`, `useDeepLink`) |
 | `src/share/` | the moment URL, the share-sheet → clipboard → shown ladder, `useShare` |
-| `src/hooks/` | `usePanel` — the right rail's one-panel state machine; `useModalDialog` — the full record's focus trap; `useThrottledValue` — the log count's once-a-second cadence |
+| `src/hooks/` | `usePanel` — the right rail's one-panel state machine; `useModalDialog` — the full record's focus trap; `useThrottledValue` — the log count's once-a-second cadence; `useIsPhone` + `useMiniPlayer` — the ≤ 900 px layout and the docked stage |
 | `src/prefs/` | viewer preferences that are not playback: `logOpen` (the broadcast log's open state) |
-| `src/components/` | stage, party rail, event feed, timeline, toast, minimap, header, rail panel, glance card, full record, dossier sections, floor map, resume card, share button + notice, broadcast log |
+| `src/components/` | stage, party rail, event feed, timeline, toast, minimap, header, rail panel, glance card, full record, dossier sections, floor map, resume card, share button + notice, broadcast log, phone tab strip |
 | `src/pages/` | `EpisodePage`, `HubPage`, `NotFoundPage` |
 | `src/copy.ts` | **every** user-facing string, in the System's voice |
 | `src/styles/tokens.css` | the colour/spacing/type tokens from spec §6 |
@@ -363,6 +366,73 @@ when the broadcast begins." (and shows no filters at all, because there is nothi
 a filter that matches nothing reads "Nothing on the log matches." while the log itself stays
 whole.
 
+---
+
+## On a phone
+
+Phones are the likely form factor for a watch-along, and v1 only stacked the desktop layout. The
+mobile pass rebuilds the page under the existing 900 px breakpoint. It is 006
+(`specs/006-mobile-pass/`). **Above 900 px nothing changed** — the desktop tree, its markup and
+its pixels are the same (the 1440 px screenshots are identical before and after; see the 006
+Results).
+
+**The stage docks as you read.** Scroll past the player and the *same* element is repositioned by
+CSS as a mini-player pinned under the header *and* under the tab strip — 45 vw wide (max 260 px,
+170 px on a landscape phone), 16:9, top right, its top edge 8 px below the strip's underline
+(88 px down the viewport). It is a fixed frame over a page that scrolls, so it yields the strip
+rather than covering it: the four tabs are the page's navigation and stay tappable at every
+scroll position. Nothing is re-parented, so the YouTube iframe never reloads and playback
+does not stutter. The space the stage came from keeps its height, so the page below it does not
+jump (measured: the slot is 213.8 px at 400 px wide, before, during and after docking). A 28 px
+bar across the bottom of the mini frame is the one part of it that is ours to tap:
+**Return to the stage** scrolls back to the top and the player grows back. The minimap badge is
+hidden while docked, the achievement toast shrinks into the frame, and the resume offer and the
+ended card cancel mini mode outright — those cards need the full stage.
+
+**Four tabs under the timeline.** Feed, Party, Map and Log, a WAI-ARIA tab list: tap a tab, or
+swipe the pane area left and right, or arrow through the strip with Home/End at the ends. The
+strip **sticks** under the compact header once you scroll (44 px tall, `--tabstrip-h`, which is
+also what the mini-player's offset is built from, so the two cannot drift): the panes are long,
+and a strip that scrolled away would leave the page with no way between them — and would slide
+under the docked player. All
+four panes stay mounted and are hidden with `hidden`, so the log's follow position and the map's
+zoom survive a switch. Vertical scrolling is untouched (`touch-action: pan-y`, and a drag counts
+as a swipe only past 40 px and only when it is twice as horizontal as it is vertical). A pane
+that owns the horizontal axis itself opts out with `data-swipe-ignore` — the floor map's pan
+viewport does, so dragging the map pans the map and does not flick to the next tab. The selected
+tab lasts the visit; it is not in the URL and not remembered across reloads.
+
+- **Feed** is the ticker and the sponsor slot, as before. At 400 × 800 the first feed row lands at
+  y 451 and six rows are fully above the fold.
+- **Party** is the five crawler frames in two columns, the fifth spanning both. Tapping one opens
+  the glance as a sheet.
+- **Map** is the floor map inline with its own zoom, fit and drag-to-pan — the stage's minimap
+  badge is not rendered on phones, because the tab *is* the map.
+- **Log** is the broadcast log, already open, with no toggle: the tab is the open/closed control.
+  Its filters, seek, share and follow behave exactly as they do on desktop.
+
+The desktop rail panel and the full-width log section are not rendered on phones at all.
+
+**The glance is a bottom sheet.** It slides up to 70 vh over a dim backdrop, leaving the video
+visible above it — 182 px of it at 400 × 800. On a **short landscape viewport** (under 500 px
+tall) it takes 85 vh instead, and at that height it covers the player: 85% of an 844 × 390 screen
+leaves 58.5 px, which the header and the docked frame's own offset use up. That is the intended
+trade — a glance card needs the room to be readable, and "the video stays visible above the
+sheet" is a portrait criterion. It has
+a grab handle, a close control and a title; drag it down past a quarter of its height, tap the
+backdrop, press Escape or use the close control and it goes, returning focus to the frame that
+opened it. The page behind does not scroll while it is open. **Open full record** still opens the
+full-screen record dialog, above the sheet, and closing the record leaves you back on the sheet.
+
+**Reduced motion** removes all of it: the sheet appears instead of sliding, the snap-back is
+instant, and "Return to the stage" jumps rather than scrolls.
+
+**One thing to know about resizing.** Crossing 900 px swaps between two different trees, so the
+player remounts and the embed reloads (and the tab selection resets to Feed). Rotating a phone,
+or any resize that stays on one side of 900 px, does neither: the same stage element and the same
+selected tab survive — verified at 400 × 800 → 800 × 400 → 880 px. Only a desktop window being
+dragged across the breakpoint pays that cost, and it pays it once.
+
 ## Authoring episode data
 
 The editor logs events in a Google Sheet during the edit pass and exports CSV. Header row
@@ -519,14 +589,16 @@ Measured on the production build (`npm run build`, Node 20.9.0):
 
 | Asset | Raw | Gzipped |
 |-------|-----|---------|
-| `dist/assets/index-*.js` | 361.8 kB | **114.1 kB** |
-| `dist/assets/index-*.css` | 54.4 kB | 9.8 kB |
+| `dist/assets/index-*.js` | 369.2 kB | **116.3 kB** |
+| `dist/assets/index-*.css` | 59.2 kB | 10.6 kB |
 | `dist/index.html` | 0.7 kB | 0.4 kB |
 
 That is React 19 + react-router 7 + the whole app — v1 plus the v2 panels, dossier, floor map
-and resume, plus the glance card, full record, deep links, share and the broadcast log —
-comfortably under the 150 kB gzipped budget. Deep links and share cost ~1.9 kB gzipped of JS;
-the broadcast log cost 2.1 kB gzipped of JS and 0.6 kB of CSS, and adds no dependency.
+and resume, plus the glance card, full record, deep links, share, the broadcast log and the
+mobile pass — comfortably under the 150 kB gzipped budget. Deep links and share cost ~1.9 kB
+gzipped of JS; the broadcast log cost 2.1 kB gzipped of JS and 0.6 kB of CSS; the mobile pass
+(mini-player, tabs, bottom sheet) cost 2.2 kB gzipped of JS and 0.8 kB of CSS. None of the four
+adds a dependency.
 
 Lighthouse 11.7.1, desktop preset, against `npm run preview` with the real YouTube embed loading:
 **performance 100, accessibility 100** on `/ep/1` and `/` (FCP 0.4 s, LCP 0.5 s, TBT 0 ms,
@@ -535,6 +607,12 @@ record in `specs/003-crawler-record/quickstart.md` → Results, again for deep l
 `specs/004-deep-links/quickstart.md` → Results, and again with the broadcast log open in
 `specs/005-episode-log/quickstart.md` → Results (**100 / 100** either side of the log's toggle,
 and the log adds no scored audit of its own).
+
+The **mobile** preset on the same build scores `/ep/1` **accessibility 100, performance 99**
+(FCP 1.5 s, LCP 2.0 s, TBT 0 ms, CLS 0 — the mini-player's placeholder is what keeps that zero).
+axe-core 4.13 with every rule enabled reports **no violations** on the phone page: on each of the
+four tabs, with the mini-player docked, and with the glance sheet open, at 400 × 800 and at
+844 × 390. Details in `specs/006-mobile-pass/quickstart.md` → Results.
 
 A deep-linked page is the one exception worth knowing about. `/ep/1?t=156` audits
 **accessibility 100, performance 79**: the seek starts the embed, and the YouTube player's own

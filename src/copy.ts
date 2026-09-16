@@ -388,6 +388,26 @@ export const copy = {
   logFollow: 'Follow the broadcast',
   /** The log is not empty — the filter is (US2 scenario 4). */
   logNoMatch: 'Nothing on the log matches.',
+
+  /* --- appended by 006 (mobile pass: phone tabs, T604) --- */
+
+  /** Names the phone tab strip that carries the four panes (FR-502). */
+  tabsLabel: 'Broadcast panels',
+  /** The four panes, in strip order. */
+  tabFeed: 'Feed',
+  tabParty: 'Party',
+  tabMap: 'Map',
+  tabLog: 'Log',
+
+  /* --- appended by 006 (mobile pass: mini-player, T602) --- */
+
+  /** The phone mini-player's return control (FR-501). */
+  miniReturn: 'Return to the stage',
+
+  /* --- appended by 006 (mobile pass: bottom sheet, T606) --- */
+
+  /** How the phone sheet's grab handle is dismissed, announced in its header (FR-504). */
+  sheetHandle: 'Drag down to close',
 } as const;
 
 export type Copy = typeof copy;

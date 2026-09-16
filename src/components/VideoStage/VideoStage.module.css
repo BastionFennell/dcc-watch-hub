@@ -1,10 +1,26 @@
 /*
  * Wireframe: 16:9 panel-deep box, hairline border, radius 8, overflow hidden.
  * Overlays (toast, minimap badge, ended card) are absolutely positioned children.
+ *
+ * Since 006 the component's root is the *slot*, not the stage: an aria-hidden
+ * placeholder holds the 16:9 box open and the stage fills it absolutely. The
+ * geometry is identical to the old single box, but the slot's height no longer
+ * depends on where the stage is — which is what lets the phone mini-player
+ * detach the stage to a fixed frame without the page below it jumping (FR-500).
  */
-.stage {
+.slot {
   position: relative;
+  min-width: 0;
+}
+
+.placeholder {
+  width: 100%;
   aspect-ratio: 16 / 9;
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
   background: var(--panel-deep);
   border: var(--border-hairline);
   border-radius: var(--radius-lg);
@@ -100,4 +116,112 @@
 
 .hostError > * {
   max-width: 420px;
+}
+
+/* ------------------------------------------- 006: the phone mini-player */
+
+/*
+ * Docked (FR-500, research R1): the *same* stage element, moved by CSS alone —
+ * no re-parenting, so the host iframe never reloads (constitution II). The slot
+ * keeps its placeholder height, so nothing below the stage moves.
+ *
+ * The frame is `min(45vw, 260px)` wide; its video area keeps 16:9 and the return
+ * bar adds its 28 px underneath, hence the explicit height rather than a bare
+ * `aspect-ratio` (which would put the bar on top of the picture).
+ */
+.slot[data-mini='true'] {
+  --mini-w: min(45vw, 260px);
+  --mini-bar-h: 28px;
+}
+
+/*
+ * A landscape phone cannot spare 45 vw: at 844 × 390 the capped 260 px frame is
+ * 174 px tall — 45% of the screen — and it reached down over the tab strip.
+ * Short viewports get a frame sized by the height they actually have (T611).
+ */
+@media (max-height: 500px) {
+  .slot[data-mini='true'] {
+    --mini-w: min(45vw, 170px);
+  }
+}
+
+.slot[data-mini='true'] .stage {
+  position: fixed;
+  /*
+   * Under the compact header *and* under the phone tab strip, which is sticky
+   * there (T611): the frame is fixed and the strip is the page's navigation, so
+   * the frame yields the strip's height rather than covering its right half.
+   */
+  top: calc(var(--header-h-compact) + var(--tabstrip-h) + 8px);
+  right: 8px;
+  bottom: auto;
+  left: auto;
+  width: var(--mini-w);
+  height: calc(var(--mini-w) * 9 / 16 + var(--mini-bar-h));
+  z-index: 15;
+  border-radius: var(--radius-md);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 55%);
+}
+
+/* The picture stops above the bar, so the video area itself stays 16:9. */
+.slot[data-mini='true'] .player,
+.slot[data-mini='true'] .fake {
+  bottom: var(--mini-bar-h);
+}
+
+/* The host's own control bar is out of reach at this size; no room to reserve. */
+.slot[data-mini='true'] .stage[data-host='youtube'] {
+  --stage-overlay-bottom: 0px;
+}
+
+/* Full-width, mono caps, 28 px: the only part of the frame that is ours to tap. */
+.miniReturn {
+  position: absolute;
+  inset: auto 0 0 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: var(--mini-bar-h, 28px);
+  padding: 0 var(--space-4);
+  background: var(--panel);
+  color: var(--text-2);
+  border: 0;
+  border-top: var(--border-hairline);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+/*
+ * The compact toast (US1 scenario 3). The toast is the page's child, not ours,
+ * and CSS Modules hash its own class names — so the mini frame narrows it
+ * through the hooks it exposes to the DOM: its live region and its testid.
+ */
+.slot[data-mini='true'] [role='status'] {
+  top: var(--space-2);
+  left: var(--space-2);
+  right: var(--space-2);
+  max-width: 100%;
+}
+
+.slot[data-mini='true'] [data-testid='achievement-toast'] {
+  padding: var(--space-2) var(--space-4);
+  border-left-width: 3px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-2xs);
+  line-height: 1.3;
+  box-shadow: none;
+}
+
+/* The toast's own title/tag type is set in points; bring it back to the box. */
+.slot[data-mini='true'] [data-testid='achievement-toast'] span,
+.slot[data-mini='true'] [data-testid='achievement-toast'] p {
+  font-size: inherit;
 }
