@@ -24,6 +24,8 @@ import { usePlayhead } from '../playback/usePlayhead';
 import { useDeepLink } from '../playback/useDeepLink';
 import { useResume } from '../playback/useResume';
 import { usePanel } from '../hooks/usePanel';
+import { useIsPhone } from '../hooks/useIsPhone';
+import { useMiniPlayer } from '../hooks/useMiniPlayer';
 import { loadLogOpen, saveLogOpen } from '../prefs/logOpen';
 import { useShare } from '../share/useShare';
 import { VideoStage } from '../components/VideoStage/VideoStage';
@@ -34,6 +36,8 @@ import { EventTimeline } from '../components/EventTimeline/EventTimeline';
 import { PartyRail } from '../components/PartyRail/PartyRail';
 import { EventFeed } from '../components/EventFeed/EventFeed';
 import { EpisodeLog } from '../components/EpisodeLog/EpisodeLog';
+import { MobileTabs } from '../components/MobileTabs/MobileTabs';
+import type { MobileTab } from '../components/MobileTabs/MobileTabs';
 import { RailPanel } from '../components/RailPanel/RailPanel';
 import { CrawlerGlance } from '../components/CrawlerGlance/CrawlerGlance';
 import { FullRecordDialog } from '../components/FullRecord/FullRecordDialog';
@@ -130,6 +134,22 @@ export function EpisodePage() {
   const [logOpen] = useState(loadLogOpen);
 
   /*
+   * The phone layout (006). Viewer state, not overlay state: a media query and
+   * an IntersectionObserver, neither of which knows anything about the event
+   * log. `phone` false — which is what jsdom and any host without `matchMedia`
+   * report — renders exactly the tree every earlier test asserts (FR-505).
+   */
+  const phone = useIsPhone();
+  /*
+   * The resume offer and the ended card need the full stage, so either one
+   * cancels the mini-player rather than shrinking with it (FR-501).
+   */
+  const mini = useMiniPlayer({
+    enabled: phone,
+    cancel: resume.pending !== null || ended,
+  });
+
+  /*
    * Sharing a moment (004 US2). Viewer state, not overlay state: a transient
    * System notice with its own short timer (spec Assumptions). It reads the
    * playhead and never moves it (FR-306).
@@ -184,6 +204,8 @@ export function EpisodePage() {
   const markers = episode ? timelineMarkers(episode.events, meta.durationSec, party) : [];
   const cells = state ? mapCells(state) : null;
   const recent = episode ? recentlyRevealed(episode.events, t) : EMPTY_CELLS;
+  // One derivation for both the rail's map panel and the phone's Map tab.
+  const labels = episode ? mapLabels(episode.events, t) : [];
   const { next } = prevNext(show, meta.id);
 
   // The dossier, like everything else, is derived at render time — a seek in
@@ -193,6 +215,16 @@ export function EpisodePage() {
       ? crawlerDossier(state, episode.events, t, panel.crawlerId, party)
       : null;
 
+  /**
+   * No episode data behind the overlay: the System says so once, wherever the
+   * viewer is looking — the feed, or the phone's Map tab (spec Edge Cases).
+   */
+  const notice = failed ? (
+    <SystemNotice tone="error">{copy.feedUnavailable}</SystemNotice>
+  ) : !episode ? (
+    <p className={styles.loading}>{copy.feedLoading}</p>
+  ) : null;
+
   const feed = (
     <EventFeed
       items={listed}
@@ -200,15 +232,23 @@ export function EpisodePage() {
       t={t}
       onSeek={(sec) => source?.seek(sec)}
       onShare={(sec) => void share.share(sec)}
-      notice={
-        failed ? (
-          <SystemNotice tone="error">{copy.feedUnavailable}</SystemNotice>
-        ) : !episode ? (
-          <p className={styles.loading}>{copy.feedLoading}</p>
-        ) : null
-      }
+      notice={notice}
     />
   );
+
+  /**
+   * The glance card the dossier panel carries, in the rail on desktop and in the
+   * bottom sheet on a phone — one card, one "Open full record" trigger (FR-504).
+   */
+  const glanceCard = dossier ? (
+    <CrawlerGlance
+      glance={crawlerGlance(dossier)}
+      onOpenRecord={(trigger) => {
+        recordTrigger.current = trigger;
+        setRecord(dossier.id);
+      }}
+    />
+  ) : null;
 
   /** The rail hosts exactly one of: feed (default), dossier, map (FR-100). */
   function railSlot() {
@@ -223,13 +263,7 @@ export function EpisodePage() {
             title={copy.dossierTitle(dossier.name)}
             onClose={panelApi.close}
           >
-            <CrawlerGlance
-              glance={crawlerGlance(dossier)}
-              onOpenRecord={(trigger) => {
-                recordTrigger.current = trigger;
-                setRecord(dossier.id);
-              }}
-            />
+            {glanceCard}
           </RailPanel>
         );
       case 'map':
@@ -242,12 +276,7 @@ export function EpisodePage() {
             title={copy.mapTitle(cells.floor)}
             onClose={panelApi.close}
           >
-            <FloorMap
-              cells={cells}
-              recent={recent}
-              labels={mapLabels(episode.events, t)}
-              floor={cells.floor}
-            />
+            <FloorMap cells={cells} recent={recent} labels={labels} floor={cells.floor} />
           </RailPanel>
         );
       default:
@@ -255,81 +284,208 @@ export function EpisodePage() {
     }
   }
 
+  /* ------------------------------------------------- 006: the phone layout */
+
+  /**
+   * The overlays drawn over the player. The minimap badge is not one of them on
+   * a phone: the Map tab is the map, and a badge that opens a second one would
+   * duplicate it (FR-503).
+   */
+  const stageOverlays = (
+    <>
+      <AchievementToast toast={toast} />
+      {!phone && cells ? (
+        <MiniMapBadge
+          cells={cells}
+          recent={recent}
+          expanded={panel.kind === 'map'}
+          onActivate={(element) => panelApi.toggle({ kind: 'map' }, element)}
+        />
+      ) : null}
+      {resume.pending ? (
+        <ResumeCard t={resume.pending.t} onRejoin={resume.rejoin} onStartOver={resume.startOver} />
+      ) : null}
+      {ended ? (
+        <div className={styles.endedOverlay}>
+          <NextEpisodeCard next={next} />
+        </div>
+      ) : null}
+    </>
+  );
+
+  const captionBlock = (
+    /*
+      The caption row (review 0.11/0.13, T340). It used to sit inside the
+      stage, where the host's own control bar covered it and the episode
+      title never appeared at all. Out here it is legible at every width,
+      and its left half is the page's one `<h1>`.
+    */
+    <div className={styles.captionBlock}>
+      <div className={styles.captionRow} data-testid="stage-caption-row">
+        <h1 className={styles.captionTitle}>{copy.captionLeft(meta.id, meta.floor, meta.title)}</h1>
+        <div className={styles.captionRight}>
+          <span className={styles.captionTime} data-testid="stage-caption-time">
+            {formatTime(t)}
+          </span>
+          {/* "Share this moment", beside the time it is about (004 FR-302). */}
+          <ShareButton testId="share-moment" onClick={() => void share.share(t)} />
+        </div>
+      </div>
+      {/*
+        The confirmation sits directly under the row that raised it. Its
+        live region is always mounted and weightless until it has
+        something to say, so the stage above never moves (T407).
+      */}
+      <ShareNotice status={share.status} url={share.url} onDismiss={share.dismiss} />
+    </div>
+  );
+
+  const timeline = (
+    <EventTimeline
+      markers={markers}
+      t={t}
+      durationSec={meta.durationSec}
+      onSeek={(sec) => source?.seek(sec)}
+    />
+  );
+
+  function partyRail(layout: 'row' | 'grid') {
+    return (
+      <PartyRail
+        frames={frames}
+        activeId={panel.kind === 'dossier' ? panel.crawlerId : null}
+        onActivate={(id, element) => panelApi.toggle({ kind: 'dossier', crawlerId: id }, element)}
+        layout={layout}
+      />
+    );
+  }
+
+  /**
+   * The broadcast log (005 US1/US2). Embedded, it is the Log tab's whole pane:
+   * always open, no toggle — the tab is the open/closed control (FR-503).
+   */
+  function broadcastLog(embedded: boolean) {
+    return (
+      <EpisodeLog
+        items={log}
+        party={party}
+        t={t}
+        playing={playing}
+        onSeek={(sec) => source?.seek(sec)}
+        onShare={(sec) => void share.share(sec)}
+        initialOpen={logOpen}
+        onOpenChange={saveLogOpen}
+        embedded={embedded}
+      />
+    );
+  }
+
+  /**
+   * The four phone panes (FR-503), all fed by the same playhead-derived data the
+   * desktop tree uses. The Map pane is the rail panel's floor map inline — with
+   * no episode behind it, the System's notice instead (spec Edge Cases).
+   */
+  function phoneTabs(): MobileTab[] {
+    return [
+      { id: 'feed', label: copy.tabFeed, content: feed },
+      { id: 'party', label: copy.tabParty, content: partyRail('grid') },
+      {
+        id: 'map',
+        label: copy.tabMap,
+        content:
+          cells && episode ? (
+            <section className={styles.mapPane} aria-label={copy.mapTitle(cells.floor)}>
+              <FloorMap cells={cells} recent={recent} labels={labels} floor={cells.floor} />
+            </section>
+          ) : (
+            notice
+          ),
+      },
+      { id: 'log', label: copy.tabLog, content: broadcastLog(true) },
+    ];
+  }
+
+  /**
+   * On a phone the dossier panel is a bottom sheet over the tabs, with the
+   * stage still visible above it (FR-504). The map panel kind cannot happen
+   * here — nothing opens it once the badge is gone — so it renders nothing.
+   */
+  function phoneSheet() {
+    if (panel.kind !== 'dossier' || !dossier) return null;
+    return (
+      <RailPanel
+        kicker={copy.glanceKicker}
+        title={copy.dossierTitle(dossier.name)}
+        presentation="sheet"
+        onClose={panelApi.close}
+      >
+        {glanceCard}
+      </RailPanel>
+    );
+  }
+
+  if (phone) {
+    return (
+      <div className={styles.page} data-ended={ended ? 'true' : undefined}>
+        <div className={styles.phone}>
+          {/*
+            The 1 px mark the mini-player watches: a sibling immediately above
+            the stage's slot, so "the stage has scrolled up past the header" is
+            one observation and never a measurement (FR-500, research R1).
+          */}
+          <div
+            ref={mini.sentinelRef}
+            className={styles.sentinel}
+            data-testid="stage-sentinel"
+            aria-hidden="true"
+          />
+          <VideoStage
+            key={meta.id}
+            meta={meta}
+            t={t}
+            onSource={setSource}
+            mini={mini.docked}
+            onExitMini={mini.exitMini}
+            hideBadge
+          >
+            {stageOverlays}
+          </VideoStage>
+
+          {captionBlock}
+          {timeline}
+
+          {/* Feed, party, map and log — one tap apart, under the timeline (FR-502). */}
+          <MobileTabs label={copy.tabsLabel} tabs={phoneTabs()} />
+        </div>
+
+        {phoneSheet()}
+
+        {dossier ? (
+          <FullRecordDialog
+            dossier={dossier}
+            meta={meta}
+            open={record === dossier.id}
+            onClose={() => setRecord(null)}
+            returnFocusTo={recordTrigger.current}
+          />
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <div className={styles.page} data-ended={ended ? 'true' : undefined}>
       <div className={styles.grid}>
         <div className={styles.main}>
           <VideoStage key={meta.id} meta={meta} t={t} onSource={setSource}>
-            <AchievementToast toast={toast} />
-            {cells ? (
-              <MiniMapBadge
-                cells={cells}
-                recent={recent}
-                expanded={panel.kind === 'map'}
-                onActivate={(element) => panelApi.toggle({ kind: 'map' }, element)}
-              />
-            ) : null}
-            {resume.pending ? (
-              <ResumeCard
-                t={resume.pending.t}
-                onRejoin={resume.rejoin}
-                onStartOver={resume.startOver}
-              />
-            ) : null}
-            {ended ? (
-              <div className={styles.endedOverlay}>
-                <NextEpisodeCard next={next} />
-              </div>
-            ) : null}
+            {stageOverlays}
           </VideoStage>
 
-          {/*
-            The caption row (review 0.11/0.13, T340). It used to sit inside the
-            stage, where the host's own control bar covered it and the episode
-            title never appeared at all. Out here it is legible at every width,
-            and its left half is the page's one `<h1>`.
-          */}
-          <div className={styles.captionBlock}>
-            <div className={styles.captionRow} data-testid="stage-caption-row">
-              <h1 className={styles.captionTitle}>
-                {copy.captionLeft(meta.id, meta.floor, meta.title)}
-              </h1>
-              <div className={styles.captionRight}>
-                <span
-                  className={styles.captionTime}
-                  data-testid="stage-caption-time"
-                >
-                  {formatTime(t)}
-                </span>
-                {/* "Share this moment", beside the time it is about (004 FR-302). */}
-                <ShareButton
-                  testId="share-moment"
-                  onClick={() => void share.share(t)}
-                />
-              </div>
-            </div>
-            {/*
-              The confirmation sits directly under the row that raised it. Its
-              live region is always mounted and weightless until it has
-              something to say, so the stage above never moves (T407).
-            */}
-            <ShareNotice status={share.status} url={share.url} onDismiss={share.dismiss} />
-          </div>
+          {captionBlock}
 
-          <EventTimeline
-            markers={markers}
-            t={t}
-            durationSec={meta.durationSec}
-            onSeek={(sec) => source?.seek(sec)}
-          />
+          {timeline}
 
-          <PartyRail
-            frames={frames}
-            activeId={panel.kind === 'dossier' ? panel.crawlerId : null}
-            onActivate={(id, element) =>
-              panelApi.toggle({ kind: 'dossier', crawlerId: id }, element)
-            }
-          />
+          {partyRail('row')}
         </div>
 
         <aside className={styles.rail} data-panel={panel.kind}>
@@ -342,18 +498,7 @@ export function EpisodePage() {
         is a full-width block under the rail and on a phone it is simply last —
         and opening it appends below rather than moving the stage (FR-400/405).
       */}
-      <div className={styles.log}>
-        <EpisodeLog
-          items={log}
-          party={party}
-          t={t}
-          playing={playing}
-          onSeek={(sec) => source?.seek(sec)}
-          onShare={(sec) => void share.share(sec)}
-          initialOpen={logOpen}
-          onOpenChange={saveLogOpen}
-        />
-      </div>
+      <div className={styles.log}>{broadcastLog(false)}</div>
 
       {/*
         The one overlay allowed to cover the stage (constitution III, 1.2.0). It

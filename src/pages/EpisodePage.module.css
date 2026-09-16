@@ -163,3 +163,35 @@
     margin-top: var(--space-8);
   }
 }
+
+/* ------------------------------------------------ 006: the phone layout */
+
+/*
+ * The phone column (FR-502): stage slot, caption row, timeline, tabs — the same
+ * gaps the desktop stage column uses, inside the same `.page` padding, so
+ * nothing about the page frame changes between the two trees.
+ */
+.phone {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+/*
+ * The mini-player's sentinel: a 1 px mark immediately above the stage's slot.
+ * The negative margin swallows its own height and the column gap it would
+ * otherwise add, so the stage sits exactly where it did without it.
+ */
+.sentinel {
+  height: 1px;
+  margin-bottom: calc(var(--space-4) * -1 - 1px);
+  pointer-events: none;
+}
+
+/* The Map tab's pane: the floor map fills it, with its own count header. */
+.mapPane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
