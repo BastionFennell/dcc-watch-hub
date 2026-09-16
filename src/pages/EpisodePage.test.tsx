@@ -10,15 +10,19 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import { MemoryRouter } from 'react-router';
 import { App } from '../App';
 import { copy } from '../copy';
-import { feedItems } from '../engine/selectors';
+import { feedItems, logItems } from '../engine/selectors';
 import { formatTime } from '../engine/time';
 import { isKnownEvent } from '../data/types';
 import { resumeKey } from '../playback/resume';
+import { parseDeepLinkT } from '../playback/deepLink';
+import { LOG_OPEN_KEY } from '../prefs/logOpen';
 import { __fakeSources } from '../components/VideoStage/FakeStage';
 import { makeEpisode, makeEpisodeRaw, makeShow } from '../test/fixtures';
 
 const episode = makeEpisode(1);
 const party = episode.initialState.party;
+/** Every fixture episode runs 240 s; a `?t=` past it is not a link at all. */
+const FIXTURE_DURATION_SEC = 240;
 
 function stubFetch(episodeOk = true) {
   vi.stubGlobal('fetch', (input: RequestInfo | URL) => {
@@ -55,6 +59,16 @@ async function mountEpisode(entry = '/ep/1?fake=1') {
   // The party rail only exists once the episode JSON has landed.
   await waitFor(() => expect(screen.getAllByTestId('crawler-frame')).toHaveLength(5));
   const source = __fakeSources[__fakeSources.length - 1];
+  /*
+   * A `?t=` entry seeks from an effect once the source exists, so under load the
+   * party rail can land a beat before the playhead does. Every caller that
+   * passes a link means "the page is already there", so wait for it here rather
+   * than in each test.
+   */
+  const linked = parseDeepLinkT(entry.slice(entry.indexOf('?') + 1), FIXTURE_DURATION_SEC);
+  if (linked !== null) {
+    await waitFor(() => expect(source.getTime()).toBe(linked));
+  }
   return {
     source,
     seek(t: number) {
@@ -1657,5 +1671,163 @@ describe('EpisodePage', () => {
     const shared = writeText.mock.calls[0][0] as string;
     expect(shared).toBe(MOMENT_URL);
     for (const flag of ['fake', 'panel', 'record']) expect(shared).not.toContain(flag);
+  });
+  /* ---------------------------------- 005: the broadcast log (T506) */
+
+  /** The log section itself, wherever the page has put it. */
+  function logSection(): HTMLElement {
+    return screen.getByTestId('episode-log');
+  }
+
+  function logRows(): HTMLElement[] {
+    return screen.queryAllByTestId('log-row');
+  }
+
+  function logCountAt(t: number): number {
+    return logItems(episode.events, t, party).length;
+  }
+
+  function toggleLog(): void {
+    fireEvent.click(screen.getByTestId('log-toggle'));
+  }
+
+  it('sits after the grid, collapsed, with the elapsed count on the bar', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+
+    const log = logSection();
+    expect(log).not.toHaveAttribute('data-open');
+    expect(logRows()).toHaveLength(0);
+    expect(screen.queryByTestId('log-filters')).not.toBeInTheDocument();
+    expect(screen.getByTestId('log-count')).toHaveTextContent(copy.logCount(logCountAt(200)));
+
+    // After the two-column grid, and never inside the stage column.
+    const stage = screen.getByTestId('video-stage');
+    expect(log.contains(stage)).toBe(false);
+    expect(stage.compareDocumentPosition(log) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('opens on load when the viewer opened it before on this device (FR-400)', async () => {
+    localStorage.setItem(LOG_OPEN_KEY, '1');
+    const { seek } = await mountEpisode();
+    seek(200);
+
+    expect(screen.getByTestId('log-toggle')).toHaveAttribute('aria-expanded', 'true');
+    expect(logRows()).toHaveLength(logCountAt(200));
+  });
+
+  it('remembers the viewer’s choice, and nothing else', async () => {
+    await mountEpisode();
+
+    toggleLog();
+    expect(localStorage.getItem(LOG_OPEN_KEY)).toBe('1');
+
+    toggleLog();
+    expect(localStorage.getItem(LOG_OPEN_KEY)).toBeNull();
+  });
+
+  it('lists every elapsed moment and shrinks on a backward seek (FR-401)', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+    toggleLog();
+
+    expect(logRows()).toHaveLength(logCountAt(200));
+    expect(logRows()[0]).toHaveTextContent(formatTime(12));
+    expect(logRows()[logRows().length - 1]).toHaveAttribute('data-latest', 'true');
+
+    seek(100);
+
+    expect(logRows()).toHaveLength(logCountAt(100));
+    expect(logCountAt(100)).toBeLessThan(logCountAt(200));
+    expect(screen.queryByText(/Grull Industries/)).not.toBeInTheDocument();
+  });
+
+  it('never puts a future moment on the log (every event boundary)', async () => {
+    const { seek } = await mountEpisode();
+    toggleLog();
+
+    for (const event of episode.events) {
+      seek(event.t - 0.001);
+      expect(logRows()).toHaveLength(logCountAt(event.t - 0.001));
+      seek(event.t);
+      expect(logRows()).toHaveLength(logCountAt(event.t));
+    }
+  });
+
+  it('seeks the broadcast from a log row', async () => {
+    const { source, seek } = await mountEpisode();
+    seek(200);
+    toggleLog();
+
+    const row = logRows()[1];
+    expect(within(row).getByTestId('feed-time')).toHaveTextContent(formatTime(30));
+    fireEvent.click(within(row).getAllByRole('button')[0]);
+
+    expect(source.getTime()).toBe(30);
+  });
+
+  it('shares a log row’s moment without seeking to it', async () => {
+    const writeText = stubClipboard();
+    const { source, seek } = await mountEpisode();
+    seek(200);
+    toggleLog();
+
+    const row = logRows()[1];
+    await act(async () => {
+      fireEvent.click(within(row).getByTestId('share-row'));
+    });
+
+    expect(writeText).toHaveBeenCalledWith('http://localhost:3000/ep/1?t=30');
+    expect(source.getTime()).toBe(200);
+  });
+
+  it('filters the log by type and by crawler, then clears (FR-402)', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+    toggleLog();
+
+    fireEvent.click(screen.getByTestId('log-chip-type-achievement'));
+    expect(logRows()).toHaveLength(3);
+
+    fireEvent.click(screen.getByTestId('log-chip-actor-harry'));
+    expect(logRows()).toHaveLength(1);
+    expect(logRows()[0]).toHaveTextContent('Gate Crasher');
+
+    fireEvent.click(screen.getByTestId('log-clear'));
+    expect(logRows()).toHaveLength(logCountAt(200));
+  });
+
+  it('says so when a filter matches nothing', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+    toggleLog();
+
+    fireEvent.click(screen.getByTestId('log-chip-type-system_message'));
+    fireEvent.click(screen.getByTestId('log-chip-actor-harry'));
+
+    expect(screen.getByTestId('log-empty')).toHaveTextContent(copy.logNoMatch);
+  });
+
+  it('opening the log leaves the stage and the rail exactly where they were (FR-405)', async () => {
+    const { seek } = await mountEpisode();
+    seek(200);
+
+    const stage = screen.getByTestId('video-stage');
+    const parent = stage.parentElement as HTMLElement;
+    const siblings = [...parent.children];
+    const rail = document.querySelector('aside');
+    const timeline = screen.getByTestId('event-timeline');
+
+    toggleLog();
+
+    // The same node, in the same place, with the same neighbours: the log
+    // appended below, it did not re-lay the page out.
+    expect(screen.getByTestId('video-stage')).toBe(stage);
+    expect(stage.parentElement).toBe(parent);
+    expect([...parent.children]).toEqual(siblings);
+    expect(document.querySelector('aside')).toBe(rail);
+    expect(screen.getByTestId('event-timeline')).toBe(timeline);
+    expect(logSection().contains(stage)).toBe(false);
+    expect(logRows().length).toBeGreaterThan(0);
   });
 });

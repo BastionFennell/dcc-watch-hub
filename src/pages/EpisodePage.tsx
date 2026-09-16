@@ -11,6 +11,7 @@ import {
   crawlerDossier,
   crawlerGlance,
   feedItems,
+  logItems,
   mapCells,
   mapLabels,
   partyFrames,
@@ -23,6 +24,7 @@ import { usePlayhead } from '../playback/usePlayhead';
 import { useDeepLink } from '../playback/useDeepLink';
 import { useResume } from '../playback/useResume';
 import { usePanel } from '../hooks/usePanel';
+import { loadLogOpen, saveLogOpen } from '../prefs/logOpen';
 import { useShare } from '../share/useShare';
 import { VideoStage } from '../components/VideoStage/VideoStage';
 import { AchievementToast } from '../components/AchievementToast/AchievementToast';
@@ -31,6 +33,7 @@ import { NextEpisodeCard } from '../components/NextEpisodeCard/NextEpisodeCard';
 import { EventTimeline } from '../components/EventTimeline/EventTimeline';
 import { PartyRail } from '../components/PartyRail/PartyRail';
 import { EventFeed } from '../components/EventFeed/EventFeed';
+import { EpisodeLog } from '../components/EpisodeLog/EpisodeLog';
 import { RailPanel } from '../components/RailPanel/RailPanel';
 import { CrawlerGlance } from '../components/CrawlerGlance/CrawlerGlance';
 import { FullRecordDialog } from '../components/FullRecord/FullRecordDialog';
@@ -64,7 +67,7 @@ export function EpisodePage() {
   const meta = show && validId ? findEpisode(show, episodeId) : undefined;
 
   const playhead = usePlayhead(source);
-  const { t, ended } = playhead;
+  const { t, ended, playing } = playhead;
   // Viewer state, not overlay state: which record is open. Resets per episode.
   const panelApi = usePanel(meta?.id);
   const { panel } = panelApi;
@@ -120,6 +123,13 @@ export function EpisodePage() {
   });
 
   /*
+   * The log's open/closed state is a viewer preference, read once per mount so a
+   * later save cannot re-open it under the viewer (005 FR-400). Constitution I
+   * allows it: a boolean about chrome, never overlay state.
+   */
+  const [logOpen] = useState(loadLogOpen);
+
+  /*
    * Sharing a moment (004 US2). Viewer state, not overlay state: a transient
    * System notice with its own short timer (spec Assumptions). It reads the
    * playhead and never moves it (FR-306).
@@ -164,6 +174,9 @@ export function EpisodePage() {
   const state = episode ? reduceTo(episode, t) : null;
   const frames = state && episode ? partyFrames(state, episode.events, t) : [];
   const items = episode ? feedItems(episode.events, t, 8, party) : [];
+  // The whole elapsed transcript, oldest first — the feed's eight rows are a
+  // window onto this (005 FR-401).
+  const log = episode ? logItems(episode.events, t, party) : [];
   const sponsor = episode ? activeSponsor(episode.events, t, party) : null;
   // A pinned sponsor is not repeated in the list; it rejoins the feed when its window closes.
   const listed = sponsor ? items.filter((item) => item.id !== sponsor.id) : items;
@@ -322,6 +335,24 @@ export function EpisodePage() {
         <aside className={styles.rail} data-panel={panel.kind}>
           {railSlot()}
         </aside>
+      </div>
+
+      {/*
+        The broadcast log (005 US1/US2). It sits after the grid, so on desktop it
+        is a full-width block under the rail and on a phone it is simply last —
+        and opening it appends below rather than moving the stage (FR-400/405).
+      */}
+      <div className={styles.log}>
+        <EpisodeLog
+          items={log}
+          party={party}
+          t={t}
+          playing={playing}
+          onSeek={(sec) => source?.seek(sec)}
+          onShare={(sec) => void share.share(sec)}
+          initialOpen={logOpen}
+          onOpenChange={saveLogOpen}
+        />
       </div>
 
       {/*

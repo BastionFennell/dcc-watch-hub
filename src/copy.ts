@@ -337,7 +337,7 @@ export const copy = {
     `Ep ${episodeId} · Floor ${floor} — ${title}`,
 
   /** A feed row is a seek control; its accessible name leads with the moment (T342). */
-  feedSeek: (time: string, text: string) => `${time} — ${text}`,
+  feedSeek: (time: string, text: string) => `${time} ${text}`,
 
   /* --- 003 revision 2, wave 3 (record polish: T330) --- */
 
@@ -366,6 +366,28 @@ export const copy = {
   shareUrlLabel: 'Link to this moment',
   /** Dismisses the notice by hand. */
   shareDismiss: 'Dismiss',
+
+  /* --- appended by 005 (broadcast log: T503) --- */
+
+  /** The collapsible section under the party rail (FR-400). */
+  logTitle: 'Broadcast log',
+  /** The bar’s elapsed count, in the System’s voice (FR-403). */
+  logCount: (n: number) => `${n} moment${n === 1 ? '' : 's'} on the log`,
+  /** The same count once a filter is on: how much of the log is showing. */
+  logCountFiltered: (n: number, m: number) =>
+    `${n} of ${m} moment${m === 1 ? '' : 's'}`,
+  /** The toggle, named for what it will do next. */
+  logOpen: 'Open the log',
+  logClose: 'Close the log',
+  /** The two chip groups (FR-402). */
+  logFiltersTypes: 'Types',
+  logFiltersCrawlers: 'Crawlers',
+  /** Resets every chip. */
+  logClear: 'Clear',
+  /** Re-arms the list’s auto-scroll after the viewer has read back (FR-404). */
+  logFollow: 'Follow the broadcast',
+  /** The log is not empty — the filter is (US2 scenario 4). */
+  logNoMatch: 'Nothing on the log matches.',
 } as const;
 
 export type Copy = typeof copy;

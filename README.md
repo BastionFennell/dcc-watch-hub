@@ -27,6 +27,8 @@ npm run dev -- --open  # opens the archive
 - Episode with the dev scrubber, no network: <http://localhost:5180/ep/1?fake=1>
 - The panels mid-episode: <http://localhost:5180/ep/1?fake=1&t=580> (click a crawler, then
   the floor-map badge)
+- The broadcast log mid-episode: <http://localhost:5180/ep/1?fake=1&t=580> → scroll below the
+  party rail and open it (55 moments, 17 type chips and 5 crawler chips)
 - Straight to a full record: <http://localhost:5180/ep/1?fake=1&t=580&panel=dossier:harry&record=1>
   (Harry's hotbar overflows at 9:32) and `…&panel=dossier:xo&record=1` (X.O.'s skills fill the
   eight-tile grid and offer "View all (10)"). The `panel` / `record` flags are DEV-only.
@@ -85,8 +87,9 @@ with a populated feed and no network.
 | `src/data/` | schema types, guards/normalization, fetching, show ordering |
 | `src/playback/` | `TimeSource` interface, YouTube adapter, fake, `usePlayhead`, resume store + `useResume`, `?t=` deep links (`deepLink`, `useDeepLink`) |
 | `src/share/` | the moment URL, the share-sheet → clipboard → shown ladder, `useShare` |
-| `src/hooks/` | `usePanel` — the right rail's one-panel state machine; `useModalDialog` — the full record's focus trap |
-| `src/components/` | stage, party rail, event feed, timeline, toast, minimap, header, rail panel, glance card, full record, dossier sections, floor map, resume card, share button + notice |
+| `src/hooks/` | `usePanel` — the right rail's one-panel state machine; `useModalDialog` — the full record's focus trap; `useThrottledValue` — the log count's once-a-second cadence |
+| `src/prefs/` | viewer preferences that are not playback: `logOpen` (the broadcast log's open state) |
+| `src/components/` | stage, party rail, event feed, timeline, toast, minimap, header, rail panel, glance card, full record, dossier sections, floor map, resume card, share button + notice, broadcast log |
 | `src/pages/` | `EpisodePage`, `HubPage`, `NotFoundPage` |
 | `src/copy.ts` | **every** user-facing string, in the System's voice |
 | `src/styles/tokens.css` | the colour/spacing/type tokens from spec §6 |
@@ -310,6 +313,56 @@ stage above it never moves when it appears. A copy or a native share clears itse
 seconds; the fallback stands until it is dismissed, because it is holding the only copy of the
 link the viewer has.
 
+---
+
+## Broadcast log
+
+The feed is a rolling eight-item ticker: by 9:00 the cold open has scrolled away. The log is the
+whole reel. It is 005 (`specs/005-episode-log/`).
+
+**Where it sits.** A full-width section *below* the party rail on desktop — the dead space under
+the frames — and last in the stacked phone layout, after the feed. It is a sibling of the
+two-column grid, never inside it, so opening it grows the page downward and the stage, caption
+row, timeline and rail do not move by a pixel (measured at 1440, 500 and 360 px; see the 005
+Results).
+
+**Collapsed by default**, like everything ambient here: a slim black bar reading
+`BROADCAST LOG · Open the log · 55 moments on the log`. The count is a polite live region
+throttled to one change a second, so a screen reader is not read a queue of numbers while the
+broadcast runs. Open and closed is a **viewer preference**, remembered on this device:
+
+- **Key**: `dcc-watch-hub:prefs:v1:log-open` in `localStorage`, value `"1"` or absent. Nothing
+  else — no rows, no filters, no playhead. Blocked storage is silent: the log opens closed.
+
+**The rows** are every known elapsed event, **oldest first** — the feed reads newest-first
+because it is a ticker; the log reads top-down because it is a transcript. Each row is the feed's
+own row: time, category, text, System boxes and purple sponsor slots included. Clicking a row
+seeks the broadcast to that moment; each row's share icon copies that moment's link without
+seeking, exactly as in the feed. The newest row carries a thin left accent. The list scrolls
+inside a bounded area (60 vh desktop, 50 vh phone); nothing is virtualized at this scale.
+
+Nothing on the log is ahead of the playhead: the rows are `logItems(events, t, party)`, recomputed
+every render, so scrubbing back removes rows and the count follows.
+
+**Filters** sit above the list in two groups, **Types** and **Crawlers**, each chip a toggle
+button with its elapsed count. A chip exists only while something of its kind has elapsed — the
+chips are a reading of the log so far, not a catalogue of what an episode might contain, so they
+arrive as the broadcast produces them (17 types and 5 crawlers by 9:40 of Ep 1; 14 and 4 at 3:20).
+A backward seek that empties a chip takes the chip away *and* the selection standing on it, so a
+filter can never leave the log blank for a reason the viewer cannot see. Selections combine as
+**any selected type AND any selected crawler**; a crawler filter drops rows that belong to nobody
+(System, sponsor, chapter, map, note). The bar then reads "N of M moments", and **Clear** resets.
+Filters are per visit — they are not remembered across reloads.
+
+**Following the broadcast.** While the episode plays, the list stays pinned to the newest row.
+Scroll up to read something and it lets go and offers **Follow the broadcast**; activating it
+returns to the end and re-arms. `prefers-reduced-motion` turns the scroll from smooth to instant.
+
+**Two quiet states**: before the first event the open log reads "Standing by. The System reports
+when the broadcast begins." (and shows no filters at all, because there is nothing to filter);
+a filter that matches nothing reads "Nothing on the log matches." while the log itself stays
+whole.
+
 ## Authoring episode data
 
 The editor logs events in a Google Sheet during the edit pass and exports CSV. Header row
@@ -466,19 +519,22 @@ Measured on the production build (`npm run build`, Node 20.9.0):
 
 | Asset | Raw | Gzipped |
 |-------|-----|---------|
-| `dist/assets/index-*.js` | 355.4 kB | **112.0 kB** |
-| `dist/assets/index-*.css` | 50.1 kB | 9.2 kB |
+| `dist/assets/index-*.js` | 361.8 kB | **114.1 kB** |
+| `dist/assets/index-*.css` | 54.4 kB | 9.8 kB |
 | `dist/index.html` | 0.7 kB | 0.4 kB |
 
 That is React 19 + react-router 7 + the whole app — v1 plus the v2 panels, dossier, floor map
-and resume, plus the glance card, full record, deep links and share — comfortably under the
-150 kB gzipped budget. Deep links and share cost ~1.9 kB gzipped of JS.
+and resume, plus the glance card, full record, deep links, share and the broadcast log —
+comfortably under the 150 kB gzipped budget. Deep links and share cost ~1.9 kB gzipped of JS;
+the broadcast log cost 2.1 kB gzipped of JS and 0.6 kB of CSS, and adds no dependency.
 
 Lighthouse 11.7.1, desktop preset, against `npm run preview` with the real YouTube embed loading:
 **performance 100, accessibility 100** on `/ep/1` and `/` (FCP 0.4 s, LCP 0.5 s, TBT 0 ms,
 CLS 0). Details in `specs/002-watch-hub-v2/quickstart.md` → Results, re-measured for the crawler
-record in `specs/003-crawler-record/quickstart.md` → Results, and again for deep links in
-`specs/004-deep-links/quickstart.md` → Results.
+record in `specs/003-crawler-record/quickstart.md` → Results, again for deep links in
+`specs/004-deep-links/quickstart.md` → Results, and again with the broadcast log open in
+`specs/005-episode-log/quickstart.md` → Results (**100 / 100** either side of the log's toggle,
+and the log adds no scored audit of its own).
 
 A deep-linked page is the one exception worth knowing about. `/ep/1?t=156` audits
 **accessibility 100, performance 79**: the seek starts the embed, and the YouTube player's own
@@ -515,8 +571,10 @@ Read in this order:
    layout, plus `contracts/panels.md` and `contracts/resume-storage.md`.
 5. `specs/003-crawler-record/` — the rail's glance card and the modal full record. Same layout,
    plus `contracts/dialog.md`.
-6. `specs/004-deep-links/` — the active feature: `?t=` deep links and "Share this moment". Same
-   layout, plus `contracts/deep-link.md`.
+6. `specs/004-deep-links/` — `?t=` deep links and "Share this moment". Same layout, plus
+   `contracts/deep-link.md`.
+7. `specs/005-episode-log/` — the active feature: the broadcast log under the rail, its filters,
+   follow control and open-state preference. Same layout, plus `contracts/log.md`.
 
 Three rules bite most often while editing:
 
@@ -535,7 +593,8 @@ Parked, from the handoff spec §8 and constitution 1.1.0. Do not build, stub, or
 these — not even "for later". In particular, do not *tease* them: no hover affordances, pointer
 cursors, or tooltips on elements that do nothing. The interactive triggers are exactly: crawler
 frames (dossier), the minimap badge (floor map), the timeline, the resume card's two buttons,
-every feed row (seek, 003), and the share controls in the caption row and on each feed row (004).
+every feed row (seek, 003), the share controls in the caption row and on each feed row (004), and
+the broadcast log's own bar, filter chips, Clear, rows and follow control (005).
 
 **Shipped in v2** (the four items below left the fence; see "Lean-forward (v2)" above)
 

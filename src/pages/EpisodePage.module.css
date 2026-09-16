@@ -146,3 +146,20 @@
     top: calc(var(--header-h) + var(--space-6));
   }
 }
+
+/*
+ * The broadcast log (005 FR-400): a full-width block after the two-column grid,
+ * which fills the dead space under the rail on desktop and lands last in the
+ * stacked phone layout. It is a sibling of the grid, never inside it, so
+ * opening it cannot move the stage, the timeline or the rail (FR-405).
+ */
+.log {
+  margin-top: var(--space-7);
+  min-width: 0;
+}
+
+@media (min-width: 1400px) {
+  .log {
+    margin-top: var(--space-8);
+  }
+}

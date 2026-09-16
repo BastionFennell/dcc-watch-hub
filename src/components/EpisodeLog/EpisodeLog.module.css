@@ -1,0 +1,288 @@
+/*
+ * The broadcast log (005). It echoes the record's sheet look — a black section
+ * bar in mono caps — because it is the same System filing the same events, just
+ * the whole reel instead of one crawler. Collapsed it is a single slim row; open
+ * it grows downward and nothing above it moves (FR-405).
+ */
+.log {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+/* --- section bar --- */
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 32px;
+  padding: var(--space-2) var(--space-4);
+  background: var(--panel-deep);
+  border-radius: var(--radius-sm);
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  flex: none;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
+  min-height: 28px;
+  padding: 0 var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition:
+    color 200ms ease,
+    border-color 200ms ease;
+}
+
+.toggle:hover {
+  color: var(--text);
+  border-color: var(--hairline-2);
+}
+
+.toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.chevron {
+  width: 12px;
+  height: 12px;
+  transition: transform 200ms ease;
+}
+
+.log[data-open='true'] .chevron {
+  transform: rotate(90deg);
+}
+
+/*
+ * The elapsed count, at the far right of the bar. It is a polite live region,
+ * so its text is throttled in the component — the CSS only keeps the digits
+ * from jittering as they change.
+ */
+.count {
+  margin-left: auto;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* --- open body --- */
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+/* --- filters --- */
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  width: 100%;
+}
+
+.groupTitle {
+  margin: 0;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* Wrapping is the phone layout: chips never push the page sideways. */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  /* Thumb-sized on a phone (spec Edge Cases). */
+  min-height: 32px;
+  padding: 0 var(--space-5);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+  color: var(--text);
+  font-family: inherit;
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease;
+}
+
+.chip:hover {
+  border-color: var(--brand-line);
+}
+
+.chip:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.chip[aria-pressed='true'] {
+  background: var(--brand-deep);
+  border-color: var(--brand-line);
+  color: var(--brand-fg-2);
+}
+
+/* The chip carries two pieces: what it filters, and how much of it there is. */
+.chipLabel {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.chipCount {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-3);
+}
+
+.chip[aria-pressed='true'] .chipCount {
+  color: var(--brand-fg);
+}
+
+.clear {
+  min-height: 32px;
+  padding: 0 var(--space-5);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--text-2);
+  font-family: inherit;
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: border-color 200ms ease;
+}
+
+.clear:hover:not(:disabled) {
+  border-color: var(--brand-line);
+  color: var(--text);
+}
+
+.clear:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.clear:disabled {
+  color: var(--text-3);
+  border-color: var(--hairline);
+  cursor: default;
+}
+
+/* --- the list --- */
+
+/*
+ * Bounded, so a three-hundred-event episode scrolls inside the section instead
+ * of burying the rest of the page (spec Edge Cases). No virtualization at v1
+ * scale (constitution V).
+ */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 60vh;
+  overflow: auto;
+  overscroll-behavior: contain;
+  min-width: 0;
+}
+
+.row {
+  min-width: 0;
+  padding-left: var(--space-4);
+  border-left: 2px solid transparent;
+}
+
+/* The newest moment on the log, marked without moving anything (research R4). */
+.row[data-latest] {
+  border-left-color: var(--brand-line);
+}
+
+.empty {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  line-height: 1.45;
+}
+
+/* --- follow --- */
+
+.follow {
+  align-self: center;
+  min-height: 32px;
+  padding: 0 var(--space-6);
+  border: 1px solid var(--system-pill-border);
+  border-radius: var(--radius-pill);
+  background: var(--system-bg);
+  color: var(--system-fg);
+  font-family: inherit;
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.follow:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+@media (max-width: 900px) {
+  .list {
+    max-height: 50vh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron,
+  .toggle,
+  .chip,
+  .clear {
+    transition: none;
+  }
+}
