@@ -1,0 +1,82 @@
+/*
+ * The phone tab strip (006 T604). It reads as another piece of System chrome:
+ * mono caps like the episodes menu's floor labels and the log's section bar,
+ * sitting in the flow under the timeline — nothing here is sticky, so the strip
+ * scrolls away with the stage and the panes get the whole screen.
+ */
+.tabs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.strip {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-2);
+  min-width: 0;
+  border-bottom: var(--border-hairline);
+}
+
+/*
+ * Thumb-sized (≥ 44 px) and equal width, so the four panes split the screen and
+ * no label needs a precise tap. The selected tab is marked by a 2 px
+ * --brand-line underline that overlaps the strip's hairline.
+ */
+.tab {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 44px;
+  padding: var(--space-3) var(--space-2);
+  margin-bottom: -1px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
+.tab[aria-selected='true'] {
+  color: var(--text);
+  border-bottom-color: var(--brand-line);
+}
+
+/*
+ * The swipe surface. `pan-y` hands vertical scrolling to the browser and keeps
+ * the horizontal axis for the gesture, which is what makes a swipe between
+ * panes possible without breaking the page's own scroll (FR-502).
+ */
+.panels {
+  min-width: 0;
+  touch-action: pan-y;
+}
+
+.panel {
+  min-width: 0;
+}
+
+/* A panel is a focus stop but must not draw a ring for a pointer tap. */
+.panel:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}

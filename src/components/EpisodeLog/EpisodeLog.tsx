@@ -32,6 +32,12 @@ export interface EpisodeLogProps {
   /** The remembered preference, read once by the page (FR-400). */
   initialOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
+  /**
+   * The phone Log pane (006 FR-503): the log *is* the pane, so it is always
+   * open, its toggle is not drawn, and `initialOpen`/the remembered preference
+   * do not apply. The header keeps the title and the elapsed count.
+   */
+  embedded?: boolean;
 }
 
 /** jsdom has no `matchMedia`, and neither does a very old browser. */
@@ -84,8 +90,12 @@ export function EpisodeLog({
   onShare,
   initialOpen = false,
   onOpenChange,
+  embedded = false,
 }: EpisodeLogProps) {
-  const [open, setOpen] = useState(initialOpen);
+  const [openPref, setOpen] = useState(initialOpen);
+  // Embedded, the section has no closed state to be in: the tab already is the
+  // open/closed control.
+  const open = embedded || openPref;
   const [types, setTypes] = useState<ReadonlySet<EventType>>(() => new Set<EventType>());
   const [actors, setActors] = useState<ReadonlySet<string>>(() => new Set<string>());
   /** Whether the list is still pinned to the newest row (FR-404). */
@@ -161,6 +171,7 @@ export function EpisodeLog({
       aria-labelledby={headingId}
       data-testid="episode-log"
       data-open={open ? 'true' : undefined}
+      data-embedded={embedded ? 'true' : undefined}
       /* The playhead this log was derived at — the measurable half of FR-405. */
       data-t={Math.max(0, Math.floor(t))}
     >
@@ -168,17 +179,19 @@ export function EpisodeLog({
         <h2 className={styles.title} id={headingId}>
           {copy.logTitle}
         </h2>
-        <button
-          type="button"
-          className={styles.toggle}
-          data-testid="log-toggle"
-          aria-expanded={open}
-          aria-controls={bodyId}
-          onClick={toggleOpen}
-        >
-          <IconChevronRight className={styles.chevron} />
-          {open ? copy.logClose : copy.logOpen}
-        </button>
+        {embedded ? null : (
+          <button
+            type="button"
+            className={styles.toggle}
+            data-testid="log-toggle"
+            aria-expanded={open}
+            aria-controls={bodyId}
+            onClick={toggleOpen}
+          >
+            <IconChevronRight className={styles.chevron} />
+            {open ? copy.logClose : copy.logOpen}
+          </button>
+        )}
         <span className={styles.count} data-testid="log-count" aria-live="polite">
           {spokenCount}
         </span>

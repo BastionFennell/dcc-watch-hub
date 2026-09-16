@@ -446,3 +446,54 @@ describe('EpisodeLog — the live region’s cadence', () => {
     expect(count()).toHaveTextContent(copy.logCountFiltered(3, at(62).length));
   });
 });
+
+describe('EpisodeLog — embedded in the phone Log pane (006 T605)', () => {
+  function renderEmbedded(initialOpen = false) {
+    const onOpenChange = vi.fn();
+    render(
+      <EpisodeLog
+        items={at(200)}
+        party={party}
+        t={200}
+        playing={false}
+        onSeek={vi.fn()}
+        onShare={vi.fn()}
+        initialOpen={initialOpen}
+        onOpenChange={onOpenChange}
+        embedded
+      />,
+    );
+    return { onOpenChange };
+  }
+
+  it('opens without a toggle, whatever the remembered preference says', () => {
+    // The tab is the open/closed control, so the section has no second one
+    // and `initialOpen` does not apply (FR-503).
+    renderEmbedded(false);
+    expect(screen.queryByTestId('log-toggle')).toBeNull();
+    expect(screen.getByTestId('episode-log')).toHaveAttribute('data-open', 'true');
+    expect(screen.getByTestId('episode-log')).toHaveAttribute('data-embedded', 'true');
+    expect(screen.getByTestId('log-list')).toBeInTheDocument();
+    expect(screen.getAllByTestId('log-row').length).toBeGreaterThan(0);
+  });
+
+  it('keeps the title and the elapsed count in the bar', () => {
+    renderEmbedded();
+    expect(screen.getByText(copy.logTitle)).toBeInTheDocument();
+    expect(screen.getByTestId('log-count')).toHaveTextContent(copy.logCount(at(200).length));
+  });
+
+  it('still filters, and the filters still narrow the count', () => {
+    renderEmbedded();
+    const total = at(200).length;
+    fireEvent.click(chipType('achievement'));
+    expect(screen.getByTestId('log-count')).toHaveTextContent(copy.logCountFiltered(3, total));
+  });
+
+  it('leaves the free-standing log unchanged: toggle present, closed by default', () => {
+    renderLog({ initialOpen: false });
+    expect(screen.getByTestId('log-toggle')).toBeInTheDocument();
+    expect(screen.getByTestId('episode-log')).not.toHaveAttribute('data-embedded');
+    expect(screen.queryByTestId('log-list')).toBeNull();
+  });
+});

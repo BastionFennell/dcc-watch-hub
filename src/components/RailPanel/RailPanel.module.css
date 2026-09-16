@@ -113,3 +113,90 @@
     padding-bottom: calc(var(--space-8) + env(safe-area-inset-bottom));
   }
 }
+
+/*
+ * The phone bottom sheet (006, FR-504, research R3). Declared after the ≤ 900 px
+ * block on purpose: the sheet element carries both classes, so these rules must
+ * win the cascade by order. The record dialog's backdrop is `--panel-z + 10`, so
+ * the full record still covers the sheet.
+ */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--panel-z);
+  /* --canvas at 60%: the stage stays legible above the sheet, dimmed. */
+  background: rgb(19 19 32 / 60%);
+}
+
+.sheet {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: var(--panel-z);
+  height: 70vh;
+  max-height: none;
+  border: 0;
+  border-radius: 12px 12px 0 0;
+  background: var(--canvas);
+  padding-top: 0;
+  padding-bottom: env(safe-area-inset-bottom);
+  animation: sheetIn 150ms ease-out;
+  transition: transform 150ms ease-out;
+  touch-action: none;
+}
+
+/* Mid-gesture the sheet must track the finger exactly; only the snap back eases. */
+.sheet[data-dragging='true'] {
+  transition: none;
+}
+
+.sheet .header {
+  user-select: none;
+}
+
+/* The section already pads for the home indicator; the body need not do it twice. */
+.sheet .body {
+  padding-bottom: var(--space-8);
+}
+
+.handle {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5) 0 var(--space-3);
+  background: var(--panel-deep);
+  touch-action: none;
+  user-select: none;
+}
+
+.grip {
+  display: block;
+  width: 36px;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--hairline-2);
+}
+
+@keyframes sheetIn {
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Landscape phones: 70 vh of a short viewport is not worth reading (spec edge case). */
+@media (max-height: 500px) {
+  .sheet {
+    height: 85vh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet {
+    animation: none;
+    transition: none;
+  }
+}
