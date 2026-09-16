@@ -451,7 +451,7 @@ export const copy = {
   registryTitle: 'System Registry',
   registryKicker: 'ENTITY RECORDS',
   registryLead:
-    'Every entity the System has filed across the broadcast archive, in the order the galaxy met them.',
+    'Every entity the System has filed across the broadcast archive, newest episode first.',
   registrySearch: 'Search the Registry',
   registryNoMatch: 'The Registry has no such entity.',
   registryMissing: (n: number) =>
