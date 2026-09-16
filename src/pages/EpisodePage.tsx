@@ -222,6 +222,11 @@ export function EpisodePage() {
   if (!show) return null;
   if (!meta) return <NotFoundPage />;
 
+  // The episode being watched, hoisted out of `meta` so the closures below (the
+  // rail panel, the strip, the phone sheet) can carry it into the Registry's
+  // scope without re-narrowing (T720).
+  const currentEpisodeId = meta.id;
+
   const frames = state && episode ? partyFrames(state, episode.events, t) : [];
   const items = episode ? feedItems(episode.events, t, 8, party, registry) : [];
   // The whole elapsed transcript, oldest first — the feed's eight rows are a
@@ -317,6 +322,7 @@ export function EpisodePage() {
           <RailPanel kicker={copy.npcKicker} title={entity.name} onClose={panelApi.close}>
             <NpcRecord
               record={entity}
+              episodeId={currentEpisodeId}
               onSeek={(sec) => source?.seek(sec)}
               onShare={(sec) => void share.share(sec)}
             />
@@ -429,6 +435,7 @@ export function EpisodePage() {
           panelApi.toggle({ kind: 'npc', npcId: entityId }, element)
         }
         layout={layout}
+        registryHref={`/registry?scope=ep-${currentEpisodeId}`}
       />
     );
   }
@@ -500,6 +507,7 @@ export function EpisodePage() {
         >
           <NpcRecord
             record={entity}
+            episodeId={currentEpisodeId}
             onSeek={(sec) => source?.seek(sec)}
             onShare={(sec) => void share.share(sec)}
           />

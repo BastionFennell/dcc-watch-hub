@@ -11,7 +11,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, useLocation } from 'react-router';
 import { App } from './../App';
 import { copy } from '../copy';
 import { makeEpisodeRaw, makeRegistry, makeShow } from '../test/fixtures';
@@ -80,10 +80,20 @@ function stubFetch({ failing = [], withoutRegistry = false }: StubOptions = {}) 
   });
 }
 
+/**
+ * The memory router's address bar (revision 2): the scope is URL state, so the
+ * tests have to be able to read the URL back.
+ */
+function LocationProbe() {
+  const location = useLocation();
+  return <span data-testid="loc" data-search={location.search} data-hash={location.hash} />;
+}
+
 function renderRegistry(path = '/registry') {
   return render(
     <MemoryRouter initialEntries={[path]}>
       <App />
+      <LocationProbe />
     </MemoryRouter>,
   );
 }
@@ -296,5 +306,185 @@ describe('the System Registry', () => {
     );
     expect(screen.queryByTestId('registry-search')).toBeNull();
     expect(screen.queryAllByTestId('registry-entry')).toHaveLength(0);
+  });
+});
+
+/**
+ * Revision 2 (T719): the scope control. The stub's episode 3 reuses episode 1's
+ * beats, so every entity debuts in episode 1 — which makes "only episode 2"
+ * (where just the vendor and the ally appear) the sharpest case.
+ */
+describe('scoping the Registry by episode', () => {
+  beforeEach(() => stubFetch());
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  async function waitForEntries() {
+    await waitFor(() => expect(screen.getAllByTestId('registry-entry').length).toBeGreaterThan(0));
+  }
+
+  function scopeSelect(): HTMLSelectElement {
+    return screen.getByTestId('registry-scope') as HTMLSelectElement;
+  }
+
+  it('offers all episodes, through each, and only each — defaulting to all', async () => {
+    renderRegistry();
+    await waitForEntries();
+
+    const select = scopeSelect();
+    expect(select).toHaveAccessibleName(copy.registryScope);
+    expect(select.value).toBe('all');
+    // The scope decides what there is to search, so it leads the toolbar.
+    expect(select.compareDocumentPosition(screen.getByTestId('registry-search'))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+
+    const titles = makeShow().episodes.map((meta) => meta.title);
+    expect([...select.options].map((option) => option.value)).toEqual([
+      'all',
+      'through-1',
+      'through-2',
+      'through-3',
+      'ep-1',
+      'ep-2',
+      'ep-3',
+    ]);
+    expect(within(select).getByRole('option', { name: copy.registryScopeAll })).toBeInTheDocument();
+    expect(
+      within(select).getByRole('option', { name: copy.registryScopeThrough(titles[1]) }),
+    ).toHaveValue('through-2');
+    expect(
+      within(select).getByRole('option', { name: copy.registryScopeOnly(titles[1]) }),
+    ).toHaveValue('ep-2');
+    expect(select.querySelectorAll('optgroup')).toHaveLength(2);
+    expect([...select.querySelectorAll('optgroup')].map((group) => group.label)).toEqual([
+      copy.registryScopeGroupThrough,
+      copy.registryScopeGroupOnly,
+    ]);
+  });
+
+  it('through an episode drops the facts and appearances released later', async () => {
+    renderRegistry('/registry?scope=through-1');
+    await waitForEntries();
+
+    expect(scopeSelect().value).toBe('through-1');
+    // All three debut in episode 1, so the cast is unchanged...
+    expect(visibleIds()).toEqual(['grull-rep', 'hoarder', 'quartermaster']);
+
+    // ...but the Quartermaster's only fact is released in episode 2.
+    const quartermaster = entry('quartermaster');
+    fireEvent.click(within(quartermaster).getByRole('button'));
+    expect(within(quartermaster).queryAllByTestId('registry-fact')).toHaveLength(0);
+    expect(quartermaster).toHaveTextContent(copy.npcFactsEmpty);
+
+    // And nothing links out of episode 1.
+    const vendor = entry('grull-rep');
+    fireEvent.click(within(vendor).getByRole('button'));
+    const hrefs = within(vendor)
+      .getAllByTestId('registry-appearance')
+      .map((link) => link.getAttribute('href'));
+    expect(hrefs.every((href) => href?.startsWith('/ep/1'))).toBe(true);
+
+    // Only episode 1 has a section.
+    expect(screen.queryByTestId('registry-section-2')).toBeNull();
+    expect(screen.queryByTestId('registry-section-3')).toBeNull();
+  });
+
+  it('through a later episode lets that episode back in', async () => {
+    renderRegistry('/registry?scope=through-2');
+    await waitForEntries();
+
+    const quartermaster = entry('quartermaster');
+    fireEvent.click(within(quartermaster).getByRole('button'));
+    expect(within(quartermaster).getByTestId('registry-fact')).toHaveAttribute(
+      'data-episode',
+      '2',
+    );
+
+    const vendor = entry('grull-rep');
+    fireEvent.click(within(vendor).getByRole('button'));
+    expect(
+      within(vendor)
+        .getAllByTestId('registry-appearance')
+        .map((link) => link.getAttribute('href')),
+    ).toContain('/ep/2?t=100');
+  });
+
+  it('only an episode keeps its own cast, filed under that episode', async () => {
+    renderRegistry('/registry?scope=ep-2');
+    await waitForEntries();
+
+    expect(scopeSelect().value).toBe('ep-2');
+    // Episode 2 sights the vendor and amends the ally; the boss is not in it.
+    expect(visibleIds()).toEqual(['grull-rep', 'quartermaster']);
+
+    const section = screen.getByTestId('registry-section-2');
+    expect(screen.queryByTestId('registry-section-1')).toBeNull();
+    expect(within(section).getByText(copy.registryCount(2))).toBeInTheDocument();
+    // Counts follow the scope, and a kind with nobody left loses its chip.
+    expect(screen.getByTestId('registry-chip-vendor')).toHaveTextContent('1');
+    expect(screen.queryByTestId('registry-chip-boss')).toBeNull();
+
+    const vendor = entry('grull-rep');
+    fireEvent.click(within(vendor).getByRole('button'));
+    expect(
+      within(vendor)
+        .getAllByTestId('registry-appearance')
+        .map((link) => link.getAttribute('href')),
+    ).toEqual(['/ep/2?t=100']);
+  });
+
+  it('writes the scope into the URL, and takes it back out for all episodes', async () => {
+    renderRegistry();
+    await waitForEntries();
+
+    fireEvent.change(scopeSelect(), { target: { value: 'ep-2' } });
+    await waitFor(() => expect(visibleIds()).toEqual(['grull-rep', 'quartermaster']));
+    expect(screen.getByTestId('loc')).toHaveAttribute('data-search', '?scope=ep-2');
+
+    fireEvent.change(scopeSelect(), { target: { value: 'all' } });
+    await waitFor(() => expect(visibleIds()).toHaveLength(3));
+    expect(screen.getByTestId('loc')).toHaveAttribute('data-search', '');
+  });
+
+  it('keeps the other search params and the hash when the scope changes', async () => {
+    renderRegistry('/registry?q=keep#hoarder');
+    await waitForEntries();
+
+    fireEvent.change(scopeSelect(), { target: { value: 'through-2' } });
+    await waitFor(() =>
+      expect(screen.getByTestId('loc')).toHaveAttribute('data-search', '?q=keep&scope=through-2'),
+    );
+    expect(screen.getByTestId('loc')).toHaveAttribute('data-hash', '#hoarder');
+  });
+
+  it('opens the whole archive for a scope it cannot read', async () => {
+    renderRegistry('/registry?scope=banana');
+    await waitForEntries();
+
+    expect(scopeSelect().value).toBe('all');
+    expect(visibleIds()).toEqual(['grull-rep', 'hoarder', 'quartermaster']);
+  });
+
+  it('says the Registry has no such entity when a scope and a search agree', async () => {
+    // "Crate" is the Hoarder's alias, and the Hoarder is not in episode 2.
+    renderRegistry('/registry?scope=ep-2');
+    await waitForEntries();
+
+    fireEvent.change(screen.getByTestId('registry-search'), { target: { value: 'Crate' } });
+    expect(screen.queryAllByTestId('registry-entry')).toHaveLength(0);
+    expect(screen.getByTestId('registry-empty')).toHaveTextContent(copy.registryNoMatch);
+    // The scope survives the empty view, so the viewer can widen it again.
+    expect(scopeSelect().value).toBe('ep-2');
+  });
+
+  it('still opens the entry the hash names inside a scope', async () => {
+    renderRegistry('/registry?scope=ep-2#grull-rep');
+    await waitForEntries();
+
+    await waitFor(() => expect(entry('grull-rep')).toHaveAttribute('data-expanded', 'true'));
+    expect(entry('grull-rep')).toHaveAttribute('data-target');
   });
 });

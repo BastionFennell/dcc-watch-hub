@@ -1,19 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation } from 'react-router';
+import { useLocation, useNavigate, useSearchParams } from 'react-router';
 import type { EntityKind, EpisodeData } from '../data/types';
 import { ENTITY_KINDS } from '../data/types';
 import { useShow } from '../data/ShowContext';
 import { useRegistry } from '../data/RegistryContext';
 import { orderedEpisodes } from '../data/show';
 import { fetchEpisode } from '../data/load';
-import type { RegistryEntry as RegistryEntryModel } from '../engine/registry';
-import { registryIndex } from '../engine/registry';
+import type {
+  RegistryEntry as RegistryEntryModel,
+  RegistryScope,
+} from '../engine/registry';
+import { parseRegistryScope, registryIndex, scopeParam, scopeRegistry } from '../engine/registry';
 import { RegistryEntry } from '../components/RegistryEntry/RegistryEntry';
 import { SystemNotice } from '../components/SystemNotice/SystemNotice';
 import { copy } from '../copy';
 import styles from './RegistryPage.module.css';
 
 const EMPTY_INDEX = { entries: [] as RegistryEntryModel[], missingEpisodes: [] as number[] };
+
+const ALL_SCOPE: RegistryScope = { kind: 'all' };
 
 /** Case-insensitive substring over the name and every alias (US2 scenario 2). */
 function matchesQuery(entry: RegistryEntryModel, query: string): boolean {
@@ -36,6 +41,8 @@ export function RegistryPage() {
   const { show } = useShow();
   const { registry, loading: registryLoading } = useRegistry();
   const { hash } = useLocation();
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
 
   const [episodes, setEpisodes] = useState<ReadonlyMap<number, EpisodeData | null> | null>(null);
   const [query, setQuery] = useState('');
@@ -72,9 +79,37 @@ export function RegistryPage() {
       ? registryIndex(show, registry, episodes)
       : EMPTY_INDEX;
 
+  /*
+   * The scope is URL state, not component state (R2-FR-631): the view is
+   * shareable, the back button works, and an unreadable `?scope=` opens the
+   * whole archive rather than an error.
+   */
+  const scope = show === null ? ALL_SCOPE : parseRegistryScope(params.get('scope'), show);
+
+  /*
+   * Written by hand rather than through `setSearchParams`, which navigates to
+   * "?<params>" and so drops the hash — and the hash is what keeps a named
+   * entry open while the viewer narrows the scope around it.
+   */
+  const setScope = useCallback(
+    (value: string) => {
+      const next = new URLSearchParams(params);
+      const param = show === null ? null : scopeParam(parseRegistryScope(value, show));
+      if (param === null) next.delete('scope');
+      else next.set('scope', param);
+      const search = next.toString();
+      void navigate({ search: search === '' ? '' : `?${search}`, hash }, { replace: false });
+    },
+    [params, show, hash, navigate],
+  );
+
+  // Everything downstream — search, chips, counts, sections — reads the scoped
+  // list, so narrowing the scope narrows the whole page at once (R2 scenario 2).
+  const scoped = show === null ? index.entries : scopeRegistry(index.entries, scope, show);
+
   const targetId = hash.startsWith('#') ? decodeURIComponent(hash.slice(1)) : '';
   const seeded = useRef<string | null>(null);
-  const presentIds = index.entries.map((entry) => entry.entity.id).join(',');
+  const presentIds = scoped.map((entry) => entry.entity.id).join(',');
 
   /*
    * `/registry#<id>` opens that entry and scrolls to it, but only once the data
@@ -152,26 +187,42 @@ export function RegistryPage() {
   }
 
   const trimmed = query.trim();
-  const visible = index.entries.filter(
+  const visible = scoped.filter(
     (entry) =>
       (kinds.size === 0 || kinds.has(entry.entity.kind)) && matchesQuery(entry, trimmed),
   );
 
   const metas = orderedEpisodes(show);
   const episodeTitles = new Map(metas.map((meta) => [meta.id, meta.title]));
+  /*
+   * Which episodes can hold a section at all: every one in "all", those at or
+   * before N in "through", and exactly N in "only" — where the cast is filed
+   * under the episode being watched rather than under its members' debuts.
+   */
+  const scopeIndex =
+    scope.kind === 'all' ? -1 : metas.findIndex((meta) => meta.id === scope.episodeId);
+  const sectionMetas =
+    scopeIndex === -1
+      ? metas
+      : scope.kind === 'through'
+        ? metas.slice(0, scopeIndex + 1)
+        : metas.slice(scopeIndex, scopeIndex + 1);
   // Sections follow broadcast order and only exist where something lands in
   // them: an episode that debuts nobody has no section at all.
-  const sections = metas
+  const sections = sectionMetas
     .map((meta) => ({
       meta,
-      entries: visible.filter((entry) => entry.firstEpisode === meta.id),
+      entries:
+        scope.kind === 'only'
+          ? visible
+          : visible.filter((entry) => entry.firstEpisode === meta.id),
     }))
     .filter((section) => section.entries.length > 0);
 
-  // Counts read the whole index, not the current filter, so a chip says how
-  // much the Registry holds rather than flickering as the search is typed.
+  // Counts read the whole scope, not the search inside it, so a chip says how
+  // much this view holds rather than flickering as the search is typed.
   const kindCounts = new Map<EntityKind, number>();
-  for (const entry of index.entries) {
+  for (const entry of scoped) {
     kindCounts.set(entry.entity.kind, (kindCounts.get(entry.entity.kind) ?? 0) + 1);
   }
 
@@ -181,6 +232,34 @@ export function RegistryPage() {
 
       {index.entries.length > 0 ? (
         <div className={styles.toolbar}>
+          {/*
+            The first control, before the search: it decides what there is to
+            search. A plain labelled `<select>` — keyboard-first, and the
+            platform's own picker on a phone (R2-FR-633).
+          */}
+          <select
+            className={styles.scope}
+            data-testid="registry-scope"
+            aria-label={copy.registryScope}
+            value={scopeParam(scope) ?? 'all'}
+            onChange={(event) => setScope(event.target.value)}
+          >
+            <option value="all">{copy.registryScopeAll}</option>
+            <optgroup label={copy.registryScopeGroupThrough}>
+              {metas.map((meta) => (
+                <option key={`through-${meta.id}`} value={`through-${meta.id}`}>
+                  {copy.registryScopeThrough(meta.title)}
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label={copy.registryScopeGroupOnly}>
+              {metas.map((meta) => (
+                <option key={`ep-${meta.id}`} value={`ep-${meta.id}`}>
+                  {copy.registryScopeOnly(meta.title)}
+                </option>
+              ))}
+            </optgroup>
+          </select>
           <input
             type="search"
             className={styles.search}

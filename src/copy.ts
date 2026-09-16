@@ -493,6 +493,22 @@ export const copy = {
   } as const,
   /** Closes an entry that does not survive the archive. */
   registryDefeatedIn: (n: number) => `Defeated in episode ${n}.`,
+
+  /* --- appended by 007 revision 2 (episode-scoped Registry: T718–T721) --- */
+
+  /** Names the scope select for a screen reader (R2-FR-633). */
+  registryScope: 'Scope',
+  /** The default: the whole published archive. */
+  registryScopeAll: 'All episodes',
+  /** Everything the System had released by the end of this episode. */
+  registryScopeThrough: (title: string) => `Through ${title}`,
+  /** Only the entities this one episode carries. */
+  registryScopeOnly: (title: string) => `Only ${title}`,
+  /** The select's two option groups. */
+  registryScopeGroupThrough: 'Seen through…',
+  registryScopeGroupOnly: 'Only in…',
+  /** From the Encountered strip to this episode's slice of the Registry. */
+  encounterRegistryLink: 'Registry for this episode',
 } as const;
 
 export type Copy = typeof copy;

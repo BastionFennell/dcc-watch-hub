@@ -18,7 +18,7 @@ import type {
   Registry,
   Show,
 } from '../data/types';
-import { orderedEpisodes } from '../data/show';
+import { orderedEpisodeIds, orderedEpisodes } from '../data/show';
 
 /** One `npc` beat, flattened to what the registry entry needs to link to it. */
 export interface RegistryAppearance {
@@ -166,4 +166,110 @@ export function registryIndex(
   });
 
   return { entries, missingEpisodes };
+}
+
+/* --- Revision 2 (R2-FR-630/R2-FR-631): episode-scoped views of the index --- */
+
+/**
+ * What slice of the archive the Registry is showing.
+ *
+ * `through` is "everything published up to and including this episode" — what a
+ * viewer who has watched that far is allowed to know. `only` is "what this one
+ * episode is about" — a narrower cast, but still carrying the context earlier
+ * episodes released, because the viewer already has it.
+ */
+export type RegistryScope =
+  | { kind: 'all' }
+  | { kind: 'through'; episodeId: number }
+  | { kind: 'only'; episodeId: number };
+
+const ALL_SCOPE: RegistryScope = { kind: 'all' };
+
+/**
+ * Read the `scope` search param. Leniently: anything that is not `through-N` or
+ * `ep-N` for an episode the show actually lists falls back to the whole archive
+ * rather than to an error page (R2-FR-631) — a hand-edited or stale URL still
+ * opens something.
+ */
+export function parseRegistryScope(param: string | null, show: Show): RegistryScope {
+  if (param === null || param === '') return ALL_SCOPE;
+
+  const match = /^(through|ep)-(\d+)$/.exec(param);
+  if (match === null) return ALL_SCOPE;
+
+  const episodeId = Number(match[2]);
+  if (!Number.isInteger(episodeId)) return ALL_SCOPE;
+  if (!orderedEpisodeIds(show).includes(episodeId)) return ALL_SCOPE;
+
+  return match[1] === 'through' ? { kind: 'through', episodeId } : { kind: 'only', episodeId };
+}
+
+/** The inverse: what `?scope=` should say. `null` means "leave the param off". */
+export function scopeParam(scope: RegistryScope): string | null {
+  switch (scope.kind) {
+    case 'through':
+      return `through-${scope.episodeId}`;
+    case 'only':
+      return `ep-${scope.episodeId}`;
+    default:
+      return null;
+  }
+}
+
+/**
+ * Narrow a whole index to one scope (R2-FR-630). Pure: same entries in, same
+ * entries out, in the same order — only trimmed.
+ *
+ * Ordering is broadcast order, not numeric id order, so "at or before episode N"
+ * asks `orderedEpisodeIds` where each episode sits.
+ *
+ * - **through N**: entities that debut at or before N; facts and appearances
+ *   from later episodes are dropped, and a defeat that has not happened yet is
+ *   not announced.
+ * - **only N**: entities with any beat in N, their appearances narrowed to N —
+ *   but facts released at or before N are kept, and a defeat at or before N
+ *   still reads, because that is history the viewer already has (spec R2
+ *   scenario 3). Nothing later ever leaks.
+ */
+export function scopeRegistry(
+  entries: readonly RegistryEntry[],
+  scope: RegistryScope,
+  show: Show,
+): RegistryEntry[] {
+  if (scope.kind === 'all') return entries.slice();
+
+  const order = orderedEpisodeIds(show);
+  const rank = new Map<number, number>();
+  order.forEach((id, index) => rank.set(id, index));
+  // An episode the show does not list sorts after everything, so it is never
+  // "at or before" the scope.
+  const rankOf = (id: number) => rank.get(id) ?? Number.POSITIVE_INFINITY;
+  const limit = rankOf(scope.episodeId);
+  const seenBy = (id: number) => rankOf(id) <= limit;
+
+  const scoped: RegistryEntry[] = [];
+  for (const entry of entries) {
+    const appearances =
+      scope.kind === 'through'
+        ? entry.appearances.filter((appearance) => seenBy(appearance.episodeId))
+        : entry.appearances.filter((appearance) => appearance.episodeId === scope.episodeId);
+    if (appearances.length === 0) continue;
+
+    // Facts follow the same rule in both modes: everything released at or
+    // before N, nothing after it.
+    const facts = entry.facts.filter((fact) => seenBy(fact.episodeId));
+    const defeatedIn =
+      entry.defeatedIn !== undefined && seenBy(entry.defeatedIn) ? entry.defeatedIn : undefined;
+
+    scoped.push({
+      entity: entry.entity,
+      firstEpisode: entry.firstEpisode,
+      firstT: entry.firstT,
+      facts,
+      appearances,
+      ...(defeatedIn !== undefined ? { defeatedIn } : {}),
+    });
+  }
+
+  return scoped;
 }

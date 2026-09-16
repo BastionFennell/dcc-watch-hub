@@ -7,6 +7,7 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { EncounterRail } from './EncounterRail';
 import type { Encounter } from '../../engine/selectors';
 import { encounteredNpcs } from '../../engine/selectors';
@@ -100,6 +101,33 @@ describe('EncounterRail', () => {
     expect(onActivate).toHaveBeenCalledTimes(1);
     // The element itself goes back, so the panel can return focus to it (FR-101).
     expect(onActivate).toHaveBeenCalledWith('grull-rep', grull);
+  });
+
+  /* --- Revision 2 (T720): the episode's own slice of the Registry --- */
+
+  it('offers no way out of the episode until it is given one', () => {
+    renderRail(encountersAt(200));
+    expect(screen.queryByTestId('encounter-registry-link')).toBeNull();
+  });
+
+  it('links to the Registry scoped to this episode, beside the title', () => {
+    render(
+      <MemoryRouter>
+        <EncounterRail
+          encounters={encountersAt(100)}
+          activeId={null}
+          onActivate={vi.fn()}
+          registryHref="/registry?scope=ep-1"
+        />
+      </MemoryRouter>,
+    );
+
+    const link = screen.getByTestId('encounter-registry-link');
+    expect(link).toHaveTextContent(copy.encounterRegistryLink);
+    expect(link).toHaveAttribute('href', '/registry?scope=ep-1');
+    // Reachable while the strip is still standing by, so an empty episode is
+    // not a dead end.
+    expect(screen.getByTestId('encounter-empty')).toBeInTheDocument();
   });
 
   it('carries its layout so the strip scrolls and the phone pane is a grid', () => {

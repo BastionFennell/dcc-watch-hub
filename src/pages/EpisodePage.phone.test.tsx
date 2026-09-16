@@ -446,6 +446,16 @@ describe('EpisodePage on a phone', () => {
     expect(chip('hoarder')).toHaveAttribute('data-defeated', 'true');
   });
 
+  it('offers this episode\'s slice of the Registry from the NPCs pane', async () => {
+    await mountEpisode();
+
+    openTab('npcs');
+    const pane = screen.getByTestId('tabpanel-npcs');
+    const link = within(pane).getByTestId('encounter-registry-link');
+    expect(link).toHaveTextContent(copy.encounterRegistryLink);
+    expect(link).toHaveAttribute('href', '/registry?scope=ep-1');
+  });
+
   it('opens the entity record as a bottom sheet over the tabs', async () => {
     const { seek } = await mountEpisode();
 

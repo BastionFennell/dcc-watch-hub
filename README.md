@@ -40,15 +40,16 @@ npm run dev -- --open  # opens the archive
   under the party rail has three entities, the first struck through and tagged `DEFEATED`.
 - Straight to an entity record: <http://localhost:5180/ep/1?fake=1&t=560&panel=npc:the-hoarder>
   (one fact released so far; `panel=npc:<id>` is DEV-only, like `panel=dossier:<id>`).
-- The System Registry: <http://localhost:5180/registry>, and deep into one entry:
-  <http://localhost:5180/registry#the-hoarder> (see **Entities and the Registry** below).
+- The System Registry: <http://localhost:5180/registry>, deep into one entry:
+  <http://localhost:5180/registry#the-hoarder>, and scoped to an episode:
+  <http://localhost:5180/registry?scope=ep-2> (see **Entities and the Registry** below).
 
 ### Verify
 
 ```sh
 npm run typecheck      # tsc --noEmit
 npm run lint           # eslint .
-npm test               # vitest run  (787 tests)
+npm test               # vitest run  (818 tests)
 npm run build          # vite build + copies dist/index.html → dist/404.html
 npm run preview        # serves dist/ at http://localhost:4173/
 ```
@@ -552,8 +553,10 @@ newest first, each one a seek control with the same share button the feed rows c
 back takes facts away, and seeking before the entity was met closes the record outright, because
 there is nothing left to show.
 
-At the bottom, **Open in the Registry** — a plain link to `/registry#<id>`. It is the one way out
-of the episode, and unlike an episode link it carries no playback flags.
+At the bottom, **Open in the Registry** — a plain link to `/registry?scope=through-<episode>#<id>`.
+It is the one way out of the episode, and unlike an episode link it carries no playback flags. The
+strip's own header carries a second one, **Registry for this episode** → `/registry?scope=ep-<episode>`.
+Both are scoped; see below.
 
 ### The System Registry page
 
@@ -574,6 +577,33 @@ render and the page says so ("1 recap episode could not be indexed.").
   entity closes with "Defeated in episode N."
 - **`/registry#<id>`** opens that entry expanded and scrolled clear of the sticky header, which is
   where "Open in the Registry" lands.
+
+### Scoping the Registry
+
+The Registry is published, not watched — so revision 2 adds the one control that lets a viewer
+hold it to where they are. A labelled **Scope** select leads the toolbar, and whatever it says is
+in the URL (`?scope=`, absent meaning all), so a scoped view is shareable and the back button
+works. An unreadable scope opens the whole archive rather than an error.
+
+- **All episodes** (the default) — everything published, exactly as before.
+- **Through Episode N** (`?scope=through-N`) — only entities that debut at or before N, with facts
+  released later and appearances later stripped out, and "Defeated in episode N" shown only once
+  that defeat has happened. This is "what I am allowed to know, having watched this far".
+- **Only Episode N** (`?scope=ep-N`) — only entities with a beat in N, filed under that one
+  section, appearances narrowed to N. Facts released *earlier* stay, and so does an earlier
+  defeat: that is history this viewer already has. Nothing later ever leaks. This is "who is in
+  this episode".
+
+Search, the kind chips (whose counts follow the scope), and `#<id>` all combine with it, and the
+empty state still reads "The Registry has no such entity." with the scope left selected.
+
+The episode page links into both: an entity record's **Open in the Registry** lands at
+`/registry?scope=through-N#<id>` — that entry, open, with nothing past the episode being watched
+— and the Encountered strip's **Registry for this episode** lands at `/registry?scope=ep-N`.
+
+The trimming itself is one pure function, `scopeRegistry(entries, scope, show)` in
+`src/engine/registry.ts`, beside `parseRegistryScope` and `scopeParam`; the page only chooses a
+scope and renders what comes back.
 
 ## Authoring episode data
 

@@ -38,7 +38,7 @@ description: "Task list for NPC encounters + System Registry"
 - [X] T717 Final: gates green; SC-601..604 under quickstart `## Results`; all tasks `[X]`.
 
 ## Revision 2 — episode-scoped Registry (single wave)
-- [ ] T718 `src/engine/registry.ts`: `RegistryScope`, `parseRegistryScope`, `scopeParam`, `scopeRegistry` per contract; tests (through/only on the fixture + on `public/data` via the samples).
-- [ ] T719 RegistryPage: scope `<select>` bound to `?scope=`; index → `scopeRegistry` → search/chips; option labels with episode titles; tests (scope from URL, select changes URL, subsets/counts, empty).
-- [ ] T720 Episode page: `NpcRecord` `episodeId` prop and scoped link; `EncounterRail` `registryHref` link (desktop strip header and phone NPCs tab); page tests for both hrefs.
-- [ ] T721 README (scope paragraph), quickstart (scoped URLs), Results addendum; gates green; all ticked.
+- [X] T718 `src/engine/registry.ts`: `RegistryScope`, `parseRegistryScope`, `scopeParam`, `scopeRegistry` per contract; tests (through/only on the fixture + on `public/data` via the samples).
+- [X] T719 RegistryPage: scope `<select>` bound to `?scope=`; index → `scopeRegistry` → search/chips; option labels with episode titles; tests (scope from URL, select changes URL, subsets/counts, empty).
+- [X] T720 Episode page: `NpcRecord` `episodeId` prop and scoped link; `EncounterRail` `registryHref` link (desktop strip header and phone NPCs tab); page tests for both hrefs.
+- [X] T721 README (scope paragraph), quickstart (scoped URLs), Results addendum; gates green; all ticked.

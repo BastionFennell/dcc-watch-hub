@@ -15,6 +15,35 @@
   min-width: 0;
 }
 
+/* Title left, the episode's Registry link right — one row, wrapping on a phone. */
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3) var(--space-5);
+  min-width: 0;
+}
+
+.registryLink {
+  margin-left: auto;
+  flex: none;
+  font-size: var(--text-xs);
+  color: var(--brand-fg);
+  text-decoration: none;
+  border-bottom: 1px solid var(--brand-line);
+  padding-bottom: 1px;
+}
+
+.registryLink:hover {
+  color: var(--brand-fg-2);
+}
+
+.registryLink:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
 .title {
   margin: 0;
   font-family: var(--font-mono);

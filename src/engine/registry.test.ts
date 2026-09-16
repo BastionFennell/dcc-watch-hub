@@ -3,11 +3,15 @@
  * DOM, no fetch — the page's job is to hand `registryIndex` a map, and this is
  * every rule about what comes back.
  */
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { EpisodeData, Registry, Show } from '../data/types';
-import { normalizeEpisode } from '../data/validate';
+import { normalizeEpisode, normalizeRegistry, normalizeShow } from '../data/validate';
+import { orderedEpisodeIds } from '../data/show';
 import { makeEpisode, makeRegistry, makeShow } from '../test/fixtures';
-import { registryIndex } from './registry';
+import type { RegistryEntry } from './registry';
+import { parseRegistryScope, registryIndex, scopeParam, scopeRegistry } from './registry';
 
 /** An episode carrying nothing but the `npc` beats a case needs. */
 function episodeWith(episodeId: number, events: unknown[]): EpisodeData {
@@ -227,5 +231,240 @@ describe('registryIndex', () => {
 
     const { entries } = registryIndex(show, registry, map([[1, ep1]]));
     expect(entries).toEqual([]);
+  });
+});
+
+/* --- Revision 2 (T718): episode-scoped views of the index --- */
+
+/**
+ * A three-episode archive with something to trim at every scope: a boss that
+ * debuts, unlocks a fact and dies in episode 1 but is amended again in episode
+ * 2; a vendor that debuts in episode 1 and is only re-sighted in episode 3; an
+ * ally that debuts in episode 2.
+ */
+function scopedIndex() {
+  const ep1 = episodeWith(1, [
+    { t: 50, type: 'npc', id: 'hoarder', action: 'met' },
+    { t: 60, type: 'npc', id: 'hoarder', action: 'update', unlock: ['lair'] },
+    { t: 70, type: 'npc', id: 'hoarder', action: 'defeated' },
+    { t: 80, type: 'npc', id: 'grull-rep', action: 'met' },
+  ]);
+  const ep2 = episodeWith(2, [
+    { t: 10, type: 'npc', id: 'quartermaster', action: 'met', unlock: ['debt'] },
+    { t: 20, type: 'npc', id: 'hoarder', action: 'seen' },
+    { t: 30, type: 'npc', id: 'hoarder', action: 'update', unlock: ['weakness'] },
+  ]);
+  const ep3 = episodeWith(3, [{ t: 10, type: 'npc', id: 'grull-rep', action: 'seen' }]);
+
+  return registryIndex(
+    show,
+    registry,
+    map([
+      [1, ep1],
+      [2, ep2],
+      [3, ep3],
+    ]),
+  ).entries;
+}
+
+const ids = (entries: RegistryEntry[]) => entries.map((entry) => entry.entity.id);
+const find = (entries: RegistryEntry[], id: string) => {
+  const entry = entries.find((candidate) => candidate.entity.id === id);
+  if (entry === undefined) throw new Error(`no scoped entry for ${id}`);
+  return entry;
+};
+
+describe('parseRegistryScope', () => {
+  it('reads through-N and ep-N for an episode the show lists', () => {
+    expect(parseRegistryScope('through-2', show)).toEqual({ kind: 'through', episodeId: 2 });
+    expect(parseRegistryScope('ep-3', show)).toEqual({ kind: 'only', episodeId: 3 });
+  });
+
+  it('falls back to the whole archive for anything else', () => {
+    // No param at all, an empty one, a shape it does not know, an episode the
+    // show does not publish, and a number it cannot read.
+    for (const param of [null, '', 'all', 'through', 'ep-', 'through-9', 'ep-99', 'ep-x', 'THROUGH-1']) {
+      expect(parseRegistryScope(param, show)).toEqual({ kind: 'all' });
+    }
+  });
+});
+
+describe('scopeParam', () => {
+  it('round-trips every scope, and leaves the param off for the whole archive', () => {
+    expect(scopeParam({ kind: 'all' })).toBeNull();
+    expect(scopeParam({ kind: 'through', episodeId: 2 })).toBe('through-2');
+    expect(scopeParam({ kind: 'only', episodeId: 2 })).toBe('ep-2');
+
+    for (const param of ['through-1', 'ep-2', 'through-3']) {
+      expect(scopeParam(parseRegistryScope(param, show))).toBe(param);
+    }
+  });
+});
+
+describe('scopeRegistry', () => {
+  it('leaves the whole archive alone', () => {
+    const entries = scopedIndex();
+    expect(scopeRegistry(entries, { kind: 'all' }, show)).toEqual(entries);
+  });
+
+  it('through N keeps the debuts up to N and trims everything later away', () => {
+    const entries = scopedIndex();
+    const through1 = scopeRegistry(entries, { kind: 'through', episodeId: 1 }, show);
+
+    expect(ids(through1)).toEqual(['hoarder', 'grull-rep']);
+
+    const hoarder = find(through1, 'hoarder');
+    expect(hoarder.facts.map((fact) => fact.id)).toEqual(['lair']);
+    expect(hoarder.appearances.map((a) => [a.episodeId, a.t])).toEqual([
+      [1, 50],
+      [1, 60],
+      [1, 70],
+    ]);
+    expect(hoarder.defeatedIn).toBe(1);
+  });
+
+  it('through N keeps a later episode once the scope reaches it', () => {
+    const through2 = scopeRegistry(scopedIndex(), { kind: 'through', episodeId: 2 }, show);
+
+    // Order is the index's own: debut episode, then timecode.
+    expect(ids(through2)).toEqual(['hoarder', 'grull-rep', 'quartermaster']);
+    expect(find(through2, 'hoarder').facts.map((fact) => fact.id)).toEqual(['lair', 'weakness']);
+    expect(find(through2, 'hoarder').appearances).toHaveLength(5);
+    // Episode 3's sighting is still beyond the scope.
+    expect(find(through2, 'grull-rep').appearances.map((a) => a.episodeId)).toEqual([1]);
+  });
+
+  it('does not announce a defeat the scope has not reached', () => {
+    const ep1 = episodeWith(1, [{ t: 10, type: 'npc', id: 'hoarder', action: 'met' }]);
+    const ep2 = episodeWith(2, [{ t: 10, type: 'npc', id: 'hoarder', action: 'defeated' }]);
+    const entries = registryIndex(
+      show,
+      registry,
+      map([
+        [1, ep1],
+        [2, ep2],
+      ]),
+    ).entries;
+
+    expect(entries[0].defeatedIn).toBe(2);
+    expect(
+      scopeRegistry(entries, { kind: 'through', episodeId: 1 }, show)[0],
+    ).not.toHaveProperty('defeatedIn');
+    expect(scopeRegistry(entries, { kind: 'through', episodeId: 2 }, show)[0].defeatedIn).toBe(2);
+  });
+
+  it('only N keeps whoever appears in N, narrowed to that episode', () => {
+    const only2 = scopeRegistry(scopedIndex(), { kind: 'only', episodeId: 2 }, show);
+
+    // The vendor never appears in episode 2, so it is not in this cast.
+    expect(ids(only2)).toEqual(['hoarder', 'quartermaster']);
+
+    const hoarder = find(only2, 'hoarder');
+    expect(hoarder.appearances.map((a) => [a.episodeId, a.t])).toEqual([
+      [2, 20],
+      [2, 30],
+    ]);
+    // Context from episode 1 is kept — the viewer already watched it — and so
+    // is the defeat it recorded (spec R2 scenario 3).
+    expect(hoarder.facts.map((fact) => fact.id)).toEqual(['lair', 'weakness']);
+    expect(hoarder.defeatedIn).toBe(1);
+    // The debut is still what it was; "only" does not re-file anyone.
+    expect(hoarder.firstEpisode).toBe(1);
+  });
+
+  it('only N never leaks a later episode', () => {
+    const only1 = scopeRegistry(scopedIndex(), { kind: 'only', episodeId: 1 }, show);
+
+    expect(ids(only1)).toEqual(['hoarder', 'grull-rep']);
+    expect(find(only1, 'hoarder').facts.map((fact) => fact.id)).toEqual(['lair']);
+    expect(find(only1, 'hoarder').appearances.every((a) => a.episodeId === 1)).toBe(true);
+
+    const only3 = scopeRegistry(scopedIndex(), { kind: 'only', episodeId: 3 }, show);
+    expect(ids(only3)).toEqual(['grull-rep']);
+    expect(find(only3, 'grull-rep').appearances.map((a) => a.episodeId)).toEqual([3]);
+  });
+
+  it('never mutates the entries it is handed', () => {
+    const entries = scopedIndex();
+    const before = JSON.stringify(entries);
+    scopeRegistry(entries, { kind: 'through', episodeId: 1 }, show);
+    scopeRegistry(entries, { kind: 'only', episodeId: 2 }, show);
+    expect(JSON.stringify(entries)).toBe(before);
+  });
+});
+
+/**
+ * R2-SC-605: the same rules against the shipped sample archive, read off disk
+ * exactly as `samples.test.ts` does — the hand-computed subsets the quickstart
+ * quotes.
+ */
+describe('scopeRegistry over public/data', () => {
+  const root = resolve(__dirname, '../..');
+  const readJson = (name: string): unknown =>
+    JSON.parse(readFileSync(resolve(root, 'public/data', name), 'utf8')) as unknown;
+
+  const sampleShow = normalizeShow(readJson('show.json'));
+  const sampleRegistry = normalizeRegistry(readJson('npcs.json'));
+  const sampleEpisodes = new Map<number, EpisodeData | null>(
+    orderedEpisodeIds(sampleShow).map((id) => [id, normalizeEpisode(readJson(`ep${id}.json`))]),
+  );
+  const sample = registryIndex(sampleShow, sampleRegistry, sampleEpisodes).entries;
+
+  const scoped = (param: string) =>
+    scopeRegistry(sample, parseRegistryScope(param, sampleShow), sampleShow);
+
+  it('indexes every sample entity, in broadcast order', () => {
+    // `the-listener-below` is episode 1's deliberate unknown id: no entry.
+    expect(ids(sample)).toEqual([
+      'the-hoarder',
+      'grull-rep',
+      'quartermaster-vel',
+      'mother-of-pipes',
+      'signal-choir',
+      'the-tollkeeper',
+      'the-lamplighter',
+      'ghaza-provisioner',
+    ]);
+  });
+
+  it('through-1 holds episode 1 debuts only, with only episode 1 facts', () => {
+    const entries = scoped('through-1');
+    expect(ids(entries)).toEqual(['the-hoarder', 'grull-rep', 'quartermaster-vel']);
+    expect(find(entries, 'the-hoarder').facts.map((fact) => fact.id)).toEqual(['lair']);
+    expect(find(entries, 'the-hoarder').defeatedIn).toBe(1);
+  });
+
+  it('through-2 adds episode 2 debuts and the amendment to the episode 1 boss', () => {
+    const entries = scoped('through-2');
+    expect(ids(entries)).toEqual([
+      'the-hoarder',
+      'grull-rep',
+      'quartermaster-vel',
+      'mother-of-pipes',
+      'signal-choir',
+    ]);
+    expect(find(entries, 'the-hoarder').facts.map((fact) => fact.id)).toEqual(['lair', 'ledger']);
+  });
+
+  it('ep-2 holds only episode 2 appearances, keeping earlier context', () => {
+    const entries = scoped('ep-2');
+    expect(ids(entries)).toEqual([
+      'the-hoarder',
+      'grull-rep',
+      'mother-of-pipes',
+      'signal-choir',
+    ]);
+
+    const hoarder = find(entries, 'the-hoarder');
+    expect(hoarder.appearances.map((a) => [a.episodeId, a.t])).toEqual([[2, 330]]);
+    expect(hoarder.facts.map((fact) => fact.id)).toEqual(['lair', 'ledger']);
+    // Beaten in episode 1: history the episode 2 viewer already has.
+    expect(hoarder.defeatedIn).toBe(1);
+  });
+
+  it('ep-3 holds episode 3 and nobody else', () => {
+    const entries = scoped('ep-3');
+    expect(ids(entries)).toEqual(['the-tollkeeper', 'the-lamplighter', 'ghaza-provisioner']);
+    expect(entries.every((entry) => entry.appearances.every((a) => a.episodeId === 3))).toBe(true);
   });
 });

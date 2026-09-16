@@ -1994,7 +1994,22 @@ describe('EpisodePage', () => {
     fireEvent.click(within(moments[3]).getAllByRole('button')[0]);
     expect(source.getTime()).toBe(118);
 
-    expect(screen.getByTestId('npc-registry-link')).toHaveAttribute('href', '/registry#hoarder');
+    // Scoped to the episode being watched (R2 scenario 5).
+    expect(screen.getByTestId('npc-registry-link')).toHaveAttribute(
+      'href',
+      '/registry?scope=through-1#hoarder',
+    );
+  });
+
+  it('offers this episode\'s slice of the Registry from the strip (R2 scenario 6)', async () => {
+    await mountEpisode();
+
+    // The strip is there from the start, standby line and all, so the link is
+    // reachable before any entity has been tagged.
+    const rail = screen.getByTestId('encounter-rail');
+    const link = within(rail).getByTestId('encounter-registry-link');
+    expect(link).toHaveTextContent(copy.encounterRegistryLink);
+    expect(link).toHaveAttribute('href', '/registry?scope=ep-1');
   });
 
   it('closes the record when a backward seek unmeets the entity', async () => {

@@ -50,6 +50,27 @@
   min-width: 0;
 }
 
+/* The scope picker leads the toolbar: it decides what there is to search. */
+.scope {
+  flex: 0 1 auto;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 32px;
+  padding: 0 var(--space-5);
+  background: var(--panel);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-pill);
+  color: var(--text);
+  font-family: inherit;
+  font-size: var(--text-sm);
+}
+
+.scope:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-color: var(--brand-line);
+}
+
 .search {
   flex: 1 1 260px;
   min-width: 0;
@@ -204,6 +225,10 @@
   }
 
   .search {
+    flex: 1 1 100%;
+  }
+
+  .scope {
     flex: 1 1 100%;
   }
 }

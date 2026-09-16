@@ -8,6 +8,12 @@ import styles from './NpcRecord.module.css';
 export interface NpcRecordProps {
   /** `npcRecord(state, events, registry, id, party, t)` — recomputed every render. */
   record: NpcRecordView;
+  /**
+   * The episode being watched. The Registry link carries it as a scope, so the
+   * page that opens holds nothing a viewer this far in has not seen
+   * (R2-FR-632).
+   */
+  episodeId: number;
   /** Seeks the broadcast to a moment (US1 scenario 7). */
   onSeek(t: number): void;
   /** Copies a link to that moment; never seeks (004 FR-306). */
@@ -39,7 +45,7 @@ function Separator() {
  * Nothing is derived here: `npcRecord` already filtered by the playhead, so a
  * seek in either direction simply hands this a different record (constitution I).
  */
-export function NpcRecord({ record, onSeek, onShare }: NpcRecordProps) {
+export function NpcRecord({ record, episodeId, onSeek, onShare }: NpcRecordProps) {
   const defeated = record.state.defeated;
   return (
     <article
@@ -127,11 +133,12 @@ export function NpcRecord({ record, onSeek, onShare }: NpcRecordProps) {
       {/*
         The one way out of the episode page (US1 scenario 6). A plain `Link`:
         the registry is show-wide, so unlike an episode link it carries no
-        playback flags (T709).
+        playback flags (T709). It does carry the episode as a scope, so the
+        Registry opens at what this viewer has watched, not past it (T720).
       */}
       <Link
         className={styles.registryLink}
-        to={`/registry#${record.id}`}
+        to={`/registry?scope=through-${episodeId}#${record.id}`}
         data-testid="npc-registry-link"
       >
         {copy.npcOpenRegistry}

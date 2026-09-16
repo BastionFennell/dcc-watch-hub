@@ -30,7 +30,7 @@ function renderRecord(record: NpcRecordView) {
   const onShare = vi.fn();
   const view = render(
     <MemoryRouter>
-      <NpcRecord record={record} onSeek={onSeek} onShare={onShare} />
+      <NpcRecord record={record} episodeId={1} onSeek={onSeek} onShare={onShare} />
     </MemoryRouter>,
   );
   return { ...view, onSeek, onShare };
@@ -63,7 +63,7 @@ describe('NpcRecord', () => {
     const again = (t: number) =>
       rerender(
         <MemoryRouter>
-          <NpcRecord record={recordAt(t)} onSeek={vi.fn()} onShare={vi.fn()} />
+          <NpcRecord record={recordAt(t)} episodeId={1} onSeek={vi.fn()} onShare={vi.fn()} />
         </MemoryRouter>,
       );
 
@@ -94,7 +94,7 @@ describe('NpcRecord', () => {
 
     rerender(
       <MemoryRouter>
-        <NpcRecord record={recordAt(200)} onSeek={vi.fn()} onShare={vi.fn()} />
+        <NpcRecord record={recordAt(200)} episodeId={1} onSeek={vi.fn()} onShare={vi.fn()} />
       </MemoryRouter>,
     );
     expect(screen.getByTestId('npc-status')).toHaveTextContent(copy.npcDefeated);
@@ -130,6 +130,22 @@ describe('NpcRecord', () => {
 
     const link = screen.getByTestId('npc-registry-link');
     expect(link).toHaveTextContent(copy.npcOpenRegistry);
-    expect(link).toHaveAttribute('href', '/registry#hoarder');
+    // Scoped to the episode being watched (R2 scenario 5): the Registry opens
+    // at this entry holding nothing this viewer has not reached.
+    expect(link).toHaveAttribute('href', '/registry?scope=through-1#hoarder');
+  });
+
+  it('carries whichever episode it is rendered on into the scope', () => {
+    const onSeek = vi.fn();
+    render(
+      <MemoryRouter>
+        <NpcRecord record={recordAt(200)} episodeId={3} onSeek={onSeek} onShare={vi.fn()} />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByTestId('npc-registry-link')).toHaveAttribute(
+      'href',
+      '/registry?scope=through-3#hoarder',
+    );
   });
 });

@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import type { Encounter } from '../../engine/selectors';
 import { initialOf } from '../../engine/initial';
 import { copy } from '../../copy';
@@ -18,6 +19,12 @@ export interface EncounterRailProps {
    * phone NPCs pane — two columns, no sideways scroll (research R3).
    */
   layout?: EncounterLayout;
+  /**
+   * Where "Registry for this episode" points — `/registry?scope=ep-N`
+   * (R2-FR-632). Omitted when the show publishes no registry, in which case the
+   * strip offers no way out at all.
+   */
+  registryHref?: string;
 }
 
 /** The disc's stand-in when an entity has no portrait (spec Assumptions). */
@@ -97,6 +104,7 @@ export function EncounterRail({
   activeId,
   onActivate,
   layout = 'row',
+  registryHref,
 }: EncounterRailProps) {
   const titleId = `encounter-rail-title-${layout}`;
   return (
@@ -106,9 +114,25 @@ export function EncounterRail({
       data-layout={layout}
       aria-labelledby={titleId}
     >
-      <h2 id={titleId} className={styles.title}>
-        {copy.encounterTitle}
-      </h2>
+      <div className={styles.head}>
+        <h2 id={titleId} className={styles.title}>
+          {copy.encounterTitle}
+        </h2>
+        {/*
+          Beside the title, not among the chips: it is about the episode, not
+          about any one entity, and it is a link rather than a panel trigger
+          because it leaves the page (T720).
+        */}
+        {registryHref === undefined ? null : (
+          <Link
+            className={styles.registryLink}
+            to={registryHref}
+            data-testid="encounter-registry-link"
+          >
+            {copy.encounterRegistryLink}
+          </Link>
+        )}
+      </div>
       {encounters.length === 0 ? (
         <p className={styles.empty} data-testid="encounter-empty">
           {copy.encounterEmpty}

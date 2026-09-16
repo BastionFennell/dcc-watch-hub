@@ -38,6 +38,9 @@ sheet over the stage. The tab exists only when the show has a `registryUrl`.
 | search `crate king` | one entry, The Hoarder — matched on an alias, not the name |
 | search `zzz` | "The Registry has no such entity." |
 | kind chips Vendor + Ally | five entries across all three sections (any-of) |
+| `http://localhost:5180/registry?scope=through-1#the-hoarder` | the **Scope** select reading "Through Episode 1 — The World Dungeon"; one section, three entities (The Hoarder, Grull Industries Representative, Quartermaster Vel), The Hoarder open with the `lair` fact only — no `Ep 2` tag, no `/ep/2?t=330` appearance — and still "Defeated in episode 1." |
+| `http://localhost:5180/registry?scope=ep-2` | "Only Episode 2 — The Meat District": one section headed with that title, four entities (The Hoarder, Grull Industries Representative, Mother of Pipes, The Signal Choir), each entry's appearances all `/ep/2?t=…`, and The Hoarder still carrying its episode 1 facts and defeat |
+| `?scope=ep-2` + search `toll` | "The Registry has no such entity." with the scope still selected |
 
 The same page at 400 × 800: one column, the search full width on its own row with the three chips
 beneath it, and no horizontal scroll.
@@ -62,6 +65,7 @@ npm run sheet-to-json -- scripts/samples/ep1-broken.csv --episode 1 --duration 2
 
 SC-601 sweep at npc boundaries; SC-602 registry sections/facts/appearances; SC-603 hash +
 "Open in the Registry"; SC-604 gates + Lighthouse a11y 100 on both pages.
+R2-SC-605 scoped subsets against the samples; R2-SC-606 both episode-page links land scoped.
 
 ---
 
@@ -271,3 +275,61 @@ Honest list of what the headless pass did **not** cover:
 - `weakness` on The Hoarder and several other facts are never unlocked by any sample episode, so
   they are invisible everywhere. That is the intended behaviour, but if you want the registry to
   look full, add `update` rows that release them.
+
+---
+
+## Results (revision 2)
+
+Measured 2026-09-16 on Node 20.9.0. The subsets below are hand-computed from
+`public/data/{show,npcs,ep1,ep2,ep3}.json` and asserted in `src/engine/registry.test.ts`
+("scopeRegistry over public/data"), which reads those files off disk exactly as
+`src/data/samples.test.ts` does.
+
+### Gates (T721)
+
+```
+npm run typecheck   tsc --noEmit            clean
+npm run lint        eslint .                clean
+npm test            43 files, 818 tests     all passing  (789 before revision 2)
+npm run build       vite build + postbuild  ✓ built, dist/404.html written
+```
+
+| Asset | Raw | Gzipped |
+|-------|-----|---------|
+| `dist/assets/index-*.js` | 393.55 kB | **123.33 kB** |
+| `dist/assets/index-*.css` | 74.77 kB | 12.66 kB |
+
+Revision 2 costs 0.91 kB gzipped of JS and 0.07 kB of CSS, and adds no dependency.
+
+### R2-SC-605 — scoped subsets over the sample archive
+
+The unscoped index holds eight entities, in broadcast order: `the-hoarder`, `grull-rep`,
+`quartermaster-vel` (episode 1), `mother-of-pipes`, `signal-choir` (episode 2),
+`the-tollkeeper`, `the-lamplighter`, `ghaza-provisioner` (episode 3). `the-listener-below`,
+episode 1's deliberate unfiled id, is in no registry and so in no scope.
+
+| Scope | Entities | Notes checked |
+|-------|----------|----------------|
+| `?scope=through-1` | **3** — the-hoarder, grull-rep, quartermaster-vel | the-hoarder's facts are `[lair]` only (`ledger` is released at 5:30 of episode 2); `defeatedIn` = 1 |
+| `?scope=through-2` | **5** — the three above + mother-of-pipes, signal-choir | the-hoarder's facts are `[lair, ledger]`; episode 3's three debuts are absent |
+| `?scope=ep-2` | **4** — the-hoarder, grull-rep, mother-of-pipes, signal-choir | the-hoarder's appearances are exactly `[{ episodeId: 2, t: 330 }]`, its facts `[lair, ledger]`, and `defeatedIn` = 1 is **kept** — a boss beaten in episode 1 still reads defeated in an episode 2 view, because that is history this viewer has |
+| `?scope=ep-3` | **3** — the-tollkeeper, the-lamplighter, ghaza-provisioner | every appearance is in episode 3 |
+| `?scope=all` / absent / `?scope=banana` | **8** | an unreadable scope opens the whole archive (R2-FR-631) |
+
+Order is the index's own in every scope (debut episode, then timecode, then id): scoping trims,
+it never re-sorts, and `only` does not re-file anyone — an entity's `firstEpisode` is what it
+always was; only the section it is displayed under follows the scope.
+
+### R2-SC-606 — the episode page lands scoped
+
+| From | Href |
+|------|------|
+| Entity record, "Open in the Registry", on `/ep/1` | `/registry?scope=through-1#the-hoarder` |
+| Encountered strip header, "Registry for this episode", on `/ep/1` | `/registry?scope=ep-1` |
+| The same strip link in the phone **NPCS** pane | `/registry?scope=ep-1` |
+
+The record's link keeps the hash, so the Registry opens with that entry expanded *inside* the
+scope; changing the scope select afterwards keeps both the hash and any other search param, so
+the entry stays open as the view widens or narrows around it.
+
+`/registry?scope=ep-2` was served 200 by the dev server in a headless check (no console errors).
