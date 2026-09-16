@@ -201,3 +201,13 @@
   box-shadow: var(--focus-ring);
   border-radius: var(--radius-sm);
 }
+
+/* The same line, as a button: the panel trigger that replaces the link when the
+   record sits beside the broadcast (007 R3). */
+.registryOpen {
+  border: 0;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}

@@ -148,4 +148,30 @@ describe('NpcRecord', () => {
       '/registry?scope=through-3#hoarder',
     );
   });
+
+  /* --- Revision 3 (T724): beside the broadcast it opens the panel instead --- */
+
+  it('opens the Registry panel rather than leaving, when it is given the handler', () => {
+    const onOpenRegistry = vi.fn();
+    render(
+      <MemoryRouter>
+        <NpcRecord
+          record={recordAt(200)}
+          episodeId={1}
+          onSeek={vi.fn()}
+          onShare={vi.fn()}
+          onOpenRegistry={onOpenRegistry}
+        />
+      </MemoryRouter>,
+    );
+
+    // No link at all: nothing in the record now leaves the episode page.
+    expect(screen.queryByTestId('npc-registry-link')).toBeNull();
+    const button = screen.getByTestId('npc-registry-open');
+    expect(button).toHaveTextContent(copy.npcOpenRegistry);
+    expect(button).toHaveAttribute('aria-controls', 'rail-panel');
+
+    fireEvent.click(button);
+    expect(onOpenRegistry).toHaveBeenCalledWith('hoarder');
+  });
 });

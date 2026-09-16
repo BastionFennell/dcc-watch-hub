@@ -1,4 +1,3 @@
-import { Link } from 'react-router';
 import type { Encounter } from '../../engine/selectors';
 import { initialOf } from '../../engine/initial';
 import { copy } from '../../copy';
@@ -20,11 +19,13 @@ export interface EncounterRailProps {
    */
   layout?: EncounterLayout;
   /**
-   * Where "Registry for this episode" points — `/registry?scope=ep-N`
-   * (R2-FR-632). Omitted when the show publishes no registry, in which case the
-   * strip offers no way out at all.
+   * Opens the Registry panel beside the broadcast (R3-FR-643). The element is
+   * the focus target, exactly as a chip's is. Omitted where there is no panel to
+   * open, in which case the strip carries no control beside its title.
    */
-  registryHref?: string;
+  onBrowse?(element: HTMLElement): void;
+  /** True while that panel is the open one, for the trigger's `aria-expanded`. */
+  browsing?: boolean;
 }
 
 /** The disc's stand-in when an entity has no portrait (spec Assumptions). */
@@ -104,7 +105,8 @@ export function EncounterRail({
   activeId,
   onActivate,
   layout = 'row',
-  registryHref,
+  onBrowse,
+  browsing = false,
 }: EncounterRailProps) {
   const titleId = `encounter-rail-title-${layout}`;
   return (
@@ -120,17 +122,23 @@ export function EncounterRail({
         </h2>
         {/*
           Beside the title, not among the chips: it is about the episode, not
-          about any one entity, and it is a link rather than a panel trigger
-          because it leaves the page (T720).
+          about any one entity. Since revision 3 it is a panel trigger rather
+          than a link — the Registry opens in the rail and the broadcast keeps
+          playing (R3 scenario 1). The way out to the full page lives in that
+          panel's footer.
         */}
-        {registryHref === undefined ? null : (
-          <Link
-            className={styles.registryLink}
-            to={registryHref}
-            data-testid="encounter-registry-link"
+        {onBrowse === undefined ? null : (
+          <button
+            type="button"
+            className={styles.browse}
+            data-testid="encounter-browse"
+            data-panel-trigger="registry"
+            aria-expanded={browsing}
+            aria-controls="rail-panel"
+            onClick={(event) => onBrowse(event.currentTarget)}
           >
-            {copy.encounterRegistryLink}
-          </Link>
+            {copy.registryBrowse}
+          </button>
         )}
       </div>
       {encounters.length === 0 ? (

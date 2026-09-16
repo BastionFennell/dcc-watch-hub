@@ -24,21 +24,27 @@
   min-width: 0;
 }
 
-.registryLink {
+/* The panel trigger beside the title (007 R3). It reads as the link it replaced
+   — the underline is the affordance — but it is a button, because it opens the
+   Registry in the rail rather than leaving the broadcast. */
+.browse {
   margin-left: auto;
   flex: none;
+  padding: 0 0 1px;
+  border: 0;
+  border-bottom: 1px solid var(--brand-line);
+  background: none;
+  font-family: inherit;
   font-size: var(--text-xs);
   color: var(--brand-fg);
-  text-decoration: none;
-  border-bottom: 1px solid var(--brand-line);
-  padding-bottom: 1px;
+  cursor: pointer;
 }
 
-.registryLink:hover {
+.browse:hover {
   color: var(--brand-fg-2);
 }
 
-.registryLink:focus-visible {
+.browse:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
   border-radius: var(--radius-sm);

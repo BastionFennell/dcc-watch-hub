@@ -118,6 +118,32 @@ describe('usePanel', () => {
     expect(document.activeElement).toBe(chip);
   });
 
+  it('opens the Registry panel, focused or not (007 R3, R3-FR-640)', () => {
+    const strip = makeTrigger('encounter-browse');
+    const { result } = renderHook(() => usePanel(1));
+
+    act(() => result.current.toggle({ kind: 'registry' }, strip));
+    expect(result.current.panel).toEqual({ kind: 'registry' });
+    expect(result.current.isOpen('registry')).toBe(true);
+    expect(result.current.isOpen('registry', 'hoarder')).toBe(false);
+
+    // The record's "Open in the Registry" replaces it with the focused one.
+    act(() => result.current.open({ kind: 'registry', focusId: 'hoarder' }, strip));
+    expect(result.current.panel).toEqual({ kind: 'registry', focusId: 'hoarder' });
+    expect(result.current.isOpen('registry', 'hoarder')).toBe(true);
+    // Still one slot: a record is not open beside it (FR-100).
+    expect(result.current.isOpen('npc', 'hoarder')).toBe(false);
+
+    /*
+     * One Registry panel, however it was opened: the strip's trigger says
+     * `aria-expanded="true"` while the focused panel is up, so re-activating it
+     * has to close that panel rather than open a second one (R3-FR-643).
+     */
+    act(() => result.current.toggle({ kind: 'registry' }, strip));
+    expect(result.current.panel).toEqual({ kind: 'none' });
+    expect(document.activeElement).toBe(strip);
+  });
+
   it('returns focus to the trigger that opened the panel', () => {
     const harry = makeTrigger('harry');
     const { result } = renderHook(() => usePanel(1));

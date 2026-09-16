@@ -273,3 +273,63 @@ export function scopeRegistry(
 
   return scoped;
 }
+
+/* --- Revision 3 (T723): the pieces the page and the panel share --- */
+
+/**
+ * Case-insensitive substring over the name and every alias (US2 scenario 2).
+ * An empty query matches everything, so the caller can hand it the raw box.
+ */
+export function matchesRegistryQuery(entry: RegistryEntry, query: string): boolean {
+  const needle = query.trim().toLowerCase();
+  if (needle === '') return true;
+  if (entry.entity.name.toLowerCase().includes(needle)) return true;
+  return (entry.entity.aliases ?? []).some((alias) => alias.toLowerCase().includes(needle));
+}
+
+/** One episode's shelf of the Registry: the bar, its title, and what sits under it. */
+export interface RegistrySection {
+  episodeId: number;
+  /** The show's own title for that episode, for the bar. */
+  title: string;
+  entries: RegistryEntry[];
+}
+
+/**
+ * File already-scoped, already-filtered entries under episode bars, in
+ * broadcast order (R2-FR-630, R3-FR-641).
+ *
+ * Under "all" and "through N" an entry sits under the episode it debuts in; an
+ * episode that debuts nobody has no bar at all. Under "only N" there is exactly
+ * one bar — the episode being watched — and the whole cast sits under it,
+ * because that is what the view is about.
+ */
+export function registrySections(
+  entries: readonly RegistryEntry[],
+  scope: RegistryScope,
+  show: Show,
+): RegistrySection[] {
+  const metas = orderedEpisodes(show);
+  const scopeIndex =
+    scope.kind === 'all' ? -1 : metas.findIndex((meta) => meta.id === scope.episodeId);
+  // An unlisted episode narrows to nothing rather than to the whole archive.
+  const shelves =
+    scope.kind === 'all' || scopeIndex < 0
+      ? scope.kind === 'all'
+        ? metas
+        : []
+      : scope.kind === 'through'
+        ? metas.slice(0, scopeIndex + 1)
+        : metas.slice(scopeIndex, scopeIndex + 1);
+
+  return shelves
+    .map((meta) => ({
+      episodeId: meta.id,
+      title: meta.title,
+      entries:
+        scope.kind === 'only'
+          ? entries.slice()
+          : entries.filter((entry) => entry.firstEpisode === meta.id),
+    }))
+    .filter((section) => section.entries.length > 0);
+}

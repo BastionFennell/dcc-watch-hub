@@ -446,14 +446,35 @@ describe('EpisodePage on a phone', () => {
     expect(chip('hoarder')).toHaveAttribute('data-defeated', 'true');
   });
 
-  it('offers this episode\'s slice of the Registry from the NPCs pane', async () => {
-    await mountEpisode();
+  it('browses the Registry as a sheet over the NPCs pane (007 R3)', async () => {
+    const { source } = await mountEpisode();
+    const seekSpy = vi.spyOn(source, 'seek');
+    const pauseSpy = vi.spyOn(source, 'pause');
 
     openTab('npcs');
     const pane = screen.getByTestId('tabpanel-npcs');
-    const link = within(pane).getByTestId('encounter-registry-link');
-    expect(link).toHaveTextContent(copy.encounterRegistryLink);
-    expect(link).toHaveAttribute('href', '/registry?scope=ep-1');
+    // Revision 2's link is gone: the way out to the page lives in the sheet.
+    expect(within(pane).queryByTestId('encounter-registry-link')).toBeNull();
+    const browse = within(pane).getByTestId('encounter-browse');
+    expect(browse).toHaveTextContent(copy.registryBrowse);
+
+    fireEvent.click(browse);
+
+    const sheet = screen.getByTestId('rail-panel');
+    expect(sheet).toHaveAttribute('data-presentation', 'sheet');
+    expect(within(sheet).getByText(copy.registryPanelKicker)).toBeInTheDocument();
+    await waitFor(() =>
+      expect(within(sheet).getByTestId('registry-browser')).toBeInTheDocument(),
+    );
+    expect(within(sheet).getByTestId('registry-scope')).toHaveValue('through-1');
+    // The stage is still up there, still where it was (R3 scenario 4).
+    expect(screen.getByTestId('video-stage')).toBeInTheDocument();
+    expect(seekSpy).not.toHaveBeenCalled();
+    expect(pauseSpy).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByTestId('panel-close'));
+    expect(screen.queryByTestId('registry-browser')).not.toBeInTheDocument();
+    expect(document.activeElement).toBe(browse);
   });
 
   it('opens the entity record as a bottom sheet over the tabs', async () => {

@@ -1,7 +1,8 @@
 # Quickstart: NPC encounters + System Registry
 
 The dev server is `http://localhost:5180` (`npm run dev`); `npm run preview` serves the
-production build at `http://localhost:4173`. `?fake=1`, `?panel=` and `?record=` are **DEV-only**
+production build at `http://localhost:4173`. `?fake=1`, `?panel=` (`map`, `dossier:<id>`, `npc:<id>`, `registry`, `registry:<id>`) and
+`?record=` are **DEV-only**
 flags — they exist on 5180 and are compiled out of the build 4173 serves. Every URL below was
 opened and checked in Chrome 152 headless at 1440 × 900 and 400 × 800.
 
@@ -28,6 +29,24 @@ strip returns to its standby line. Drag forward again and they come back in the 
 **Phone.** The same page at 400 × 800 (DevTools device mode) has a fifth tab, **NPCS**, after
 LOG. It renders the same chips as a two-column grid; tapping one opens the record as a bottom
 sheet over the stage. The tab exists only when the show has a `registryUrl`.
+
+## The Registry beside the broadcast (R3)
+
+| URL | What to see |
+|-----|-------------|
+| `http://localhost:5199/ep/1?fake=1&t=560&panel=registry` | the **SYSTEM REGISTRY / System Registry** panel in the right rail, beside a stage that is still playing: **Scope** reading "Through Episode 1 — The World Dungeon", the search box, chips Boss 1 / Vendor / Guide 1 / Ally / Faction 1, one bar "EPISODE 1 — THE WORLD DUNGEON · 3 entities" over the-hoarder, grull-rep and quartermaster-vel, and **Open the full Registry** → `/registry?scope=through-1` at the foot |
+| the same URL, entry expanded | The Hoarder's **FACTS** (`Ep 1` · the lair) and **APPEARANCES** — 2:10 MET, 6:20 AMENDED, 9:00 DEFEATED — each a **seek button** with a share icon, not a link, because they are in the episode on screen. Activating the first moves the caption clock from 9:20 to 2:10 and navigates nowhere |
+| scope → **All episodes**, entry expanded | the same entry now also lists `Episode 2 — The Meat District · 5:30 AMENDED`, and *that* row is a link to `/ep/2?t=330` |
+| `http://localhost:5199/ep/1?fake=1&t=560&panel=registry:the-hoarder` | what the record's **Open in the Registry** does: the panel opens with that entry expanded, scrolled into view and on the brand ground, and the footer link carries it out as `/registry?scope=through-1#the-hoarder` |
+
+Escape, the panel's close control and a second press of **Browse the Registry** all close it, and
+focus returns to whatever opened it. While it is open, drag the dev scrubber: the **ENCOUNTERED**
+strip beneath changes with the playhead and the panel does not — it lists what the archive has
+published, not what this device has watched.
+
+**Phone.** The same two URLs at 400 × 800 render the panel as a bottom sheet over the tabs with
+the stage still visible above it, drag-to-dismiss and backdrop-tap included. **Browse the
+Registry** sits in the **NPCS** pane's header.
 
 ## The System Registry (US2)
 
@@ -333,3 +352,110 @@ scope; changing the scope select afterwards keeps both the hash and any other se
 the entry stays open as the view widens or narrows around it.
 
 `/registry?scope=ep-2` was served 200 by the dev server in a headless check (no console errors).
+
+---
+
+## Results (revision 3)
+
+Measured 2026-09-16 on Node 20.9.0, Chrome 152 headless over CDP (puppeteer-core 22.15.0),
+axe-core 4.10.3 and Lighthouse 11.7.1. The episode page runs against `npm run dev` on port 5199
+(the `?panel=` flag is DEV-only); the Registry page runs against `npm run preview` on 4173.
+
+### Gates (T725)
+
+```
+npm run typecheck   tsc --noEmit            clean
+npm run lint        eslint .                clean
+npm test            45 files, 841 tests     all passing  (818 before revision 3)
+npm run build       vite build + postbuild  ✓ built, dist/404.html written
+```
+
+| Asset | Raw | Gzipped |
+|-------|-----|---------|
+| `dist/assets/index-*.js` | 399.33 kB | **124.97 kB** |
+| `dist/assets/index-*.css` | 76.58 kB | 12.71 kB |
+
+Revision 3 costs 1.64 kB gzipped of JS and 0.05 kB of CSS over revision 2 (123.33 / 12.66), adds
+no dependency, and stays well inside the 150 kB gzipped budget.
+
+The 23 new tests: `RegistryIndexContext` (4 — lazy, once, cached, one missing episode),
+`RegistryBrowser` (7), `registrySections` / `matchesRegistryQuery` (6), `usePanel` (1),
+`NpcRecord` (1), and the desktop page suite (+4). `EncounterRail`'s and the phone suite's
+revision 2 link assertions were rewritten as panel-trigger assertions rather than added to.
+
+### R3-SC-607 — the panel opens beside the broadcast, and nothing moves
+
+At 1440 × 900, `/ep/1?fake=1&t=560&panel=registry`:
+
+| Measured | Value |
+|----------|-------|
+| Stage rect | x 16, width 1072, height 603 |
+| Panel rect | x 1104, width 320 — **no overlap** with the stage (constitution III) |
+| Scope select | `through-1`, "Through Episode 1 — The World Dungeon" |
+| Chips | Boss 1, Vendor / Guide 1, Ally / Faction 1 |
+| Section | "Episode 1 — The World Dungeon", 3 entities — the-hoarder, grull-rep, quartermaster-vel |
+| Footer link | `/registry?scope=through-1` ("Open the full Registry") |
+| Strip trigger | `encounter-browse`, `aria-expanded="true"`, `aria-controls="rail-panel"` |
+| Console | no errors, no warnings |
+| Horizontal scroll | 0 at 1440, 400 **and** 360 px (page and panel both) |
+
+That the open does not touch playback is proved in jsdom rather than by eye
+(`EpisodePage.test.tsx`, "browses the Registry beside the broadcast, without touching the
+video"): with `seek` and `pause` spied on the fake source, opening the panel calls neither,
+`getTime()` is unchanged, and `source.playing` stays false. The phone suite asserts the same for
+the sheet. Scrubbing while the panel is open changes the strip beneath and leaves the panel's
+scope, search and entries exactly as they were.
+
+### R3-SC-608 — current-episode appearances seek, others link
+
+Expanding The Hoarder in the panel on `/ep/1`:
+
+| Appearance | Rendered as |
+|------------|-------------|
+| Episode 1 · 2:10 MET | `<button data-current="true">` + share icon |
+| Episode 1 · 6:20 AMENDED | `<button data-current="true">` + share icon |
+| Episode 1 · 9:00 DEFEATED | `<button data-current="true">` + share icon |
+| Episode 2 · 5:30 AMENDED (scope **All episodes**) | `<a href="/ep/2?t=330">` |
+
+Activating the first button moved the caption clock from **9:20 to 2:10** with no navigation.
+
+### Accessibility
+
+| Run | Result |
+|-----|--------|
+| Lighthouse a11y, `/ep/1?t=560&panel=registry` (dev, panel open) | **100** |
+| Lighthouse a11y, `/ep/1?t=560&panel=registry:the-hoarder` (dev) | **100** |
+| Lighthouse a11y, `/registry` (preview) | **100** |
+| Lighthouse a11y, `/registry?scope=through-1#the-hoarder` (preview) | **100** |
+| axe on the panel (`[data-testid="rail-panel"]`), 1440 | **0 violations** — 26 passes collapsed, 29 with an entry expanded |
+| axe on the whole episode page, 1440 and 400, panel open | 0 violations beyond the pre-existing DEV scrubber label (`Simulated broadcast — dev scrubber`, 3.23:1), which is present without the panel and is compiled out of the build |
+| axe on `/registry#the-hoarder` (preview), 1440 and 400 | **0 violations** |
+
+One real defect surfaced and was fixed: the entry the hash (or `focusId`) names sits on the brand
+ground, where the dimmest text step falls to 4.0:1 — under AA for the 10 px `FACTS` /
+`APPEARANCES` labels inside it. `.entry[data-target]` now raises `--text-3` one step for its own
+subtree, which fixes the panel and the page's `#<id>` landing together.
+
+### Screenshots
+
+- **1440 × 900, rail panel** (`panel-1440-expanded.png`): the stage fills the left column with
+  the dev scrubber at 9:20; the right rail carries `SYSTEM REGISTRY / System Registry` with a
+  close control, the scope select at full width, the search box under it, the three kind chips
+  wrapping onto two rows, the black mono-caps episode bar with "3 entities", and The Hoarder's
+  card — struck-through name, `BOSS · FLOOR 1`, red `DEFEATED` tag, intro, `Ep 1` fact, three
+  appearance rows each with a share icon, closing with "Defeated in episode 1." Under the party
+  rail, **ENCOUNTERED** carries **Browse the Registry** on its right.
+- **400 × 800, bottom sheet** (`sheet-400.png`): the stage stays visible at the top; the sheet
+  covers the tabs from y 240 with its grab handle, the same kicker and title, and the toolbar
+  scrolled just above the focused entry — The Hoarder on the brand ground, expanded, its three
+  appearance rows and share icons at thumb size, with Grull Industries Representative below.
+
+### Notes for the author
+
+- The panel's scope is deliberately **not** in the URL: changing it must not navigate, or the
+  broadcast would reload. Shareability lives in the footer link, which carries the scope (and the
+  open entity) to `/registry`.
+- The index is fetched once per visit, by whichever of the page or the panel asks first. Opening
+  the panel on a cold page shows "The System is indexing the archive." for as long as the episode
+  files take, then fills in; a file that fails still yields "N recap episodes could not be
+  indexed." inside the panel.

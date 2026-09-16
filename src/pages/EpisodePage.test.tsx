@@ -26,6 +26,29 @@ const registry = makeRegistry();
 /** Every fixture episode runs 240 s; a `?t=` past it is not a link at all. */
 const FIXTURE_DURATION_SEC = 240;
 
+interface RawEpisode {
+  episodeId: number;
+  initialState: unknown;
+  events: { type: string }[];
+}
+
+/**
+ * Episode 2's own `npc` beats (007 R3): one amendment to the entity episode 1
+ * introduces, so the Registry panel has an appearance in *another* episode —
+ * the case that must stay a link rather than become a seek (R3 scenario 2).
+ */
+function makeEpisode2Raw(): unknown {
+  const raw = makeEpisodeRaw(2) as RawEpisode;
+  return {
+    episodeId: 2,
+    initialState: raw.initialState,
+    events: [
+      ...raw.events.filter((event) => event.type !== 'npc'),
+      { t: 90, type: 'npc', id: 'hoarder', action: 'update', unlock: ['weakness'] },
+    ],
+  };
+}
+
 function stubFetch(episodeOk = true, withRegistry = true) {
   vi.stubGlobal('fetch', (input: RequestInfo | URL) => {
     const url = String(input);
@@ -53,7 +76,7 @@ function stubFetch(episodeOk = true, withRegistry = true) {
     // The loader checks `episodeId` against the meta, so answer for the episode asked for.
     const episodeId = Number(/ep(\d+)\.json/.exec(url)?.[1] ?? 1);
     return Promise.resolve(
-      new Response(JSON.stringify(makeEpisodeRaw(episodeId)), {
+      new Response(JSON.stringify(episodeId === 2 ? makeEpisode2Raw() : makeEpisodeRaw(episodeId)), {
         status: 200,
         headers: { 'content-type': 'application/json' },
       }),
@@ -1994,22 +2017,151 @@ describe('EpisodePage', () => {
     fireEvent.click(within(moments[3]).getAllByRole('button')[0]);
     expect(source.getTime()).toBe(118);
 
-    // Scoped to the episode being watched (R2 scenario 5).
-    expect(screen.getByTestId('npc-registry-link')).toHaveAttribute(
+    // Since revision 3 the Registry opens in the rail instead of being linked
+    // to, so the record carries a panel trigger and no link at all.
+    expect(screen.queryByTestId('npc-registry-link')).toBeNull();
+    expect(screen.getByTestId('npc-registry-open')).toHaveTextContent(copy.npcOpenRegistry);
+  });
+
+  /* ------------------------------- 007 R3: the Registry panel (T724) */
+
+  /** The strip's panel trigger, which replaced revision 2's link. */
+  function browseButton(): HTMLElement {
+    return within(screen.getByTestId('encounter-rail')).getByTestId('encounter-browse');
+  }
+
+  /** The panel's contents, once the index has landed. */
+  async function browser(): Promise<HTMLElement> {
+    const panel = screen.getByTestId('rail-panel');
+    await waitFor(() =>
+      expect(within(panel).getByTestId('registry-browser')).toBeInTheDocument(),
+    );
+    return within(panel).getByTestId('registry-browser');
+  }
+
+  function entry(id: string): HTMLElement {
+    const element = document.querySelector(`[data-testid="registry-entry"][data-npc="${id}"]`);
+    if (!element) throw new Error(`no registry entry for ${id}`);
+    return element as HTMLElement;
+  }
+
+  it('browses the Registry beside the broadcast, without touching the video', async () => {
+    const { source, seek } = await mountEpisode();
+
+    seek(150);
+    const before = source.getTime();
+    const seekSpy = vi.spyOn(source, 'seek');
+    const pauseSpy = vi.spyOn(source, 'pause');
+
+    // The strip stands by from t = 0, so the trigger is there before any entity
+    // has been tagged — and revision 2's link is not (R3 scenario 1).
+    expect(within(screen.getByTestId('encounter-rail')).queryByTestId('encounter-registry-link'))
+      .toBeNull();
+    const browse = browseButton();
+    expect(browse).toHaveTextContent(copy.registryBrowse);
+    expect(browse).toHaveAttribute('aria-expanded', 'false');
+
+    fireEvent.click(browse);
+
+    const panel = screen.getByTestId('rail-panel');
+    expect(within(panel).getByText(copy.registryPanelKicker)).toBeInTheDocument();
+    expect(
+      within(panel).getByRole('heading', { level: 2, name: copy.registryTitle }),
+    ).toBeInTheDocument();
+    await browser();
+    expect(browse).toHaveAttribute('aria-expanded', 'true');
+
+    // Nothing about opening a panel may move the broadcast (R3 scenario 4).
+    expect(source.getTime()).toBe(before);
+    expect(seekSpy).not.toHaveBeenCalled();
+    expect(pauseSpy).not.toHaveBeenCalled();
+    expect(source.playing).toBe(false);
+
+    // "Through this episode" by default (R3-FR-641).
+    expect(within(panel).getByTestId('registry-scope')).toHaveValue('through-1');
+    expect(
+      within(panel)
+        .getAllByTestId('registry-entry')
+        .map((element) => element.getAttribute('data-npc')),
+    ).toEqual(['grull-rep', 'hoarder', 'quartermaster']);
+  });
+
+  it('seeks from an appearance in this episode and links to one in another', async () => {
+    const { source } = await mountEpisode();
+
+    fireEvent.click(browseButton());
+    const panel = await browser();
+
+    fireEvent.click(within(entry('hoarder')).getByRole('button', { expanded: false }));
+    const here = within(entry('hoarder')).getAllByTestId('registry-appearance');
+    expect(here[0]).toHaveAttribute('data-current', 'true');
+    fireEvent.click(here[0]);
+    // 118: the Hoarder enters the broadcast — no navigation (R3 scenario 2).
+    expect(source.getTime()).toBe(118);
+
+    // Widen the scope to reach episode 2's amendment, which stays a link.
+    fireEvent.change(within(panel).getByTestId('registry-scope'), { target: { value: 'all' } });
+    const elsewhere = within(entry('hoarder'))
+      .getAllByTestId('registry-appearance')
+      .filter((row) => row.getAttribute('data-episode') === '2');
+    expect(elsewhere).toHaveLength(1);
+    expect(elsewhere[0].tagName).toBe('A');
+    expect(elsewhere[0]).toHaveAttribute('href', '/ep/2?t=90');
+    // The panel stayed put: changing the scope is panel state, not the URL.
+    expect(screen.getByTestId('registry-browser')).toBeInTheDocument();
+  });
+
+  it('opens the panel on the entity a record names, and hands focus back on Escape', async () => {
+    const { source, seek } = await mountEpisode();
+
+    seek(200);
+    fireEvent.click(chip('hoarder'));
+    const before = source.getTime();
+
+    fireEvent.click(screen.getByTestId('npc-registry-open'));
+    await browser();
+
+    // The record is gone, the Registry is up, and the Hoarder is open in it
+    // (R3 scenario 3).
+    expect(screen.queryByTestId('npc-record')).not.toBeInTheDocument();
+    expect(entry('hoarder')).toHaveAttribute('data-expanded', 'true');
+    expect(entry('grull-rep')).toHaveAttribute('data-expanded', 'false');
+    expect(screen.getByTestId('registry-browser-full')).toHaveAttribute(
       'href',
       '/registry?scope=through-1#hoarder',
     );
+    expect(source.getTime()).toBe(before);
+
+    pressEscape();
+    expect(screen.queryByTestId('registry-browser')).not.toBeInTheDocument();
+    expect(screen.getByTestId('feed-items')).toBeInTheDocument();
+    // Focus lands on the chip that led here, which is still on the strip.
+    expect(document.activeElement).toBe(chip('hoarder'));
   });
 
-  it('offers this episode\'s slice of the Registry from the strip (R2 scenario 6)', async () => {
-    await mountEpisode();
+  it('closes the panel from its own trigger, and leaves the strip beneath it live', async () => {
+    const { seek } = await mountEpisode();
 
-    // The strip is there from the start, standby line and all, so the link is
-    // reachable before any entity has been tagged.
-    const rail = screen.getByTestId('encounter-rail');
-    const link = within(rail).getByTestId('encounter-registry-link');
-    expect(link).toHaveTextContent(copy.encounterRegistryLink);
-    expect(link).toHaveAttribute('href', '/registry?scope=ep-1');
+    fireEvent.click(browseButton());
+    await browser();
+
+    // The strip under the panel is still the playhead's (R3 scenario 5) …
+    seek(200);
+    expect(chipIds()).toEqual(['hoarder', 'quartermaster', 'grull-rep']);
+    // … while the panel itself does not move: publication-scoped, not playhead-scoped.
+    expect(screen.getByTestId('registry-scope')).toHaveValue('through-1');
+    expect(screen.getByTestId('registry-browser')).toBeInTheDocument();
+
+    fireEvent.click(browseButton());
+    expect(screen.queryByTestId('registry-browser')).not.toBeInTheDocument();
+    expect(document.activeElement).toBe(browseButton());
+  });
+
+  it('opens the Registry panel on load from the DEV `?panel=registry:` flag', async () => {
+    await mountEpisode('/ep/1?fake=1&t=200&panel=registry:hoarder');
+
+    await waitFor(() => expect(screen.getByTestId('registry-browser')).toBeInTheDocument());
+    await waitFor(() => expect(entry('hoarder')).toHaveAttribute('data-expanded', 'true'));
   });
 
   it('closes the record when a backward seek unmeets the entity', async () => {

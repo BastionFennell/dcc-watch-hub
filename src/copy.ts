@@ -507,8 +507,22 @@ export const copy = {
   /** The select's two option groups. */
   registryScopeGroupThrough: 'Seen through…',
   registryScopeGroupOnly: 'Only in…',
-  /** From the Encountered strip to this episode's slice of the Registry. */
+  /**
+   * From the Encountered strip to this episode's slice of the Registry.
+   * Retired by revision 3: the strip's control is now `registryBrowse`, which
+   * opens the Registry panel instead of leaving the broadcast. Kept because the
+   * revision 2 contract names it and nothing else claims the phrase.
+   */
   encounterRegistryLink: 'Registry for this episode',
+
+  /* --- appended by 007 revision 3 (the Registry panel: T722-T725) --- */
+
+  /** The strip's panel trigger: the Registry beside the broadcast (R3-FR-643). */
+  registryBrowse: 'Browse the Registry',
+  /** The panel's footer, out to the whole page at the same scope. */
+  registryOpenFull: 'Open the full Registry',
+  /** Mono caps above the panel's title, as every rail panel carries. */
+  registryPanelKicker: 'SYSTEM REGISTRY',
 } as const;
 
 export type Copy = typeof copy;

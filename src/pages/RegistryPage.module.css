@@ -40,117 +40,8 @@
   max-width: 60ch;
 }
 
-/* --- search + kind chips --- */
-
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-5);
-  min-width: 0;
-}
-
-/* The scope picker leads the toolbar: it decides what there is to search. */
-.scope {
-  flex: 0 1 auto;
-  max-width: 100%;
-  min-width: 0;
-  min-height: 32px;
-  padding: 0 var(--space-5);
-  background: var(--panel);
-  border: var(--border-hairline-2);
-  border-radius: var(--radius-pill);
-  color: var(--text);
-  font-family: inherit;
-  font-size: var(--text-sm);
-}
-
-.scope:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-  border-color: var(--brand-line);
-}
-
-.search {
-  flex: 1 1 260px;
-  min-width: 0;
-  min-height: 32px;
-  padding: 0 var(--space-5);
-  background: var(--panel);
-  border: var(--border-hairline-2);
-  border-radius: var(--radius-pill);
-  color: var(--text);
-  font-family: inherit;
-  font-size: var(--text-sm);
-}
-
-.search::placeholder {
-  color: var(--text-3);
-}
-
-.search:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-  border-color: var(--brand-line);
-}
-
-/* Wrapping is the phone layout: chips never push the page sideways. */
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  /* Thumb-sized on a phone (spec Edge Cases). */
-  min-height: 32px;
-  padding: 0 var(--space-5);
-  border: var(--border-hairline-2);
-  border-radius: var(--radius-pill);
-  background: var(--panel);
-  color: var(--text);
-  font-family: inherit;
-  font-size: var(--text-xs);
-  cursor: pointer;
-  transition:
-    background-color 200ms ease,
-    border-color 200ms ease;
-}
-
-.chip:hover {
-  border-color: var(--brand-line);
-}
-
-.chip:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-
-.chip[aria-pressed='true'] {
-  background: var(--brand-deep);
-  border-color: var(--brand-line);
-  color: var(--brand-fg-2);
-}
-
-.chipLabel {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.chipCount {
-  font-family: var(--font-mono);
-  font-size: var(--text-2xs);
-  font-variant-numeric: tabular-nums;
-  color: var(--text-3);
-}
-
-.chip[aria-pressed='true'] .chipCount {
-  color: var(--brand-fg);
-}
+/* The three controls (scope, search, chips) live in RegistryToolbar.module.css
+   since revision 3 — the page and the rail panel render the same toolbar. */
 
 /* --- episode sections --- */
 
@@ -222,13 +113,5 @@
   /* Single column, chips wrap, search full width (spec Edge Cases). */
   .entries {
     grid-template-columns: 1fr;
-  }
-
-  .search {
-    flex: 1 1 100%;
-  }
-
-  .scope {
-    flex: 1 1 100%;
   }
 }

@@ -1,6 +1,7 @@
 import { Route, Routes, useMatch } from 'react-router';
 import { ShowProvider, useShow } from './data/ShowContext';
 import { RegistryProvider } from './data/RegistryContext';
+import { RegistryIndexProvider } from './data/RegistryIndexContext';
 import { findEpisode } from './data/show';
 import { SiteHeader } from './components/SiteHeader/SiteHeader';
 import { SystemNotice } from './components/SystemNotice/SystemNotice';
@@ -55,7 +56,11 @@ export function App() {
     <ShowProvider>
       {/* The registry needs the show's `registryUrl`, so it nests inside (007 R1). */}
       <RegistryProvider>
-        <AppShell />
+        {/* The index is lazy: nothing is fetched until the page or the panel
+            asks for it (007 R3, R3-FR-644). */}
+        <RegistryIndexProvider>
+          <AppShell />
+        </RegistryIndexProvider>
       </RegistryProvider>
     </ShowProvider>
   );

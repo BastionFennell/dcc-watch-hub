@@ -1,32 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router';
-import type { EntityKind, EpisodeData } from '../data/types';
-import { ENTITY_KINDS } from '../data/types';
+import type { EntityKind } from '../data/types';
 import { useShow } from '../data/ShowContext';
 import { useRegistry } from '../data/RegistryContext';
+import { useRegistryIndex } from '../data/RegistryIndexContext';
 import { orderedEpisodes } from '../data/show';
-import { fetchEpisode } from '../data/load';
-import type {
-  RegistryEntry as RegistryEntryModel,
-  RegistryScope,
+import type { RegistryScope } from '../engine/registry';
+import {
+  matchesRegistryQuery,
+  parseRegistryScope,
+  registrySections,
+  scopeParam,
+  scopeRegistry,
 } from '../engine/registry';
-import { parseRegistryScope, registryIndex, scopeParam, scopeRegistry } from '../engine/registry';
 import { RegistryEntry } from '../components/RegistryEntry/RegistryEntry';
+import { RegistryToolbar } from '../components/RegistryToolbar/RegistryToolbar';
 import { SystemNotice } from '../components/SystemNotice/SystemNotice';
 import { copy } from '../copy';
 import styles from './RegistryPage.module.css';
 
-const EMPTY_INDEX = { entries: [] as RegistryEntryModel[], missingEpisodes: [] as number[] };
-
 const ALL_SCOPE: RegistryScope = { kind: 'all' };
-
-/** Case-insensitive substring over the name and every alias (US2 scenario 2). */
-function matchesQuery(entry: RegistryEntryModel, query: string): boolean {
-  if (query === '') return true;
-  const needle = query.toLowerCase();
-  if (entry.entity.name.toLowerCase().includes(needle)) return true;
-  return (entry.entity.aliases ?? []).some((alias) => alias.toLowerCase().includes(needle));
-}
 
 /**
  * The System Registry (FR-620..FR-622): every entity the archive has published,
@@ -36,15 +29,19 @@ function matchesQuery(entry: RegistryEntryModel, query: string): boolean {
  * show, the registry and every episode file, and shows what was published
  * (FR-621). An episode that will not load costs its beats and is named in a
  * notice; everything else still renders (US2 scenario 6).
+ *
+ * Since revision 3 the episode files come from `RegistryIndexProvider`, which
+ * this page asks to load on mount and the rail panel asks on open — whoever
+ * arrives first pays for the fetches and the other reads the cache (R3-FR-644).
  */
 export function RegistryPage() {
   const { show } = useShow();
   const { registry, loading: registryLoading } = useRegistry();
+  const { index, load } = useRegistryIndex();
   const { hash } = useLocation();
   const [params] = useSearchParams();
   const navigate = useNavigate();
 
-  const [episodes, setEpisodes] = useState<ReadonlyMap<number, EpisodeData | null> | null>(null);
   const [query, setQuery] = useState('');
   const [kinds, setKinds] = useState<ReadonlySet<EntityKind>>(() => new Set());
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
@@ -53,36 +50,15 @@ export function RegistryPage() {
     document.title = copy.pageTitle(copy.registryTitle);
   }, []);
 
-  // Every published episode at once: a rejected fetch lands as `null` rather
-  // than taking the page down with it (research R5).
+  // The whole point of the page: ask for the index the moment it opens.
   useEffect(() => {
-    if (show === null) return;
-    let live = true;
-    const metas = orderedEpisodes(show);
-    void Promise.allSettled(metas.map((meta) => fetchEpisode(meta))).then((results) => {
-      if (!live) return;
-      const next = new Map<number, EpisodeData | null>();
-      results.forEach((result, index) => {
-        const meta = metas[index];
-        if (meta === undefined) return;
-        next.set(meta.id, result.status === 'fulfilled' ? result.value : null);
-      });
-      setEpisodes(next);
-    });
-    return () => {
-      live = false;
-    };
-  }, [show]);
-
-  const index =
-    show !== null && registry !== null && episodes !== null
-      ? registryIndex(show, registry, episodes)
-      : EMPTY_INDEX;
+    load();
+  }, [load]);
 
   /*
    * The scope is URL state, not component state (R2-FR-631): the view is
    * shareable, the back button works, and an unreadable `?scope=` opens the
-   * whole archive rather than an error.
+   * whole archive rather than an error page.
    */
   const scope = show === null ? ALL_SCOPE : parseRegistryScope(params.get('scope'), show);
 
@@ -105,7 +81,8 @@ export function RegistryPage() {
 
   // Everything downstream — search, chips, counts, sections — reads the scoped
   // list, so narrowing the scope narrows the whole page at once (R2 scenario 2).
-  const scoped = show === null ? index.entries : scopeRegistry(index.entries, scope, show);
+  const scoped =
+    show === null || index === null ? [] : scopeRegistry(index.entries, scope, show);
 
   const targetId = hash.startsWith('#') ? decodeURIComponent(hash.slice(1)) : '';
   const seeded = useRef<string | null>(null);
@@ -175,7 +152,7 @@ export function RegistryPage() {
     );
   }
 
-  if (episodes === null) {
+  if (index === null) {
     return (
       <div className={styles.page} data-testid="registry">
         {head}
@@ -186,38 +163,16 @@ export function RegistryPage() {
     );
   }
 
-  const trimmed = query.trim();
   const visible = scoped.filter(
     (entry) =>
-      (kinds.size === 0 || kinds.has(entry.entity.kind)) && matchesQuery(entry, trimmed),
+      (kinds.size === 0 || kinds.has(entry.entity.kind)) && matchesRegistryQuery(entry, query),
   );
 
   const metas = orderedEpisodes(show);
   const episodeTitles = new Map(metas.map((meta) => [meta.id, meta.title]));
-  /*
-   * Which episodes can hold a section at all: every one in "all", those at or
-   * before N in "through", and exactly N in "only" — where the cast is filed
-   * under the episode being watched rather than under its members' debuts.
-   */
-  const scopeIndex =
-    scope.kind === 'all' ? -1 : metas.findIndex((meta) => meta.id === scope.episodeId);
-  const sectionMetas =
-    scopeIndex === -1
-      ? metas
-      : scope.kind === 'through'
-        ? metas.slice(0, scopeIndex + 1)
-        : metas.slice(scopeIndex, scopeIndex + 1);
   // Sections follow broadcast order and only exist where something lands in
   // them: an episode that debuts nobody has no section at all.
-  const sections = sectionMetas
-    .map((meta) => ({
-      meta,
-      entries:
-        scope.kind === 'only'
-          ? visible
-          : visible.filter((entry) => entry.firstEpisode === meta.id),
-    }))
-    .filter((section) => section.entries.length > 0);
+  const sections = registrySections(visible, scope, show);
 
   // Counts read the whole scope, not the search inside it, so a chip says how
   // much this view holds rather than flickering as the search is typed.
@@ -231,60 +186,16 @@ export function RegistryPage() {
       {head}
 
       {index.entries.length > 0 ? (
-        <div className={styles.toolbar}>
-          {/*
-            The first control, before the search: it decides what there is to
-            search. A plain labelled `<select>` — keyboard-first, and the
-            platform's own picker on a phone (R2-FR-633).
-          */}
-          <select
-            className={styles.scope}
-            data-testid="registry-scope"
-            aria-label={copy.registryScope}
-            value={scopeParam(scope) ?? 'all'}
-            onChange={(event) => setScope(event.target.value)}
-          >
-            <option value="all">{copy.registryScopeAll}</option>
-            <optgroup label={copy.registryScopeGroupThrough}>
-              {metas.map((meta) => (
-                <option key={`through-${meta.id}`} value={`through-${meta.id}`}>
-                  {copy.registryScopeThrough(meta.title)}
-                </option>
-              ))}
-            </optgroup>
-            <optgroup label={copy.registryScopeGroupOnly}>
-              {metas.map((meta) => (
-                <option key={`ep-${meta.id}`} value={`ep-${meta.id}`}>
-                  {copy.registryScopeOnly(meta.title)}
-                </option>
-              ))}
-            </optgroup>
-          </select>
-          <input
-            type="search"
-            className={styles.search}
-            data-testid="registry-search"
-            aria-label={copy.registrySearch}
-            placeholder={copy.registrySearch}
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-          />
-          <div className={styles.chips} role="group" aria-label={copy.registryKinds}>
-            {ENTITY_KINDS.filter((kind) => (kindCounts.get(kind) ?? 0) > 0).map((kind) => (
-              <button
-                key={kind}
-                type="button"
-                className={styles.chip}
-                data-testid={`registry-chip-${kind}`}
-                aria-pressed={kinds.has(kind)}
-                onClick={() => toggleKind(kind)}
-              >
-                <span className={styles.chipLabel}>{copy.kindLabels[kind]}</span>
-                <span className={styles.chipCount}>{kindCounts.get(kind) ?? 0}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+        <RegistryToolbar
+          episodes={metas}
+          scope={scope}
+          onScopeChange={setScope}
+          query={query}
+          onQueryChange={setQuery}
+          kinds={kinds}
+          onToggleKind={toggleKind}
+          counts={kindCounts}
+        />
       ) : null}
 
       {index.missingEpisodes.length > 0 ? (
@@ -301,21 +212,26 @@ export function RegistryPage() {
         </p>
       ) : (
         <div className={styles.sections}>
-          {sections.map(({ meta, entries }) => (
+          {sections.map((section) => (
             <section
-              key={meta.id}
+              key={section.episodeId}
               className={styles.section}
-              data-testid={`registry-section-${meta.id}`}
-              aria-labelledby={`registry-section-title-${meta.id}`}
+              data-testid={`registry-section-${section.episodeId}`}
+              aria-labelledby={`registry-section-title-${section.episodeId}`}
             >
               <div className={styles.bar}>
-                <h2 id={`registry-section-title-${meta.id}`} className={styles.barTitle}>
-                  {copy.registryEpisodeSection(meta.id, meta.title)}
+                <h2
+                  id={`registry-section-title-${section.episodeId}`}
+                  className={styles.barTitle}
+                >
+                  {copy.registryEpisodeSection(section.episodeId, section.title)}
                 </h2>
-                <span className={styles.barCount}>{copy.registryCount(entries.length)}</span>
+                <span className={styles.barCount}>
+                  {copy.registryCount(section.entries.length)}
+                </span>
               </div>
               <div className={styles.entries}>
-                {entries.map((entry) => (
+                {section.entries.map((entry) => (
                   <RegistryEntry
                     key={entry.entity.id}
                     entry={entry}

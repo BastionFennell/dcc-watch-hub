@@ -51,6 +51,12 @@
 .entry[data-target] {
   border-color: var(--brand-line);
   background: var(--brand-deep);
+  /*
+    The brand ground is lighter than the panel, and the dimmest text step falls
+    to 4.0:1 on it — under AA for the 10 px mono labels inside an expanded entry
+    (axe, 007 R3). One step up, for this entry only.
+  */
+  --text-3: var(--text-2);
 }
 
 /* --- the disclosure header --- */
@@ -304,6 +310,23 @@
 .appearance:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
+}
+
+/* The seek control and its share icon, side by side (007 R3, FR-303). */
+.appearanceRow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+/* A button, so it needs the reset a `Link` gets for free. */
+.appearanceSeek {
+  border: 0;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
 .appearanceTitle {

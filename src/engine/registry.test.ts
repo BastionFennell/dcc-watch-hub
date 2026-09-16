@@ -11,7 +11,14 @@ import { normalizeEpisode, normalizeRegistry, normalizeShow } from '../data/vali
 import { orderedEpisodeIds } from '../data/show';
 import { makeEpisode, makeRegistry, makeShow } from '../test/fixtures';
 import type { RegistryEntry } from './registry';
-import { parseRegistryScope, registryIndex, scopeParam, scopeRegistry } from './registry';
+import {
+  matchesRegistryQuery,
+  parseRegistryScope,
+  registryIndex,
+  registrySections,
+  scopeParam,
+  scopeRegistry,
+} from './registry';
 
 /** An episode carrying nothing but the `npc` beats a case needs. */
 function episodeWith(episodeId: number, events: unknown[]): EpisodeData {
@@ -466,5 +473,58 @@ describe('scopeRegistry over public/data', () => {
     const entries = scoped('ep-3');
     expect(ids(entries)).toEqual(['the-tollkeeper', 'the-lamplighter', 'ghaza-provisioner']);
     expect(entries.every((entry) => entry.appearances.every((a) => a.episodeId === 3))).toBe(true);
+  });
+});
+
+/* --- Revision 3 (T723): the shelving and the search the page and panel share --- */
+
+describe('registrySections', () => {
+  it('files entries under the episode they debut in, skipping empty shelves', () => {
+    const entries = scopedIndex();
+    const sections = registrySections(entries, { kind: 'all' }, show);
+
+    expect(sections.map((section) => section.episodeId)).toEqual([1, 2]);
+    expect(sections[0].title).toBe(show.episodes[0].title);
+    expect(sections.map((section) => ids(section.entries))).toEqual([
+      ['hoarder', 'grull-rep'],
+      ['quartermaster'],
+    ]);
+  });
+
+  it('stops at the scope under through N', () => {
+    const entries = scopeRegistry(scopedIndex(), { kind: 'through', episodeId: 1 }, show);
+    const sections = registrySections(entries, { kind: 'through', episodeId: 1 }, show);
+
+    expect(sections.map((section) => section.episodeId)).toEqual([1]);
+    expect(ids(sections[0].entries)).toEqual(['hoarder', 'grull-rep']);
+  });
+
+  it('puts the whole cast under one bar in only N', () => {
+    const entries = scopeRegistry(scopedIndex(), { kind: 'only', episodeId: 2 }, show);
+    const sections = registrySections(entries, { kind: 'only', episodeId: 2 }, show);
+
+    expect(sections).toHaveLength(1);
+    expect(sections[0].episodeId).toBe(2);
+    // The Hoarder debuts in episode 1 and still shelves here (R2 scenario 3).
+    expect(ids(sections[0].entries)).toEqual(['hoarder', 'quartermaster']);
+  });
+
+  it('shelves nothing for an episode the show does not list', () => {
+    expect(registrySections(scopedIndex(), { kind: 'only', episodeId: 99 }, show)).toEqual([]);
+  });
+});
+
+describe('matchesRegistryQuery', () => {
+  const hoarder = find(scopedIndex(), 'hoarder');
+
+  it('matches everything on an empty or blank query', () => {
+    expect(matchesRegistryQuery(hoarder, '')).toBe(true);
+    expect(matchesRegistryQuery(hoarder, '   ')).toBe(true);
+  });
+
+  it('matches the name and every alias, case-insensitively', () => {
+    expect(matchesRegistryQuery(hoarder, 'HOARD')).toBe(true);
+    expect(matchesRegistryQuery(hoarder, 'crate king')).toBe(true);
+    expect(matchesRegistryQuery(hoarder, 'quartermaster')).toBe(false);
   });
 });

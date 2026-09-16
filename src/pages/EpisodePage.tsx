@@ -39,6 +39,7 @@ import { EventTimeline } from '../components/EventTimeline/EventTimeline';
 import { PartyRail } from '../components/PartyRail/PartyRail';
 import { EncounterRail } from '../components/EncounterRail/EncounterRail';
 import { NpcRecord } from '../components/NpcRecord/NpcRecord';
+import { RegistryBrowser } from '../components/RegistryBrowser/RegistryBrowser';
 import { EventFeed } from '../components/EventFeed/EventFeed';
 import { EpisodeLog } from '../components/EpisodeLog/EpisodeLog';
 import { MobileTabs } from '../components/MobileTabs/MobileTabs';
@@ -95,8 +96,9 @@ export function EpisodePage() {
   const [record, setRecord] = useState<string | null>(null);
   /** The "Open full record" button, so the dialog can hand focus back (FR-210). */
   const recordTrigger = useRef<HTMLElement | null>(null);
-  // DEV only: `?panel=dossier:<id>`, `?panel=npc:<id>` or `?panel=map` opens a panel on
-  // load (screenshots, manual QA).
+  // DEV only: `?panel=dossier:<id>`, `?panel=npc:<id>`, `?panel=map`,
+  // `?panel=registry` or `?panel=registry:<id>` opens a panel on load
+  // (screenshots, manual QA).
   const [searchParams] = useSearchParams();
   const devPanel = import.meta.env.DEV ? searchParams.get('panel') : null;
   const devRecord = import.meta.env.DEV && searchParams.get('record') === '1';
@@ -107,6 +109,9 @@ export function EpisodePage() {
     if (devPanel === 'map') panelApi.open({ kind: 'map' }, null);
     else if (devPanel.startsWith('dossier:')) panelApi.open({ kind: 'dossier', crawlerId: devPanel.slice(8) }, null);
     else if (devPanel.startsWith('npc:')) panelApi.open({ kind: 'npc', npcId: devPanel.slice(4) }, null);
+    else if (devPanel === 'registry') panelApi.open({ kind: 'registry' }, null);
+    else if (devPanel.startsWith('registry:'))
+      panelApi.open({ kind: 'registry', focusId: devPanel.slice(9) }, null);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- open once per episode load
   }, [devPanel, partyLoaded, meta?.id]);
 
@@ -297,6 +302,42 @@ export function EpisodePage() {
     />
   ) : null;
 
+  /**
+   * The open entity record, in the rail on desktop and in the sheet on a phone
+   * — one component, one "Open in the Registry" trigger. That trigger opens the
+   * Registry panel rather than leaving the episode (R3 scenario 3), and hands
+   * focus return to the strip chip that opened this record, which is still on
+   * screen behind the panel.
+   */
+  const entityRecord = entity ? (
+    <NpcRecord
+      record={entity}
+      episodeId={currentEpisodeId}
+      onSeek={(sec) => source?.seek(sec)}
+      onShare={(sec) => void share.share(sec)}
+      onOpenRegistry={(entityId) => {
+        const chip = document.querySelector<HTMLElement>(
+          `[data-panel-trigger="npc:${entityId}"]`,
+        );
+        panelApi.open({ kind: 'registry', focusId: entityId }, chip);
+      }}
+    />
+  ) : null;
+
+  /**
+   * The Registry panel's contents. Its two controls are the only things in it
+   * that touch the broadcast, and both are explicit: a moment in this episode
+   * seeks, and the share icon copies its link (R3-FR-642).
+   */
+  const registryBrowser = (
+    <RegistryBrowser
+      currentEpisodeId={currentEpisodeId}
+      focusId={panel.kind === 'registry' ? panel.focusId : undefined}
+      onSeek={(sec) => source?.seek(sec)}
+      onShare={(sec) => void share.share(sec)}
+    />
+  );
+
   /** The rail hosts exactly one of: feed (default), dossier, map (FR-100). */
   function railSlot() {
     switch (panel.kind) {
@@ -320,12 +361,23 @@ export function EpisodePage() {
         if (!entity) return feed;
         return (
           <RailPanel kicker={copy.npcKicker} title={entity.name} onClose={panelApi.close}>
-            <NpcRecord
-              record={entity}
-              episodeId={currentEpisodeId}
-              onSeek={(sec) => source?.seek(sec)}
-              onShare={(sec) => void share.share(sec)}
-            />
+            {entityRecord}
+          </RailPanel>
+        );
+      case 'registry':
+        /*
+         * The whole Registry beside the stage (007 R3). Unlike every other
+         * panel it needs no episode data at all — it reads the published
+         * archive — so it opens while the episode file is still landing, and
+         * opening it neither seeks nor pauses (R3 scenario 4).
+         */
+        return (
+          <RailPanel
+            kicker={copy.registryPanelKicker}
+            title={copy.registryTitle}
+            onClose={panelApi.close}
+          >
+            {registryBrowser}
           </RailPanel>
         );
       case 'map':
@@ -435,7 +487,8 @@ export function EpisodePage() {
           panelApi.toggle({ kind: 'npc', npcId: entityId }, element)
         }
         layout={layout}
-        registryHref={`/registry?scope=ep-${currentEpisodeId}`}
+        onBrowse={(element) => panelApi.toggle({ kind: 'registry' }, element)}
+        browsing={panel.kind === 'registry'}
       />
     );
   }
@@ -496,6 +549,18 @@ export function EpisodePage() {
    * here — nothing opens it once the badge is gone — so it renders nothing.
    */
   function phoneSheet() {
+    if (panel.kind === 'registry') {
+      return (
+        <RailPanel
+          kicker={copy.registryPanelKicker}
+          title={copy.registryTitle}
+          presentation="sheet"
+          onClose={panelApi.close}
+        >
+          {registryBrowser}
+        </RailPanel>
+      );
+    }
     if (panel.kind === 'npc') {
       if (!entity) return null;
       return (
@@ -505,12 +570,7 @@ export function EpisodePage() {
           presentation="sheet"
           onClose={panelApi.close}
         >
-          <NpcRecord
-            record={entity}
-            episodeId={currentEpisodeId}
-            onSeek={(sec) => source?.seek(sec)}
-            onShare={(sec) => void share.share(sec)}
-          />
+          {entityRecord}
         </RailPanel>
       );
     }

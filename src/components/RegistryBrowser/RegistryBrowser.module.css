@@ -1,0 +1,98 @@
+/*
+ * The Registry in the rail (007 R3). The page's vocabulary — section bars,
+ * entry cards, pill controls — at panel width: one column, tighter gaps, and
+ * compact type, so an entry is readable in ~320 px without the stage moving.
+ */
+
+.browser {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.loading,
+.empty {
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+/* The log's black mono-caps bar, as on the page. */
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 28px;
+  padding: var(--space-2) var(--space-4);
+  background: var(--panel-deep);
+  border-radius: var(--radius-sm);
+  min-width: 0;
+}
+
+.barTitle {
+  margin: 0;
+  min-width: 0;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.barCount {
+  margin-left: auto;
+  flex: none;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Single column: the rail is one card wide and never scrolls sideways. */
+.entries {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.footer {
+  margin: 0;
+  padding-top: var(--space-4);
+  border-top: var(--border-hairline);
+}
+
+.full {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  color: var(--brand-fg-2);
+  font-size: var(--text-sm);
+}
+
+.full:hover {
+  color: var(--brand-fg);
+}
+
+.full:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}

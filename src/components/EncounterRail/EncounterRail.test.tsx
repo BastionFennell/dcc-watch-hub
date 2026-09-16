@@ -7,7 +7,6 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
 import { EncounterRail } from './EncounterRail';
 import type { Encounter } from '../../engine/selectors';
 import { encounteredNpcs } from '../../engine/selectors';
@@ -103,31 +102,49 @@ describe('EncounterRail', () => {
     expect(onActivate).toHaveBeenCalledWith('grull-rep', grull);
   });
 
-  /* --- Revision 2 (T720): the episode's own slice of the Registry --- */
+  /* --- Revision 3 (T724): the Registry as a panel beside the broadcast --- */
 
-  it('offers no way out of the episode until it is given one', () => {
+  it('offers no way into the Registry until it is given one', () => {
     renderRail(encountersAt(200));
+    expect(screen.queryByTestId('encounter-browse')).toBeNull();
+    // The link revision 2 put here is gone: it lives in the panel's footer now.
     expect(screen.queryByTestId('encounter-registry-link')).toBeNull();
   });
 
-  it('links to the Registry scoped to this episode, beside the title', () => {
-    render(
-      <MemoryRouter>
-        <EncounterRail
-          encounters={encountersAt(100)}
-          activeId={null}
-          onActivate={vi.fn()}
-          registryHref="/registry?scope=ep-1"
-        />
-      </MemoryRouter>,
+  it('browses the Registry from a panel trigger beside the title', () => {
+    const onBrowse = vi.fn();
+    const { rerender } = render(
+      <EncounterRail
+        encounters={encountersAt(100)}
+        activeId={null}
+        onActivate={vi.fn()}
+        onBrowse={onBrowse}
+      />,
     );
 
-    const link = screen.getByTestId('encounter-registry-link');
-    expect(link).toHaveTextContent(copy.encounterRegistryLink);
-    expect(link).toHaveAttribute('href', '/registry?scope=ep-1');
+    const browse = screen.getByTestId('encounter-browse');
+    expect(browse).toHaveTextContent(copy.registryBrowse);
+    expect(browse).toHaveAttribute('aria-controls', 'rail-panel');
+    expect(browse).toHaveAttribute('data-panel-trigger', 'registry');
+    expect(browse).toHaveAttribute('aria-expanded', 'false');
     // Reachable while the strip is still standing by, so an empty episode is
     // not a dead end.
     expect(screen.getByTestId('encounter-empty')).toBeInTheDocument();
+
+    fireEvent.click(browse);
+    // The element itself goes back, so the panel can return focus to it (FR-101).
+    expect(onBrowse).toHaveBeenCalledWith(browse);
+
+    rerender(
+      <EncounterRail
+        encounters={encountersAt(100)}
+        activeId={null}
+        onActivate={vi.fn()}
+        onBrowse={onBrowse}
+        browsing
+      />,
+    );
+    expect(screen.getByTestId('encounter-browse')).toHaveAttribute('aria-expanded', 'true');
   });
 
   it('carries its layout so the strip scrolls and the phone pane is a grid', () => {

@@ -18,6 +18,12 @@ export interface NpcRecordProps {
   onSeek(t: number): void;
   /** Copies a link to that moment; never seeks (004 FR-306). */
   onShare(t: number): void;
+  /**
+   * 007 R3: opens the Registry panel on this entity instead of leaving for the
+   * page (R3 scenario 3). When it is given, the link below becomes a button —
+   * the broadcast keeps playing and the panel's own footer carries the way out.
+   */
+  onOpenRegistry?(id: string): void;
 }
 
 /**
@@ -45,7 +51,13 @@ function Separator() {
  * Nothing is derived here: `npcRecord` already filtered by the playhead, so a
  * seek in either direction simply hands this a different record (constitution I).
  */
-export function NpcRecord({ record, episodeId, onSeek, onShare }: NpcRecordProps) {
+export function NpcRecord({
+  record,
+  episodeId,
+  onSeek,
+  onShare,
+  onOpenRegistry,
+}: NpcRecordProps) {
   const defeated = record.state.defeated;
   return (
     <article
@@ -131,18 +143,32 @@ export function NpcRecord({ record, episodeId, onSeek, onShare }: NpcRecordProps
       </section>
 
       {/*
-        The one way out of the episode page (US1 scenario 6). A plain `Link`:
-        the registry is show-wide, so unlike an episode link it carries no
-        playback flags (T709). It does carry the episode as a scope, so the
-        Registry opens at what this viewer has watched, not past it (T720).
+        The Registry, at this entity (US1 scenario 6). Beside the broadcast it is
+        a button that swaps this record for the Registry panel, so nothing stops
+        (R3 scenario 3); anywhere the panel system is absent it stays the plain
+        `Link` it has always been, carrying the episode as a scope so the page
+        opens at what this viewer has watched (T720).
       */}
-      <Link
-        className={styles.registryLink}
-        to={`/registry?scope=through-${episodeId}#${record.id}`}
-        data-testid="npc-registry-link"
-      >
-        {copy.npcOpenRegistry}
-      </Link>
+      {onOpenRegistry === undefined ? (
+        <Link
+          className={styles.registryLink}
+          to={`/registry?scope=through-${episodeId}#${record.id}`}
+          data-testid="npc-registry-link"
+        >
+          {copy.npcOpenRegistry}
+        </Link>
+      ) : (
+        <button
+          type="button"
+          className={`${styles.registryLink} ${styles.registryOpen}`}
+          data-testid="npc-registry-open"
+          data-panel-trigger="registry"
+          aria-controls="rail-panel"
+          onClick={() => onOpenRegistry(record.id)}
+        >
+          {copy.npcOpenRegistry}
+        </button>
+      )}
     </article>
   );
 }

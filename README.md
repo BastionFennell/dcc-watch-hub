@@ -40,7 +40,11 @@ npm run dev -- --open  # opens the archive
   under the party rail has three entities, the first struck through and tagged `DEFEATED`.
 - Straight to an entity record: <http://localhost:5180/ep/1?fake=1&t=560&panel=npc:the-hoarder>
   (one fact released so far; `panel=npc:<id>` is DEV-only, like `panel=dossier:<id>`).
-- The System Registry: <http://localhost:5180/registry>, deep into one entry:
+- The Registry beside the broadcast:
+  <http://localhost:5180/ep/1?fake=1&t=560&panel=registry> — the rail panel, scoped to this
+  episode; <http://localhost:5180/ep/1?fake=1&t=560&panel=registry:the-hoarder> opens it on one
+  entity (`panel=registry` and `panel=registry:<id>` are DEV-only, like `panel=npc:<id>`).
+- The System Registry page: <http://localhost:5180/registry>, deep into one entry:
   <http://localhost:5180/registry#the-hoarder>, and scoped to an episode:
   <http://localhost:5180/registry?scope=ep-2> (see **Entities and the Registry** below).
 
@@ -553,10 +557,11 @@ newest first, each one a seek control with the same share button the feed rows c
 back takes facts away, and seeking before the entity was met closes the record outright, because
 there is nothing left to show.
 
-At the bottom, **Open in the Registry** — a plain link to `/registry?scope=through-<episode>#<id>`.
-It is the one way out of the episode, and unlike an episode link it carries no playback flags. The
-strip's own header carries a second one, **Registry for this episode** → `/registry?scope=ep-<episode>`.
-Both are scoped; see below.
+At the bottom, **Open in the Registry** — beside the broadcast this is a button, not a link: it
+swaps the record for the **Registry panel** in the same rail, opened on that entity, and the video
+never stops. The strip's own header carries the way in from cold, **Browse the Registry**, a panel
+trigger like the chips beneath it. The one link out to `/registry` lives in that panel's footer.
+See **The Registry beside the broadcast** below.
 
 ### The System Registry page
 
@@ -597,13 +602,42 @@ works. An unreadable scope opens the whole archive rather than an error.
 Search, the kind chips (whose counts follow the scope), and `#<id>` all combine with it, and the
 empty state still reads "The Registry has no such entity." with the scope left selected.
 
-The episode page links into both: an entity record's **Open in the Registry** lands at
-`/registry?scope=through-N#<id>` — that entry, open, with nothing past the episode being watched
-— and the Encountered strip's **Registry for this episode** lands at `/registry?scope=ep-N`.
+The episode page carries the same scopes: the Registry panel opens at **Through Episode N** for
+the episode being watched, and its footer link hands that scope (and the open entity) to the full
+page — `/registry?scope=through-N#<id>`, that entry open, with nothing past where the viewer is.
 
 The trimming itself is one pure function, `scopeRegistry(entries, scope, show)` in
 `src/engine/registry.ts`, beside `parseRegistryScope` and `scopeParam`; the page only chooses a
 scope and renders what comes back.
+
+### The Registry beside the broadcast
+
+Revision 3 answers the obvious complaint about all of the above: reading the Registry meant
+leaving the episode. It does not any more. **Browse the Registry** on the Encountered strip (and
+in the NPCs tab) opens the Registry as a **rail panel** — a bottom sheet on a phone — beside a
+video that keeps playing. It is the same panel slot the dossier and the entity record use: one at
+a time, never over the stage, closed by Escape, the close control or the trigger, with focus
+returning where it came from.
+
+Inside it is the page in a narrow column: the same **Scope** select, search box, kind chips,
+episode bars and expandable entries, with three differences that follow from the stage being right
+there.
+
+- It opens at **Through Episode N** for the episode being watched, not at the whole archive.
+- The scope, the search and the chips are panel state. Changing them does **not** touch the URL —
+  navigating would take the broadcast with it.
+- An appearance **in the episode being watched** is a seek button (with the feed's share icon
+  beside it), not a link: activating it moves the playhead and nothing else. Appearances in other
+  episodes stay links to `/ep/N?t=…`.
+
+The panel is publication-scoped, not playhead-scoped: while it is open the playhead can run or be
+scrubbed and its contents do not change — the strip beneath it still does. Opening it never seeks
+and never pauses.
+
+The episode files it needs are fetched **once per visit**, lazily, the first time either the panel
+or `/registry` asks — `RegistryIndexProvider` (`src/data/RegistryIndexContext.tsx`) holds the
+index for both, with a System-voice "The System is indexing the archive." line until it lands and
+the same "could not be indexed" notice inside the panel when a file fails.
 
 ## Authoring episode data
 
