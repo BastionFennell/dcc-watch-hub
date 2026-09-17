@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * User Story 2 (T714): the System Registry at `/registry`. The page is mounted
+ * User Story 2 (T714): the System Registry at `/codex`. The page is mounted
  * through `<App/>`, because the route, the providers and the header link are
  * part of what is under test.
  *
@@ -89,7 +89,7 @@ function LocationProbe() {
   return <span data-testid="loc" data-search={location.search} data-hash={location.hash} />;
 }
 
-function renderRegistry(path = '/registry') {
+function renderRegistry(path = '/codex') {
   return render(
     <MemoryRouter initialEntries={[path]}>
       <App />
@@ -276,8 +276,8 @@ describe('the System Registry', () => {
     ).toContain('/ep/2?t=100');
   });
 
-  it('opens and marks the entry /registry#<id> names', async () => {
-    renderRegistry('/registry#hoarder');
+  it('opens and marks the entry /codex#<id> names', async () => {
+    renderRegistry('/codex#hoarder');
     await waitForIndex();
 
     await waitFor(() => expect(entry('hoarder')).toHaveAttribute('data-expanded', 'true'));
@@ -367,7 +367,7 @@ describe('scoping the Registry by episode', () => {
   });
 
   it('through an episode drops the facts and appearances released later', async () => {
-    renderRegistry('/registry?scope=through-1');
+    renderRegistry('/codex?scope=through-1');
     await waitForEntries();
 
     expect(scopeSelect().value).toBe('through-1');
@@ -394,7 +394,7 @@ describe('scoping the Registry by episode', () => {
   });
 
   it('through a later episode lets that episode back in', async () => {
-    renderRegistry('/registry?scope=through-2');
+    renderRegistry('/codex?scope=through-2');
     await waitForEntries();
 
     const quartermaster = entry('quartermaster');
@@ -414,7 +414,7 @@ describe('scoping the Registry by episode', () => {
   });
 
   it('only an episode keeps its own cast, filed under that episode', async () => {
-    renderRegistry('/registry?scope=ep-2');
+    renderRegistry('/codex?scope=ep-2');
     await waitForEntries();
 
     expect(scopeSelect().value).toBe('ep-2');
@@ -452,7 +452,7 @@ describe('scoping the Registry by episode', () => {
   });
 
   it('keeps the other search params and the hash when the scope changes', async () => {
-    renderRegistry('/registry?q=keep#hoarder');
+    renderRegistry('/codex?q=keep#hoarder');
     await waitForEntries();
 
     fireEvent.change(scopeSelect(), { target: { value: 'through-2' } });
@@ -463,7 +463,7 @@ describe('scoping the Registry by episode', () => {
   });
 
   it('opens the whole archive for a scope it cannot read', async () => {
-    renderRegistry('/registry?scope=banana');
+    renderRegistry('/codex?scope=banana');
     await waitForEntries();
 
     expect(scopeSelect().value).toBe('all');
@@ -472,7 +472,7 @@ describe('scoping the Registry by episode', () => {
 
   it('says the Registry has no such entity when a scope and a search agree', async () => {
     // "Crate" is the Hoarder's alias, and the Hoarder is not in episode 2.
-    renderRegistry('/registry?scope=ep-2');
+    renderRegistry('/codex?scope=ep-2');
     await waitForEntries();
 
     fireEvent.change(screen.getByTestId('registry-search'), { target: { value: 'Crate' } });
@@ -483,7 +483,7 @@ describe('scoping the Registry by episode', () => {
   });
 
   it('still opens the entry the hash names inside a scope', async () => {
-    renderRegistry('/registry?scope=ep-2#grull-rep');
+    renderRegistry('/codex?scope=ep-2#grull-rep');
     await waitForEntries();
 
     await waitFor(() => expect(entry('grull-rep')).toHaveAttribute('data-expanded', 'true'));
@@ -539,7 +539,7 @@ describe('the Registry reads newest first', () => {
   });
 
   it('keeps the newest shelf first under through N as well', async () => {
-    renderRegistry('/registry?scope=through-2');
+    renderRegistry('/codex?scope=through-2');
     await waitForIndex();
 
     expect(

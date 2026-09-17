@@ -5,7 +5,7 @@
 > frame ahead of it.
 
 A static watch-along site for the Dungeon Crawl Cast actual play show. One page per recap
-episode, one archive page, one System Registry of everyone the party has met, no backend, no
+episode, one archive page, one Dungeon Codex of everyone the party has met, no backend, no
 accounts, no database.
 
 - **Stack**: Vite 6 + React 19 + TypeScript (strict) + react-router 7 + CSS Modules + Vitest 3.
@@ -48,9 +48,9 @@ npm run dev -- --open  # opens the archive
   holds nobody, <http://localhost:5180/ep/1?fake=1&t=130&panel=registry> holds The Hoarder alone,
   and <http://localhost:5180/ep/1?fake=1&t=540&panel=registry:the-hoarder> has its fact and its
   "Defeated in episode 1." Drag the scrubber back and the panel gives them up again.
-- The System Registry page: <http://localhost:5180/registry>, deep into one entry:
+- The Dungeon Codex page: <http://localhost:5180/registry>, deep into one entry:
   <http://localhost:5180/registry#the-hoarder>, and scoped to an episode:
-  <http://localhost:5180/registry?scope=ep-2> (see **Entities and the Registry** below).
+  <http://localhost:5180/registry?scope=ep-2> (see **Entities and the Codex** below).
 
 ### Verify
 
@@ -449,7 +449,7 @@ or any resize that stays on one side of 900 px, does neither: the same stage ele
 selected tab survive — verified at 400 × 800 → 800 × 400 → 880 px. Only a desktop window being
 dragged across the breakpoint pays that cost, and it pays it once.
 
-## Entities and the Registry
+## Entities and the Codex
 
 NPCs are the one thing the show has that the episode files could not hold: a boss met on floor 1
 comes back three episodes later, and a viewer wants both "who is this, right now" and "who is
@@ -459,9 +459,9 @@ spoiler policy:
 - **On the episode page, what you see is tied to the playhead.** The Encountered strip only lists
   entities the broadcast has already met, and a record only shows the facts already released. Scrub
   back and both shrink. This is the same rule as every other overlay surface (constitution I).
-- **The System Registry is not tied to the playhead, or to this device at all.** It lists every
+- **The Dungeon Codex is not tied to the playhead, or to this device at all.** It lists every
   entity that appears in any **published** episode, ordered by the episode that introduced it, with
-  every fact any published episode has released. Opening `/registry` before watching episode 3 will
+  every fact any published episode has released. Opening `/codex` before watching episode 3 will
   tell you how episode 3 ends for The Tollkeeper. That is deliberate: a glossary you have to earn is
   not a glossary. Nothing device-specific gates it — no "visited" list, no local storage.
 
@@ -471,14 +471,14 @@ in `show.json` mentions is not listed at all.
 ### The registry file
 
 `show.json` gains one optional field, `registryUrl` (`"/data/npcs.json"` in the sample). Without
-it there is no strip, no NPCs tab, no header link and no `/registry` route — the episode page
+it there is no strip, no NPCs tab, no header link and no `/codex` route — the episode page
 works exactly as it did, and `npc` events still show in the feed under their raw id.
 
 ```jsonc
 {
   "entities": [
     {
-      "id": "the-hoarder",              // stable; the anchor in /registry#<id>
+      "id": "the-hoarder",              // stable; the anchor in /codex#<id>
       "name": "The Hoarder",
       "kind": "boss",                   // boss | vendor | ally — exactly these three
       "floor": 1,                       // optional
@@ -561,15 +561,15 @@ newest first, each one a seek control with the same share button the feed rows c
 back takes facts away, and seeking before the entity was met closes the record outright, because
 there is nothing left to show.
 
-At the bottom, **Open in the Registry** — beside the broadcast this is a button, not a link: it
+At the bottom, **Open in the Codex** — beside the broadcast this is a button, not a link: it
 swaps the record for the **Registry panel** in the same rail, opened on that entity, and the video
-never stops. The strip's own header carries the way in from cold, **Browse the Registry**, a panel
-trigger like the chips beneath it. The one link out to `/registry` lives in that panel's footer.
+never stops. The strip's own header carries the way in from cold, **Browse the Codex**, a panel
+trigger like the chips beneath it. The one link out to `/codex` lives in that panel's footer.
 See **The Registry beside the broadcast** below.
 
-### The System Registry page
+### The Dungeon Codex page
 
-`/registry`, linked from the header (desktop cluster and phone menu) whenever the show has a
+`/codex`, linked from the header (desktop cluster and phone menu) whenever the show has a
 registry. It loads `show.json`, `npcs.json` and **every** episode file in parallel and builds the
 index itself, so it needs no new data and no build step. If one episode file fails, the rest still
 render and the page says so ("1 recap episode could not be indexed.").
@@ -580,16 +580,16 @@ render and the page says so ("1 recap episode could not be indexed.").
   **latest** leads (same episode: later timecode first). Reading down the page is reading backwards
   through the archive, so the newest material is the material you land on.
 - **Search** over name **and** aliases, case-insensitive substring — "crate king" finds The
-  Hoarder. No match: "The Registry has no such entity."
+  Hoarder. No match: "The Codex has no such entity."
 - **Kind chips** with counts, combining as any-of: Boss + Ally shows both.
 - **Expanding an entry** reveals its **FACTS**, each tagged `Ep N` with the episode that first
   released it (a fact no published episode unlocks is not listed), and its **APPEARANCES** —
   every moment, as `Episode N — Title · 5:30 · AMENDED`, linking to `/ep/N?t=330`. A defeated
   entity closes with "Defeated in episode N."
-- **`/registry#<id>`** opens that entry expanded and scrolled clear of the sticky header, which is
-  where "Open in the Registry" lands.
+- **`/codex#<id>`** opens that entry expanded and scrolled clear of the sticky header, which is
+  where "Open in the Codex" lands.
 
-### Scoping the Registry
+### Scoping the Codex
 
 The Registry is published, not watched — so revision 2 adds the one control that lets a viewer
 hold it to where they are. A labelled **Scope** select leads the toolbar, and whatever it says is
@@ -606,12 +606,12 @@ works. An unreadable scope opens the whole archive rather than an error.
   this episode".
 
 Search, the kind chips (whose counts follow the scope), and `#<id>` all combine with it, and the
-empty state still reads "The Registry has no such entity." with the scope left selected. The order
+empty state still reads "The Codex has no such entity." with the scope left selected. The order
 is the same at every scope: newest episode first, latest debut first inside it.
 
-The episode page carries the same scopes: the Registry panel opens at **Through Episode N** for
+The episode page carries the same scopes: the Codex panel opens at **Through Episode N** for
 the episode being watched, and its footer link hands that scope (and the open entity) to the full
-page — `/registry?scope=through-N#<id>`, that entry open, with nothing past where the viewer is.
+page — `/codex?scope=through-N#<id>`, that entry open, with nothing past where the viewer is.
 
 The trimming itself is one pure function, `scopeRegistry(entries, scope, show)` in
 `src/engine/registry.ts`, beside `parseRegistryScope` and `scopeParam`; the page only chooses a
@@ -619,9 +619,9 @@ scope and renders what comes back.
 
 ### The Registry beside the broadcast
 
-Revision 3 answers the obvious complaint about all of the above: reading the Registry meant
-leaving the episode. It does not any more. **Browse the Registry** on the Encountered strip (and
-in the NPCs tab) opens the Registry as a **rail panel** — a bottom sheet on a phone — beside a
+Revision 3 answers the obvious complaint about all of the above: reading the Codex meant
+leaving the episode. It does not any more. **Browse the Codex** on the Encountered strip (and
+in the NPCs tab) opens the Codex as a **rail panel** — a bottom sheet on a phone — beside a
 video that keeps playing. It is the same panel slot the dossier and the entity record use: one at
 a time, never over the stage, closed by Escape, the close control or the trigger, with focus
 returning where it came from.
@@ -646,7 +646,7 @@ gives it up again; the facts, the appearances and the defeated line are recomput
 is still publication-scoped, and opening it never seeks and never pauses.
 
 The episode files it needs are fetched **once per visit**, lazily, the first time either the panel
-or `/registry` asks — `RegistryIndexProvider` (`src/data/RegistryIndexContext.tsx`) holds the
+or `/codex` asks — `RegistryIndexProvider` (`src/data/RegistryIndexContext.tsx`) holds the
 index for both, with a System-voice "The System is indexing the archive." line until it lands and
 the same "could not be indexed" notice inside the panel when a file fails.
 
@@ -693,7 +693,7 @@ npm run sheet-to-json -- path/to/ep4.csv \
 ```
 
 `--registry` is optional and names the show's `npcs.json`; give it and every `npc` row's entity
-id and fact ids are checked (warnings only — see **Entities and the Registry** above). Without
+id and fact ids are checked (warnings only — see **Entities and the Codex** above). Without
 it no id is checked, because the registry is show-level data the converter is not otherwise given.
 
 `--initial-state` is a JSON file holding the episode's `initialState` (`party` and `map`).
@@ -847,11 +847,11 @@ Measured on the production build (`npm run build`, Node 20.9.0):
 
 That is React 19 + react-router 7 + the whole app — v1 plus the v2 panels, dossier, floor map
 and resume, plus the glance card, full record, deep links, share, the broadcast log and the
-mobile pass, plus the NPC encounters and the System Registry — comfortably under the 150 kB
+mobile pass, plus the NPC encounters and the Dungeon Codex — comfortably under the 150 kB
 gzipped budget. Deep links and share cost ~1.9 kB gzipped of JS; the broadcast log cost 2.1 kB
 gzipped of JS and 0.6 kB of CSS; the mobile pass (mini-player, tabs, bottom sheet) cost 2.2 kB
-gzipped of JS and 0.8 kB of CSS; entities and the Registry (strip, record, NPCs tab, the
-`/registry` page and the cross-episode index) cost 6.1 kB gzipped of JS and 2.0 kB of CSS —
+gzipped of JS and 0.8 kB of CSS; entities and the Codex (strip, record, NPCs tab, the
+`/codex` page and the cross-episode index) cost 6.1 kB gzipped of JS and 2.0 kB of CSS —
 the largest single feature since v2, and the only one that adds a page. None of the five
 adds a dependency.
 
@@ -863,14 +863,14 @@ record in `specs/003-crawler-record/quickstart.md` → Results, again for deep l
 `specs/005-episode-log/quickstart.md` → Results (**100 / 100** either side of the log's toggle,
 and the log adds no scored audit of its own).
 
-`/registry` was measured the same way for 007: **performance 100, accessibility 100,
+`/codex` was measured the same way for 007: **performance 100, accessibility 100,
 best-practices 100** on the desktop preset (FCP 0.4 s, LCP 0.6 s, TBT 0 ms, CLS 0), and
 **performance 98, accessibility 100** on the mobile preset (FCP 1.5 s, LCP 2.3 s, TBT 0 ms,
 CLS 0). It fetches `show.json`, `npcs.json` and every episode file, and still paints in under half
 a second on desktop, because those are four small JSON files behind one render. `/ep/1` re-scored
 **performance 100, accessibility 100** with the Encountered strip and an entity record on the page.
 axe-core 4.13 with every rule enabled finds **no violations** on the Encountered strip, the entity
-record (rail and phone sheet), the NPCs tab, or `/registry` collapsed and expanded, at 1440 × 900
+record (rail and phone sheet), the NPCs tab, or `/codex` collapsed and expanded, at 1440 × 900
 and 400 × 800. Details in `specs/007-npc-registry/quickstart.md` → Results.
 
 The **mobile** preset on the same build scores `/ep/1` **accessibility 100, performance 99**
@@ -921,7 +921,7 @@ Read in this order:
 8. `specs/006-mobile-pass/` — the phone composition: the docked mini-player, the four tabs and
    the bottom sheets, all under the existing 900 px breakpoint.
 9. `specs/007-npc-registry/` — the active feature: `npc` events, the Encountered strip and the
-   entity record on the episode page, and the System Registry at `/registry`. Same layout, plus
+   entity record on the episode page, and the Dungeon Codex at `/codex`. Same layout, plus
    `contracts/npc.md` and `contracts/npcs.schema.json`.
 
 Three rules bite most often while editing:

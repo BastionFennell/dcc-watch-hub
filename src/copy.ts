@@ -441,19 +441,19 @@ export const copy = {
   npcMoments: 'MOMENTS',
   npcDefeated: 'DEFEATED',
   npcActive: 'ACTIVE',
-  npcOpenRegistry: 'Open in the Registry',
+  npcOpenRegistry: 'Open in the Codex',
 
   /** The fifth phone tab, which exists only when the show has a registry. */
   tabNpcs: 'NPCs',
 
   /** The glossary at /registry (FR-620): everything published, by episode. */
-  registry: 'Registry',
-  registryTitle: 'System Registry',
+  registry: 'Codex',
+  registryTitle: 'Dungeon Codex',
   registryKicker: 'ENTITY RECORDS',
   registryLead:
     'Every entity the System has filed across the broadcast archive, newest episode first.',
-  registrySearch: 'Search the Registry',
-  registryNoMatch: 'The Registry has no such entity.',
+  registrySearch: 'Search the Codex',
+  registryNoMatch: 'The Codex has no such entity.',
   registryMissing: (n: number) =>
     `${n} recap episode${n === 1 ? '' : 's'} could not be indexed.`,
   /**
@@ -477,7 +477,7 @@ export const copy = {
   /** While the page is pulling the show, the registry and every episode file. */
   registryLoading: 'The System is indexing the archive.',
   /** The show declares no registry, or the file could not be read (spec edge case). */
-  registryUnavailable: 'The Registry has not been transmitted.',
+  registryUnavailable: 'The Codex has not been transmitted.',
   /** Names the kind chip group for a screen reader. */
   registryKinds: 'Filter by kind',
   /** How many entities a section holds. */
@@ -513,16 +513,16 @@ export const copy = {
    * opens the Registry panel instead of leaving the broadcast. Kept because the
    * revision 2 contract names it and nothing else claims the phrase.
    */
-  encounterRegistryLink: 'Registry for this episode',
+  encounterRegistryLink: 'Codex for this episode',
 
   /* --- appended by 007 revision 3 (the Registry panel: T722-T725) --- */
 
   /** The strip's panel trigger: the Registry beside the broadcast (R3-FR-643). */
-  registryBrowse: 'Browse the Registry',
+  registryBrowse: 'Browse the Codex',
   /** The panel's footer, out to the whole page at the same scope. */
-  registryOpenFull: 'Open the full Registry',
+  registryOpenFull: 'Open the full Codex',
   /** Mono caps above the panel's title, as every rail panel carries. */
-  registryPanelKicker: 'SYSTEM REGISTRY',
+  registryPanelKicker: 'DUNGEON CODEX',
 } as const;
 
 export type Copy = typeof copy;

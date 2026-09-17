@@ -1,4 +1,4 @@
-# Quickstart: NPC encounters + System Registry
+# Quickstart: NPC encounters + Dungeon Codex
 
 The dev server is `http://localhost:5180` (`npm run dev`); `npm run preview` serves the
 production build at `http://localhost:4173`. `?fake=1`, `?panel=` (`map`, `dossier:<id>`, `npc:<id>`, `registry`, `registry:<id>`) and
@@ -19,7 +19,7 @@ npm run dev            # http://localhost:5180/
 |-----|-------------|
 | `http://localhost:5180/ep/1?fake=1&t=120` | before the first `npc` event (2:10): **ENCOUNTERED** under the party rail reads "No entities tagged yet." |
 | `http://localhost:5180/ep/1?fake=1&t=560` | three chips, newest first — The Hoarder (boss, struck through, `DEFEATED`), Quartermaster Vel (ally, initial disc "Q"), Grull Industries Representative (vendor, portrait) |
-| `http://localhost:5180/ep/1?fake=1&t=560&panel=npc:the-hoarder` | the entity record open in the rail: Boss · Floor 1, the intro, `DEFEATED`, **FACTS** with only "It nests behind the crate wall it builds…" (the `lair` fact, unlocked at 6:20), **MOMENTS** 9:00 / 6:20 / 2:10 each seek-able and shareable, and **Open in the Registry** |
+| `http://localhost:5180/ep/1?fake=1&t=560&panel=npc:the-hoarder` | the entity record open in the rail: Boss · Floor 1, the intro, `DEFEATED`, **FACTS** with only "It nests behind the crate wall it builds…" (the `lair` fact, unlocked at 6:20), **MOMENTS** 9:00 / 6:20 / 2:10 each seek-able and shareable, and **Open in the Codex** |
 | `http://localhost:5180/ep/1?fake=1&t=246` | the unfiled id: the feed says "Entity · the-listener-below enters the broadcast — Unfiled. The System has no record of this one." and the strip still has only three chips |
 | `http://localhost:5180/ep/2?fake=1&t=820&panel=npc:the-hoarder` | an entity that spans episodes: four chips (signal-choir, mother-of-pipes `DEFEATED`, the-hoarder, grull-rep), and The Hoarder's record here shows only the `ledger` fact — released at 5:30 in *this* episode — and status **ACTIVE**, because overlay state is a pure function of *this* episode's log and episode 2 never kills it. The registry, which is cross-episode, still says "Defeated in episode 1." |
 
@@ -34,12 +34,12 @@ sheet over the stage. The tab exists only when the show has a `registryUrl`.
 
 | URL | What to see |
 |-----|-------------|
-| `http://localhost:5199/ep/1?fake=1&t=560&panel=registry` | the **SYSTEM REGISTRY / System Registry** panel in the right rail, beside a stage that is still playing: **Scope** reading "Through Episode 1 — The World Dungeon", the search box, chips Boss 1 / Vendor / Guide 1 / Ally / Faction 1, one bar "EPISODE 1 — THE WORLD DUNGEON · 3 entities" over the-hoarder, grull-rep and quartermaster-vel, and **Open the full Registry** → `/registry?scope=through-1` at the foot |
+| `http://localhost:5199/ep/1?fake=1&t=560&panel=registry` | the **SYSTEM REGISTRY / Dungeon Codex** panel in the right rail, beside a stage that is still playing: **Scope** reading "Through Episode 1 — The World Dungeon", the search box, chips Boss 1 / Vendor / Guide 1 / Ally / Faction 1, one bar "EPISODE 1 — THE WORLD DUNGEON · 3 entities" over the-hoarder, grull-rep and quartermaster-vel, and **Open the full Codex** → `/codex?scope=through-1` at the foot |
 | the same URL, entry expanded | The Hoarder's **FACTS** (`Ep 1` · the lair) and **APPEARANCES** — 2:10 MET, 6:20 AMENDED, 9:00 DEFEATED — each a **seek button** with a share icon, not a link, because they are in the episode on screen. Activating the first moves the caption clock from 9:20 to 2:10 and navigates nowhere |
 | scope → **All episodes**, entry expanded | the same entry now also lists `Episode 2 — The Meat District · 5:30 AMENDED`, and *that* row is a link to `/ep/2?t=330` |
-| `http://localhost:5199/ep/1?fake=1&t=560&panel=registry:the-hoarder` | what the record's **Open in the Registry** does: the panel opens with that entry expanded, scrolled into view and on the brand ground, and the footer link carries it out as `/registry?scope=through-1#the-hoarder` |
+| `http://localhost:5199/ep/1?fake=1&t=560&panel=registry:the-hoarder` | what the record's **Open in the Codex** does: the panel opens with that entry expanded, scrolled into view and on the brand ground, and the footer link carries it out as `/codex?scope=through-1#the-hoarder` |
 
-Escape, the panel's close control and a second press of **Browse the Registry** all close it, and
+Escape, the panel's close control and a second press of **Browse the Codex** all close it, and
 focus returns to whatever opened it.
 
 ## The panel follows the playhead (R4)
@@ -67,18 +67,18 @@ chips do not move — only what the playhead has released.
 the stage still visible above it, drag-to-dismiss and backdrop-tap included. **Browse the
 Registry** sits in the **NPCS** pane's header.
 
-## The System Registry (US2)
+## The Dungeon Codex (US2)
 
 | URL | What to see |
 |-----|-------------|
 | `http://localhost:5180/registry` | three sections, **newest first** — "Episode 3 — Descent" (3 entities), "Episode 2 — The Meat District" (2), "Episode 1 — The World Dungeon" (3) — with search and three kind chips (Boss 3, Vendor / Guide 2, Ally / Faction 3). Inside each, the latest debut leads: Ghaza Provisioner / The Lamplighter / The Tollkeeper, then The Signal Choir / Mother of Pipes, then Quartermaster Vel / Grull Industries Representative / The Hoarder |
 | `http://localhost:5180/registry#the-hoarder` | that entry already expanded and scrolled clear of the sticky header: facts tagged `Ep 1` and `Ep 2`, four appearances linking to `/ep/1?t=130`, `/ep/1?t=380`, `/ep/1?t=540` and `/ep/2?t=330`, closing with "Defeated in episode 1." |
 | search `crate king` | one entry, The Hoarder — matched on an alias, not the name |
-| search `zzz` | "The Registry has no such entity." |
+| search `zzz` | "The Codex has no such entity." |
 | kind chips Vendor + Ally | five entries across all three sections (any-of) |
 | `http://localhost:5180/registry?scope=through-1#the-hoarder` | the **Scope** select reading "Through Episode 1 — The World Dungeon"; one section, three entities (Quartermaster Vel, Grull Industries Representative, The Hoarder), The Hoarder open with the `lair` fact only — no `Ep 2` tag, no `/ep/2?t=330` appearance — and still "Defeated in episode 1." |
 | `http://localhost:5180/registry?scope=ep-2` | "Only Episode 2 — The Meat District": one section headed with that title, four entities in debut order, latest first (The Signal Choir and Mother of Pipes, who debut here, then Grull Industries Representative and The Hoarder, who debut in episode 1), each entry's appearances all `/ep/2?t=…`, and The Hoarder still carrying its episode 1 facts and defeat |
-| `?scope=ep-2` + search `toll` | "The Registry has no such entity." with the scope still selected |
+| `?scope=ep-2` + search `toll` | "The Codex has no such entity." with the scope still selected |
 
 The same page at 400 × 800: one column, the search full width on its own row with the three chips
 beneath it, and no horizontal scroll.
@@ -102,7 +102,7 @@ npm run sheet-to-json -- scripts/samples/ep1-broken.csv --episode 1 --duration 2
 ## Manual acceptance
 
 SC-601 sweep at npc boundaries; SC-602 registry sections/facts/appearances; SC-603 hash +
-"Open in the Registry"; SC-604 gates + Lighthouse a11y 100 on both pages.
+"Open in the Codex"; SC-604 gates + Lighthouse a11y 100 on both pages.
 R2-SC-605 scoped subsets against the samples; R2-SC-606 both episode-page links land scoped.
 
 ---
@@ -167,7 +167,7 @@ three chips. Nothing throws.
 
 ### SC-602 — the registry lists every entity, in the right section, with the right tags
 
-`/registry` on the production build:
+`/codex` on the production build:
 
 | Section | Entities |
 |---------|----------|
@@ -188,19 +188,19 @@ Search `crate king` (an alias) leaves only The Hoarder; `zzz` shows "The Registr
 entity."; the Vendor chip alone leaves grull-rep + ghaza-provisioner (`aria-pressed="true"`),
 and Vendor + Ally leaves five across all three sections.
 
-### SC-603 — `#<id>` and "Open in the Registry"
+### SC-603 — `#<id>` and "Open in the Codex"
 
 Both land clear of the sticky header. `scroll-margin-top: calc(var(--header-h) + var(--space-6))`
 on `.entry` is what does it (added in wave 3; without it the entry's top sat under the header).
 
 | Route | Entry top | Header bottom | Clearance |
 |-------|-----------|---------------|-----------|
-| `/registry#the-hoarder`, 1440 × 900 | 59.89 px | 36 px | **+23.89 px** |
-| `/registry#the-hoarder`, 400 × 800 | 59.73 px | 36 px | **+23.73 px** |
-| "Open in the Registry" clicked from `/ep/1?fake=1&t=560`, 1440 × 900 | 106.89 px | 36 px | **+70.89 px** |
+| `/codex#the-hoarder`, 1440 × 900 | 59.89 px | 36 px | **+23.89 px** |
+| `/codex#the-hoarder`, 400 × 800 | 59.73 px | 36 px | **+23.73 px** |
+| "Open in the Codex" clicked from `/ep/1?fake=1&t=560`, 1440 × 900 | 106.89 px | 36 px | **+70.89 px** |
 
 In all three the entry arrives already expanded (`data-expanded="true"`), the URL is
-`/registry#the-hoarder`, and the document title is "System Registry · Dungeon Crawl Cast". The
+`/codex#the-hoarder`, and the document title is "Dungeon Codex · Dungeon Crawl Cast". The
 in-app click lands lower because the header is still at its full 48 px when the scroll is issued
 and compacts to 36 px afterwards — clear either way.
 
@@ -210,11 +210,11 @@ and compacts to 36 px afterwards — clear either way.
 
 | Page | Preset | Perf | **A11y** | Best practices | FCP / LCP / TBT / CLS |
 |------|--------|------|----------|----------------|------------------------|
-| `/registry` | desktop | 100 | **100** | 100 | 0.4 s / 0.6 s / 0 ms / 0 |
+| `/codex` | desktop | 100 | **100** | 100 | 0.4 s / 0.6 s / 0 ms / 0 |
 | `/ep/1` | desktop | 100 | **100** | 96 | 0.4 s / 0.5 s / 0 ms / 0.007 |
-| `/registry` | mobile | 98 | **100** | 100 | 1.5 s / 2.3 s / 0 ms / 0 |
+| `/codex` | mobile | 98 | **100** | 100 | 1.5 s / 2.3 s / 0 ms / 0 |
 
-No accessibility audit fails on any of the three. `/registry` fetches `show.json`, `npcs.json`
+No accessibility audit fails on any of the three. `/codex` fetches `show.json`, `npcs.json`
 and all three episode files before it can render, and still paints in 0.4 s on desktop; the
 mobile 98 is `render-blocking-resources` on the one CSS file, which is the same audit the rest of
 the site trades away and not a 007 regression. `/ep/1`'s best-practices 96 is the YouTube embed's
@@ -230,8 +230,8 @@ own console issue, unchanged from 006.
 | NPCs tab, whole document | 400 | same single dev-scrubber hit, nothing else |
 | NPCs tab strip (scoped) | 400 | 0 |
 | Entity record as a bottom sheet, whole document | 400 | same single dev-scrubber hit, nothing else |
-| `/registry` collapsed, whole document (production build) | 1440 and 400 | **0** |
-| `/registry` with an entry expanded, whole document | 1440 and 400 | **0** |
+| `/codex` collapsed, whole document (production build) | 1440 and 400 | **0** |
+| `/codex` with an entry expanded, whole document | 1440 and 400 | **0** |
 
 The dev-scrubber label is the same known, DEV-only item recorded in the 006 Results.
 
@@ -256,14 +256,14 @@ onto the first opaque ancestor). Everything below is body text or a badge, so th
 | Appearance link (title / time / action) | `#B4B2A9` / `#888780` on `#1D1D28` | 7.85:1 / 4.63:1 |
 | Section bar title / count | `#EEEDFE` / `#888780` on `#0D0D16` | 16.74:1 / 5.36:1 |
 | Kind chips | `#EEEDFE` on `#1D1D28` | 14.44:1 |
-| "Open in the Registry" | `#CECBF6` on `#1D1D28` | 10.72:1 |
+| "Open in the Codex" | `#CECBF6` on `#1D1D28` | 10.72:1 |
 
 The three kind tints are only ever used as **backgrounds under dark text** or as a 3 px spine —
 no tint is ever asked to carry a ratio as a foreground on the dark ground.
 
 ### Layout
 
-- No horizontal scroll at 1440, 400 or **360** px on `/registry` (`scrollWidth === innerWidth`).
+- No horizontal scroll at 1440, 400 or **360** px on `/codex` (`scrollWidth === innerWidth`).
 - At 360 and 400 the toolbar wraps: the search takes a full-width row (336 px / 376 px) and the
   three kind chips sit on one row beneath it, right edge 291 px — room to spare for a fourth.
 - The phone NPCs tab is a two-column grid (chips at x = 10 and x = 204, 186 px wide); an odd
@@ -276,7 +276,7 @@ no tint is ever asked to carry a ratio as a foreground on the dark ground.
 1. **`?panel=npc:<id>`** — the DEV panel flag in `EpisodePage.tsx` handled `map` and `dossier:`
    but not `npc:`, so an entity record could not be screenshot or QA'd from a URL. One branch
    added, plus a page test that mounts `/ep/1?fake=1&t=200&panel=npc:hoarder`.
-2. **Hash landing under the header** — `/registry#<id>` scrolled the entry to y = 0, where the
+2. **Hash landing under the header** — `/codex#<id>` scrolled the entry to y = 0, where the
    sticky header covered its first line. `scroll-margin-top: calc(var(--header-h) + var(--space-6))`
    on `.entry` in `RegistryEntry.module.css`; measured above.
 3. **Doubled section heading** — `copy.registryEpisodeSection(1, 'Episode 1 — The World Dungeon')`
@@ -295,7 +295,7 @@ Honest list of what the headless pass did **not** cover:
 - **A screen reader.** Roles, names and states are asserted by the component tests and by axe,
   but no VoiceOver / NVDA pass was made over the strip, the record or the registry.
 - **A registry that fails to load, and an episode file that fails to load.** Both paths
-  ("The Registry has not been transmitted.", "1 recap episode could not be indexed.") are covered
+  ("The Codex has not been transmitted.", "1 recap episode could not be indexed.") are covered
   by `RegistryPage.test.tsx` and `registry.test.ts` with stubbed fetches; neither was reproduced
   against a live server, which would mean breaking `public/data` on disk.
 - **A show with no `registryUrl`.** The "no strip, no tab, no header link" edge case is covered by
@@ -362,15 +362,15 @@ always was; only the section it is displayed under follows the scope.
 
 | From | Href |
 |------|------|
-| Entity record, "Open in the Registry", on `/ep/1` | `/registry?scope=through-1#the-hoarder` |
-| Encountered strip header, "Registry for this episode", on `/ep/1` | `/registry?scope=ep-1` |
-| The same strip link in the phone **NPCS** pane | `/registry?scope=ep-1` |
+| Entity record, "Open in the Codex", on `/ep/1` | `/codex?scope=through-1#the-hoarder` |
+| Encountered strip header, "Codex for this episode", on `/ep/1` | `/codex?scope=ep-1` |
+| The same strip link in the phone **NPCS** pane | `/codex?scope=ep-1` |
 
-The record's link keeps the hash, so the Registry opens with that entry expanded *inside* the
+The record's link keeps the hash, so the Codex opens with that entry expanded *inside* the
 scope; changing the scope select afterwards keeps both the hash and any other search param, so
 the entry stays open as the view widens or narrows around it.
 
-`/registry?scope=ep-2` was served 200 by the dev server in a headless check (no console errors).
+`/codex?scope=ep-2` was served 200 by the dev server in a headless check (no console errors).
 
 ---
 
@@ -378,7 +378,7 @@ the entry stays open as the view widens or narrows around it.
 
 Measured 2026-09-16 on Node 20.9.0, Chrome 152 headless over CDP (puppeteer-core 22.15.0),
 axe-core 4.10.3 and Lighthouse 11.7.1. The episode page runs against `npm run dev` on port 5199
-(the `?panel=` flag is DEV-only); the Registry page runs against `npm run preview` on 4173.
+(the `?panel=` flag is DEV-only); the Codex page runs against `npm run preview` on 4173.
 
 ### Gates (T725)
 
@@ -413,13 +413,13 @@ At 1440 × 900, `/ep/1?fake=1&t=560&panel=registry`:
 | Scope select | `through-1`, "Through Episode 1 — The World Dungeon" |
 | Chips | Boss 1, Vendor / Guide 1, Ally / Faction 1 |
 | Section | "Episode 1 — The World Dungeon", 3 entities — the-hoarder, grull-rep, quartermaster-vel |
-| Footer link | `/registry?scope=through-1` ("Open the full Registry") |
+| Footer link | `/codex?scope=through-1` ("Open the full Codex") |
 | Strip trigger | `encounter-browse`, `aria-expanded="true"`, `aria-controls="rail-panel"` |
 | Console | no errors, no warnings |
 | Horizontal scroll | 0 at 1440, 400 **and** 360 px (page and panel both) |
 
 That the open does not touch playback is proved in jsdom rather than by eye
-(`EpisodePage.test.tsx`, "browses the Registry beside the broadcast, without touching the
+(`EpisodePage.test.tsx`, "browses the Codex beside the broadcast, without touching the
 video"): with `seek` and `pause` spied on the fake source, opening the panel calls neither,
 `getTime()` is unchanged, and `source.playing` stays false. The phone suite asserts the same for
 the sheet. Scrubbing while the panel is open changes the strip beneath and leaves the panel's
@@ -444,11 +444,11 @@ Activating the first button moved the caption clock from **9:20 to 2:10** with n
 |-----|--------|
 | Lighthouse a11y, `/ep/1?t=560&panel=registry` (dev, panel open) | **100** |
 | Lighthouse a11y, `/ep/1?t=560&panel=registry:the-hoarder` (dev) | **100** |
-| Lighthouse a11y, `/registry` (preview) | **100** |
-| Lighthouse a11y, `/registry?scope=through-1#the-hoarder` (preview) | **100** |
+| Lighthouse a11y, `/codex` (preview) | **100** |
+| Lighthouse a11y, `/codex?scope=through-1#the-hoarder` (preview) | **100** |
 | axe on the panel (`[data-testid="rail-panel"]`), 1440 | **0 violations** — 26 passes collapsed, 29 with an entry expanded |
 | axe on the whole episode page, 1440 and 400, panel open | 0 violations beyond the pre-existing DEV scrubber label (`Simulated broadcast — dev scrubber`, 3.23:1), which is present without the panel and is compiled out of the build |
-| axe on `/registry#the-hoarder` (preview), 1440 and 400 | **0 violations** |
+| axe on `/codex#the-hoarder` (preview), 1440 and 400 | **0 violations** |
 
 One real defect surfaced and was fixed: the entry the hash (or `focusId`) names sits on the brand
 ground, where the dimmest text step falls to 4.0:1 — under AA for the 10 px `FACTS` /
@@ -458,12 +458,12 @@ subtree, which fixes the panel and the page's `#<id>` landing together.
 ### Screenshots
 
 - **1440 × 900, rail panel** (`panel-1440-expanded.png`): the stage fills the left column with
-  the dev scrubber at 9:20; the right rail carries `SYSTEM REGISTRY / System Registry` with a
+  the dev scrubber at 9:20; the right rail carries `SYSTEM REGISTRY / Dungeon Codex` with a
   close control, the scope select at full width, the search box under it, the three kind chips
   wrapping onto two rows, the black mono-caps episode bar with "3 entities", and The Hoarder's
   card — struck-through name, `BOSS · FLOOR 1`, red `DEFEATED` tag, intro, `Ep 1` fact, three
   appearance rows each with a share icon, closing with "Defeated in episode 1." Under the party
-  rail, **ENCOUNTERED** carries **Browse the Registry** on its right.
+  rail, **ENCOUNTERED** carries **Browse the Codex** on its right.
 - **400 × 800, bottom sheet** (`sheet-400.png`): the stage stays visible at the top; the sheet
   covers the tabs from y 240 with its grab handle, the same kicker and title, and the toolbar
   scrolled just above the focused entry — The Hoarder on the brand ground, expanded, its three
@@ -473,7 +473,7 @@ subtree, which fixes the panel and the page's `#<id>` landing together.
 
 - The panel's scope is deliberately **not** in the URL: changing it must not navigate, or the
   broadcast would reload. Shareability lives in the footer link, which carries the scope (and the
-  open entity) to `/registry`.
+  open entity) to `/codex`.
 - The index is fetched once per visit, by whichever of the page or the panel asks first. Opening
   the panel on a cold page shows "The System is indexing the archive." for as long as the episode
   files take, then fills in; a file that fails still yields "N recap episodes could not be
@@ -517,7 +517,7 @@ duplicated.
 
 ### R4-FR-650 — newest episode first, latest debut first
 
-`/registry`, read off the rendered DOM:
+`/codex`, read off the rendered DOM:
 
 | Section, top to bottom | Entries, in order |
 |------------------------|-------------------|
@@ -563,11 +563,11 @@ only what has elapsed.
 
 ### Notes for the author
 
-- The standalone `/registry` page is deliberately **not** playhead-aware — there is no playhead on
+- The standalone `/codex` page is deliberately **not** playhead-aware — there is no playhead on
   it. It is publication-scoped, as it has been since revision 1; only the panel follows a video.
 - The panel now needs the current episode's data, which the page already holds, so it is correct
   the moment it opens even though the other episode files are still in flight. Those fill in
   underneath when they land, and "The System is indexing the archive." stands only for them.
-- With nothing yet aired the panel shows its empty line ("The Registry has no such entity.") —
+- With nothing yet aired the panel shows its empty line ("The Codex has no such entity.") —
   literally true of a scope that holds nobody, but if a "nothing tagged yet" line in the strip's
   voice would read better there, it is one copy key and one condition in `RegistryBrowser`.

@@ -152,7 +152,7 @@ export function NpcRecord({
       {onOpenRegistry === undefined ? (
         <Link
           className={styles.registryLink}
-          to={`/registry?scope=through-${episodeId}#${record.id}`}
+          to={`/codex?scope=through-${episodeId}#${record.id}`}
           data-testid="npc-registry-link"
         >
           {copy.npcOpenRegistry}

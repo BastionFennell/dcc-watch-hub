@@ -2131,7 +2131,7 @@ describe('EpisodePage', () => {
     expect(entry('grull-rep')).toHaveAttribute('data-expanded', 'false');
     expect(screen.getByTestId('registry-browser-full')).toHaveAttribute(
       'href',
-      '/registry?scope=through-1#hoarder',
+      '/codex?scope=through-1#hoarder',
     );
     expect(source.getTime()).toBe(before);
 

@@ -1,4 +1,4 @@
-import { Route, Routes, useMatch } from 'react-router';
+import { Navigate, Route, Routes, useMatch } from 'react-router';
 import { ShowProvider, useShow } from './data/ShowContext';
 import { RegistryProvider } from './data/RegistryContext';
 import { RegistryIndexProvider } from './data/RegistryIndexContext';
@@ -42,7 +42,8 @@ function AppShell() {
           <Routes>
             <Route path="/" element={<HubPage />} />
             <Route path="/ep/:id" element={<EpisodePage />} />
-            <Route path="/registry" element={<RegistryPage />} />
+            <Route path="/codex" element={<RegistryPage />} />
+            <Route path="/registry" element={<Navigate to="/codex" replace />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         )}

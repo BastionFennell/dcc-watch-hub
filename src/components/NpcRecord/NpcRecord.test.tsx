@@ -132,7 +132,7 @@ describe('NpcRecord', () => {
     expect(link).toHaveTextContent(copy.npcOpenRegistry);
     // Scoped to the episode being watched (R2 scenario 5): the Registry opens
     // at this entry holding nothing this viewer has not reached.
-    expect(link).toHaveAttribute('href', '/registry?scope=through-1#hoarder');
+    expect(link).toHaveAttribute('href', '/codex?scope=through-1#hoarder');
   });
 
   it('carries whichever episode it is rendered on into the scope', () => {
@@ -145,7 +145,7 @@ describe('NpcRecord', () => {
 
     expect(screen.getByTestId('npc-registry-link')).toHaveAttribute(
       'href',
-      '/registry?scope=through-3#hoarder',
+      '/codex?scope=through-3#hoarder',
     );
   });
 

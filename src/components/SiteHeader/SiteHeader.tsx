@@ -84,7 +84,7 @@ export function SiteHeader({ show, current }: SiteHeaderProps) {
                 the same reason they do: the header has no room for it (FR-052).
               */}
               {show.registryUrl ? (
-                <Link to="/registry" className={styles.menuRegistry}>
+                <Link to="/codex" className={styles.menuRegistry}>
                   {copy.registry}
                 </Link>
               ) : null}
@@ -92,7 +92,7 @@ export function SiteHeader({ show, current }: SiteHeaderProps) {
             </EpisodesMenu>
             {/* Only a show that publishes a registry links to one (FR-600). */}
             {show.registryUrl ? (
-              <Link to="/registry" className={styles.registryLink}>
+              <Link to="/codex" className={styles.registryLink}>
                 {copy.registry}
               </Link>
             ) : null}

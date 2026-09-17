@@ -177,7 +177,7 @@ export function RegistryBrowser({
   }
 
   const param = scopeParam(scope);
-  const fullHref = `/registry${param === null ? '' : `?scope=${param}`}${
+  const fullHref = `/codex${param === null ? '' : `?scope=${param}`}${
     focusId === undefined ? '' : `#${focusId}`
   }`;
 

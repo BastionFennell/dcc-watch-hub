@@ -170,7 +170,7 @@ describe('RegistryBrowser', () => {
     expect(screen.getByTestId('registry-scope')).toHaveValue('all');
     // The whole archive now, and the page behind the panel has not moved.
     expect(screen.getByTestId('loc')).toHaveAttribute('data-path', '/ep/1');
-    expect(screen.getByTestId('registry-browser-full')).toHaveAttribute('href', '/registry');
+    expect(screen.getByTestId('registry-browser-full')).toHaveAttribute('href', '/codex');
   });
 
   it('narrows by search and by kind, as the page does', async () => {
@@ -238,7 +238,7 @@ describe('RegistryBrowser', () => {
     // The footer carries the same entity out to the page, at the panel's scope.
     expect(screen.getByTestId('registry-browser-full')).toHaveAttribute(
       'href',
-      '/registry?scope=through-1#hoarder',
+      '/codex?scope=through-1#hoarder',
     );
     expect(screen.getByTestId('registry-browser-full')).toHaveTextContent(copy.registryOpenFull);
   });

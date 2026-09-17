@@ -146,7 +146,7 @@ describe('broadcast archive', () => {
     const banner = screen.getByRole('banner');
     const links = await within(banner).findAllByRole('link', { name: copy.registry });
     expect(links.length).toBeGreaterThan(0);
-    for (const link of links) expect(link).toHaveAttribute('href', '/registry');
+    for (const link of links) expect(link).toHaveAttribute('href', '/codex');
   });
 
   it('omits the Registry link for a show that publishes no registry', async () => {
@@ -164,5 +164,10 @@ describe('broadcast archive', () => {
     renderAt('/ep/999');
     await waitFor(() => expect(screen.getByText(copy.notFoundTitle)).toBeInTheDocument());
     expect(screen.getByRole('link', { name: copy.returnToArchive })).toHaveAttribute('href', '/');
+  });
+
+  it('redirects the old /codex path to the Codex', async () => {
+    renderAt('/registry');
+    await waitFor(() => expect(screen.getByTestId('registry')).toBeInTheDocument());
   });
 });
