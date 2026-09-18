@@ -138,7 +138,13 @@
   position: sticky;
   top: 0;
   align-self: start;
-  height: calc(90vh - 128px);
+  /*
+   * 008 revision 2: the column hugs its image instead of running the sheet's
+   * height. A render with empty margins used to leave a tall blank band of
+   * panel under it; the previous fixed height is now only a ceiling.
+   */
+  height: auto;
+  max-height: calc(90vh - 128px);
   background: var(--panel-deep);
   border: var(--border-hairline);
   border-radius: var(--radius-md);
@@ -147,9 +153,11 @@
 
 .artFigure {
   width: 100%;
-  height: 100%;
+  height: auto;
+  max-height: calc(90vh - 128px);
   object-fit: contain;
   object-position: top center;
+  display: block;
 }
 
 /*
@@ -293,6 +301,12 @@
   .artColumn {
     position: static;
     height: 40vh;
+  }
+
+  /* The banner is a fixed band, so the figure fits it rather than its own cap. */
+  .artFigure {
+    height: 100%;
+    max-height: 40vh;
   }
 
   .top {

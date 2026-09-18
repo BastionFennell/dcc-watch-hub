@@ -162,22 +162,32 @@ panel is a full-viewport overlay and the page behind it does not scroll.
 **Open full record** opens the whole System sheet as a modal dialog over the page - the one
 overlay allowed to cover the stage. Revision 2 lays it out as a character sheet in an MMO:
 
-- **Art column** - the crawler's full-figure art (`art` in the episode data) down the left at
-  the sheet's height, contained rather than cropped, hung from the top so a tall figure uses the
-  height and a wide stance the width. A crawler with no `art` gets their bust in the same
-  column instead. At ≤ 900 px the art becomes a banner above the identity.
+- **Art column** - the crawler's full-figure art (`art` in the episode data) down the left,
+  contained rather than cropped and hung from the top. The column hugs its image: full column
+  width, height from the image, capped at the sheet's height, so a render with empty margins
+  leaves no blank band beneath it. A crawler with no `art` gets their bust in the same column
+  instead. At ≤ 900 px the art becomes a banner above the identity.
 - **Top band** - identity (portrait, name, handle, played by, race, pronouns, crawler number,
   level, class, floor) and vitals side by side, with the **STATS** strip (STR / INT / CON / DEX
   / CHA, when the data carries them) full width beneath them.
 - **Hotbar** - the Hotlist as ten numbered square keys filled in order, empty keys dashed and
-  unlit, and a `+N` marker after key ten when the crawler is tracking more than ten. Each key
-  names itself for assistive tech ("Slot 3, The Rot Market" / "Slot 4, empty"). On a phone the
-  bar wraps to two rows of five with the marker right-aligned beneath.
+  unlit, and a `+N` marker after key ten when the crawler is tracking more than ten. A key shows
+  the entry's short name; when the entry carries a quantity above one, an `x5` box sits in the
+  key's top-right corner the way an MMO bag draws a stack. Each key names itself for assistive
+  tech ("Slot 3, The Rot Market" / "Slot 2, Standard Mana Potion, x5" / "Slot 4, empty"). On a
+  phone the bar wraps to two rows of five with the marker right-aligned beneath.
 - **Gear** - every slot on the official sheet (Head, Torso, Arms, Hands, Legs, Feet,
   Accessories) with what is worn in it or "-". Accessories share one row.
-- **Tile grids** - Skills, Inventory and Achievements as bag-style tiles (name, then rank or
-  time in a mono footer), at most **eight**, with a **View all (N)** control when there are
-  more. History shows its latest eight rows the same way.
+- **Tile grids** - Skills, Spells, Inventory and Achievements as bag-style tiles (name, then
+  rank, cost or time in a mono footer), at most **eight**, with a **View all (N)** control when
+  there are more. History shows its latest eight rows the same way. **SPELLS** sits between
+  SKILLS and INVENTORY, as on the sheet, and its footer reads `Rank 1 · 2 mana`.
+- **Tooltips** - a Hotlist key, skill tile, spell tile or inventory tile whose entry carries a
+  description becomes a button that shows the sheet's full text on hover, on keyboard focus and
+  on click (click toggles). <kbd>Escape</kbd> hides it and leaves the record open; a click
+  outside hides it too. The tooltip is a `role="tooltip"` the trigger points at with
+  `aria-describedby`, sits above the trigger and flips below it when there is no headroom.
+  An entry with nothing to explain gets no button and no affordance at all.
 - **List views** - **View all** replaces the dialog body with that category in full, under a
   **Back to record** control, and the dialog's title becomes `{name} - {CATEGORY}`. Focus moves
   to the list's heading on entry and back to the **View all** button on return. The list view is
@@ -675,6 +685,7 @@ required; columns are `timecode,type,actor,field1,field2,field3`
 | `status` | add (`;`) | remove (`;`) | – |
 | `inventory` | add (`;`) | remove (`;`) | – |
 | `skill` | name | rank (number, optional) | desc (optional) |
+| `spell` | name | rank (number, optional) | mana cost (number, optional) |
 | `class` | class | – | – |
 | `hotlist` | add (`;`) | remove (`;`) | – |
 | `equip` | slot (`head`/`torso`/`arms`/`hands`/`legs`/`feet`/`accessory`) | item | – |
@@ -699,9 +710,18 @@ it no id is checked, because the registry is show-level data the converter is no
 `--initial-state` is a JSON file holding the episode's `initialState` (`party` and `map`).
 Each crawler there may carry the optional sheet fields the dossier renders - `race`, `pronouns`,
 `crawlerNumber`, `stats` (`{ str, int, con, dex, cha }`), `hotlist[]`, `skills[]`
-(`{ name, rank? }`), `gear` (`{ head?, torso?, arms?, hands?, legs?, feet?, accessories[]? }`)
+(`{ name, rank?, desc? }`), `spells[]` (`{ name, rank?, mana?, desc? }`), `gear`
+(`{ head?, torso?, arms?, hands?, legs?, feet?, accessories[]? }`)
 and `art` (a full-figure image path; the record falls back to the bust without it). They need no new CSV columns, and v1 files without them keep working: the
 dossier simply omits what it does not know.
+
+`hotlist[]` and `inventory[]` take either a plain string or an object
+(`{ name, qty?, desc? }`) - a string is the shorthand for `{ name }`, so every older file reads
+exactly as it did. `qty` draws the `x5` box on the hotbar key and the `x5` meta in a list view;
+`desc` is the sheet's own paragraph and is what the tooltip shows. A paragraph does not belong
+in a CSV cell, so this structure lives in `--initial-state` only: `hotlist`, `inventory` and
+`spell` rows in the sheet still name entries by their short name alone, and a `hotlist` or
+`inventory` `remove` matches on that name and drops the whole entry.
 The converter sorts events by `t`, normalizes them, and prints a summary such as
 `wrote public/data/ep4.json (42 events, 2 warnings)`. **Warnings still produce output** (unknown
 actor, impossible HP, timecode past `--duration`, unknown type, bad `chapter.kind`, an
@@ -709,7 +729,8 @@ accessory `unequip` with no item - the last one worn comes off, a legacy `rank` 
 `crawler` in field1 - the rank is read out of field2, and - only with `--registry` - an `npc`
 row naming an entity or a fact the registry does not have); **errors write nothing and
 exit 1** (unparseable timecode, missing header column, non-numeric numeric field, empty required
-field, an `equip`/`unequip` slot that is not one of the seven, a `rank` row with `party` in
+field, an `equip`/`unequip` slot that is not one of the seven, a `spell` row with no name or a
+rank or mana cost that is not a non-negative integer, a `rank` row with `party` in
 field1 - DCC has no party rank).
 
 ### Carrying the map across episodes
@@ -880,6 +901,10 @@ a second on desktop, because those are four small JSON files behind one render. 
 axe-core 4.13 with every rule enabled finds **no violations** on the Encountered strip, the entity
 record (rail and phone sheet), the NPCs tab, or `/codex` collapsed and expanded, at 1440 × 900
 and 400 × 800. Details in `specs/007-npc-registry/quickstart.md` → Results.
+
+008 revision 2 re-measured the record with its new explanation surface: Lighthouse 11.7.1
+desktop scores `/ep/1` **accessibility 100**, and axe-core 4.13 with every rule enabled finds
+**no violations** on Mimi's full record at 1440 × 900 with a hotbar tooltip open.
 
 The **mobile** preset on the same build scores `/ep/1` **accessibility 100, performance 99**
 (FCP 1.5 s, LCP 2.0 s, TBT 0 ms, CLS 0 - the mini-player's placeholder is what keeps that zero).

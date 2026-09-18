@@ -35,6 +35,8 @@ export function CrawlerDossier({ dossier, meta }: CrawlerDossierProps) {
       <DossierStats stats={dossier.stats} />
       <DossierList kind="hotlist" items={dossier.hotlist} />
       <DossierList kind="skills" items={dossier.skills} />
+      {/* 008 revision 2: SPELLS sits between SKILLS and INVENTORY, as on the sheet. */}
+      <DossierList kind="spells" items={dossier.spells} />
       <DossierList kind="inventory" items={dossier.inventory} />
       <DossierAchievements items={dossier.achievements} />
       <DossierHistory items={dossier.history} />

@@ -446,3 +446,96 @@ describe('FullRecordDialog', () => {
     trigger.remove();
   });
 });
+
+/* ----- 008 revision 2: quantities, tooltips and the SPELLS section (R2) ----- */
+
+describe('FullRecordDialog - 008 revision 2', () => {
+  const psychic = () => dossierAt(0, 'psychic');
+
+  it('draws a quantity box on a key that holds a stack', () => {
+    open(psychic());
+    const slot = within(section('hotlist')).getAllByTestId('hotbar-slot')[0];
+    expect(slot).toHaveAttribute('data-name', 'Mana Draught');
+    expect(within(slot).getByTestId('hotbar-qty')).toHaveTextContent('x5');
+  });
+
+  it('names the stack, and its count, in the key accessible name', () => {
+    open(psychic());
+    expect(
+      screen.getByRole('button', { name: copy.hotbarSlotQtyAria(1, 'Mana Draught', 5) }),
+    ).toBeInTheDocument();
+  });
+
+  it('shows the sheet text on click and hides it on Escape', () => {
+    open(psychic());
+    const trigger = screen.getByRole('button', {
+      name: copy.hotbarSlotQtyAria(1, 'Mana Draught', 5),
+    });
+    expect(screen.queryByTestId('tooltip')).not.toBeInTheDocument();
+    fireEvent.click(trigger);
+    expect(screen.getByTestId('tooltip')).toHaveTextContent(
+      'Restores your Mana in full when you spend an Action to drink one.',
+    );
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByTestId('tooltip')).not.toBeInTheDocument();
+    // Escape inside a tooltip does not also close the record.
+    expect(screen.getByTestId('crawler-record')).toBeInTheDocument();
+  });
+
+  it('leaves a key with nothing to explain as an inert slot', () => {
+    open(dossierAt(210));
+    const slot = within(section('hotlist')).getAllByTestId('hotbar-slot')[0];
+    expect(within(slot).queryByRole('button')).not.toBeInTheDocument();
+    expect(within(slot).queryByTestId('hotbar-qty')).not.toBeInTheDocument();
+  });
+
+  it('files SPELLS between SKILLS and INVENTORY, with a mono footer', () => {
+    open(psychic());
+    const sections = screen.getAllByTestId(/^dossier-/).map((node) => node.dataset.testid);
+    expect(sections.indexOf('dossier-spells')).toBeGreaterThan(sections.indexOf('dossier-skills'));
+    expect(sections.indexOf('dossier-spells')).toBeLessThan(sections.indexOf('dossier-inventory'));
+
+    const tile = within(section('spells')).getByTestId('tile');
+    expect(tile).toHaveAttribute('data-item', 'spell');
+    expect(tile).toHaveAttribute('data-name', 'Second Sight');
+    expect(tile).toHaveTextContent(copy.spellMeta(2, 3) as string);
+  });
+
+  it('explains a spell tile on click', () => {
+    open(psychic());
+    fireEvent.click(
+      within(section('spells')).getByRole('button', {
+        name: copy.tooltipTrigger('Second Sight'),
+      }),
+    );
+    const tip = screen.getByTestId('tooltip');
+    expect(tip).toHaveTextContent('Read the room one beat before it happens.');
+    expect(tip).toHaveTextContent(copy.spellMeta(2, 3) as string);
+  });
+
+  it('says so when the crawler has inscribed nothing', () => {
+    open(dossierAt(200));
+    expect(within(section('spells')).getByText(copy.dossierEmpty.spells)).toBeInTheDocument();
+  });
+
+  it('opens a spells list view that carries the full text', () => {
+    const base = psychic();
+    const many: Dossier = {
+      ...base,
+      spells: Array.from({ length: 9 }, (_, i) => ({
+        name: `Cantrip ${i + 1}`,
+        rank: i,
+        mana: i + 1,
+        desc: `What Cantrip ${i + 1} does.`,
+      })),
+    };
+    open(many);
+    fireEvent.click(screen.getByTestId('view-all-spells'));
+    expect(screen.getByTestId('crawler-record')).toHaveAttribute('data-view', 'spells');
+    const row = within(section('spells')).getAllByRole('listitem')[0];
+    expect(row).toHaveAttribute('data-item', 'spell');
+    expect(row).toHaveTextContent('What Cantrip 1 does.');
+    fireEvent.click(screen.getByTestId('record-back'));
+    expect(screen.getByTestId('crawler-record')).toHaveAttribute('data-view', 'sheet');
+  });
+});

@@ -438,8 +438,8 @@ describe('crawlerDossier', () => {
   });
 
   it('lists hotlist, skills, inventory and achievements as of t', () => {
-    expect(dossierAt(110)?.hotlist).toEqual(['Door']);
-    expect(dossierAt(200)?.hotlist).toEqual(['Crowbar']);
+    expect(dossierAt(110)?.hotlist.map((e) => e.name)).toEqual(['Door']);
+    expect(dossierAt(200)?.hotlist.map((e) => e.name)).toEqual(['Crowbar']);
     expect(dossierAt(200)?.skills).toEqual([{ name: 'Powerful Strike', rank: 1 }]);
     // X.O. logs nine skills by 200; the first one is upserted to rank 2 at 160.
     expect(dossierAt(200, 'xo')?.skills).toHaveLength(9);
@@ -453,8 +453,8 @@ describe('crawlerDossier', () => {
 
   it('removes what has not been earned yet on a backward seek', () => {
     // Harry loots the crowbar at 30 and trades it for a torch at 150.
-    expect(dossierAt(40)?.inventory).toEqual(['Enchanted Crowbar']);
-    expect(dossierAt(200)?.inventory).toEqual(['Torch']);
+    expect(dossierAt(40)?.inventory.map((e) => e.name)).toEqual(['Enchanted Crowbar']);
+    expect(dossierAt(200)?.inventory.map((e) => e.name)).toEqual(['Torch']);
     expect(dossierAt(20)?.inventory).toEqual([]);
     expect(dossierAt(20)?.history).toEqual([]);
   });
@@ -635,22 +635,23 @@ describe('hotbarSlots', () => {
   });
 
   it('fills slots in order and leaves the rest dim', () => {
-    const { slots, overflow } = hotbarSlots(['The Hoarder', 'The Doorway']);
-    expect(slots.slice(0, 2)).toEqual(['The Hoarder', 'The Doorway']);
+    const { slots, overflow } = hotbarSlots([{ name: 'The Hoarder' }, { name: 'The Doorway' }]);
+    expect(slots.slice(0, 2)).toEqual([{ name: 'The Hoarder' }, { name: 'The Doorway' }]);
     expect(slots.slice(2).every((slot) => slot === null)).toBe(true);
     expect(slots).toHaveLength(10);
     expect(overflow).toBe(0);
   });
 
   it('counts everything past the tenth slot', () => {
-    const many = Array.from({ length: 13 }, (_, i) => `Mark ${i + 1}`);
+    const many = Array.from({ length: 13 }, (_, i) => ({ name: `Mark ${i + 1}` }));
     const { slots, overflow } = hotbarSlots(many);
     expect(slots).toEqual(many.slice(0, 10));
     expect(overflow).toBe(3);
   });
 
   it('honours a custom slot count', () => {
-    expect(hotbarSlots(['a', 'b', 'c'], 2)).toEqual({ slots: ['a', 'b'], overflow: 1 });
+    const abc = [{ name: 'a' }, { name: 'b' }, { name: 'c' }];
+    expect(hotbarSlots(abc, 2)).toEqual({ slots: [{ name: 'a' }, { name: 'b' }], overflow: 1 });
   });
 
   it('reads the fixture: Harry overflows the bar at 210', () => {
@@ -1023,5 +1024,71 @@ describe('npcMoments and npcRecord (FR-611)', () => {
     expect(npcRecord(state, episode.events, registry, 'nobody', party, 200)).toBeNull();
     expect(npcRecord(reduceTo(episode, 111), episode.events, registry, 'hoarder', party, 111)).toBeNull();
     expect(npcRecord(state, episode.events, null, 'hoarder', party, 200)).toBeNull();
+  });
+});
+
+/* ---------------- 008 revision 2: structured entries, spells, hotbar slots */
+
+describe('008 revision 2 - entries, spells and the hotbar', () => {
+  const at = (t: number, id: string) => crawlerDossier(reduceTo(episode, t), episode.events, t, id);
+
+  it('carries the sheet structure through to the dossier', () => {
+    const dossier = at(0, 'psychic');
+    expect(dossier?.hotlist).toEqual([
+      {
+        name: 'Mana Draught',
+        qty: 5,
+        desc: 'Restores your Mana in full when you spend an Action to drink one.',
+      },
+    ]);
+    expect(dossier?.spells).toEqual([
+      {
+        name: 'Second Sight',
+        rank: 2,
+        mana: 3,
+        desc: 'Read the room one beat before it happens.',
+      },
+    ]);
+  });
+
+  it('gives a crawler with no spell list an empty one, never undefined', () => {
+    expect(at(200, 'harry')?.spells).toEqual([]);
+  });
+
+  it('pads the hotbar with entries, keeping quantity and text', () => {
+    const { slots, overflow } = hotbarSlots(at(0, 'psychic')?.hotlist ?? []);
+    expect(slots[0]).toMatchObject({ name: 'Mana Draught', qty: 5 });
+    expect(slots.slice(1).every((slot) => slot === null)).toBe(true);
+    expect(overflow).toBe(0);
+  });
+
+  it('labels and narrates a spell row', () => {
+    const withSpell = withEvents([
+      { t: 5, type: 'spell', actor: 'psychic', name: 'Second Sight', rank: 3 },
+    ]);
+    const item = feedItems(withSpell.events, 10, 8, withSpell.initialState.party)[0];
+    expect(item.kind).toBe('spell');
+    expect(item.label).toBe(copy.labels.spell);
+    expect(item.text).toBe(copy.feedText.spell('The Psychic', 'Second Sight', 3));
+    expect(item.actorId).toBe('psychic');
+  });
+
+  it('spells reach the dossier as of the playhead and not before', () => {
+    const withSpell = withEvents([
+      { t: 50, type: 'spell', actor: 'harry', name: 'Mend', rank: 1, mana: 4 },
+    ]);
+    const dossierAtT = (t: number) =>
+      crawlerDossier(reduceTo(withSpell, t), withSpell.events, t, 'harry');
+    expect(dossierAtT(40)?.spells).toEqual([]);
+    expect(dossierAtT(60)?.spells).toEqual([{ name: 'Mend', rank: 1, mana: 4 }]);
+  });
+});
+
+describe('copy.spellMeta (008 revision 2)', () => {
+  it('joins whatever halves the sheet gave', () => {
+    expect(copy.spellMeta(1, 2)).toBe('Rank 1 · 2 mana');
+    expect(copy.spellMeta(1, undefined)).toBe('Rank 1');
+    expect(copy.spellMeta(undefined, 2)).toBe('2 mana');
+    expect(copy.spellMeta(undefined, undefined)).toBeUndefined();
   });
 });

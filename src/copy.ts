@@ -51,6 +51,8 @@ export const copy = {
     inventory: 'Inventory',
     note: 'Note',
     skill: 'Skill',
+    /** 008 revision 2. */
+    spell: 'Spell',
     class: 'Class',
     hotlist: 'Hotlist',
     equip: 'Equip',
@@ -107,6 +109,11 @@ export const copy = {
       rank === undefined
         ? `${actor} logs the skill ${name}`
         : `${actor} logs ${name} at rank ${rank}`,
+    /* --- 008 revision 2: the System files a spell the way it files a skill. --- */
+    spell: (actor: string, name: string, rank?: number) =>
+      rank === undefined
+        ? `${actor} inscribes ${name}`
+        : `${actor} inscribes ${name} at rank ${rank}`,
     classChange: (actor: string, cls: string) => `${actor} is classed: ${cls}`,
     hotlist: (actor: string, add: string[], remove: string[]) => {
       const parts: string[] = [];
@@ -190,6 +197,8 @@ export const copy = {
     stats: 'STATS',
     hotlist: 'HOTLIST',
     skills: 'SKILLS',
+    /** 008 revision 2: the sheet's spell list, between SKILLS and INVENTORY. */
+    spells: 'SPELLS',
     inventory: 'INVENTORY',
     achievements: 'ACHIEVEMENTS',
     history: 'HISTORY',
@@ -221,6 +230,7 @@ export const copy = {
     stats: 'Stats unfiled.',
     hotlist: 'Hotlist empty.',
     skills: 'No skills logged.',
+    spells: 'No spells inscribed.',
     inventory: 'Nothing carried.',
     achievements: 'No achievements yet.',
     history: 'No moments logged.',
@@ -523,6 +533,32 @@ export const copy = {
   registryOpenFull: 'Open the full Codex',
   /** Mono caps above the panel's title, as every rail panel carries. */
   registryPanelKicker: 'DUNGEON CODEX',
+
+  /* --- appended by 008 revision 2 (quantities, tooltips, spells) --- */
+
+  /**
+   * How many of a thing the crawler is carrying: the corner box on a hotbar key
+   * and the meta line in every list view (R2 acceptance: "an x5 box").
+   */
+  qty: (n: number) => `x${n}`,
+
+  /** A hotbar key that holds a stack says so in its accessible name. */
+  hotbarSlotQtyAria: (n: number, name: string, qty: number) => `Slot ${n}, ${name}, x${qty}`,
+
+  /**
+   * The mono footer under a spell tile, and the last line of a skill or spell
+   * tooltip: "Rank 1 · 2 mana", or whichever half the sheet actually gives.
+   * Absent from both ends means there is no footer to draw at all.
+   */
+  spellMeta: (rank?: number, mana?: number): string | undefined => {
+    const parts: string[] = [];
+    if (rank !== undefined) parts.push(`Rank ${rank}`);
+    if (mana !== undefined) parts.push(`${mana} mana`);
+    return parts.length === 0 ? undefined : parts.join(' · ');
+  },
+
+  /** Names the tooltip's trigger: the key or tile explains itself on demand. */
+  tooltipTrigger: (name: string) => `${name}, show details`,
 } as const;
 
 export type Copy = typeof copy;

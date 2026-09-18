@@ -1,0 +1,110 @@
+/*
+ * 008 revision 2: the record's one explanation surface. It is positioned by its
+ * own trigger rather than by a portal, so a hotbar key that scrolls with the
+ * sheet keeps its tooltip attached without any measurement on scroll.
+ */
+
+.wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/*
+ * The trigger is a button only so it can be reached, pressed and described; the
+ * key or tile it sits inside owns every visual. It therefore inherits type and
+ * colour and carries no chrome of its own.
+ */
+.trigger {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  text-align: inherit;
+  cursor: pointer;
+  min-width: 0;
+  width: 100%;
+}
+
+.trigger:focus-visible {
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
+.tip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + var(--space-3));
+  transform: translateX(-50%);
+  /*
+   * Above the tiles and the hotbar keys it explains. The record dialog is its
+   * own stacking context, so this never competes with the site header.
+   */
+  z-index: 5;
+  width: max-content;
+  max-width: 280px;
+  padding: var(--space-4) var(--space-5);
+  background: var(--panel-deep);
+  border: 1px solid var(--brand-line);
+  border-radius: var(--radius-md);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 55%);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: normal;
+  text-transform: none;
+  text-align: left;
+  color: var(--text-2);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+  animation: tooltip-in 120ms ease-out;
+}
+
+/* Near the top of the scroll box there is no headroom, so it hangs below. */
+.tip[data-placement='below'] {
+  bottom: auto;
+  top: calc(100% + var(--space-3));
+}
+
+@keyframes tooltip-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tip {
+    animation: none;
+  }
+}
+
+/* The entry's own name, restated as the tooltip's first line. */
+.title {
+  display: block;
+  color: var(--text);
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+}
+
+/* "Rank 1 · 2 mana": the sheet's numbers, in the sheet's mono voice. */
+.meta {
+  display: block;
+  margin-top: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}

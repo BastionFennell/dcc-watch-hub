@@ -120,6 +120,13 @@ export function useModalDialog({
         // (the panel hook's) never see the keypress that closed the dialog -
         // nor the one an inner view consumed.
         event.stopPropagation();
+        /*
+         * 008 revision 2: an open tooltip gets first refusal, the way a list
+         * view does. It has its own capture listener on `document`, registered
+         * after this one, so it closes itself on the same keypress - and the
+         * record it sits in stays open (R2 acceptance: "Escape hides it").
+         */
+        if (dialogRef.current?.querySelector('[role="tooltip"]') != null) return;
         if (escapeRef.current?.() === true) return;
         onClose();
         return;

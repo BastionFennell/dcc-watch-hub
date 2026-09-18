@@ -89,10 +89,41 @@ export interface Hp {
   max: number;
 }
 
-/** One row of the sheet's SKILLS section (v2, FR-113). */
+/** One row of the sheet's SKILLS section (v2, FR-113; `desc` added by 008 R2). */
 export interface SkillEntry {
   name: string;
   rank?: number;
+  /** The sheet's Notes column, shown in the tile's tooltip (008 R2). */
+  desc?: string;
+}
+
+/**
+ * One Hotlist mark (008 revision 2). The sheet writes a short name, sometimes a
+ * count, and sometimes a paragraph explaining it; a plain string is still legal
+ * everywhere and means `{ name }`.
+ */
+export interface HotlistEntry {
+  name: string;
+  qty?: number;
+  desc?: string;
+}
+
+/** One carried item (008 revision 2). Same shape, same string shorthand. */
+export interface InventoryEntry {
+  name: string;
+  qty?: number;
+  desc?: string;
+}
+
+/**
+ * One inscribed spell (008 revision 2): the sheet's name, its rank, what it
+ * costs to cast, and the full text the record shows in a tooltip.
+ */
+export interface SpellEntry {
+  name: string;
+  rank?: number;
+  mana?: number;
+  desc?: string;
 }
 
 /**
@@ -140,7 +171,8 @@ export interface Crawler {
   hp: Hp;
   portrait: string;
   class: string | null;
-  inventory: string[];
+  /** Strings are the v1 shorthand for `{ name }` (008 R2). */
+  inventory: (string | InventoryEntry)[];
   rank: number | null;
 
   /* Optional sheet fields (v2, FR-113). Absent in every v1 file. */
@@ -148,8 +180,10 @@ export interface Crawler {
   pronouns?: string;
   crawlerNumber?: string | number;
   stats?: CrawlerStats;
-  hotlist?: string[];
+  hotlist?: (string | HotlistEntry)[];
   skills?: SkillEntry[];
+  /** The sheet's spell list (008 revision 2); absent means none inscribed. */
+  spells?: SpellEntry[];
 
   /* Optional gear and art (003 revision 2, R2-FR-220/224). */
   /** Gear worn at t = 0; `equip`/`unequip` events move it from there. */
@@ -279,6 +313,19 @@ export interface SkillEvent extends EventBase {
   desc?: string;
 }
 
+/**
+ * Adds a spell, or amends it when rank, mana cost or text is given (008 R2).
+ * Upserts by name, exactly like `skill`.
+ */
+export interface SpellEvent extends EventBase {
+  type: 'spell';
+  actor: string;
+  name: string;
+  rank?: number;
+  mana?: number;
+  desc?: string;
+}
+
 export interface ClassEvent extends EventBase {
   type: 'class';
   actor: string;
@@ -352,6 +399,7 @@ export type Event =
   | InventoryEvent
   | NoteEvent
   | SkillEvent
+  | SpellEvent
   | ClassEvent
   | HotlistEvent
   | EquipEvent
@@ -385,6 +433,7 @@ export const KNOWN_EVENT_TYPES = [
   'inventory',
   'note',
   'skill',
+  'spell',
   'class',
   'hotlist',
   'equip',

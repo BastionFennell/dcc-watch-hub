@@ -15,12 +15,15 @@ import type {
   EpisodeMeta,
   Gear,
   GearSlot,
+  HotlistEntry,
   InitialState,
+  InventoryEntry,
   MapState,
   NpcAction,
   Registry,
   Show,
   SkillEntry,
+  SpellEntry,
   UnknownEvent,
 } from './types';
 import { ENTITY_KINDS, GEAR_SLOTS, NPC_ACTIONS } from './types';
@@ -235,6 +238,27 @@ export function normalizeEvent(raw: unknown): AnyEvent {
         ...(desc === null ? {} : { desc }),
       };
     }
+    case 'spell': {
+      /*
+       * 008 revision 2: the same shape as `skill` plus a mana cost. A malformed
+       * rank or cost is dropped rather than fatal - the spell itself is still
+       * the fact the row carries.
+       */
+      const name = toString_(raw.name);
+      if (actor === null || name === null || name === '') return unknownEvent(t, raw);
+      const rank = toSkillRank(raw.rank);
+      const mana = toSkillRank(raw.mana);
+      const desc = toString_(raw.desc);
+      return {
+        t,
+        type: 'spell',
+        actor,
+        name,
+        ...(rank === null ? {} : { rank }),
+        ...(mana === null ? {} : { mana }),
+        ...(desc === null ? {} : { desc }),
+      };
+    }
     case 'class': {
       const cls = toString_(raw.class);
       if (actor === null || cls === null || cls === '') return unknownEvent(t, raw);
@@ -311,7 +335,62 @@ function toSkillEntries(x: unknown): SkillEntry[] | null {
     const name = toString_(item.name);
     if (name === null || name === '') return null;
     const rank = toSkillRank(item.rank);
-    out.push(rank === null ? { name } : { name, rank });
+    const desc = toString_(item.desc);
+    out.push({
+      name,
+      ...(rank === null ? {} : { rank }),
+      ...(desc === null || desc === '' ? {} : { desc }),
+    });
+  }
+  return out;
+}
+
+/**
+ * Hotlist and inventory entries (008 revision 2). A plain string is the v1
+ * shorthand and is kept as a string; an object must at least name itself, and
+ * its `qty` / `desc` are dropped when malformed rather than costing the entry.
+ */
+function toNamedEntries<T extends HotlistEntry | InventoryEntry>(
+  x: unknown,
+): (string | T)[] | null {
+  if (!Array.isArray(x)) return null;
+  const out: (string | T)[] = [];
+  for (const item of x) {
+    if (typeof item === 'string') {
+      out.push(item);
+      continue;
+    }
+    if (!isRecord(item)) return null;
+    const name = toString_(item.name);
+    if (name === null || name === '') return null;
+    const qty = toSkillRank(item.qty);
+    const desc = toString_(item.desc);
+    out.push({
+      name,
+      ...(qty === null ? {} : { qty }),
+      ...(desc === null || desc === '' ? {} : { desc }),
+    } as T);
+  }
+  return out;
+}
+
+/** The sheet's spell list (008 revision 2): name, rank, mana cost, full text. */
+function toSpellEntries(x: unknown): SpellEntry[] | null {
+  if (!Array.isArray(x)) return null;
+  const out: SpellEntry[] = [];
+  for (const item of x) {
+    if (!isRecord(item)) return null;
+    const name = toString_(item.name);
+    if (name === null || name === '') return null;
+    const rank = toSkillRank(item.rank);
+    const mana = toSkillRank(item.mana);
+    const desc = toString_(item.desc);
+    out.push({
+      name,
+      ...(rank === null ? {} : { rank }),
+      ...(mana === null ? {} : { mana }),
+      ...(desc === null || desc === '' ? {} : { desc }),
+    });
   }
   return out;
 }
@@ -371,14 +450,30 @@ export function normalizeCrawler(raw: Crawler): Crawler {
     else crawler.stats = stats;
   }
   if (crawler.hotlist !== undefined) {
-    const hotlist = toStringList(crawler.hotlist);
+    const hotlist = toNamedEntries<HotlistEntry>(crawler.hotlist);
     if (hotlist === null) drop('hotlist');
     else crawler.hotlist = hotlist;
+  }
+  {
+    // `inventory` is required, so a malformed one empties the bag rather than
+    // deleting the field and failing the guard on the way back out.
+    const inventory = toNamedEntries<InventoryEntry>(crawler.inventory);
+    if (inventory === null) {
+      crawler.inventory = [];
+      console.warn(`Crawler "${raw.id}": dropping malformed "inventory".`);
+    } else {
+      crawler.inventory = inventory;
+    }
   }
   if (crawler.skills !== undefined) {
     const skills = toSkillEntries(crawler.skills);
     if (skills === null) drop('skills');
     else crawler.skills = skills;
+  }
+  if (crawler.spells !== undefined) {
+    const spells = toSpellEntries(crawler.spells);
+    if (spells === null) drop('spells');
+    else crawler.spells = spells;
   }
   if (crawler.gear !== undefined) {
     const gear = toGear(crawler.gear);

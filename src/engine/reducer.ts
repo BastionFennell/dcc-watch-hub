@@ -4,7 +4,14 @@
  * Constitution I: no I/O, no clocks, no randomness, no component or DOM reads.
  * Unknown event types and unknown actors leave state untouched (FR-006, edge cases).
  */
-import type { AnyEvent, Cell, EpisodeData, GearSlot, SkillEntry } from '../data/types';
+import type {
+  AnyEvent,
+  Cell,
+  EpisodeData,
+  GearSlot,
+  SkillEntry,
+  SpellEntry,
+} from '../data/types';
 import type { CrawlerState, GearState, NpcState, OverlayState } from './state';
 import { ACCESSORY_CAP, cellKey, fromInitialState } from './state';
 
@@ -35,16 +42,68 @@ function union(existing: string[], add: string[], remove: string[]): string[] {
   return kept;
 }
 
-/** Upsert by name: an existing skill keeps its slot and takes the new rank. */
-function upsertSkill(existing: SkillEntry[], name: string, rank: number | undefined): SkillEntry[] {
-  const index = existing.findIndex((skill) => skill.name === name);
-  if (index === -1) {
-    return [...existing, rank === undefined ? { name } : { name, rank }];
+/**
+ * The same union over entries that carry structure (008 revision 2). Events
+ * name items by their short `name` alone, so a `remove` drops the whole entry -
+ * quantity, description and all - and an `add` that the crawler is not already
+ * carrying appends a bare `{ name }`. A string list and an entry list therefore
+ * behave identically, which is the point.
+ */
+function unionEntries<T extends { name: string }>(
+  existing: readonly T[],
+  add: readonly string[],
+  remove: readonly string[],
+): T[] {
+  const removed = new Set(remove);
+  const kept = existing.filter((entry) => !removed.has(entry.name));
+  for (const name of add) {
+    if (!kept.some((entry) => entry.name === name)) kept.push({ name } as T);
   }
-  if (rank === undefined) return existing;
+  return kept;
+}
+
+/** Upsert by name: an existing skill keeps its slot and takes the new rank. */
+function upsertSkill(
+  existing: SkillEntry[],
+  name: string,
+  rank: number | undefined,
+  desc: string | undefined,
+): SkillEntry[] {
+  const patch = {
+    ...(rank === undefined ? {} : { rank }),
+    ...(desc === undefined ? {} : { desc }),
+  };
+  const index = existing.findIndex((skill) => skill.name === name);
+  if (index === -1) return [...existing, { name, ...patch }];
+  if (rank === undefined && desc === undefined) return existing;
   const skills = existing.slice();
-  skills[index] = { ...skills[index], rank };
+  skills[index] = { ...skills[index], ...patch };
   return skills;
+}
+
+/**
+ * The same upsert for spells (008 revision 2): rank, mana cost and text each
+ * replace what the sheet held when the event carries them, and leave it alone
+ * when it does not.
+ */
+function upsertSpell(
+  existing: SpellEntry[],
+  name: string,
+  rank: number | undefined,
+  mana: number | undefined,
+  desc: string | undefined,
+): SpellEntry[] {
+  const patch = {
+    ...(rank === undefined ? {} : { rank }),
+    ...(mana === undefined ? {} : { mana }),
+    ...(desc === undefined ? {} : { desc }),
+  };
+  const index = existing.findIndex((spell) => spell.name === name);
+  if (index === -1) return [...existing, { name, ...patch }];
+  if (rank === undefined && mana === undefined && desc === undefined) return existing;
+  const spells = existing.slice();
+  spells[index] = { ...spells[index], ...patch };
+  return spells;
 }
 
 /**
@@ -83,13 +142,13 @@ export function applyEvent(state: OverlayState, event: AnyEvent): OverlayState {
     case 'loot':
       return withCrawler(state, event.actor, (crawler) => ({
         ...crawler,
-        inventory: union(crawler.inventory, [event.item], []),
+        inventory: unionEntries(crawler.inventory, [event.item], []),
       }));
 
     case 'inventory':
       return withCrawler(state, event.actor, (crawler) => ({
         ...crawler,
-        inventory: union(crawler.inventory, event.add, event.remove),
+        inventory: unionEntries(crawler.inventory, event.add, event.remove),
       }));
 
     case 'status':
@@ -107,7 +166,13 @@ export function applyEvent(state: OverlayState, event: AnyEvent): OverlayState {
     case 'skill':
       return withCrawler(state, event.actor, (crawler) => ({
         ...crawler,
-        skills: upsertSkill(crawler.skills, event.name, event.rank),
+        skills: upsertSkill(crawler.skills, event.name, event.rank, event.desc),
+      }));
+
+    case 'spell':
+      return withCrawler(state, event.actor, (crawler) => ({
+        ...crawler,
+        spells: upsertSpell(crawler.spells, event.name, event.rank, event.mana, event.desc),
       }));
 
     case 'class':
@@ -119,7 +184,7 @@ export function applyEvent(state: OverlayState, event: AnyEvent): OverlayState {
     case 'hotlist':
       return withCrawler(state, event.actor, (crawler) => ({
         ...crawler,
-        hotlist: union(crawler.hotlist, event.add, event.remove),
+        hotlist: unionEntries(crawler.hotlist, event.add, event.remove),
       }));
 
     case 'equip':

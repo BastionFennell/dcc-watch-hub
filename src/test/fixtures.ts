@@ -106,9 +106,29 @@ export function makeEpisodeRaw(episodeId = 1): unknown {
           race: 'Human',
           pronouns: 'he/him',
         }),
+        /*
+         * 008 revision 2: the one crawler whose sheet carries structure. Harry
+         * keeps the plain string entries every earlier test asserts on, so the
+         * two shapes are exercised side by side in the same episode.
+         */
         crawler('psychic', 'The Psychic', 3, 20, 'Signal', 'Rae', {
           race: 'Human',
           pronouns: 'she/her',
+          hotlist: [
+            {
+              name: 'Mana Draught',
+              qty: 5,
+              desc: 'Restores your Mana in full when you spend an Action to drink one.',
+            },
+          ],
+          spells: [
+            {
+              name: 'Second Sight',
+              rank: 2,
+              mana: 3,
+              desc: 'Read the room one beat before it happens.',
+            },
+          ],
         }),
         crawler('harry', 'Harry', 2, 22, 'Harry', 'Marcus', {
           race: 'Human',

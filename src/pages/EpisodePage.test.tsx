@@ -2249,3 +2249,62 @@ describe('EpisodePage', () => {
     expect(screen.queryByText(copy.feedText.npcDefeated('The Hoarder'))).not.toBeInTheDocument();
   });
 });
+
+/* ------- 008 revision 2: quantities, tooltips and SPELLS on the page (R2) */
+
+describe('EpisodePage - the record explains itself (008 revision 2)', () => {
+  it('boxes a quantity on the hotbar and explains the key on click', async () => {
+    await mountEpisode();
+    clickFrame('psychic');
+    openRecord();
+
+    const slot = within(section('hotlist')).getAllByTestId('hotbar-slot')[0];
+    expect(slot).toHaveAttribute('data-name', 'Mana Draught');
+    expect(within(slot).getByTestId('hotbar-qty')).toHaveTextContent(copy.qty(5));
+
+    const trigger = within(slot).getByRole('button', {
+      name: copy.hotbarSlotQtyAria(1, 'Mana Draught', 5),
+    });
+    expect(screen.queryByTestId('tooltip')).not.toBeInTheDocument();
+    fireEvent.click(trigger);
+    expect(screen.getByTestId('tooltip')).toHaveTextContent(
+      'Restores your Mana in full when you spend an Action to drink one.',
+    );
+
+    // Escape closes the tooltip and leaves the record standing (R2 acceptance).
+    pressEscape();
+    expect(screen.queryByTestId('tooltip')).not.toBeInTheDocument();
+    expect(screen.getByTestId('crawler-record')).toBeInTheDocument();
+  });
+
+  it('files the crawler spells as tiles between skills and inventory', async () => {
+    await mountEpisode();
+    clickFrame('psychic');
+    openRecord();
+
+    const tile = within(section('spells')).getByTestId('tile');
+    expect(tile).toHaveAttribute('data-item', 'spell');
+    expect(tile).toHaveAttribute('data-name', 'Second Sight');
+    expect(tile).toHaveTextContent(copy.spellMeta(2, 3) as string);
+
+    fireEvent.click(
+      within(tile).getByRole('button', { name: copy.tooltipTrigger('Second Sight') }),
+    );
+    expect(screen.getByTestId('tooltip')).toHaveTextContent(
+      'Read the room one beat before it happens.',
+    );
+  });
+
+  it('leaves a crawler with no spells and plain hotlist marks exactly as before', async () => {
+    const { seek } = await mountEpisode();
+    seek(210);
+    clickFrame('harry');
+    openRecord();
+
+    expect(within(section('spells')).getByText(copy.dossierEmpty.spells)).toBeInTheDocument();
+    const slot = within(section('hotlist')).getAllByTestId('hotbar-slot')[0];
+    expect(slot).toHaveAttribute('aria-label', copy.hotbarSlotAria(1, 'Crowbar'));
+    expect(within(slot).queryByRole('button')).not.toBeInTheDocument();
+    expect(within(slot).queryByTestId('hotbar-qty')).not.toBeInTheDocument();
+  });
+});

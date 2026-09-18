@@ -15,9 +15,12 @@ import type {
   EventType,
   GearSlot,
   Hp,
+  HotlistEntry,
+  InventoryEntry,
   NpcEvent,
   Registry,
   SkillEntry,
+  SpellEntry,
 } from '../data/types';
 import { isKnownEvent } from '../data/types';
 import { copy } from '../copy';
@@ -143,9 +146,12 @@ export interface Dossier {
   art?: string;
   /** Worn gear as of the playhead, one item or null per slot (R2-FR-220). */
   gear: GearState;
-  hotlist: string[];
+  /** Normalized entries (008 R2): a string in the data reads as `{ name }`. */
+  hotlist: HotlistEntry[];
   skills: SkillEntry[];
-  inventory: string[];
+  /** The sheet's SPELLS section as of the playhead (008 R2). */
+  spells: SpellEntry[];
+  inventory: InventoryEntry[];
   achievements: DossierAchievement[];
   history: FeedItem[];
 }
@@ -292,6 +298,8 @@ function toFeedItem(
       return { ...base, actorName, text: copy.feedText.inventory(who, event.add, event.remove) };
     case 'skill':
       return { ...base, actorName, text: copy.feedText.skill(who, event.name, event.rank) };
+    case 'spell':
+      return { ...base, actorName, text: copy.feedText.spell(who, event.name, event.rank) };
     case 'class':
       return { ...base, actorName, text: copy.feedText.classChange(who, event.class) };
     case 'hotlist':
@@ -558,6 +566,7 @@ export function crawlerDossier(
     gear: crawler.gear,
     hotlist: crawler.hotlist,
     skills: crawler.skills,
+    spells: crawler.spells,
     inventory: crawler.inventory,
     achievements,
     history: crawlerHistory(events, t, actorId, party),
@@ -644,7 +653,7 @@ export const GEAR_SLOT_ORDER = [
 
 /** The record's ten-slot hotbar, plus how many entries did not fit (R2-FR-221). */
 export interface Hotbar {
-  slots: (string | null)[];
+  slots: (HotlistEntry | null)[];
   overflow: number;
 }
 
@@ -652,8 +661,8 @@ export interface Hotbar {
  * Pads the hotlist to `n` fixed slots and counts the rest, so the hotbar is a
  * pure function of the elapsed hotlist and never changes size (R2-FR-221).
  */
-export function hotbarSlots(hotlist: readonly string[], n = 10): Hotbar {
-  const slots: (string | null)[] = [];
+export function hotbarSlots(hotlist: readonly HotlistEntry[], n = 10): Hotbar {
+  const slots: (HotlistEntry | null)[] = [];
   for (let i = 0; i < n; i += 1) slots.push(hotlist[i] ?? null);
   return { slots, overflow: Math.max(0, hotlist.length - n) };
 }

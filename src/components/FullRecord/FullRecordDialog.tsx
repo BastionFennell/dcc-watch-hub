@@ -32,7 +32,13 @@ const TITLE_ID = 'crawler-record-title';
 const BODY_ID = 'crawler-record-body';
 
 /** The sheet, or one category opened in full (contracts/dialog.md Revision 2). */
-export type RecordView = 'sheet' | 'skills' | 'inventory' | 'achievements' | 'history';
+export type RecordView =
+  | 'sheet'
+  | 'skills'
+  | 'spells'
+  | 'inventory'
+  | 'achievements'
+  | 'history';
 
 /** Tiles and history rows shown on the sheet before "View all" takes over. */
 const SHEET_MAX = 8;
@@ -227,6 +233,14 @@ export function FullRecordDialog({
                     onViewAll={() => openView('skills')}
                     viewAllRef={viewAllRef('skills')}
                   />
+                  {/* 008 revision 2: the sheet's SPELLS block, between SKILLS and INVENTORY. */}
+                  <DossierTiles
+                    kind="spells"
+                    items={dossier.spells}
+                    max={SHEET_MAX}
+                    onViewAll={() => openView('spells')}
+                    viewAllRef={viewAllRef('spells')}
+                  />
                   <DossierTiles
                     kind="inventory"
                     items={dossier.inventory}
@@ -267,6 +281,9 @@ export function FullRecordDialog({
               */}
               {view === 'skills' ? (
                 <DossierList kind="skills" items={dossier.skills} headingRef={headingRef} />
+              ) : null}
+              {view === 'spells' ? (
+                <DossierList kind="spells" items={dossier.spells} headingRef={headingRef} />
               ) : null}
               {view === 'inventory' ? (
                 <DossierList kind="inventory" items={dossier.inventory} headingRef={headingRef} />

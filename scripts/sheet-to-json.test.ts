@@ -17,7 +17,7 @@ import { normalizeRegistry } from '../src/data/validate';
 
 const root = resolve(__dirname, '..');
 const samples = resolve(root, 'scripts/samples');
-const schemaPath = resolve(root, 'specs/007-npc-registry/contracts/episode.schema.json');
+const schemaPath = resolve(root, 'specs/008-real-crawlers/contracts/episode.schema.json');
 
 const ajv = new Ajv({ strict: false, allErrors: true });
 addFormats(ajv);
@@ -151,6 +151,7 @@ describe('convert(scripts/samples/ep1.csv)', () => {
       'inventory',
       'note',
       'skill',
+      'spell',
       'class',
       'hotlist',
       'equip',
@@ -720,4 +721,53 @@ describe('cli', () => {
     },
     30_000,
   );
+});
+
+/* ----------------------------------- 008 revision 2: the spell row (R2) */
+
+describe('rowToEvent - spell (008 revision 2)', () => {
+  it('maps name, rank and mana cost', () => {
+    const result = rowToEvent(
+      sheetRow({ type: 'spell', actor: 'mimi', field1: 'Heal', field2: '1', field3: '2' }),
+      rowCtx(),
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.event).toEqual({
+      t: 10,
+      type: 'spell',
+      actor: 'mimi',
+      name: 'Heal',
+      rank: 1,
+      mana: 2,
+    });
+  });
+
+  it('omits rank and cost the sheet leaves blank', () => {
+    const result = rowToEvent(sheetRow({ type: 'spell', actor: 'mimi', field1: 'Heal' }), rowCtx());
+    expect(result.event).toEqual({ t: 10, type: 'spell', actor: 'mimi', name: 'Heal' });
+  });
+
+  it('errors on a missing name', () => {
+    const result = rowToEvent(sheetRow({ type: 'spell', actor: 'mimi' }), rowCtx());
+    expect(result.errors).toEqual(['empty required field: name (field1) on spell']);
+    expect(result.event).toBeNull();
+  });
+
+  it('errors on a rank or cost that is not a non-negative integer', () => {
+    const result = rowToEvent(
+      sheetRow({ type: 'spell', actor: 'mimi', field1: 'Heal', field2: 'two', field3: '-1' }),
+      rowCtx(),
+    );
+    expect(result.errors).toEqual([
+      'spell rank (field2) must be a non-negative integer, got "two"',
+      'spell mana (field3) must be a non-negative integer, got "-1"',
+    ]);
+    expect(result.event).toBeNull();
+  });
+
+  it('warns when a spell row has no actor', () => {
+    expect(
+      rowToEvent(sheetRow({ type: 'spell', field1: 'Heal' }), rowCtx()).warnings,
+    ).toContain('spell row has no actor');
+  });
 });

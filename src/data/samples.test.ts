@@ -15,7 +15,10 @@ const root = resolve(__dirname, '../..');
 // 007 extends the 003 contracts: the episode gains the `npc` branch, the show
 // gains `registryUrl`, and the registry file has a schema of its own.
 const contracts = resolve(root, 'specs/007-npc-registry/contracts');
-const episodeSchemaPath = resolve(contracts, 'episode.schema.json');
+// 008 revision 2 extends the episode contract again (structured hotlist and
+// inventory entries, a spell list, a `spell` event); the show and registry
+// schemas are unchanged, so they stay where 007 left them.
+const episodeSchemaPath = resolve(root, 'specs/008-real-crawlers/contracts/episode.schema.json');
 const dataDir = resolve(root, 'public/data');
 
 function readJson(path: string): unknown {
@@ -98,6 +101,7 @@ describe.each(show.episodes.map((meta) => [meta.id, meta] as const))(
         'inventory',
         'note',
         'skill',
+        'spell',
         'class',
         'hotlist',
         'equip',

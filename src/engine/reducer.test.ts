@@ -31,7 +31,7 @@ describe('applyEvent - one case per event type', () => {
 
   it('loot appends to inventory', () => {
     const after = applyEvent(init(), { t: 1, type: 'loot', actor: 'harry', item: 'Crowbar' });
-    expect(findCrawler(after, 'harry')?.inventory).toContain('Crowbar');
+    expect(findCrawler(after, 'harry')?.inventory.map((e) => e.name)).toContain('Crowbar');
   });
 
   it('hp sets current and max', () => {
@@ -109,7 +109,7 @@ describe('applyEvent - one case per event type', () => {
       add: ['Torch'],
       remove: ['Crowbar'],
     });
-    expect(findCrawler(swapped, 'harry')?.inventory).toEqual(['Torch']);
+    expect(findCrawler(swapped, 'harry')?.inventory.map((e) => e.name)).toEqual(['Torch']);
   });
 });
 
@@ -272,7 +272,7 @@ describe('applyEvent - v2 event types', () => {
       add: ['Door', 'The Hoarder'],
       remove: [],
     });
-    expect(findCrawler(added, 'harry')?.hotlist).toEqual(['Door', 'The Hoarder']);
+    expect(findCrawler(added, 'harry')?.hotlist.map((e) => e.name)).toEqual(['Door', 'The Hoarder']);
 
     const again = applyEvent(added, {
       t: 2,
@@ -281,7 +281,7 @@ describe('applyEvent - v2 event types', () => {
       add: ['Door', 'Crowbar'],
       remove: ['The Hoarder'],
     });
-    expect(findCrawler(again, 'harry')?.hotlist).toEqual(['Door', 'Crowbar']);
+    expect(findCrawler(again, 'harry')?.hotlist.map((e) => e.name)).toEqual(['Door', 'Crowbar']);
   });
 
   it('ignores all three for an unknown actor', () => {
@@ -298,8 +298,10 @@ describe('applyEvent - v2 event types', () => {
     const at170 = reduceTo(episode, 170);
     expect(findCrawler(at94, 'harry')?.class).toBeNull();
     expect(findCrawler(at170, 'harry')?.class).toBe('Compensated Anarchist');
-    expect(findCrawler(at170, 'harry')?.hotlist).toEqual(['Crowbar']);
-    expect(findCrawler(reduceTo(episode, 110), 'harry')?.hotlist).toEqual(['Door']);
+    expect(findCrawler(at170, 'harry')?.hotlist.map((e) => e.name)).toEqual(['Crowbar']);
+    expect(
+      findCrawler(reduceTo(episode, 110), 'harry')?.hotlist.map((e) => e.name),
+    ).toEqual(['Door']);
     // X.O. keeps logging skills; the first one is upserted to rank 2 at 160.
     expect(findCrawler(at170, 'xo')?.skills[0]).toEqual({ name: 'Understudy Strike', rank: 2 });
     expect(findCrawler(reduceTo(episode, 100), 'xo')?.skills[0]).toEqual({
@@ -500,5 +502,107 @@ describe('npc events (FR-602)', () => {
   it('ignores a malformed npc row (demoted to unknown)', () => {
     const broken = withEvents([{ t: 5, type: 'npc', id: 'hoarder', action: 'befriended' }]);
     expect(reduceTo(broken, 10).npcs).toEqual({});
+  });
+});
+
+/* ------------------------- 008 revision 2: entries with structure, and spells */
+
+describe('structured entries and the spell event (008 revision 2)', () => {
+  it('normalizes string and object entries into the same state', () => {
+    const psychic = findCrawler(init(), 'psychic');
+    expect(psychic?.hotlist).toEqual([
+      {
+        name: 'Mana Draught',
+        qty: 5,
+        desc: 'Restores your Mana in full when you spend an Action to drink one.',
+      },
+    ]);
+    // Harry's sheet writes plain strings; both arrive as entries.
+    const harry = findCrawler(reduceTo(episode, 110), 'harry');
+    expect(harry?.hotlist).toEqual([{ name: 'Door' }]);
+  });
+
+  it('keeps an entry whole through a hotlist event that does not name it', () => {
+    const after = applyEvent(init(), {
+      t: 1,
+      type: 'hotlist',
+      actor: 'psychic',
+      add: ['The Doorway'],
+      remove: [],
+    });
+    const hotlist = findCrawler(after, 'psychic')?.hotlist ?? [];
+    expect(hotlist[0]).toMatchObject({ name: 'Mana Draught', qty: 5 });
+    expect(hotlist[1]).toEqual({ name: 'The Doorway' });
+  });
+
+  it('removes a structured entry by its short name alone', () => {
+    const after = applyEvent(init(), {
+      t: 1,
+      type: 'hotlist',
+      actor: 'psychic',
+      add: [],
+      remove: ['Mana Draught'],
+    });
+    expect(findCrawler(after, 'psychic')?.hotlist).toEqual([]);
+  });
+
+  it('never duplicates an entry the crawler already carries', () => {
+    const after = applyEvent(init(), {
+      t: 1,
+      type: 'hotlist',
+      actor: 'psychic',
+      add: ['Mana Draught'],
+      remove: [],
+    });
+    expect(findCrawler(after, 'psychic')?.hotlist).toHaveLength(1);
+    expect(findCrawler(after, 'psychic')?.hotlist[0]).toMatchObject({ qty: 5 });
+  });
+
+  it('loot and inventory events append entries, not strings', () => {
+    const after = applyEvent(init(), { t: 1, type: 'loot', actor: 'harry', item: 'Crowbar' });
+    expect(findCrawler(after, 'harry')?.inventory).toEqual([{ name: 'Crowbar' }]);
+  });
+
+  it('seeds spells from the sheet and leaves everyone else with none', () => {
+    expect(findCrawler(init(), 'psychic')?.spells).toEqual([
+      {
+        name: 'Second Sight',
+        rank: 2,
+        mana: 3,
+        desc: 'Read the room one beat before it happens.',
+      },
+    ]);
+    expect(findCrawler(init(), 'harry')?.spells).toEqual([]);
+  });
+
+  it('spell adds a new spell and upserts an existing one by name', () => {
+    const added = applyEvent(init(), {
+      t: 1,
+      type: 'spell',
+      actor: 'harry',
+      name: 'Heal',
+      rank: 1,
+      mana: 2,
+      desc: 'Rank 1, heal 2 HB slots.',
+    });
+    expect(findCrawler(added, 'harry')?.spells).toEqual([
+      { name: 'Heal', rank: 1, mana: 2, desc: 'Rank 1, heal 2 HB slots.' },
+    ]);
+
+    const raised = applyEvent(added, { t: 2, type: 'spell', actor: 'harry', name: 'Heal', rank: 2 });
+    expect(findCrawler(raised, 'harry')?.spells).toEqual([
+      { name: 'Heal', rank: 2, mana: 2, desc: 'Rank 1, heal 2 HB slots.' },
+    ]);
+  });
+
+  it('leaves the spell alone when the event carries nothing new', () => {
+    const added = applyEvent(init(), { t: 1, type: 'spell', actor: 'harry', name: 'Heal' });
+    const again = applyEvent(added, { t: 2, type: 'spell', actor: 'harry', name: 'Heal' });
+    expect(findCrawler(again, 'harry')?.spells).toEqual([{ name: 'Heal' }]);
+  });
+
+  it('ignores a spell for an unknown actor', () => {
+    const before = init();
+    expect(applyEvent(before, { t: 1, type: 'spell', actor: 'ghost', name: 'Haunt' })).toBe(before);
   });
 });

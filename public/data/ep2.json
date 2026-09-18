@@ -99,8 +99,15 @@
           "cha": 6
         },
         "hotlist": [
-          "Heal (2 mana) Rank 1, heal 2 HB slots.",
-          "5 Standard Mana Potions, which fully restore your Mana"
+          {
+            "name": "Heal",
+            "desc": "Heal (2 mana) - Rank 1, heal 2 HB slots."
+          },
+          {
+            "name": "Standard Mana Potion",
+            "qty": 5,
+            "desc": "5 Standard Mana Potions, which fully restore your Mana when you spend an Action to drink one."
+          }
         ],
         "skills": [
           {
@@ -141,11 +148,20 @@
           },
           {
             "name": "Frost Scar",
-            "rank": 3
+            "rank": 3,
+            "desc": "With a slice of your frigid hand, you leave a scar of rime on your target."
           },
           {
             "name": "Heal",
             "rank": 1
+          }
+        ],
+        "spells": [
+          {
+            "name": "Heal",
+            "rank": 1,
+            "mana": 2,
+            "desc": "Heal (2 mana) - Rank 1, heal 2 HB slots."
           }
         ],
         "gear": {},
@@ -472,6 +488,14 @@
       "desc": "The door never stood a chance."
     },
     {
+      "t": 266,
+      "type": "spell",
+      "actor": "mimi",
+      "name": "Heal",
+      "rank": 1,
+      "mana": 2
+    },
+    {
       "t": 271,
       "type": "sponsor",
       "text": "Meat District cuts, dressed by Grull Industries. Ask for the thoracic special.",
@@ -669,6 +693,14 @@
       "type": "rank",
       "actor": "harry",
       "rank": 740
+    },
+    {
+      "t": 693,
+      "type": "spell",
+      "actor": "mimi",
+      "name": "Heal",
+      "rank": 2,
+      "mana": 2
     },
     {
       "t": 700,

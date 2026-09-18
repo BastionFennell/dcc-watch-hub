@@ -4,7 +4,10 @@
  * Contract: specs/001-watch-hub-v1/contracts/sheet-csv.md, extended by
  * specs/002-watch-hub-v2/contracts/sheet-csv.md (skill / class / hotlist rows) and by
  * specs/003-crawler-record/data-model.md (equip / unequip rows: field1 slot, field2 item) and by
- * specs/007-npc-registry/contracts/npc.md (npc row: field1 id, field2 action[:fact,fact], field3 note).
+ * specs/007-npc-registry/contracts/npc.md (npc row: field1 id, field2 action[:fact,fact], field3 note)
+ * and by specs/008-real-crawlers (spell row: field1 name, field2 rank, field3 mana; hotlist and
+ * inventory rows still name entries by their short name alone, and the structure an entry carries -
+ * quantity, description - lives in `--initial-state`).
  *
  *   npm run sheet-to-json -- scripts/samples/ep1.csv --episode 1 --duration 240 \
  *     --initial-state scripts/samples/ep1.initial.json --out public/data/ep1.json
@@ -95,6 +98,7 @@ const ACTOR_EVENT_TYPES = new Set([
   'status',
   'inventory',
   'skill',
+  'spell',
   'class',
   'hotlist',
   'equip',
@@ -365,6 +369,38 @@ export function rowToEvent(row: SheetRow, ctx: RowContext): RowResult {
         ...(rank === null ? {} : { rank }),
         ...(field3 === '' ? {} : { desc: field3 }),
       };
+      break;
+    }
+    case 'spell': {
+      /*
+       * 008 revision 2: field1 name, field2 rank, field3 mana cost. The spell's
+       * full text is not a CSV cell - a paragraph does not belong in a sheet
+       * column, so it lives in `--initial-state` (or an earlier file) and the
+       * event only ever amends the numbers.
+       */
+      if (field1 === '') {
+        errors.push('empty required field: name (field1) on spell');
+        break;
+      }
+      const numbers: Record<string, number> = {};
+      let bad = false;
+      for (const [key, raw, column] of [
+        ['rank', field2, 'field2'],
+        ['mana', field3, 'field3'],
+      ] as const) {
+        if (raw === '') continue;
+        const value = toNumber(raw);
+        if (value === null || !Number.isInteger(value) || value < 0) {
+          errors.push(
+            `spell ${key} (${column}) must be a non-negative integer, got ${JSON.stringify(raw)}`,
+          );
+          bad = true;
+          continue;
+        }
+        numbers[key] = value;
+      }
+      if (bad) break;
+      event = { t, type, actor, name: field1, ...numbers };
       break;
     }
     case 'equip':

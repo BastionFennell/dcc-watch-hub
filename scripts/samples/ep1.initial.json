@@ -96,8 +96,15 @@
         "cha": 6
       },
       "hotlist": [
-        "Heal (2 mana) Rank 1, heal 2 HB slots.",
-        "5 Standard Mana Potions, which fully restore your Mana"
+        {
+          "name": "Heal",
+          "desc": "Heal (2 mana) - Rank 1, heal 2 HB slots."
+        },
+        {
+          "name": "Standard Mana Potion",
+          "qty": 5,
+          "desc": "5 Standard Mana Potions, which fully restore your Mana when you spend an Action to drink one."
+        }
       ],
       "skills": [
         {
@@ -138,11 +145,20 @@
         },
         {
           "name": "Frost Scar",
-          "rank": 3
+          "rank": 3,
+          "desc": "With a slice of your frigid hand, you leave a scar of rime on your target."
         },
         {
           "name": "Heal",
           "rank": 1
+        }
+      ],
+      "spells": [
+        {
+          "name": "Heal",
+          "rank": 1,
+          "mana": 2,
+          "desc": "Heal (2 mana) - Rank 1, heal 2 HB slots."
         }
       ]
     },
