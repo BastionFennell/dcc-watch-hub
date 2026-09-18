@@ -61,7 +61,7 @@ const EMPTY_CELLS = new Set<string>();
 
 /**
  * The watch page. Everything below the stage is recomputed from `(episode, t)`
- * on every render — no memoization, no incremental patching, so a seek in either
+ * on every render - no memoization, no incremental patching, so a seek in either
  * direction is automatically correct (constitution I, FR-001/002/003).
  */
 export function EpisodePage() {
@@ -69,7 +69,7 @@ export function EpisodePage() {
   const { show } = useShow();
   /*
    * The entity registry (007 R1). `null` for a show that declares no
-   * `registryUrl` — and for one whose registry failed to load — in which case
+   * `registryUrl` - and for one whose registry failed to load - in which case
    * every piece of NPC chrome below is simply absent and `npc` events still
    * show in the feed under their raw id (spec Edge Cases).
    */
@@ -90,7 +90,7 @@ export function EpisodePage() {
   const { panel } = panelApi;
   /*
    * Viewer state as well (data-model.md): which crawler's full record covers the
-   * stage, or `null`. Never persisted and never derived from events — the
+   * stage, or `null`. Never persisted and never derived from events - the
    * record's *content* is derived; this is only what the viewer asked to see.
    */
   const [record, setRecord] = useState<string | null>(null);
@@ -121,7 +121,7 @@ export function EpisodePage() {
     if (record !== null && (panel.kind !== 'dossier' || panel.crawlerId !== record)) setRecord(null);
   }, [panel, record]);
 
-  // A new episode always opens ambient — no panel (usePanel) and no record (US2 scenario 7).
+  // A new episode always opens ambient - no panel (usePanel) and no record (US2 scenario 7).
   useEffect(() => {
     setRecord(null);
     devRecordOpened.current = false;
@@ -155,8 +155,8 @@ export function EpisodePage() {
   /*
    * The phone layout (006). Viewer state, not overlay state: a media query and
    * an IntersectionObserver, neither of which knows anything about the event
-   * log. `phone` false — which is what jsdom and any host without `matchMedia`
-   * report — renders exactly the tree every earlier test asserts (FR-505).
+   * log. `phone` false - which is what jsdom and any host without `matchMedia`
+   * report - renders exactly the tree every earlier test asserts (FR-505).
    */
   const phone = useIsPhone();
   /*
@@ -234,7 +234,7 @@ export function EpisodePage() {
 
   const frames = state && episode ? partyFrames(state, episode.events, t) : [];
   const items = episode ? feedItems(episode.events, t, 8, party, registry) : [];
-  // The whole elapsed transcript, oldest first — the feed's eight rows are a
+  // The whole elapsed transcript, oldest first - the feed's eight rows are a
   // window onto this (005 FR-401).
   const log = episode ? logItems(episode.events, t, party, registry) : [];
   const sponsor = episode ? activeSponsor(episode.events, t, party) : null;
@@ -248,13 +248,13 @@ export function EpisodePage() {
   const labels = episode ? mapLabels(episode.events, t) : [];
   const { next } = prevNext(show, meta.id);
   /*
-   * The Encountered strip (FR-610): newest first, and empty — standby line and
-   * all — until the first `npc` event elapses. Without a registry there is
+   * The Encountered strip (FR-610): newest first, and empty - standby line and
+   * all - until the first `npc` event elapses. Without a registry there is
    * nothing to name, so the strip and the phone's NPCs tab do not exist at all.
    */
   const encounters = state ? encounteredNpcs(state, registry) : [];
 
-  // The dossier, like everything else, is derived at render time — a seek in
+  // The dossier, like everything else, is derived at render time - a seek in
   // either direction is correct with no extra work (constitution I, FR-103).
   const dossier =
     panel.kind === 'dossier' && state && episode
@@ -269,7 +269,7 @@ export function EpisodePage() {
 
   /**
    * No episode data behind the overlay: the System says so once, wherever the
-   * viewer is looking — the feed, or the phone's Map tab (spec Edge Cases).
+   * viewer is looking - the feed, or the phone's Map tab (spec Edge Cases).
    */
   const notice = failed ? (
     <SystemNotice tone="error">{copy.feedUnavailable}</SystemNotice>
@@ -290,7 +290,7 @@ export function EpisodePage() {
 
   /**
    * The glance card the dossier panel carries, in the rail on desktop and in the
-   * bottom sheet on a phone — one card, one "Open full record" trigger (FR-504).
+   * bottom sheet on a phone - one card, one "Open full record" trigger (FR-504).
    */
   const glanceCard = dossier ? (
     <CrawlerGlance
@@ -304,7 +304,7 @@ export function EpisodePage() {
 
   /**
    * The open entity record, in the rail on desktop and in the sheet on a phone
-   * — one component, one "Open in the Registry" trigger. That trigger opens the
+   * - one component, one "Open in the Registry" trigger. That trigger opens the
    * Registry panel rather than leaving the episode (R3 scenario 3), and hands
    * focus return to the strip chip that opened this record, which is still on
    * screen behind the panel.
@@ -373,8 +373,8 @@ export function EpisodePage() {
       case 'registry':
         /*
          * The whole Registry beside the stage (007 R3). Unlike every other
-         * panel it needs no episode data to open — it reads the published
-         * archive — so it opens while the episode file is still landing, and
+         * panel it needs no episode data to open - it reads the published
+         * archive - so it opens while the episode file is still landing, and
          * opening it neither seeks nor pauses (R3 scenario 4). What this
          * episode contributes arrives with the file, clipped to the playhead.
          */
@@ -502,7 +502,7 @@ export function EpisodePage() {
 
   /**
    * The broadcast log (005 US1/US2). Embedded, it is the Log tab's whole pane:
-   * always open, no toggle — the tab is the open/closed control (FR-503).
+   * always open, no toggle - the tab is the open/closed control (FR-503).
    */
   function broadcastLog(embedded: boolean) {
     return (
@@ -522,7 +522,7 @@ export function EpisodePage() {
 
   /**
    * The four phone panes (FR-503), all fed by the same playhead-derived data the
-   * desktop tree uses. The Map pane is the rail panel's floor map inline — with
+   * desktop tree uses. The Map pane is the rail panel's floor map inline - with
    * no episode behind it, the System's notice instead (spec Edge Cases).
    */
   function phoneTabs(): MobileTab[] {
@@ -553,7 +553,7 @@ export function EpisodePage() {
   /**
    * On a phone the dossier panel is a bottom sheet over the tabs, with the
    * stage still visible above it (FR-504). The map panel kind cannot happen
-   * here — nothing opens it once the badge is gone — so it renders nothing.
+   * here - nothing opens it once the badge is gone - so it renders nothing.
    */
   function phoneSheet() {
     if (panel.kind === 'registry') {
@@ -624,7 +624,7 @@ export function EpisodePage() {
           {captionBlock}
           {timeline}
 
-          {/* Feed, party, map and log — one tap apart, under the timeline (FR-502). */}
+          {/* Feed, party, map and log - one tap apart, under the timeline (FR-502). */}
           <MobileTabs label={copy.tabsLabel} tabs={phoneTabs()} />
         </div>
 
@@ -668,7 +668,7 @@ export function EpisodePage() {
 
       {/*
         The broadcast log (005 US1/US2). It sits after the grid, so on desktop it
-        is a full-width block under the rail and on a phone it is simply last —
+        is a full-width block under the rail and on a phone it is simply last -
         and opening it appends below rather than moving the stage (FR-400/405).
       */}
       <div className={styles.log}>{broadcastLog(false)}</div>

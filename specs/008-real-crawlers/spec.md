@@ -1,4 +1,4 @@
-# Feature 008: Real crawlers — sheets and renders
+# Feature 008: Real crawlers - sheets and renders
 
 **Branch**: `008-real-crawlers` (on top of `007-npc-registry`) · **Created**: 2026-09-18
 
@@ -11,9 +11,9 @@ Author: "I've added character sheets and our first two fully rendered characters
   Ids: `harry`, `mimi`, `ronald`, `xo`.
 - Initial state per crawler from the sheets: name, handle (the crawler-facing name/nickname),
   player (if on the sheet), race, pronouns, crawler number, class, level, HP max (current = max
-  at episode start unless the sheet says otherwise), stats (STR INT CON DEX CHA — enhanced value
+  at episode start unless the sheet says otherwise), stats (STR INT CON DEX CHA - enhanced value
   when both are given), starting Hotlist, skills (name + rank), inventory items, gear slots.
-  Anything the sheet leaves blank is omitted (optional fields) — never invented.
+  Anything the sheet leaves blank is omitted (optional fields) - never invented.
 - Art: Mimi and Ronald get full-figure `art` (optimized web copy) and a bust `portrait` cropped
   from the render; Harry and XO keep generated placeholder busts and no `art` until renders exist.
 - Sample episodes keep their event shape but actors are remapped to the real ids

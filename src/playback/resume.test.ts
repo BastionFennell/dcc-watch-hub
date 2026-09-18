@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createResumeStore, resumeKey } from './resume';
 
-/** A `Storage` that lives in a Map — no jsdom, no globals. */
+/** A `Storage` that lives in a Map - no jsdom, no globals. */
 function memoryStorage(seed: Record<string, string> = {}): Storage {
   const map = new Map(Object.entries(seed));
   return {

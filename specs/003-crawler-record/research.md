@@ -8,12 +8,12 @@
   sheet's columns.
 - **Alternatives**: side-by-side second panel (no room on laptops); replacing the stage (breaks
   the broadcast); native `<dialog>` (usable, but `showModal` focus and inert behaviour vary and
-  jsdom lacks it — a small hook with explicit trap is more testable).
+  jsdom lacks it - a small hook with explicit trap is more testable).
 
 ## R2. Focus trap and inertness (`useModalDialog`)
 
 - **Decision**: On open: remember `document.activeElement` (or the provided trigger), set
-  `inert` on the app root (`#root > *` siblings of the dialog — the dialog is portaled to
+  `inert` on the app root (`#root > *` siblings of the dialog - the dialog is portaled to
   `document.body`), add `body.dialog-open` (`overflow: hidden`), focus the close control. Tab/
   Shift+Tab wrap within the dialog's focusable elements (queried on each keydown). Escape is a
   capture-phase `document` listener (as `ResumeCard`) so it beats `usePanel`. Backdrop click
@@ -29,12 +29,12 @@
   `dossier.history` (already newest first). Empty → `{ count: 0 }` and the component shows the
   v2 `dossierEmpty.*` phrase.
 - **Caveat**: "newest" for inventory after a `remove` is the last remaining item, which is the
-  most recently added still-held item — matches the reducer's union order. Documented.
+  most recently added still-held item - matches the reducer's union order. Documented.
 
 ## R4. Fixed height
 
 - **Decision**: The card's ledger and history rows are single-line with `text-overflow:
-  ellipsis`; history shows exactly three rows (placeholders "—" when fewer). Header, HP, rank,
+  ellipsis`; history shows exactly three rows (placeholders "-" when fewer). Header, HP, rank,
   debuffs (max two rows of chips, then "+N") are bounded. Target ≤ 640 px tall at the 1400 px
   type scale; verified by screenshot in polish.
 

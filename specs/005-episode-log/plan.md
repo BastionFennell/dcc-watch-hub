@@ -30,7 +30,7 @@ Unchanged stack. New: `src/engine/selectors.ts` (`logItems`, `logCounts`, `apply
 ```text
 src/engine/selectors.ts           # + logItems(events, t, party): FeedItem[] (chronological, uncapped)
                                   # + logCounts(items): { byType: Record<EventType, number>; byActor: Record<string, number> }
-                                  # + applyLogFilters(items, { types, actors }): FeedItem[]  (actor filter uses FeedItem.actorId — add actorId to FeedItem)
+                                  # + applyLogFilters(items, { types, actors }): FeedItem[]  (actor filter uses FeedItem.actorId - add actorId to FeedItem)
 src/prefs/logOpen.ts              # loadLogOpen(): boolean; saveLogOpen(open)
 src/components/EpisodeLog/EpisodeLog.tsx      # section: header bar (toggle button, count live region), filters, list, follow control
 src/components/EpisodeLog/LogFilters.tsx      # type chips + crawler chips + Clear

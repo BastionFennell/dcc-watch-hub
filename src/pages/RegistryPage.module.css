@@ -1,6 +1,6 @@
 /*
  * The System Registry (007, FR-620/FR-622). Same page box as the broadcast
- * archive — 960 px, centred, one column — because both are "the whole archive,
+ * archive - 960 px, centred, one column - because both are "the whole archive,
  * filed": the hub files episodes by floor, this files entities by episode.
  * Section bars are the log's black mono-caps bar, so the sheet vocabulary holds
  * across the site.
@@ -41,7 +41,7 @@
 }
 
 /* The three controls (scope, search, chips) live in RegistryToolbar.module.css
-   since revision 3 — the page and the rail panel render the same toolbar. */
+   since revision 3 - the page and the rail panel render the same toolbar. */
 
 /* --- episode sections --- */
 

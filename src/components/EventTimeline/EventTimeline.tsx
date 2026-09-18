@@ -5,12 +5,12 @@ import { copy } from '../../copy';
 import styles from './EventTimeline.module.css';
 
 export interface EventTimelineProps {
-  /** `timelineMarkers(events, durationSec, party)` — already positioned 0..1. */
+  /** `timelineMarkers(events, durationSec, party)` - already positioned 0..1. */
   markers: Marker[];
   /** The playhead, for the elapsed fill (FR-042) and label reveal. */
   t: number;
   durationSec: number;
-  /** Clicking a marker — or anywhere on the strip — seeks playback (FR-041). */
+  /** Clicking a marker - or anywhere on the strip - seeks playback (FR-041). */
   onSeek: (t: number) => void;
 }
 
@@ -20,7 +20,7 @@ const LEGEND_KINDS: MarkerKind[] = ['story', 'boss', 'loot', 'achievement', 'lev
 /**
  * A marker names itself only once the playhead has reached it. Before that the
  * tooltip gives away nothing but the kind (already visible as the colour) and
- * the time — a future boss chapter must not spoil its own name (constitution I).
+ * the time - a future boss chapter must not spoil its own name (constitution I).
  */
 function labelFor(marker: Marker, t: number): string {
   if (marker.t <= t) return marker.label;
@@ -38,7 +38,7 @@ function anchorFor(pos: number): 'start' | 'center' | 'end' {
  * The marker bar under the stage (US3): a 3 px hairline track with a brand fill
  * up to the playhead, a distinct playhead tick, and one focusable button per
  * chapter, achievement, and level-up. The whole strip is a scrub target: a click
- * anywhere seeks to that fraction of the episode. It holds no state — the fill,
+ * anywhere seeks to that fraction of the episode. It holds no state - the fill,
  * the playhead, the markers, and their labels are functions of `t` and the log.
  *
  * Each marker carries its own tooltip rather than a native `title` (review 1.1,

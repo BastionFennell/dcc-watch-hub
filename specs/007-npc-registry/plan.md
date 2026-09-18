@@ -15,7 +15,7 @@ Unchanged stack. New data file + loader; new route; `usePanel` kind. No deps.
 ## Constitution Check (1.2.1)
 | Principle | Gate | Status |
 |-----------|------|--------|
-| I | Encounters/records/feed derive from events ≤ t; the registry derives from full published files (not the playhead — it is a glossary, by design and author decision) | PASS |
+| I | Encounters/records/feed derive from events ≤ t; the registry derives from full published files (not the playhead - it is a glossary, by design and author decision) | PASS |
 | II | No playback change; moments seek via the page's `source.seek` | PASS |
 | III | Strip is ambient (a row of chips); record opens by tap; registry is a separate page | PASS |
 | IV | Static JSON; no deps | PASS |

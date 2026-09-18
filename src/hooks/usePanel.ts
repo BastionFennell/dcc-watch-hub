@@ -15,12 +15,12 @@ export type Panel =
   | { kind: 'npc'; npcId: string }
   /**
    * 007 R3: the whole Registry, beside the broadcast (R3-FR-640). `focusId` is
-   * the entity to open it on — the record's "Open in the Registry" sets it, the
+   * the entity to open it on - the record's "Open in the Registry" sets it, the
    * strip's own trigger leaves it off.
    */
   | { kind: 'registry'; focusId?: string };
 
-/** Anything that can actually be opened — i.e. every panel but `none`. */
+/** Anything that can actually be opened - i.e. every panel but `none`. */
 export type OpenPanel = Exclude<Panel, { kind: 'none' }>;
 
 export interface PanelApi {
@@ -70,7 +70,7 @@ export function usePanel(resetKey: unknown): PanelApi {
   }, []);
 
   // Not memoized on purpose: they close over the current panel, and a handler
-  // identity change costs nothing here (constitution V — no idle optimization).
+  // identity change costs nothing here (constitution V - no idle optimization).
   function open(next: OpenPanel, trigger: HTMLElement | null): void {
     triggerRef.current = trigger;
     setPanel(next);

@@ -30,7 +30,7 @@ option), `VideoStage` (drop the DEV-only `t` reading in favour of the shared par
 ## Project Structure (additions)
 ```text
 src/playback/deepLink.ts          # parseDeepLinkT(search, durationSec): number | null; stripDevParams(url)
-src/playback/useDeepLink.ts       # useDeepLink(meta, source): { linkedT: number | null } — seeks once per (episodeId, search)
+src/playback/useDeepLink.ts       # useDeepLink(meta, source): { linkedT: number | null } - seeks once per (episodeId, search)
 src/playback/useResume.ts         # + options.suppressOffer
 src/share/share.ts                # momentUrl({ base, origin, episodeId, t }); deliver(url, title): Promise<'shared'|'copied'|'shown'>
 src/share/useShare.ts             # { share(t), status, lastUrl, dismiss }; 2 s confirmation via setTimeout (viewer notice)

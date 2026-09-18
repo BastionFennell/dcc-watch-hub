@@ -4,8 +4,8 @@
  * through `<App/>`, because the route, the providers and the header link are
  * part of what is under test.
  *
- * The stub gives episode 2 its own `npc` beats — one sighting of an entity that
- * debuts in episode 1, and the only unlock of the Quartermaster's `debt` — so
+ * The stub gives episode 2 its own `npc` beats - one sighting of an entity that
+ * debuts in episode 1, and the only unlock of the Quartermaster's `debt` - so
  * the cross-episode rules (section by *first* appearance, fact tagged with the
  * episode that released it) have something to prove.
  */
@@ -25,7 +25,7 @@ interface RawEpisode {
 /**
  * Episode 2's own beats (this file's helper, not the shared fixture): a second
  * sighting of the vendor that debuts in episode 1, and the one unlock of
- * `debt` — the only fact in the sample whose tag is not "Ep 1".
+ * `debt` - the only fact in the sample whose tag is not "Ep 1".
  */
 function makeEpisode2Raw(): unknown {
   const raw = makeEpisodeRaw(2) as RawEpisode;
@@ -127,24 +127,24 @@ describe('the System Registry', () => {
     await waitForIndex();
 
     const section = screen.getByTestId('registry-section-1');
-    // The sample titles already carry "Episode N — ", so the bar must not say it
+    // The sample titles already carry "Episode N - ", so the bar must not say it
     // twice (007 fix).
     expect(within(section).getByRole('heading', { level: 2 })).toHaveTextContent(
-      'Episode 1 — The World Dungeon',
+      'Episode 1 - The World Dungeon',
     );
     expect(copy.registryEpisodeSection(1, makeShow().episodes[0].title)).toBe(
-      'Episode 1 — The World Dungeon',
+      'Episode 1 - The World Dungeon',
     );
     expect(copy.registryEpisodeSection(4, 'The Meat District')).toBe(
-      'Episode 4 — The Meat District',
+      'Episode 4 - The Meat District',
     );
-    // "Episode 10 — …" must not be mistaken for episode 1's own prefix.
-    expect(copy.registryEpisodeSection(1, 'Episode 10 — Deeper')).toBe(
-      'Episode 1 — Episode 10 — Deeper',
+    // "Episode 10 - …" must not be mistaken for episode 1's own prefix.
+    expect(copy.registryEpisodeSection(1, 'Episode 10 - Deeper')).toBe(
+      'Episode 1 - Episode 10 - Deeper',
     );
     expect(within(section).getByText(copy.registryCount(3))).toBeInTheDocument();
 
-    // Fixture episode 1: quartermaster @135, hoarder @118, grull-rep @112 —
+    // Fixture episode 1: quartermaster @135, hoarder @118, grull-rep @112 -
     // the entity met last leads the shelf (R4-FR-650).
     expect(visibleIds()).toEqual(['quartermaster', 'hoarder', 'grull-rep']);
   });
@@ -227,7 +227,7 @@ describe('the System Registry', () => {
     }
 
     // The Quartermaster's only fact is unlocked in episode 2, though it debuts
-    // in episode 1 — the tag follows the release, not the debut.
+    // in episode 1 - the tag follows the release, not the debut.
     const quartermaster = entry('quartermaster');
     fireEvent.click(within(quartermaster).getByRole('button'));
     const debt = within(quartermaster).getByTestId('registry-fact');
@@ -312,7 +312,7 @@ describe('the System Registry', () => {
 
 /**
  * Revision 2 (T719): the scope control. The stub's episode 3 reuses episode 1's
- * beats, so every entity debuts in episode 1 — which makes "only episode 2"
+ * beats, so every entity debuts in episode 1 - which makes "only episode 2"
  * (where just the vendor and the ally appear) the sharpest case.
  */
 describe('scoping the Registry by episode', () => {
@@ -330,7 +330,7 @@ describe('scoping the Registry by episode', () => {
     return screen.getByTestId('registry-scope') as HTMLSelectElement;
   }
 
-  it('offers all episodes, through each, and only each — defaulting to all', async () => {
+  it('offers all episodes, through each, and only each - defaulting to all', async () => {
     renderRegistry();
     await waitForEntries();
 

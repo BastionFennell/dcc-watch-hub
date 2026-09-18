@@ -15,7 +15,7 @@ reducer, never stored), and **view models** (derived by selectors for components
 | links | { youtube: string; discord: string } | header links |
 
 **Season**: `{ season: number; floors: Floor[] }`  
-**Floor**: `{ floor: number; label: string; episodes: number[] }` — ordered episode ids.  
+**Floor**: `{ floor: number; label: string; episodes: number[] }` - ordered episode ids.  
 **EpisodeMeta**: `{ id: number; title: string; youtubeId: string; floor: number; durationSec: number; dataUrl: string }`
 
 **Derived ordering** (`src/data/show.ts`): `orderedEpisodeIds(show)` = concat of every

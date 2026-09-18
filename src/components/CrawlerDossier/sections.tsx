@@ -19,7 +19,7 @@ import styles from './CrawlerDossier.module.css';
  * seek simply removes what the crawler has not earned yet (constitution I), and
  * every list item carries `data-item` / `data-name` with its label in its own
  * `<span>` so a later per-item explanation can attach without restructuring
- * (FR-214 — no tooltip today).
+ * (FR-214 - no tooltip today).
  */
 
 const STAT_KEYS = ['str', 'int', 'con', 'dex', 'cha'] as const;
@@ -90,7 +90,7 @@ function Empty({ children }: { children: string }) {
 /**
  * One definition row of the identity grid. `field` is a styling hook only: the
  * crawler number is a long digit group that must never be split across lines
- * (T330 visual review — it was rendering as "10,491,2 / 01").
+ * (T330 visual review - it was rendering as "10,491,2 / 01").
  */
 function Row({ label, value, field }: { label: string; value: ReactNode; field?: string }) {
   return (
@@ -130,11 +130,17 @@ export function DossierHeader({ dossier, meta }: DossierHeaderProps) {
           */}
           <p className={styles.handle}>
             {dossier.handle}
-            <span className={styles.dot} aria-hidden="true">
-              {'·'}
-            </span>
-            <span className="sr-only">{copy.srSeparator}</span>
-            {copy.playedBy(dossier.player)}
+            {/* 008: the real sheets name no player, so the credit only appears
+                when the data actually carries one. */}
+            {dossier.player !== '' && (
+              <>
+                <span className={styles.dot} aria-hidden="true">
+                  {'·'}
+                </span>
+                <span className="sr-only">{copy.srSeparator}</span>
+                {copy.playedBy(dossier.player)}
+              </>
+            )}
           </p>
         </div>
       </header>
@@ -270,7 +276,7 @@ export type DossierListProps = (
 ) &
   SectionHeadingProps;
 
-/** HOTLIST / SKILLS / INVENTORY — the three plain-name lists. */
+/** HOTLIST / SKILLS / INVENTORY - the three plain-name lists. */
 export function DossierList(props: DossierListProps) {
   const { kind, headingRef } = props;
   if (props.items.length === 0) {
@@ -450,7 +456,7 @@ export interface DossierGearProps extends SectionHeadingProps {
 
 /**
  * GEAR: every slot on the official sheet, in sheet order, with what is worn in
- * it or "—" (R2 US2 scenario 3). Accessories are one row holding the whole
+ * it or "-" (R2 US2 scenario 3). Accessories are one row holding the whole
  * list, because the sheet has one accessory line.
  */
 export function DossierGear({ gear, headingRef }: DossierGearProps) {

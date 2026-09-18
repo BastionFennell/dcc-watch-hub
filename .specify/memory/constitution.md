@@ -1,18 +1,18 @@
 <!--
 Sync Impact Report
-- Version change: 1.2.0 → 1.2.1 (2026-09-15): PATCH — active-feature pointer moved to 004; no principle changes
+- Version change: 1.2.0 → 1.2.1 (2026-09-15): PATCH - active-feature pointer moved to 004; no principle changes
 
 Previous report (1.2.0):
 - Version change: 1.1.0 → 1.2.0 (2026-09-15)
-- Modified principles: III. Ambient & Diegetic — a modal "full record" dialog MAY cover the stage when the
+- Modified principles: III. Ambient & Diegetic - a modal "full record" dialog MAY cover the stage when the
   viewer explicitly asks for it from an already-open panel; it is the only overlay allowed to do so;
-  V. Scope Discipline — active feature is now 003 (crawler record: glance card + full-record dialog)
+  V. Scope Discipline - active feature is now 003 (crawler record: glance card + full-record dialog)
 - Added sections: none · Removed sections: none · Templates: none
 
 Previous report (1.1.0):
 - Version change: 1.0.0 → 1.1.0 (2026-09-15)
 - Modified principles: V. Scope Discipline now binds to the ACTIVE feature spec rather than the v1 list;
-  I. Time-Truth gains an explicit rule for persisted playhead (resume) — storage may hold the playhead only,
+  I. Time-Truth gains an explicit rule for persisted playhead (resume) - storage may hold the playhead only,
   never overlay state; III. Ambient & Diegetic clarified: opt-in panels (dossier, map) are allowed when opened by
   an explicit click and closed by an explicit action
 - Added sections: none
@@ -26,9 +26,9 @@ Previous report (1.0.0):
 - Added sections: Core Principles (I–VI), Technical Constraints, Development Workflow & Quality Gates, Governance
 - Removed sections: none
 - Templates requiring updates:
-  - ✅ .specify/templates/plan-template.md — Constitution Check gate list is derived from Principles I–VI at plan time (no structural change needed)
-  - ✅ .specify/templates/spec-template.md — no change needed; scope-boundary rule (Principle V) is enforced in spec Assumptions/Out-of-scope
-  - ✅ .specify/templates/tasks-template.md — no change needed; test tasks remain optional except where Principle I mandates reducer/selector tests
+  - ✅ .specify/templates/plan-template.md - Constitution Check gate list is derived from Principles I–VI at plan time (no structural change needed)
+  - ✅ .specify/templates/spec-template.md - no change needed; scope-boundary rule (Principle V) is enforced in spec Assumptions/Out-of-scope
+  - ✅ .specify/templates/tasks-template.md - no change needed; test tasks remain optional except where Principle I mandates reducer/selector tests
 - Follow-up TODOs: none
 -->
 

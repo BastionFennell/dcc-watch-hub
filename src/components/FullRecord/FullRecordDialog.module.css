@@ -155,7 +155,7 @@
 /*
  * No full-figure art in the data: the bust, hung from the top of the same
  * column. Centering it (T325) put it halfway down a column as tall as the whole
- * sheet — a thousand pixels of empty panel above a portrait the viewer had to
+ * sheet - a thousand pixels of empty panel above a portrait the viewer had to
  * scroll to find (T330 visual review). It now hangs where the full-figure art
  * hangs.
  */
@@ -261,7 +261,7 @@
   }
 }
 
-/* ≤ 900 px: the record is the page — art banner, then the sheet in one column. */
+/* ≤ 900 px: the record is the page - art banner, then the sheet in one column. */
 @media (max-width: 900px) {
   .backdrop {
     padding: 0;

@@ -128,6 +128,18 @@ describe.each(show.episodes.map((meta) => [meta.id, meta] as const))(
       }
     });
 
+    // 008: the invented five-crawler party is gone. Every episode ships the
+    // same four crawlers read off the author's filled sheets, in rail order.
+    it('carries the four real crawlers', () => {
+      const episode = normalizeEpisode(raw);
+      expect(episode.initialState.party.map((crawler) => crawler.id)).toEqual([
+        'harry',
+        'mimi',
+        'ronald',
+        'xo',
+      ]);
+    });
+
     it('points every portrait at a file that exists', () => {
       const episode = normalizeEpisode(raw);
       for (const crawler of episode.initialState.party) {

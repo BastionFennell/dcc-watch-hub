@@ -13,7 +13,7 @@ function withEvents(events: unknown[]): EpisodeData {
   return normalizeEpisode({ ...raw, events });
 }
 
-describe('applyEvent — one case per event type', () => {
+describe('applyEvent - one case per event type', () => {
   it('system_message does not change state', () => {
     const before = init();
     expect(applyEvent(before, { t: 1, type: 'system_message', text: 'hi' })).toBe(before);
@@ -216,7 +216,7 @@ describe('reduceTo', () => {
 
 /* ------------------------------------------------- v2: skill, class, hotlist */
 
-describe('applyEvent — v2 event types', () => {
+describe('applyEvent - v2 event types', () => {
   it('seeds skills and hotlist from the crawler sheet fields', () => {
     const harry = findCrawler(init(), 'harry');
     expect(harry?.skills).toEqual([{ name: 'Powerful Strike', rank: 1 }]);
@@ -311,7 +311,7 @@ describe('applyEvent — v2 event types', () => {
 
 /* --------------------------------------- 003 revision 2: equip and unequip */
 
-describe('applyEvent — gear (R2-FR-220)', () => {
+describe('applyEvent - gear (R2-FR-220)', () => {
   const gearOf = (state: ReturnType<typeof init>, id: string) => findCrawler(state, id)?.gear;
 
   const equip = (slot: string, item: string, actor = 'harry', t = 1): AnyEvent =>
@@ -434,7 +434,7 @@ describe('npc events (FR-602)', () => {
   });
 
   it('creates the entry on the first event of any action', () => {
-    // The fixture's quartermaster is only ever `seen` — it still counts (R2).
+    // The fixture's quartermaster is only ever `seen` - it still counts (R2).
     expect(npcs(134)).not.toHaveProperty('quartermaster');
     expect(npcs(135).quartermaster).toEqual({
       firstMet: 135,

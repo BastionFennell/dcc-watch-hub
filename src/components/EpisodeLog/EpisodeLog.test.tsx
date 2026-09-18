@@ -89,7 +89,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe('EpisodeLog — the collapsed bar', () => {
+describe('EpisodeLog - the collapsed bar', () => {
   it('is collapsed by default and renders only the bar (constitution III)', () => {
     renderLog({ initialOpen: false });
 
@@ -145,7 +145,7 @@ describe('EpisodeLog — the collapsed bar', () => {
   });
 });
 
-describe('EpisodeLog — the list', () => {
+describe('EpisodeLog - the list', () => {
   it('lists every elapsed moment oldest first, with time, category and text', () => {
     renderLog({ items: at(62), t: 62 });
 
@@ -215,7 +215,7 @@ describe('EpisodeLog — the list', () => {
   });
 });
 
-describe('EpisodeLog — filters', () => {
+describe('EpisodeLog - filters', () => {
   it('shows both chip groups with elapsed counts per chip', () => {
     renderLog();
 
@@ -245,7 +245,7 @@ describe('EpisodeLog — filters', () => {
     expect(rows()).toHaveLength(3);
 
     // Back before the first achievement: the chip goes, and so does the filter
-    // standing on it — the log reads as the whole elapsed log again, not empty.
+    // standing on it - the log reads as the whole elapsed log again, not empty.
     act(() => {
       rerender({ items: at(12), t: 12 });
     });
@@ -338,7 +338,7 @@ describe('EpisodeLog — filters', () => {
   });
 });
 
-describe('EpisodeLog — empty and standby', () => {
+describe('EpisodeLog - empty and standby', () => {
   it('shows the System’s standby line before anything has elapsed', () => {
     renderLog({ items: [], t: 0 });
 
@@ -349,7 +349,7 @@ describe('EpisodeLog — empty and standby', () => {
   });
 });
 
-describe('EpisodeLog — following the broadcast', () => {
+describe('EpisodeLog - following the broadcast', () => {
   it('scrolls to the newest row as rows arrive while playing (FR-404)', () => {
     const { rerender } = renderLog({ items: at(62), playing: true, t: 62 });
     stubScroll(list(), 0, 100, 100);
@@ -424,7 +424,7 @@ describe('EpisodeLog — following the broadcast', () => {
   });
 });
 
-describe('EpisodeLog — the live region’s cadence', () => {
+describe('EpisodeLog - the live region’s cadence', () => {
   it('changes the count at most once a second (FR-406, research R5)', () => {
     vi.useFakeTimers();
     const total = at(200).length;
@@ -447,7 +447,7 @@ describe('EpisodeLog — the live region’s cadence', () => {
   });
 });
 
-describe('EpisodeLog — embedded in the phone Log pane (006 T605)', () => {
+describe('EpisodeLog - embedded in the phone Log pane (006 T605)', () => {
   function renderEmbedded(initialOpen = false) {
     const onOpenChange = vi.fn();
     render(

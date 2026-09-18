@@ -43,7 +43,7 @@ describe('EncounterRail', () => {
 
   it('lists what the playhead says, newest encounter first', () => {
     const { rerender } = renderRail(encountersAt(120));
-    // 118 hoarder, 112 grull-rep — and nothing for the id 140 names, which the
+    // 118 hoarder, 112 grull-rep - and nothing for the id 140 names, which the
     // registry does not carry (spec US1 scenario 5).
     expect(ids()).toEqual(['hoarder', 'grull-rep']);
 

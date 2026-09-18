@@ -68,7 +68,7 @@ describe('broadcast archive', () => {
         .map((link) => link.getAttribute('href')),
     ).toEqual(['/ep/3']);
     expect(
-      within(main).getByRole('link', { name: /Episode 2 — The Meat District/ }),
+      within(main).getByRole('link', { name: /Episode 2 - The Meat District/ }),
     ).toHaveAttribute('href', '/ep/2');
   });
 
@@ -116,10 +116,10 @@ describe('broadcast archive', () => {
       expect.arrayContaining(['/ep/1?fake=1', '/ep/2?fake=1', '/ep/3?fake=1']),
     );
 
-    const open = within(banner).getByRole('link', { name: /Episode 2 — The Meat District/ });
+    const open = within(banner).getByRole('link', { name: /Episode 2 - The Meat District/ });
     expect(open).toHaveAttribute('aria-current', 'page');
     expect(
-      within(banner).getByRole('link', { name: /Episode 1 — The World Dungeon/ }),
+      within(banner).getByRole('link', { name: /Episode 1 - The World Dungeon/ }),
     ).not.toHaveAttribute('aria-current');
   });
 
@@ -137,8 +137,8 @@ describe('broadcast archive', () => {
   });
 
   /*
-   * The System Registry link (007, FR-620). It appears twice in the DOM — the
-   * right cluster and the phone menu — and CSS picks which one is on screen, so
+   * The System Registry link (007, FR-620). It appears twice in the DOM - the
+   * right cluster and the phone menu - and CSS picks which one is on screen, so
    * the assertion is about every copy of it.
    */
   it('links to the System Registry when the show publishes one', async () => {

@@ -4,7 +4,7 @@
 **Created**: 2026-09-15  
 **Status**: Draft  
 **Input**: UX review triage items 1.7 and 1.11, adopted by the author: "The feed is a rolling
-window of roughly eight items — by 8:59 the entire cold open is unreachable. Add a scrollable
+window of roughly eight items - by 8:59 the entire cold open is unreachable. Add a scrollable
 full log for the episode, filterable by event type and by crawler, with click-to-seek. All data
 already exists; it's being discarded." and "Large empty region below the party row on every
 episode page. Use it for the episode log."
@@ -90,7 +90,7 @@ selected crawler"; nothing selected means everything. A "Clear" action resets.
 
 ### Key Entities
 
-- **Log row (derived)**: a `FeedItem` (existing) — the log is `feedItems(events, t, ∞, party)` in
+- **Log row (derived)**: a `FeedItem` (existing) - the log is `feedItems(events, t, ∞, party)` in
   chronological order.
 - **Log filters (viewer state)**: `{ types: Set<EventType>; actors: Set<string> }`.
 - **Log open (persisted preference)**: boolean under `dcc-watch-hub:prefs:v1:log-open`.

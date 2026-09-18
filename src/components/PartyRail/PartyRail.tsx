@@ -4,7 +4,7 @@ import { CrawlerFrame } from './CrawlerFrame';
 import styles from './PartyRail.module.css';
 
 export interface PartyRailProps {
-  /** Straight from `partyFrames(state, events, t)` — recomputed every render. */
+  /** Straight from `partyFrames(state, events, t)` - recomputed every render. */
   frames: PartyFrame[];
   /** The crawler whose dossier is open, if any (drives `aria-expanded`). */
   activeId: string | null;
@@ -12,7 +12,7 @@ export interface PartyRailProps {
   onActivate(id: string, element: HTMLElement): void;
   /**
    * `'row'` (default) is the desktop rail and its phone strip; `'grid'` is the
-   * phone Party pane — two columns, the odd last frame spanning both (006
+   * phone Party pane - two columns, the odd last frame spanning both (006
    * FR-503, research R2).
    */
   layout?: 'row' | 'grid';

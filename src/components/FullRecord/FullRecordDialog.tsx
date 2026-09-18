@@ -19,7 +19,7 @@ import {
 import styles from './FullRecordDialog.module.css';
 
 export interface FullRecordDialogProps {
-  /** `crawlerDossier(...)` at the playhead — recomputed every render (FR-212). */
+  /** `crawlerDossier(...)` at the playhead - recomputed every render (FR-212). */
   dossier: Dossier;
   meta: EpisodeMeta;
   open: boolean;
@@ -40,7 +40,7 @@ const SHEET_MAX = 8;
 /**
  * The full record (US2, FR-210..FR-214, R2-FR-221..224): the one overlay allowed
  * to cover the stage (constitution III, 1.2.0). Revision 2 lays it out the way
- * the author asked — the crawler's full-figure art down the left at the sheet's
+ * the author asked - the crawler's full-figure art down the left at the sheet's
  * height, identity / vitals / stats beside it, then an MMO hotbar, the gear
  * sheet, and bag-style tile grids that cap at eight and hand the rest to a list
  * view (research R8/R9).
@@ -49,7 +49,7 @@ const SHEET_MAX = 8;
  * to the sheet whenever the record closes (R2-FR-223), so reopening a crawler
  * never lands mid-navigation. Everything else it draws is a pure function of
  * the `Dossier` it is handed: no `TimeSource`, no playback call, so a seek
- * behind it — in any view — flows straight through (FR-212).
+ * behind it - in any view - flows straight through (FR-212).
  */
 export function FullRecordDialog({
   dossier,
@@ -174,7 +174,7 @@ export function FullRecordDialog({
         {/*
           `tabIndex={0}`: the sheet scrolls internally (FR-212), so without a tab
           stop a keyboard could not scroll a record longer than the viewport
-          (axe scrollable-region-focusable, WCAG 2.1.1 — T313). It joins the
+          (axe scrollable-region-focusable, WCAG 2.1.1 - T313). It joins the
           dialog's own focus cycle; no role and no label, so it stays a plain
           group to assistive tech.
         */}

@@ -42,7 +42,7 @@ converter emits `{ episodeId, initialState, events }` with events sorted by `t` 
 
 ## Diagnostics
 
-- **WARN row N: ...** (stderr) — output still written; exit 0:
+- **WARN row N: ...** (stderr) - output still written; exit 0:
   - unknown actor; missing actor on an actor event
   - HP for an actor changed relative to the previous `hp` row without an intervening `hp` event
     is *not* detectable from rows alone, so the check implemented is: `current > max`, or `current`
@@ -50,14 +50,14 @@ converter emits `{ episodeId, initialState, events }` with events sorted by `t` 
   - timecode > `--duration`
   - unknown event type (passed through)
   - `chapter.kind` not in {boss, loot, achievement, levelup, story}
-- **ERROR row N: ...** — nothing written; exit 1:
+- **ERROR row N: ...** - nothing written; exit 1:
   - unparseable timecode; missing header column; numeric field not numeric; empty required field
     (e.g. achievement title)
 - Summary line on completion: `wrote public/data/ep1.json (42 events, 2 warnings)`.
 
 ## Samples
 
-- `scripts/samples/ep1.csv` — clean, exercises every type.
-- `scripts/samples/ep1-broken.csv` — same plus: row with actor `ghost` (warn), row at
+- `scripts/samples/ep1.csv` - clean, exercises every type.
+- `scripts/samples/ep1-broken.csv` - same plus: row with actor `ghost` (warn), row at
   `01:30:00` past duration (warn), row `hp` with `current` 999 > max (warn).
-- `scripts/samples/ep1-error.csv` — row with timecode `abc` (error, exit 1).
+- `scripts/samples/ep1-error.csv` - row with timecode `abc` (error, exit 1).

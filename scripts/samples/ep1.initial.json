@@ -1,176 +1,280 @@
 {
   "party": [
     {
-      "id": "stuntman",
-      "name": "The Stuntman",
-      "handle": "Dungeon Crawler Danny",
-      "player": "Danny",
-      "level": 1,
-      "hp": {
-        "current": 22,
-        "max": 22
-      },
-      "portrait": "/img/crawlers/stuntman.svg",
-      "class": null,
-      "inventory": [
-        "Utility Harness"
-      ],
-      "rank": null,
-      "race": "Human",
-      "pronouns": "he/him",
-      "crawlerNumber": "4,102,116",
-      "stats": {
-        "str": 7,
-        "int": 4,
-        "con": 7,
-        "dex": 6,
-        "cha": 5
-      },
-      "hotlist": [
-        "The Doorway"
-      ],
-      "skills": [
-        {
-          "name": "Reckless Tumble",
-          "rank": 1
-        }
-      ]
-    },
-    {
-      "id": "psychic",
-      "name": "The Psychic",
-      "handle": "Static Bloom",
-      "player": "Rae",
-      "level": 1,
-      "hp": {
-        "current": 18,
-        "max": 18
-      },
-      "portrait": "/img/crawlers/psychic.svg",
-      "class": null,
-      "inventory": [
-        "Cracked Visor"
-      ],
-      "rank": null,
-      "race": "Human",
-      "pronouns": "she/her",
-      "crawlerNumber": "9,338,470",
-      "stats": {
-        "str": 3,
-        "int": 8,
-        "con": 4,
-        "dex": 5,
-        "cha": 7
-      },
-      "hotlist": [],
-      "skills": [
-        {
-          "name": "Static Read",
-          "rank": 1
-        }
-      ]
-    },
-    {
       "id": "harry",
-      "name": "Harry",
-      "handle": "Harold the Unhoused",
-      "player": "Marcus",
-      "level": 1,
-      "hp": {
-        "current": 22,
-        "max": 22
-      },
-      "portrait": "/img/crawlers/harry.svg",
-      "class": null,
-      "inventory": [
-        "Bent Pry Bar"
-      ],
-      "rank": null,
-      "race": "Human",
-      "pronouns": "he/him",
-      "crawlerNumber": "10,491,201",
-      "stats": {
-        "str": 5,
-        "int": 6,
-        "con": 6,
-        "dex": 7,
-        "cha": 4
-      },
-      "hotlist": [],
-      "skills": [
-        {
-          "name": "Powerful Strike",
-          "rank": 1
-        }
-      ]
-    },
-    {
-      "id": "xo",
-      "name": "X.O.",
-      "handle": "Executive Officer",
-      "player": "Jules",
+      "name": "Harold \"Harry\" Wallace",
+      "handle": "Harry",
+      "player": "",
       "level": 1,
       "hp": {
         "current": 20,
         "max": 20
       },
-      "portrait": "/img/crawlers/xo.svg",
+      "portrait": "/img/crawlers/harry.svg",
       "class": null,
       "inventory": [
-        "Signal Flare"
+        "Netbook w satchel case",
+        "Handheld retro emulator",
+        "Bag of weed/vape",
+        "Dumpy clothes"
       ],
       "rank": null,
-      "race": "Crocodilian",
-      "pronouns": "they/them",
-      "crawlerNumber": "2,776,845",
+      "race": "Human-ish",
+      "pronouns": "he/them",
+      "crawlerNumber": "1651655",
       "stats": {
-        "str": 6,
+        "str": 3,
+        "int": 6,
+        "con": 5,
+        "dex": 2,
+        "cha": 4
+      },
+      "hotlist": [],
+      "skills": [
+        {
+          "name": "Streetwise",
+          "rank": 1
+        },
+        {
+          "name": "Stealth",
+          "rank": 1
+        },
+        {
+          "name": "Investigation",
+          "rank": 1
+        },
+        {
+          "name": "Fabricate",
+          "rank": 1
+        },
+        {
+          "name": "Deception",
+          "rank": 3
+        },
+        {
+          "name": "Performance (writing)",
+          "rank": 3
+        },
+        {
+          "name": "Determine Value",
+          "rank": 2
+        },
+        {
+          "name": "Perception",
+          "rank": 2
+        },
+        {
+          "name": "Soul Collector (Fabricate Ending)",
+          "rank": 3
+        },
+        {
+          "name": "Unarmed",
+          "rank": 3
+        }
+      ]
+    },
+    {
+      "id": "mimi",
+      "name": "Mimi Rivers",
+      "handle": "Crawler Mimi",
+      "player": "",
+      "level": 1,
+      "hp": {
+        "current": 20,
+        "max": 20
+      },
+      "portrait": "/img/crawlers/mimi.jpg",
+      "class": null,
+      "inventory": [],
+      "rank": null,
+      "pronouns": "she + her",
+      "stats": {
+        "str": 2,
         "int": 5,
-        "con": 8,
-        "dex": 4,
-        "cha": 3
+        "con": 4,
+        "dex": 3,
+        "cha": 6
       },
       "hotlist": [
-        "The Quartermaster"
+        "Heal (2 mana) Rank 1, heal 2 HB slots.",
+        "5 Standard Mana Potions, which fully restore your Mana"
       ],
       "skills": [
         {
-          "name": "Signal Discipline",
+          "name": "Performance (Gymnast)",
+          "rank": 1
+        },
+        {
+          "name": "Endurance (Gymnast)",
+          "rank": 1
+        },
+        {
+          "name": "Persuasion (Popular)",
+          "rank": 1
+        },
+        {
+          "name": "Perception (Popular)",
+          "rank": 1
+        },
+        {
+          "name": "Deception (Entertainer)",
+          "rank": 3
+        },
+        {
+          "name": "Good First Impression (Entertainer)",
+          "rank": 3
+        },
+        {
+          "name": "Negotiation (Travel)",
+          "rank": 2
+        },
+        {
+          "name": "Streetwise (Travel)",
+          "rank": 2
+        },
+        {
+          "name": "Unarmed Combat",
+          "rank": 3
+        },
+        {
+          "name": "Frost Scar",
+          "rank": 3
+        },
+        {
+          "name": "Heal",
           "rank": 1
         }
       ]
     },
     {
-      "id": "actress",
-      "name": "The Actress",
-      "handle": "Second Billing",
-      "player": "Nia",
+      "id": "ronald",
+      "name": "Ronald Hudson",
+      "handle": "Madio",
+      "player": "",
       "level": 1,
       "hp": {
-        "current": 19,
-        "max": 19
+        "current": 20,
+        "max": 20
       },
-      "portrait": "/img/crawlers/actress.svg",
+      "portrait": "/img/crawlers/ronald.jpg",
       "class": null,
       "inventory": [
-        "Stage Blood (x3)"
+        "\"Lucky Charm\" - a small ceramic lady bug",
+        "Paracord Bracelet"
       ],
       "rank": null,
       "race": "Human",
-      "pronouns": "she/her",
-      "crawlerNumber": "6,204,998",
+      "pronouns": "He/Him",
+      "stats": {
+        "str": 5,
+        "int": 3,
+        "con": 4,
+        "dex": 6,
+        "cha": 2
+      },
+      "hotlist": [
+        "Heal Spell (Interrupt) Rank 1 (Max): Mana Cost 2, heal 2 slots"
+      ],
+      "skills": [
+        {
+          "name": "Escape Artist",
+          "rank": 1
+        },
+        {
+          "name": "Endurance",
+          "rank": 1
+        },
+        {
+          "name": "Repair",
+          "rank": 1
+        },
+        {
+          "name": "Fabricate",
+          "rank": 1
+        },
+        {
+          "name": "Performance",
+          "rank": 1
+        },
+        {
+          "name": "Deception",
+          "rank": 1
+        },
+        {
+          "name": "Negotiation",
+          "rank": 1
+        },
+        {
+          "name": "Streetwise",
+          "rank": 1
+        },
+        {
+          "name": "Unarmed Combat",
+          "rank": 3
+        }
+      ]
+    },
+    {
+      "id": "xo",
+      "name": "Xavier \"X.O.\" Ortiz",
+      "handle": "XO",
+      "player": "",
+      "level": 1,
+      "hp": {
+        "current": 30,
+        "max": 30
+      },
+      "portrait": "/img/crawlers/xo.svg",
+      "class": null,
+      "inventory": [],
+      "rank": null,
+      "race": "Human",
+      "pronouns": "He/Them",
+      "crawlerNumber": "5,211,046",
       "stats": {
         "str": 4,
-        "int": 6,
-        "con": 5,
-        "dex": 8,
-        "cha": 9
+        "int": 5,
+        "con": 6,
+        "dex": 3,
+        "cha": 2
       },
       "hotlist": [],
       "skills": [
         {
-          "name": "Stage Presence",
+          "name": "Investigation",
           "rank": 1
+        },
+        {
+          "name": "Negotiation",
+          "rank": 1
+        },
+        {
+          "name": "Good First Impression",
+          "rank": 1
+        },
+        {
+          "name": "Perception",
+          "rank": 1
+        },
+        {
+          "name": "Survival",
+          "rank": 3
+        },
+        {
+          "name": "Tactics",
+          "rank": 3
+        },
+        {
+          "name": "Endurance",
+          "rank": 2
+        },
+        {
+          "name": "Climbing",
+          "rank": 2
+        },
+        {
+          "name": "Unarmed Combat",
+          "rank": 3
         }
       ]
     }

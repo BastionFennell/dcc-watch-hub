@@ -4,7 +4,7 @@
 **Created**: 2026-09-15  
 **Status**: Draft  
 **Input**: User description: "Continue to the next milestone: the v2 items parked in the handoff
-spec — click-open character sheets (inventory / skills / history), an interactive minimap with pan
+spec - click-open character sheets (inventory / skills / history), an interactive minimap with pan
 and labels, resume where you left off (localStorage), and per-crawler fame/rank sparklines.
 Stinger sounds and the roster page stay parked until real audio and art exist." Reference: the
 author supplied the official Dungeon Crawler Carl RPG character sheet (Renegade Game Studios;
@@ -21,7 +21,7 @@ A viewer clicks (or keyboard-activates) a crawler frame in the party rail. The r
 the event feed for that crawler's System dossier, laid out like the official crawler sheet:
 header (portrait, name, handle, player, race, pronouns, crawler number, level, class, floor),
 vitals (a ten-segment HP bar, rank with sparkline, debuffs), stats when known, then Hotlist,
-Skills, Inventory, Achievements, and a history of that crawler's moments — all exactly as of
+Skills, Inventory, Achievements, and a history of that crawler's moments - all exactly as of
 the playhead. Scrubbing backward while
 the dossier is open removes items the crawler has not yet earned. A close control (or Escape,
 or clicking the same frame again) returns the feed. Clicking a different frame switches
@@ -81,7 +81,7 @@ scrub back, verify labels vanish, zoom and pan, press fit, close.
 5. **Given** the expanded map, **When** the viewer presses Escape or the close control,
    **Then** the feed returns and focus goes back to the badge.
 6. **Given** the badge, **When** the viewer hovers it, **Then** it shows an affordance; it is
-   keyboard-focusable and announces "Floor N — open the floor map" (its visible text plus the action, so the name matches the label).
+   keyboard-focusable and announces "Floor N - open the floor map" (its visible text plus the action, so the name matches the label).
 7. **Given** the map and a dossier, **When** one opens, **Then** the other closes (one panel).
 
 ---
@@ -201,9 +201,9 @@ back to one; verify one point and the numbers update.
   converter, schema, samples): `skill` `{ actor, name, rank?, desc? }` adds a skill or updates
   its rank; `class` `{ actor, class }` sets the crawler's class; `hotlist` `{ actor, add[],
   remove[] }` edits the crawler's Hotlist. All three appear in the feed and history.
-- **FR-113**: The crawler record in episode data MUST accept optional sheet fields — `race`,
+- **FR-113**: The crawler record in episode data MUST accept optional sheet fields - `race`,
   `pronouns`, `crawlerNumber`, `stats { str, int, con, dex, cha }`, `hotlist[]`, `skills[]`
-  (`{ name, rank? }`) — and existing v1 files without them MUST keep working. The converter's
+  (`{ name, rank? }`) - and existing v1 files without them MUST keep working. The converter's
   `--initial-state` file carries them; no new CSV columns.
 
 **Expanded map (US2)**
@@ -291,5 +291,5 @@ Lighthouse ≥ 90, desktop browsers and phone widths.
 
 ## Out of Scope (still parked, do not build)
 
-- Stinger sounds (opt-in toggle) and the roster page with commissioned art — need assets.
+- Stinger sounds (opt-in toggle) and the roster page with commissioned art - need assets.
 - v3: alternate video sources, live premiere sync, sponsor slot management, accounts.

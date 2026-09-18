@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * T722 — the lazily loaded, once-per-visit registry index (R3-FR-644).
+ * T722 - the lazily loaded, once-per-visit registry index (R3-FR-644).
  *
  * What is under test is the *loading policy*, not the index itself (that is
  * `registry.test.ts`): nothing is fetched until someone asks, the fetches
@@ -47,7 +47,7 @@ function episodeFetches(): number {
 
 /**
  * A consumer that reports the index as data attributes. `loads` is how many
- * times it calls `load()` on mount — twice proves the call is idempotent.
+ * times it calls `load()` on mount - twice proves the call is idempotent.
  */
 function Probe({ ask = true, loads = 1 }: { ask?: boolean; loads?: number }) {
   const { index, episodes, loading, error, load } = useRegistryIndex();
@@ -99,7 +99,7 @@ describe('RegistryIndexProvider', () => {
   it('fetches nothing until a consumer asks for the index', async () => {
     renderProbes(<Probe ask={false} />);
 
-    // The show and the registry still load — they are not this provider's doing.
+    // The show and the registry still load - they are not this provider's doing.
     await waitFor(() => expect(requested.some((url) => url.includes('npcs.json'))).toBe(true));
     expect(episodeFetches()).toBe(0);
     expect(probe()).toHaveAttribute('data-loading', 'false');
@@ -117,7 +117,7 @@ describe('RegistryIndexProvider', () => {
     expect(probe()).toHaveAttribute('data-loading', 'false');
     expect(probe()).toHaveAttribute('data-error', 'none');
 
-    // A second consumer — the panel after the page, say — re-reads the cache.
+    // A second consumer - the panel after the page, say - re-reads the cache.
     rerender(
       <ShowProvider>
         <RegistryProvider>
@@ -174,7 +174,7 @@ describe('RegistryIndexProvider', () => {
 
     await waitFor(() => expect(probe()).toHaveAttribute('data-ready', 'true'));
     expect(probe()).toHaveAttribute('data-missing', '2');
-    // Episode 1's cast is still filed — one bad file is not a failed index.
+    // Episode 1's cast is still filed - one bad file is not a failed index.
     expect(probe()).toHaveAttribute('data-entries', 'grull-rep,hoarder,quartermaster');
     expect(probe()).toHaveAttribute('data-error', 'none');
   });

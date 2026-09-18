@@ -3,7 +3,7 @@
  *
  * Constitution I is explicit about what may be persisted: the playhead and
  * viewer preferences, never overlay state. This is a single boolean saying
- * whether the viewer likes the log open — nothing derived from the event log,
+ * whether the viewer likes the log open - nothing derived from the event log,
  * so a restored preference cannot leak a future event.
  *
  * Mirrors `src/playback/resume.ts`: storage-agnostic, and every call wrapped in

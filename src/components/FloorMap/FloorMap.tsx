@@ -45,7 +45,7 @@ function clampZoom(zoom: number): number {
 
 /**
  * Soft clamp: the scaled grid may be dragged until half the viewport is empty
- * on any side, so a drag always answers — even at fit — without letting the map
+ * on any side, so a drag always answers - even at fit - without letting the map
  * vanish. Per axis the offset lives in `[min(0, view − grid·zoom) − view/2, view/2]`.
  */
 function clampPan(pan: Pan, cols: number, rows: number, zoom: number): Pan {
@@ -58,11 +58,11 @@ function clampPan(pan: Pan, cols: number, rows: number, zoom: number): Pan {
 }
 
 export interface FloorMapProps {
-  /** `mapCells(state)` — grid shape and the revealed set as of the playhead. */
+  /** `mapCells(state)` - grid shape and the revealed set as of the playhead. */
   cells: MapCellsView;
-  /** `recentlyRevealed(events, t)` — cells revealed in the last 5 s (FR-120). */
+  /** `recentlyRevealed(events, t)` - cells revealed in the last 5 s (FR-120). */
   recent: Set<string>;
-  /** `mapLabels(events, t)` — one entry per named neighborhood, at its centroid. */
+  /** `mapLabels(events, t)` - one entry per named neighborhood, at its centroid. */
   labels: MapLabel[];
   /** The floor being drawn; the panel header renders the title, not this component. */
   floor: number;

@@ -9,11 +9,11 @@
 ## R2. Event and state
 - `npc { t, id, action: 'met'|'seen'|'update'|'defeated', note?, unlock?: string[], actor? }`.
 - `NpcState { firstMet: number; encounters: number; unlocked: string[]; defeated: boolean; lastT: number }`.
-- Reducer: any action creates/updates the entry (`firstMet` on first event of any action — a `seen`
+- Reducer: any action creates/updates the entry (`firstMet` on first event of any action - a `seen`
   before a `met` still counts as encountered), `encounters++`, `unlock` appended (dedupe), `defeated` on `defeated`.
 - Feed text (System voice): met → "{name} enters the broadcast", seen → "{name} is sighted", update →
   "{name}: {note}" (note required for update; else "The System amends its file on {name}"), defeated →
-  "{name} is no more"; a note appends " — {note}" where not already used. Label "Entity".
+  "{name} is no more"; a note appends " - {note}" where not already used. Label "Entity".
 
 ## R3. Encountered strip
 - Desktop: a horizontal chip row under the party rail (`overflow-x: auto`, no wrap), newest first;

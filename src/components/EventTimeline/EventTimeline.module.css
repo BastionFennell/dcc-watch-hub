@@ -1,5 +1,5 @@
 /*
- * Wireframe: an 18 px strip under the stage — a 3 px hairline track at 8 px with
+ * Wireframe: an 18 px strip under the stage - a 3 px hairline track at 8 px with
  * a brand-2 elapsed fill, and 6×11 px rounded markers straddling it. Since T341
  * the strip also carries a playhead tick and, below it, a colour legend.
  */
@@ -95,7 +95,7 @@
 }
 
 /*
- * The marker's own tooltip (T341). Instant, styled, and reachable by keyboard —
+ * The marker's own tooltip (T341). Instant, styled, and reachable by keyboard -
  * the native `title` waited a second, never appeared on touch, and could not be
  * kept spoiler-safe in its own right.
  */

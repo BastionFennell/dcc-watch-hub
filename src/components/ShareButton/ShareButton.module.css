@@ -3,8 +3,8 @@
  * --text on hover and focus. The icon is a meaningful graphic, so its resting
  * colour has to clear WCAG 1.4.11 (3:1). Measured (T410): --text-3 #888780 is
  * 5.10:1 on --canvas #131320 and 4.63:1 on --panel #1d1d28. Both places it can
- * land — the caption row and the feed rows sit on --canvas, since the icon is
- * the seek box's sibling and not inside it — are well clear.
+ * land - the caption row and the feed rows sit on --canvas, since the icon is
+ * the seek box's sibling and not inside it - are well clear.
  */
 .button {
   display: inline-flex;

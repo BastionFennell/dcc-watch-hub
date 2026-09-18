@@ -7,7 +7,7 @@ import styles from './EncounterRail.module.css';
 export type EncounterLayout = 'row' | 'grid';
 
 export interface EncounterRailProps {
-  /** Straight from `encounteredNpcs(state, registry)` — newest first (FR-610). */
+  /** Straight from `encounteredNpcs(state, registry)` - newest first (FR-610). */
   encounters: Encounter[];
   /** The entity whose record is the open panel, if any (drives `aria-expanded`). */
   activeId: string | null;
@@ -15,7 +15,7 @@ export interface EncounterRailProps {
   onActivate(id: string, element: HTMLElement): void;
   /**
    * `'row'` (default) scrolls sideways under the party rail; `'grid'` is the
-   * phone NPCs pane — two columns, no sideways scroll (research R3).
+   * phone NPCs pane - two columns, no sideways scroll (research R3).
    */
   layout?: EncounterLayout;
   /**
@@ -31,7 +31,7 @@ export interface EncounterRailProps {
 /** The disc's stand-in when an entity has no portrait (spec Assumptions). */
 /**
  * One chip: who the party has met, and the trigger for that entity's record.
- * Mirrors `CrawlerFrame`'s semantics exactly — a real `<button>` carrying
+ * Mirrors `CrawlerFrame`'s semantics exactly - a real `<button>` carrying
  * `aria-expanded`/`aria-controls` and the `data-panel-trigger` the focus return
  * reads (contracts/panels.md, research R3).
  */
@@ -97,7 +97,7 @@ function EncounterChip({
  * The Encountered strip (FR-610, research R3): every entity the party has met at
  * or before the playhead, newest first, each a trigger for its record.
  *
- * Nothing here is derived from events — `encounteredNpcs` already did that — so
+ * Nothing here is derived from events - `encounteredNpcs` already did that - so
  * a seek in either direction simply hands this a different list (constitution I).
  */
 export function EncounterRail({
@@ -123,7 +123,7 @@ export function EncounterRail({
         {/*
           Beside the title, not among the chips: it is about the episode, not
           about any one entity. Since revision 3 it is a panel trigger rather
-          than a link — the Registry opens in the rail and the broadcast keeps
+          than a link - the Registry opens in the rail and the broadcast keeps
           playing (R3 scenario 1). The way out to the full page lives in that
           panel's footer.
         */}

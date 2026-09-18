@@ -4,7 +4,7 @@
  * This is a transient viewer notice, not overlay state: a short timer is
  * explicitly allowed for it (spec Assumptions), and nothing here is derived
  * from the event log, so constitution I is untouched. Playback is never
- * touched either (FR-306) — the hook is handed a second and hands back a link.
+ * touched either (FR-306) - the hook is handed a second and hands back a link.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { formatTime } from '../engine/time';

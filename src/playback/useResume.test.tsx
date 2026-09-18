@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * T127 — useResume (US3, FR-130..FR-133, contracts/resume-storage.md).
+ * T127 - useResume (US3, FR-130..FR-133, contracts/resume-storage.md).
  *
  * The playhead is driven the realistic way: a real `FakeTimeSource` feeding
  * `usePlayhead` inside a small harness hook, so `set` / `play` / `pause` /

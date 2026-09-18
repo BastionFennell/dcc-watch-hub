@@ -5,7 +5,7 @@
  * Since 006 the component's root is the *slot*, not the stage: an aria-hidden
  * placeholder holds the 16:9 box open and the stage fills it absolutely. The
  * geometry is identical to the old single box, but the slot's height no longer
- * depends on where the stage is — which is what lets the phone mini-player
+ * depends on where the stage is - which is what lets the phone mini-player
  * detach the stage to a fixed frame without the page below it jumping (FR-500).
  */
 .slot {
@@ -121,7 +121,7 @@
 /* ------------------------------------------- 006: the phone mini-player */
 
 /*
- * Docked (FR-500, research R1): the *same* stage element, moved by CSS alone —
+ * Docked (FR-500, research R1): the *same* stage element, moved by CSS alone -
  * no re-parenting, so the host iframe never reloads (constitution II). The slot
  * keeps its placeholder height, so nothing below the stage moves.
  *
@@ -136,7 +136,7 @@
 
 /*
  * A landscape phone cannot spare 45 vw: at 844 × 390 the capped 260 px frame is
- * 174 px tall — 45% of the screen — and it reached down over the tab strip.
+ * 174 px tall - 45% of the screen - and it reached down over the tab strip.
  * Short viewports get a frame sized by the height they actually have (T611).
  */
 @media (max-height: 500px) {
@@ -201,7 +201,7 @@
 
 /*
  * The compact toast (US1 scenario 3). The toast is the page's child, not ours,
- * and CSS Modules hash its own class names — so the mini frame narrows it
+ * and CSS Modules hash its own class names - so the mini frame narrows it
  * through the hooks it exposes to the DOM: its live region and its testid.
  */
 .slot[data-mini='true'] [role='status'] {

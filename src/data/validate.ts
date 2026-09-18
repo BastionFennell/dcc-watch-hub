@@ -83,7 +83,7 @@ function toNonEmptyStringList(x: unknown): string[] {
   return out;
 }
 
-/** An `npc` action this version understands, or `null` — never guessed. */
+/** An `npc` action this version understands, or `null` - never guessed. */
 function toNpcAction(x: unknown): NpcAction | null {
   return typeof x === 'string' && (NPC_ACTIONS as readonly string[]).includes(x)
     ? (x as NpcAction)
@@ -97,7 +97,7 @@ function toEntityKind(x: unknown): EntityKind | null {
     : null;
 }
 
-/** A gear slot the schema knows, or `null` — an unknown slot is never guessed. */
+/** A gear slot the schema knows, or `null` - an unknown slot is never guessed. */
 function toGearSlot(x: unknown): GearSlot | null {
   return typeof x === 'string' && (GEAR_SLOTS as readonly string[]).includes(x)
     ? (x as GearSlot)
@@ -184,7 +184,7 @@ export function normalizeEvent(raw: unknown): AnyEvent {
     case 'rank': {
       /*
        * DCC has individual rank only (T334). A legacy `scope: 'crawler'` row is
-       * still read — the field is simply dropped — while a legacy party row has
+       * still read - the field is simply dropped - while a legacy party row has
        * no crawler to belong to, so it is demoted to `unknown` and ignored.
        */
       if (raw.scope === 'party') return unknownEvent(t, raw);
@@ -347,7 +347,7 @@ function toCrawlerNumber(x: unknown): string | number | null {
 
 /**
  * Copies a crawler, keeping only the optional v2 sheet fields that are well
- * formed. A malformed optional field is dropped with a warning — never fatal,
+ * formed. A malformed optional field is dropped with a warning - never fatal,
  * so a v1 file (which has none of them) and a half-edited v2 file both load.
  */
 export function normalizeCrawler(raw: Crawler): Crawler {
@@ -391,7 +391,7 @@ export function normalizeCrawler(raw: Crawler): Crawler {
   return crawler;
 }
 
-/** Ascending by `t`, stable for equal `t` (file order wins — spec edge case). */
+/** Ascending by `t`, stable for equal `t` (file order wins - spec edge case). */
 export function sortEvents(events: AnyEvent[]): AnyEvent[] {
   return events
     .map((event, index) => ({ event, index }))
@@ -469,7 +469,7 @@ export function isEpisodeData(x: unknown): x is EpisodeData {
 
 /**
  * Validates the envelope, normalizes every event, and stable-sorts by `t`.
- * Throws `DataError` only when the file is unusable — a bad *event* is demoted
+ * Throws `DataError` only when the file is unusable - a bad *event* is demoted
  * to `unknown`, never fatal.
  */
 export function normalizeEpisode(raw: unknown): EpisodeData {
@@ -495,7 +495,7 @@ export function normalizeShow(raw: unknown): Show {
     throw new DataError('Show data does not match the show schema.');
   }
   // 007: the registry pointer is optional, so a malformed one costs the registry
-  // and nothing else — the archive still loads (FR-600).
+  // and nothing else - the archive still loads (FR-600).
   if (raw.registryUrl !== undefined && typeof raw.registryUrl !== 'string') {
     const show: Show = { ...raw };
     delete show.registryUrl;

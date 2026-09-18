@@ -24,7 +24,7 @@ export interface RegistryBrowserProps {
   /** The episode being watched: the default scope, and which appearances seek. */
   currentEpisodeId: number;
   /**
-   * The current episode's data, straight from the page — `null` while its file
+   * The current episode's data, straight from the page - `null` while its file
    * is still landing, because the panel opens without waiting for it (R3
    * scenario 4). The shared index loads lazily over the network, but the page
    * already holds *this* episode, so laying it over the cached map makes the
@@ -45,19 +45,19 @@ export interface RegistryBrowserProps {
 /**
  * The System Registry beside the broadcast (007 R3, R3-FR-641).
  *
- * The same archive the `/registry` page shows — same index, same toolbar, same
- * entries — in the rail's narrow column, so a viewer can read about an entity
+ * The same archive the `/registry` page shows - same index, same toolbar, same
+ * entries - in the rail's narrow column, so a viewer can read about an entity
  * without stopping the video. Two things differ from the page, both because the
  * broadcast is still running next to it:
  *
  * - the default scope is "through this episode", not the whole archive, so the
  *   panel opens on what this viewer has reached;
- * - the scope lives here rather than in the URL (R3-FR-641) — changing it must
+ * - the scope lives here rather than in the URL (R3-FR-641) - changing it must
  *   not navigate, because navigating would take the stage with it.
  *
  * Revision 4 adds the third: the current episode follows the playhead
  * (R4-FR-651). Earlier episodes are published history and read whole, but this
- * one is being watched, so it contributes only the beats that have elapsed —
+ * one is being watched, so it contributes only the beats that have elapsed -
  * recomputed from `(episode, t)` on every render like everything else below the
  * stage, which makes a scrub backwards correct for free (constitution I).
  */
@@ -121,7 +121,7 @@ export function RegistryBrowser({
   /*
    * The index, rebuilt every render (it is a few hundred events; no memo). The
    * cached map is whatever has landed so far, with the page's own copy of the
-   * current episode laid over it — clipped to the playhead by `registryIndexAt`.
+   * current episode laid over it - clipped to the playhead by `registryIndexAt`.
    * Until the rest of the archive arrives, `archived` is false and the episodes
    * the show lists but the map lacks are reported as "still indexing" rather
    * than as failures.
@@ -139,7 +139,7 @@ export function RegistryBrowser({
 
   /*
    * The record's "Open in the Registry" lands here (R3 scenario 3): the entry is
-   * expanded and brought into view — but only once the index has arrived, since
+   * expanded and brought into view - but only once the index has arrived, since
    * before that there is no element to scroll to.
    */
   useEffect(() => {
@@ -262,7 +262,7 @@ export function RegistryBrowser({
 
       {/*
         The way out, at the bottom where it belongs: the whole page, at whatever
-        scope the panel is showing (R3 scenario 3). It is the only link in here —
+        scope the panel is showing (R3 scenario 3). It is the only link in here -
         everything above either seeks or expands, and so keeps the video running.
       */}
       <p className={styles.footer}>

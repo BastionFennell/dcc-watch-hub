@@ -20,7 +20,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Nothing has elapsed yet and nothing is wrong — the System says so (T335). */
+/* Nothing has elapsed yet and nothing is wrong - the System says so (T335). */
 .standby {
   margin: 0;
   color: var(--text-3);
@@ -44,7 +44,7 @@
 
 /*
  * Since 004 a row is two controls side by side: the seek button and the share
- * icon (T407). They are siblings — a button inside a button is invalid — and
+ * icon (T407). They are siblings - a button inside a button is invalid - and
  * the seek button keeps the row's full width minus the icon and its gap.
  */
 .rowInner {
@@ -74,7 +74,7 @@
   text-align: left;
 }
 
-/* The time the row names — the thing that makes the seek predictable (T342). */
+/* The time the row names - the thing that makes the seek predictable (T342). */
 .time {
   flex: none;
   font-family: var(--font-mono);

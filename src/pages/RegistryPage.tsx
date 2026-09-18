@@ -25,13 +25,13 @@ const ALL_SCOPE: RegistryScope = { kind: 'all' };
  * The System Registry (FR-620..FR-622): every entity the archive has published,
  * filed under the episode it first appears in.
  *
- * It is deliberately *not* playhead-aware and not device-aware — it reads the
+ * It is deliberately *not* playhead-aware and not device-aware - it reads the
  * show, the registry and every episode file, and shows what was published
  * (FR-621). An episode that will not load costs its beats and is named in a
  * notice; everything else still renders (US2 scenario 6).
  *
  * Since revision 3 the episode files come from `RegistryIndexProvider`, which
- * this page asks to load on mount and the rail panel asks on open — whoever
+ * this page asks to load on mount and the rail panel asks on open - whoever
  * arrives first pays for the fetches and the other reads the cache (R3-FR-644).
  */
 export function RegistryPage() {
@@ -64,7 +64,7 @@ export function RegistryPage() {
 
   /*
    * Written by hand rather than through `setSearchParams`, which navigates to
-   * "?<params>" and so drops the hash — and the hash is what keeps a named
+   * "?<params>" and so drops the hash - and the hash is what keeps a named
    * entry open while the viewer narrows the scope around it.
    */
   const setScope = useCallback(
@@ -79,7 +79,7 @@ export function RegistryPage() {
     [params, show, hash, navigate],
   );
 
-  // Everything downstream — search, chips, counts, sections — reads the scoped
+  // Everything downstream - search, chips, counts, sections - reads the scoped
   // list, so narrowing the scope narrows the whole page at once (R2 scenario 2).
   const scoped =
     show === null || index === null ? [] : scopeRegistry(index.entries, scope, show);
@@ -90,7 +90,7 @@ export function RegistryPage() {
 
   /*
    * `/registry#<id>` opens that entry and scrolls to it, but only once the data
-   * has landed — before that there is no element to scroll to (US2 scenario 5).
+   * has landed - before that there is no element to scroll to (US2 scenario 5).
    */
   useEffect(() => {
     if (targetId === '' || seeded.current === targetId) return;

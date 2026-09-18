@@ -29,10 +29,10 @@ export interface TimeSource {
 
 ## Implementations
 
-- `YouTubeTimeSource(container: HTMLElement, videoId: string)` — production. The only module that
+- `YouTubeTimeSource(container: HTMLElement, videoId: string)` - production. The only module that
   may reference the global `YT` namespace or `@types/youtube`. ESLint enforces this with
   `no-restricted-globals` (`YT`) everywhere else.
-- `FakeTimeSource(initial = 0)` — tests and dev scrubber. Extra methods: `set(t)`, `play()`
+- `FakeTimeSource(initial = 0)` - tests and dev scrubber. Extra methods: `set(t)`, `play()`
   (advances at 1× via `setInterval` 250 ms, or manually via `advance(dt)`), `pause()`, `end()`.
 
 ## Consumers

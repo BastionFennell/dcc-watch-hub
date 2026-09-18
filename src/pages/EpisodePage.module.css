@@ -3,7 +3,7 @@
  * fills the viewport: the stage column grows until either the width runs out or
  * the stage would push the timeline and party rail below the fold (16:9 from
  * the height left under the header), and the feed takes what remains.
- * Under 900px everything stacks: stage, timeline, rail, feed — no horizontal scroll.
+ * Under 900px everything stacks: stage, timeline, rail, feed - no horizontal scroll.
  */
 .page {
   /* Header + page padding + timeline + party rail, roughly. */
@@ -46,7 +46,7 @@
  */
 /*
  * The row and its confirmation are one block, so the share notice appearing
- * cannot push the row away from the stage — it only grows downward, above the
+ * cannot push the row away from the stage - it only grows downward, above the
  * timeline (T407).
  */
 .captionBlock {
@@ -168,7 +168,7 @@
 /* ------------------------------------------------ 006: the phone layout */
 
 /*
- * The phone column (FR-502): stage slot, caption row, timeline, tabs — the same
+ * The phone column (FR-502): stage slot, caption row, timeline, tabs - the same
  * gaps the desktop stage column uses, inside the same `.page` padding, so
  * nothing about the page frame changes between the two trees.
  */

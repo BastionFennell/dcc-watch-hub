@@ -9,7 +9,7 @@ export interface ModalDialogOptions {
   returnFocusTo: HTMLElement | null;
   /**
    * First refusal on Escape (contracts/dialog.md Revision 2). Return true to
-   * consume it — the record's list views step back to the sheet and stay open;
+   * consume it - the record's list views step back to the sheet and stay open;
    * a second Escape then finds them on the sheet and closes. Either way the
    * keypress is stopped here and never reaches the page's panel listener.
    */
@@ -49,7 +49,7 @@ function focusables(dialog: HTMLElement): HTMLElement[] {
  * - open: `body.dialog-open` (scroll lock), `inert` on every child of `#root`
  *   (the dialog is portaled to `document.body`, so it is not one of them), and
  *   initial focus on the close control;
- * - keys: Tab / Shift+Tab wrap inside, Escape closes — registered in the
+ * - keys: Tab / Shift+Tab wrap inside, Escape closes - registered in the
  *   capture phase on `document` (as `ResumeCard`) and stopping propagation, so
  *   one Escape cannot also reach `usePanel`'s bubble-phase listener;
  * - pointer: a click on the backdrop itself closes; clicks inside never do.
@@ -117,7 +117,7 @@ export function useModalDialog({
       if (event.key === 'Escape') {
         if (event.repeat) return;
         // Capture phase on `document`, so the page's bubble-phase listeners
-        // (the panel hook's) never see the keypress that closed the dialog —
+        // (the panel hook's) never see the keypress that closed the dialog -
         // nor the one an inner view consumed.
         event.stopPropagation();
         if (escapeRef.current?.() === true) return;

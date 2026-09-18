@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * T609 — the phone composition (006 US1–US4). The page is the same `App` the
+ * T609 - the phone composition (006 US1–US4). The page is the same `App` the
  * desktop suite drives; only the environment changes: `matchMedia` answers
  * "≤ 900 px" with a match, and `IntersectionObserver` is a stub whose callback
  * the test fires, so "the stage scrolled past the header" is a function call.
@@ -136,7 +136,7 @@ function stageObserver(): StubObserver {
   return observers[observers.length - 1];
 }
 
-/** Scrolls the stage up past the header — or back into view. */
+/** Scrolls the stage up past the header - or back into view. */
 function dock(): void {
   fireIntersection(stageObserver(), false, -10);
 }

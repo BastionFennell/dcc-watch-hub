@@ -10,7 +10,7 @@
  *     --initial-state scripts/samples/ep1.initial.json --out public/data/ep1.json
  *
  * Warnings (unknown actor, impossible HP, timecode past the duration, unknown type or
- * chapter kind, an accessory unequip with no item, and — only with `--registry` — an
+ * chapter kind, an accessory unequip with no item, and - only with `--registry` - an
  * unknown entity or fact id) are reported and the file is still written. Only malformed
  * input (unparseable timecode, missing column, non-numeric numeric, empty required field,
  * an unknown gear slot, an unknown npc action) is an error, and then nothing is written.
@@ -79,7 +79,7 @@ export interface ConvertContext {
 }
 
 export interface ConvertResult {
-  /** Absent when `errors` is non-empty — nothing should be written. */
+  /** Absent when `errors` is non-empty - nothing should be written. */
   episode?: EpisodeData;
   warnings: string[];
   errors: string[];

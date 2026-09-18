@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * T603 — the mini stage (006 T602, FR-500/FR-501/FR-505).
+ * T603 - the mini stage (006 T602, FR-500/FR-501/FR-505).
  *
  * The stage runs on the dev host (`?fake=1`) so no network is involved. The
  * load-bearing claim is the *absence* of a remount: docking must move the same
@@ -17,7 +17,7 @@ import { VideoStage } from './VideoStage';
 
 const META: EpisodeMeta = {
   id: 1,
-  title: 'Episode 1 — The World Dungeon',
+  title: 'Episode 1 - The World Dungeon',
   youtubeId: 'M7lc1UVf-VE',
   floor: 1,
   durationSec: 240,
@@ -106,7 +106,7 @@ describe('VideoStage', () => {
     expect(slot()).not.toHaveAttribute('data-mini');
   });
 
-  it('docks the same nodes — no remount, so the host never reloads (FR-500)', () => {
+  it('docks the same nodes - no remount, so the host never reloads (FR-500)', () => {
     const { rerender } = mount();
     const before = stage();
     const player = screen.getByTestId('fake-stage');
@@ -131,7 +131,7 @@ describe('VideoStage', () => {
     const button = screen.getByTestId('mini-return');
     expect(button).toHaveTextContent(copy.miniReturn);
     expect(button).toHaveAccessibleName(copy.miniReturn);
-    // Inside the frame, under the picture — the one part of it that is ours.
+    // Inside the frame, under the picture - the one part of it that is ours.
     expect(stage()).toContainElement(button);
 
     fireEvent.click(button);

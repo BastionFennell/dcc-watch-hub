@@ -6,7 +6,7 @@
  * worth testing without a DOM, and a later surface (timeline markers, a gallery)
  * can reuse them without dragging React in.
  *
- * Nothing here touches playback (FR-306) — a share reads the playhead, it never
+ * Nothing here touches playback (FR-306) - a share reads the playhead, it never
  * moves it.
  */
 import { momentSearch } from '../playback/deepLink';
@@ -34,7 +34,7 @@ export interface ShareEnv {
 }
 
 export interface MomentUrlArgs {
-  /** `window.location.origin` — scheme, host, port, no trailing slash. */
+  /** `window.location.origin` - scheme, host, port, no trailing slash. */
   origin: string;
   /** `import.meta.env.BASE_URL`; normalized here so callers need not care. */
   base: string;

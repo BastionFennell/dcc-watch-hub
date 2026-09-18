@@ -44,7 +44,7 @@ export async function fetchShow(): Promise<Show> {
 
 /**
  * The show's entity registry (007, FR-600), or `null` when the show declares no
- * `registryUrl` — that is not a failure, it is a show without a registry, and
+ * `registryUrl` - that is not a failure, it is a show without a registry, and
  * every piece of NPC chrome stays hidden. A declared file that cannot be read or
  * parsed *is* a failure and throws `DataError`.
  */

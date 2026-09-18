@@ -1,5 +1,5 @@
 /**
- * T404 — the moment URL and the delivery ladder (research R3/R4/R6).
+ * T404 - the moment URL and the delivery ladder (research R3/R4/R6).
  * Framework-free and DOM-free: every capability arrives as a stub.
  */
 import { describe, expect, it, vi } from 'vitest';
@@ -46,7 +46,7 @@ describe('momentUrl', () => {
 
 describe('deliver', () => {
   const URL_ = `${ORIGIN}/ep/1?t=156`;
-  const TITLE = 'Episode 1 — 2:36';
+  const TITLE = 'Episode 1 - 2:36';
 
   function env(overrides: Partial<ShareEnv> = {}): ShareEnv {
     return {

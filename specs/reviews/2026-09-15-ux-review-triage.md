@@ -2,12 +2,12 @@
 
 Source: `2026-09-15-ux-review.md` (automated). Evaluated against the constitution (1.2.0), the
 handoff spec, and the author's stated context. Author-supplied correction folded in: **there is no
-party rank in DCC, only individual rank** — all party-rank references are removed (see task T334).
+party rank in DCC, only individual rank** - all party-rank references are removed (see task T334).
 
 Legend: **Do now** = folded into feature 003 revision 2 polish · **Milestone** = proposed as a
 later feature · **Decline / context** = not adopted, with the reason · **Done** = already true.
 
-## Phase 0 — bugs
+## Phase 0 - bugs
 
 | # | Finding | Verdict | Notes |
 |---|---------|---------|-------|
@@ -21,11 +21,11 @@ later feature · **Decline / context** = not adopted, with the reason · **Done*
 | 0.8 | Handle · player reads redundant | Do now | "played by {player}" label; also a sample-data artifact (handle contains the player's name). |
 | 0.9 | Name truncation 950–1050 px | Do now | Wrap the rail to 3 + 2 below ~1100 px when the feed column is present. |
 | 0.10 | Status pip row jitters card height | Do now | Reserve a fixed pips row on every frame. |
-| 0.11 | Stage caption collides with YouTube chrome / illegible | Do now (with a spec deviation) | Move the caption out of the player into a slim row above the timeline: left "Ep 1 · Floor 1 — The World Dungeon", right playhead time. Also resolves 0.13. Deviates from v1 §5 (caption inside the stage); recorded here as an amendment. |
+| 0.11 | Stage caption collides with YouTube chrome / illegible | Do now (with a spec deviation) | Move the caption out of the player into a slim row above the timeline: left "Ep 1 · Floor 1 - The World Dungeon", right playhead time. Also resolves 0.13. Deviates from v1 §5 (caption inside the stage); recorded here as an amendment. |
 | 0.12 | Placeholder Discord URL | Author | Needs the real invite. |
 | 0.13 | Episode title never visible | Do now | See 0.11. |
 
-## Phase 1 — discoverability
+## Phase 1 - discoverability
 
 | # | Finding | Verdict | Notes |
 |---|---------|---------|-------|
@@ -41,7 +41,7 @@ later feature · **Decline / context** = not adopted, with the reason · **Done*
 | 1.10 | Settings panel | Milestone (low) | Sounds remain parked (author). |
 | 1.11 | Desktop dead space | Milestone | Solved by 1.7. |
 
-## Phase 2 — mobile
+## Phase 2 - mobile
 
 | # | Finding | Verdict |
 |---|---------|---------|
@@ -52,7 +52,7 @@ later feature · **Decline / context** = not adopted, with the reason · **Done*
 
 The v1 spec only required a stacked mobile layout; a proper mobile milestone is warranted.
 
-## Phase 3 — new surfaces
+## Phase 3 - new surfaces
 
 | # | Finding | Verdict |
 |---|---------|---------|

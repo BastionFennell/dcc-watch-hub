@@ -66,7 +66,7 @@ export const copy = {
   sectorsRevealed: (revealed: number, total: number) =>
     `${revealed} of ${total} sectors revealed`,
 
-  // Loading and failure states — still the System talking
+  // Loading and failure states - still the System talking
   feedLoading: 'The System is compiling this recap.',
   feedUnavailable: 'Feed unavailable. The System is recalibrating.',
   archiveUnavailable: 'The broadcast archive is unreachable. The System is recalibrating.',
@@ -78,7 +78,7 @@ export const copy = {
   /** Feed sentence templates. The System narrates; it does not label. */
   feedText: {
     achievement: (actor: string, title: string, desc?: string) =>
-      desc ? `${actor} earns ${title} — ${desc}` : `${actor} earns ${title}`,
+      desc ? `${actor} earns ${title} - ${desc}` : `${actor} earns ${title}`,
     loot: (actor: string, item: string, source?: string) =>
       source ? `${actor} opens a ${source} → ${item}` : `${actor} claims ${item}`,
     hp: (actor: string, current: number, max: number) =>
@@ -123,14 +123,14 @@ export const copy = {
     markerLevelUp: (actor: string, level: number) => `${actor} reaches Lv ${level}`,
     /* --- appended by 007 (research R2): the System narrates an encounter --- */
     npcMet: (name: string, note?: string) =>
-      note ? `${name} enters the broadcast — ${note}` : `${name} enters the broadcast`,
+      note ? `${name} enters the broadcast - ${note}` : `${name} enters the broadcast`,
     npcSeen: (name: string, note?: string) =>
-      note ? `${name} is sighted — ${note}` : `${name} is sighted`,
+      note ? `${name} is sighted - ${note}` : `${name} is sighted`,
     /** An update carries its note as the amendment itself, so it is never appended. */
     npcUpdate: (name: string, note?: string) =>
       note ? `${name}: ${note}` : `The System amends its file on ${name}`,
     npcDefeated: (name: string, note?: string) =>
-      note ? `${name} is no more — ${note}` : `${name} is no more`,
+      note ? `${name} is no more - ${note}` : `${name} is no more`,
   },
 
   /* --- appended by T025–T029 (archive navigation) --- */
@@ -149,7 +149,7 @@ export const copy = {
   stageLabel: (title: string) => `Broadcast: ${title}`,
 
   /** Dev-only scrubber (research R14); never reaches a viewer. */
-  fakeStageLabel: 'Simulated broadcast — dev scrubber',
+  fakeStageLabel: 'Simulated broadcast - dev scrubber',
   fakeStagePlay: 'Play',
   fakeStagePause: 'Pause',
   fakeStageScrub: 'Scrub the broadcast',
@@ -183,7 +183,7 @@ export const copy = {
    * Crawler sheet copy (FR-110/111). Since 003 the rail's kicker is
    * `glanceKicker` and the dialog's is `recordKicker`; the title is shared.
    */
-  dossierTitle: (name: string) => `${name} — System record`,
+  dossierTitle: (name: string) => `${name} - System record`,
   dossierSections: {
     vitals: 'VITALS',
     debuffs: 'DEBUFFS',
@@ -225,7 +225,7 @@ export const copy = {
     achievements: 'No achievements yet.',
     history: 'No moments logged.',
     equipped: 'Nothing equipped.',
-    gearSlot: '—',
+    gearSlot: '-',
   } as const,
   unranked: 'Unranked',
   unclassed: 'Unclassed',
@@ -247,9 +247,9 @@ export const copy = {
    * The badge's accessible name opens with its visible text ("Floor 1"), which
    * WCAG 2.5.3 Label in Name requires and axe flags otherwise (T131).
    */
-  mapTriggerLabel: (floor: number) => `Floor ${floor} — open the floor map`,
+  mapTriggerLabel: (floor: number) => `Floor ${floor} - open the floor map`,
   /** Names the focusable map viewport and states its keys (T131). */
-  mapViewportLabel: 'Floor map — drag or arrow keys to pan, + and − or scroll to zoom, 0 to fit',
+  mapViewportLabel: 'Floor map - drag or arrow keys to pan, + and − or scroll to zoom, 0 to fit',
   mapPointerHint: 'Drag to pan · scroll or double-click to zoom · Fit resets',
   mapZoomReadout: (zoom: number) => `${Math.round(zoom * 100)}%`,
   mapSummary: (revealed: number, total: number, labels: number) =>
@@ -270,7 +270,7 @@ export const copy = {
 
   /** The full record dialog (FR-210). */
   recordKicker: 'CRAWLER RECORD',
-  recordTitle: (name: string) => `${name} — full record`,
+  recordTitle: (name: string) => `${name} - full record`,
   /** Debuff chips past the card's two-row cap. */
   debuffsMore: (n: number) => `+${n}`,
 
@@ -294,7 +294,7 @@ export const copy = {
   /** Tile grids cap at eight; the rest live behind a list view (R2-FR-222/223). */
   viewAll: (n: number) => `View all (${n})`,
   backToRecord: 'Back to record',
-  recordListTitle: (name: string, category: string) => `${name} — ${category}`,
+  recordListTitle: (name: string, category: string) => `${name} - ${category}`,
 
   /** The full-figure art column (R2-FR-224). */
   artAlt: (name: string) => `${name}, full figure`,
@@ -346,7 +346,7 @@ export const copy = {
    * The episode title is finally visible, so this line is the page's `<h1>`.
    */
   captionLeft: (episodeId: number, floor: number, title: string) =>
-    `Ep ${episodeId} · Floor ${floor} — ${title}`,
+    `Ep ${episodeId} · Floor ${floor} - ${title}`,
 
   /** A feed row is a seek control; its accessible name leads with the moment (T342). */
   feedSeek: (time: string, text: string) => `${time} ${text}`,
@@ -356,7 +356,7 @@ export const copy = {
   /**
    * A hotbar slot names itself (T330). The visible name is clamped to two
    * lines inside a ~80 px key, so the slot carries the whole thing for
-   * assistive tech — and an empty key says it is empty instead of reading as a
+   * assistive tech - and an empty key says it is empty instead of reading as a
    * stray digit.
    */
   hotbarSlotAria: (n: number, name: string) => `Slot ${n}, ${name}`,
@@ -373,7 +373,7 @@ export const copy = {
   shareShared: 'Moment marked.',
   shareShown: 'Moment marked. Copy the link below.',
   /** The native share sheet's title: the episode, then the moment. */
-  shareTitle: (episodeTitle: string, time: string) => `${episodeTitle} — ${time}`,
+  shareTitle: (episodeTitle: string, time: string) => `${episodeTitle} - ${time}`,
   /** Names the read-only field the fallback notice offers (FR-304). */
   shareUrlLabel: 'Link to this moment',
   /** Dismisses the notice by hand. */
@@ -398,7 +398,7 @@ export const copy = {
   logClear: 'Clear',
   /** Re-arms the list’s auto-scroll after the viewer has read back (FR-404). */
   logFollow: 'Follow the broadcast',
-  /** The log is not empty — the filter is (US2 scenario 4). */
+  /** The log is not empty - the filter is (US2 scenario 4). */
   logNoMatch: 'Nothing on the log matches.',
 
   /* --- appended by 006 (mobile pass: phone tabs, T604) --- */
@@ -458,8 +458,8 @@ export const copy = {
     `${n} recap episode${n === 1 ? '' : 's'} could not be indexed.`,
   /**
    * Titles a registry section. The author's episode titles usually already read
-   * "Episode N — …", so prefixing unconditionally said it twice; the digits must
-   * match exactly, or "Episode 10 — …" would swallow the prefix for episode 1.
+   * "Episode N - …", so prefixing unconditionally said it twice; the digits must
+   * match exactly, or "Episode 10 - …" would swallow the prefix for episode 1.
    */
   registryEpisodeSection: (n: number, title: string) => {
     const prefix = `episode ${n}`;
@@ -467,7 +467,7 @@ export const copy = {
     const next = lower.charAt(prefix.length);
     return lower.startsWith(prefix) && !(next >= '0' && next <= '9')
       ? title
-      : `Episode ${n} — ${title}`;
+      : `Episode ${n} - ${title}`;
   },
   /** Tags a fact with the episode that released it. */
   registryFactTag: (n: number) => `Ep ${n}`,

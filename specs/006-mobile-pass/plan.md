@@ -3,12 +3,12 @@
 **Branch**: `006-mobile-pass` | **Date**: 2026-09-16 | **Spec**: [spec.md](./spec.md)
 
 ## Summary
-Phone-only (≤ 900 px) layout built from three additive pieces: (1) `useMiniPlayer` — an
+Phone-only (≤ 900 px) layout built from three additive pieces: (1) `useMiniPlayer` - an
 IntersectionObserver on a sentinel above the stage toggles `data-mini` on the stage wrapper,
 whose CSS pins the same element under the header while a placeholder keeps the slot height;
-(2) `MobileTabs` — a WAI-ARIA tab list with swipe, hosting the feed, a 2-column party grid, the
+(2) `MobileTabs` - a WAI-ARIA tab list with swipe, hosting the feed, a 2-column party grid, the
 inline floor map, and the broadcast log; (3) `RailPanel` gains a `sheet` presentation used on
-phones — a bottom sheet with handle, drag-to-dismiss, dim backdrop. `EpisodePage` composes the
+phones - a bottom sheet with handle, drag-to-dismiss, dim backdrop. `EpisodePage` composes the
 phone layout behind a `useIsPhone()` media hook; desktop markup is untouched.
 
 ## Technical Context

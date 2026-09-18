@@ -2,7 +2,7 @@
  * Wireframe: five panel boxes, hairline-2 border, radius 6, name 11–12px
  * semibold, "Lv N" muted, 4px HP bar. In v2 each box is the `<button>` that
  * opens that crawler's dossier, so it carries a pointer cursor, a hover border
- * and a focus ring (FR-104, research R9) — otherwise it looks identical (SC-106).
+ * and a focus ring (FR-104, research R9) - otherwise it looks identical (SC-106).
  */
 .rail {
   display: grid;
@@ -115,8 +115,8 @@
 
 /*
  * The separator carries the spacing now that it is real text (T338), as a
- * margin rather than literal spaces so every "·" in the feature — frame,
- * glance, dossier header — is spaced identically (T330).
+ * margin rather than literal spaces so every "·" in the feature - frame,
+ * glance, dossier header - is spaced identically (T330).
  */
 .dot {
   color: var(--text-4);
@@ -212,8 +212,8 @@
 
 /*
  * Five across next to the feed column starts truncating names around 1050px
- * (review 0.9, T339). Between 901 and 1100px — the band where the desktop grid
- * is still two columns — the rail wraps to 3 + 2 instead. At or below 900px the
+ * (review 0.9, T339). Between 901 and 1100px - the band where the desktop grid
+ * is still two columns - the rail wraps to 3 + 2 instead. At or below 900px the
  * page has already stacked, so the rules below own that range.
  */
 @media (min-width: 901px) and (max-width: 1100px) {
@@ -248,7 +248,7 @@
      * Without this the strip's own overflow still reached the root box: at
      * 360 px the page scrolled 535 px sideways into empty space even though
      * every painted node sat inside the viewport (T330 measurement). `contain:
-     * paint` is the only declaration that stops it — `overflow-x: clip`,
+     * paint` is the only declaration that stops it - `overflow-x: clip`,
      * clipping an ancestor, and `body { overflow-x: hidden }` all leave the
      * root scrollable. The strip already clips, so nothing about it looks
      * different; the page simply stops scrolling sideways (R2-SC-204).
@@ -270,7 +270,7 @@
 /*
  * The phone Party pane (006 T605, research R2). Inside a tab the rail has the
  * whole screen width and no feed beside it, so the frames read best as two
- * columns at their full 40 px portrait size — no scroll strip, nothing to swipe
+ * columns at their full 40 px portrait size - no scroll strip, nothing to swipe
  * sideways (the pane itself owns the horizontal gesture). Five crawlers leave a
  * ragged last row, so an odd final frame spans both columns rather than sitting
  * alone at half width.

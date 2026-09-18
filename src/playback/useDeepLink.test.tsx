@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * T402 — `useDeepLink` (research R6). The source is a real `FakeTimeSource`
+ * T402 - `useDeepLink` (research R6). The source is a real `FakeTimeSource`
  * with a spy on `seek`, inside a `MemoryRouter` so `useLocation` is real; the
  * harness exposes `navigate` so a test can change the search the way the header
  * does, without remounting the hook.

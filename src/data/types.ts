@@ -220,7 +220,7 @@ export interface LevelUpEvent extends EventBase {
 }
 
 /**
- * One crawler's standing on the leaderboard. DCC has individual rank only —
+ * One crawler's standing on the leaderboard. DCC has individual rank only -
  * there is no party rank (003 revision 2, T334; supersedes v1/v2 FR-141).
  */
 export interface RankEvent extends EventBase {

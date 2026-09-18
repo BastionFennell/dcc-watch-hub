@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * T405 — `useShare` (FR-302/304, research R5). Fake timers, stubbed platform:
+ * T405 - `useShare` (FR-302/304, research R5). Fake timers, stubbed platform:
  * the hook's whole job is the URL, the status and the timer around them.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -9,7 +9,7 @@ import { copy } from '../copy';
 import type { ShareEnv } from './share';
 import { SHARE_NOTICE_MS, useShare } from './useShare';
 
-const ARGS = { episodeId: 1, episodeTitle: 'Episode 1 — The World Dungeon' };
+const ARGS = { episodeId: 1, episodeTitle: 'Episode 1 - The World Dungeon' };
 
 function env(overrides: Partial<ShareEnv> = {}): ShareEnv {
   return {
@@ -150,7 +150,7 @@ describe('useShare', () => {
   it('shares the episode the caller names', async () => {
     const e = env();
     const { result } = renderHook(() =>
-      useShare({ episodeId: 3, episodeTitle: 'Episode 3 — Descent', env: e }),
+      useShare({ episodeId: 3, episodeTitle: 'Episode 3 - Descent', env: e }),
     );
     await act(async () => {
       await result.current.share(0);

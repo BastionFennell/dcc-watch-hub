@@ -143,7 +143,7 @@ describe('FullRecordDialog', () => {
     expect(screen.getByTestId('hotbar-overflow')).toHaveTextContent(copy.hotbarOverflow(1));
   });
 
-  it('lists every gear slot in sheet order, with "—" for the empty ones', () => {
+  it('lists every gear slot in sheet order, with "-" for the empty ones', () => {
     open(dossierAt(200));
 
     const rows = within(section('gear')).getAllByTestId('gear-row');
@@ -372,7 +372,7 @@ describe('FullRecordDialog', () => {
     const dialog = screen.getByTestId('crawler-record');
     expect(within(section('inventory')).getByText('Torch')).toBeInTheDocument();
 
-    // Seek back before the trade at 150 — the same dialog node, new contents.
+    // Seek back before the trade at 150 - the same dialog node, new contents.
     rerender(
       <FullRecordDialog
         dossier={dossierAt(110)}
@@ -388,7 +388,7 @@ describe('FullRecordDialog', () => {
     expect(within(section('hotlist')).getByText('Door')).toBeInTheDocument();
   });
 
-  it('closes on the close control, on Escape, and on the backdrop — but not from inside', () => {
+  it('closes on the close control, on Escape, and on the backdrop - but not from inside', () => {
     const onClose = vi.fn();
     open(dossierAt(200), onClose);
 

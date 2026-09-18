@@ -5,7 +5,7 @@
  *
  * It *sticks* under the compact header rather than scrolling away with the
  * stage: the docked mini-player is a fixed frame, and a strip in the flow slid
- * underneath it — at 430 × 932 the document's scroll ends with the strip parked
+ * underneath it - at 430 × 932 the document's scroll ends with the strip parked
  * behind the frame and two of the four tabs untappable. Pinned here, and with
  * the frame offset by exactly this strip's height, the two can never meet.
  */

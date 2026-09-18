@@ -1,6 +1,6 @@
 /*
- * The broadcast log (005). It echoes the record's sheet look — a black section
- * bar in mono caps — because it is the same System filing the same events, just
+ * The broadcast log (005). It echoes the record's sheet look - a black section
+ * bar in mono caps - because it is the same System filing the same events, just
  * the whole reel instead of one crawler. Collapsed it is a single slim row; open
  * it grows downward and nothing above it moves (FR-405).
  */
@@ -77,7 +77,7 @@
 
 /*
  * The elapsed count, at the far right of the bar. It is a polite live region,
- * so its text is throttled in the component — the CSS only keeps the digits
+ * so its text is throttled in the component - the CSS only keeps the digits
  * from jittering as they change.
  */
 .count {

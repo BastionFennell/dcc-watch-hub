@@ -35,7 +35,7 @@ fade-in honoring reduced motion.
 | Trigger | Element | Attributes |
 |---------|---------|------------|
 | Crawler frame | `<button type="button">` | `aria-expanded`, `aria-controls="rail-panel"`, `data-crawler`, `data-panel-trigger="dossier:<id>"` |
-| Minimap badge | `<button type="button">` | `aria-label` "Floor N — open the floor map" (visible text first: WCAG 2.5.3), `aria-expanded`, `aria-controls="rail-panel"`, `data-panel-trigger="map"` |
+| Minimap badge | `<button type="button">` | `aria-label` "Floor N - open the floor map" (visible text first: WCAG 2.5.3), `aria-expanded`, `aria-controls="rail-panel"`, `data-panel-trigger="map"` |
 
 Both show pointer cursor, hover highlight, and a visible focus ring. Clicking an open trigger
 closes its panel (toggle).

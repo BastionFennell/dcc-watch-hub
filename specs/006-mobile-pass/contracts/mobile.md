@@ -1,9 +1,9 @@
 # Contract: Mobile pass
 
 ## Hooks
-- `useIsPhone(): boolean` — `(max-width: 900px)`; false when `matchMedia` is missing.
+- `useIsPhone(): boolean` - `(max-width: 900px)`; false when `matchMedia` is missing.
 - `useMiniPlayer({ enabled, headerPx = 48, cancel }): { docked: boolean; sentinelRef: RefCallback<HTMLElement>; exitMini(): void }`
-  — `docked` false when `!enabled || cancel`; `exitMini` scrolls to top (reduced-motion aware).
+  - `docked` false when `!enabled || cancel`; `exitMini` scrolls to top (reduced-motion aware).
 
 ## VideoStage
 - New props: `mini?: boolean`, `onExitMini?(): void`, `hideBadge?: boolean` (page passes on phones).

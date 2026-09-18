@@ -3,210 +3,302 @@
   "initialState": {
     "party": [
       {
-        "id": "stuntman",
-        "name": "The Stuntman",
-        "handle": "Dungeon Crawler Danny",
-        "player": "Danny",
-        "level": 2,
-        "hp": {
-          "current": 24,
-          "max": 24
-        },
-        "portrait": "/img/crawlers/stuntman.svg",
-        "class": null,
-        "inventory": [
-          "Utility Harness",
-          "Duct Tape"
-        ],
-        "rank": 918,
-        "race": "Human",
-        "pronouns": "he/him",
-        "crawlerNumber": "4,102,116",
-        "stats": {
-          "str": 7,
-          "int": 4,
-          "con": 7,
-          "dex": 6,
-          "cha": 5
-        },
-        "hotlist": [
-          "The Butcher"
-        ],
-        "skills": [
-          {
-            "name": "Reckless Tumble",
-            "rank": 2
-          }
-        ],
-        "gear": {
-          "head": "Scuffed Helmet",
-          "torso": "Padded Stunt Vest",
-          "feet": "Grip Boots"
-        },
-        "art": "/img/crawlers/stuntman-art.svg"
-      },
-      {
-        "id": "psychic",
-        "name": "The Psychic",
-        "handle": "Static Bloom",
-        "player": "Rae",
-        "level": 2,
+        "id": "harry",
+        "name": "Harold \"Harry\" Wallace",
+        "handle": "Harry",
+        "player": "",
+        "level": 1,
         "hp": {
           "current": 20,
           "max": 20
         },
-        "portrait": "/img/crawlers/psychic.svg",
-        "class": null,
-        "inventory": [
-          "Cracked Visor",
-          "Ration Brick"
-        ],
-        "rank": 2204,
-        "race": "Human",
-        "pronouns": "she/her",
-        "crawlerNumber": "9,338,470",
-        "stats": {
-          "str": 3,
-          "int": 9,
-          "con": 4,
-          "dex": 5,
-          "cha": 7
-        },
-        "hotlist": [],
-        "skills": [
-          {
-            "name": "Static Read",
-            "rank": 1
-          }
-        ],
-        "gear": {
-          "head": "Cracked Visor",
-          "torso": "Static Shawl"
-        },
-        "art": "/img/crawlers/psychic-art.svg"
-      },
-      {
-        "id": "harry",
-        "name": "Harry",
-        "handle": "Harold the Unhoused",
-        "player": "Marcus",
-        "level": 2,
-        "hp": {
-          "current": 22,
-          "max": 22
-        },
         "portrait": "/img/crawlers/harry.svg",
         "class": null,
         "inventory": [
-          "Torch",
-          "Bent Pry Bar"
+          "Netbook w satchel case",
+          "Handheld retro emulator",
+          "Bag of weed/vape",
+          "Dumpy clothes"
         ],
-        "rank": 1177,
-        "race": "Human",
-        "pronouns": "he/him",
-        "crawlerNumber": "10,491,201",
+        "rank": null,
+        "race": "Human-ish",
+        "pronouns": "he/them",
+        "crawlerNumber": "1651655",
         "stats": {
-          "str": 5,
+          "str": 3,
           "int": 6,
-          "con": 6,
-          "dex": 7,
+          "con": 5,
+          "dex": 2,
           "cha": 4
         },
         "hotlist": [],
         "skills": [
           {
-            "name": "Powerful Strike",
+            "name": "Streetwise",
             "rank": 1
           },
           {
-            "name": "Crowbar Work",
+            "name": "Stealth",
             "rank": 1
-          }
-        ],
-        "gear": {
-          "hands": "Bent Pry Bar",
-          "legs": "Work Trousers"
-        }
-      },
-      {
-        "id": "xo",
-        "name": "X.O.",
-        "handle": "Executive Officer",
-        "player": "Jules",
-        "level": 2,
-        "hp": {
-          "current": 21,
-          "max": 21
-        },
-        "portrait": "/img/crawlers/xo.svg",
-        "class": null,
-        "inventory": [
-          "Signal Flare",
-          "Ledger of Debts"
-        ],
-        "rank": 4188,
-        "race": "Crocodilian",
-        "pronouns": "they/them",
-        "crawlerNumber": "2,776,845",
-        "stats": {
-          "str": 6,
-          "int": 5,
-          "con": 8,
-          "dex": 4,
-          "cha": 3
-        },
-        "hotlist": [
-          "The Quartermaster"
-        ],
-        "skills": [
+          },
           {
-            "name": "Signal Discipline",
+            "name": "Investigation",
+            "rank": 1
+          },
+          {
+            "name": "Fabricate",
+            "rank": 1
+          },
+          {
+            "name": "Deception",
+            "rank": 3
+          },
+          {
+            "name": "Performance (writing)",
+            "rank": 3
+          },
+          {
+            "name": "Determine Value",
             "rank": 2
+          },
+          {
+            "name": "Perception",
+            "rank": 2
+          },
+          {
+            "name": "Soul Collector (Fabricate Ending)",
+            "rank": 3
+          },
+          {
+            "name": "Unarmed",
+            "rank": 3
           }
         ],
-        "gear": {
-          "arms": "Signal Bracers",
-          "accessories": [
-            "Quartermaster Tag"
-          ]
-        }
+        "gear": {}
       },
       {
-        "id": "actress",
-        "name": "The Actress",
-        "handle": "Second Billing",
-        "player": "Nia",
-        "level": 2,
+        "id": "mimi",
+        "name": "Mimi Rivers",
+        "handle": "Crawler Mimi",
+        "player": "",
+        "level": 1,
         "hp": {
           "current": 20,
           "max": 20
         },
-        "portrait": "/img/crawlers/actress.svg",
+        "portrait": "/img/crawlers/mimi.jpg",
+        "class": null,
+        "inventory": [],
+        "rank": null,
+        "pronouns": "she + her",
+        "stats": {
+          "str": 2,
+          "int": 5,
+          "con": 4,
+          "dex": 3,
+          "cha": 6
+        },
+        "hotlist": [
+          "Heal (2 mana) Rank 1, heal 2 HB slots.",
+          "5 Standard Mana Potions, which fully restore your Mana"
+        ],
+        "skills": [
+          {
+            "name": "Performance (Gymnast)",
+            "rank": 1
+          },
+          {
+            "name": "Endurance (Gymnast)",
+            "rank": 1
+          },
+          {
+            "name": "Persuasion (Popular)",
+            "rank": 1
+          },
+          {
+            "name": "Perception (Popular)",
+            "rank": 1
+          },
+          {
+            "name": "Deception (Entertainer)",
+            "rank": 3
+          },
+          {
+            "name": "Good First Impression (Entertainer)",
+            "rank": 3
+          },
+          {
+            "name": "Negotiation (Travel)",
+            "rank": 2
+          },
+          {
+            "name": "Streetwise (Travel)",
+            "rank": 2
+          },
+          {
+            "name": "Unarmed Combat",
+            "rank": 3
+          },
+          {
+            "name": "Frost Scar",
+            "rank": 3
+          },
+          {
+            "name": "Heal",
+            "rank": 1
+          }
+        ],
+        "gear": {},
+        "art": "/img/crawlers/mimi-art.jpg"
+      },
+      {
+        "id": "ronald",
+        "name": "Ronald Hudson",
+        "handle": "Madio",
+        "player": "",
+        "level": 1,
+        "hp": {
+          "current": 20,
+          "max": 20
+        },
+        "portrait": "/img/crawlers/ronald.jpg",
         "class": null,
         "inventory": [
-          "Understudy's Dagger"
+          "\"Lucky Charm\" - a small ceramic lady bug",
+          "Paracord Bracelet"
         ],
-        "rank": 3050,
+        "rank": null,
         "race": "Human",
-        "pronouns": "she/her",
-        "crawlerNumber": "6,204,998",
+        "pronouns": "He/Him",
+        "stats": {
+          "str": 5,
+          "int": 3,
+          "con": 4,
+          "dex": 6,
+          "cha": 2
+        },
+        "hotlist": [
+          "Heal Spell (Interrupt) Rank 1 (Max): Mana Cost 2, heal 2 slots"
+        ],
+        "skills": [
+          {
+            "name": "Escape Artist",
+            "rank": 1
+          },
+          {
+            "name": "Endurance",
+            "rank": 1
+          },
+          {
+            "name": "Repair",
+            "rank": 1
+          },
+          {
+            "name": "Fabricate",
+            "rank": 1
+          },
+          {
+            "name": "Performance",
+            "rank": 1
+          },
+          {
+            "name": "Deception",
+            "rank": 1
+          },
+          {
+            "name": "Negotiation",
+            "rank": 1
+          },
+          {
+            "name": "Streetwise",
+            "rank": 1
+          },
+          {
+            "name": "Unarmed Combat",
+            "rank": 3
+          }
+        ],
+        "gear": {},
+        "art": "/img/crawlers/ronald-art.jpg"
+      },
+      {
+        "id": "xo",
+        "name": "Xavier \"X.O.\" Ortiz",
+        "handle": "XO",
+        "player": "",
+        "level": 1,
+        "hp": {
+          "current": 30,
+          "max": 30
+        },
+        "portrait": "/img/crawlers/xo.svg",
+        "class": null,
+        "inventory": [],
+        "rank": null,
+        "race": "Human",
+        "pronouns": "He/Them",
+        "crawlerNumber": "5,211,046",
         "stats": {
           "str": 4,
-          "int": 6,
-          "con": 5,
-          "dex": 8,
-          "cha": 9
+          "int": 5,
+          "con": 6,
+          "dex": 3,
+          "cha": 2
         },
         "hotlist": [],
         "skills": [
           {
-            "name": "Stage Presence",
+            "name": "Investigation",
             "rank": 1
+          },
+          {
+            "name": "Negotiation",
+            "rank": 1
+          },
+          {
+            "name": "Good First Impression",
+            "rank": 1
+          },
+          {
+            "name": "Perception",
+            "rank": 1
+          },
+          {
+            "name": "Survival",
+            "rank": 3
+          },
+          {
+            "name": "Tactics",
+            "rank": 3
+          },
+          {
+            "name": "Endurance",
+            "rank": 2
+          },
+          {
+            "name": "Climbing",
+            "rank": 2
+          },
+          {
+            "name": "Unarmed Combat",
+            "rank": 3
           }
         ],
         "gear": {
-          "torso": "Stage Corset",
-          "feet": "Character Shoes"
+          "accessories": [
+            "Wide-brimmed hat",
+            "Water-resistant jacket",
+            "Breathable shirt",
+            "Cargo pants",
+            "Steel-toed shoes",
+            "Fanny pack",
+            "Heavy Maglite Flashlight",
+            "Walkie-Talkie w/ surveillance headset & extra battery",
+            "Gold Folder (scheduling sheets, call sheet, script)",
+            "Director's Viewfinder & Light Meter",
+            "Rolls of Gaffer Tape & Glo-Tape",
+            "iPhone ProMax w/ charger & 3 power banks"
+          ]
         }
       }
     ],
@@ -261,18 +353,18 @@
     {
       "t": 47,
       "type": "chapter",
-      "label": "Recap — What the Door Cost",
+      "label": "Recap - What the Door Cost",
       "kind": "story"
     },
     {
       "t": 72,
       "type": "note",
-      "text": "Rae has stopped narrating her own thoughts. The audience objects."
+      "text": "Mimi has stopped narrating her own thoughts. The audience objects."
     },
     {
       "t": 97,
       "type": "inventory",
-      "actor": "actress",
+      "actor": "mimi",
       "add": [
         "Greasepaint"
       ],
@@ -295,7 +387,7 @@
     {
       "t": 144,
       "type": "hp",
-      "actor": "psychic",
+      "actor": "mimi",
       "current": 11,
       "max": 20
     },
@@ -334,14 +426,14 @@
     {
       "t": 217,
       "type": "achievement",
-      "actor": "psychic",
+      "actor": "mimi",
       "title": "Static Bloom",
       "desc": "Read a room that was not there."
     },
     {
       "t": 220,
       "type": "achievement",
-      "actor": "actress",
+      "actor": "mimi",
       "title": "Second Billing",
       "desc": "Upstaged a mid-boss."
     },
@@ -355,7 +447,7 @@
     {
       "t": 230,
       "type": "class",
-      "actor": "stuntman",
+      "actor": "ronald",
       "class": "Reckless Stuntman"
     },
     {
@@ -368,7 +460,7 @@
     {
       "t": 249,
       "type": "level_up",
-      "actor": "psychic",
+      "actor": "mimi",
       "level": 3
     },
     {
@@ -436,14 +528,14 @@
     {
       "t": 386,
       "type": "loot",
-      "actor": "stuntman",
+      "actor": "ronald",
       "item": "Grappling Spool",
       "source": "Gold Adventurer Box"
     },
     {
       "t": 390,
       "type": "equip",
-      "actor": "stuntman",
+      "actor": "ronald",
       "slot": "accessory",
       "item": "Grappling Spool"
     },
@@ -452,7 +544,7 @@
       "type": "hp",
       "actor": "harry",
       "current": 5,
-      "max": 22
+      "max": 20
     },
     {
       "t": 415,
@@ -464,7 +556,7 @@
     {
       "t": 437,
       "type": "rank",
-      "actor": "psychic",
+      "actor": "mimi",
       "rank": 3310
     },
     {
@@ -489,7 +581,7 @@
     {
       "t": 491,
       "type": "note",
-      "text": "Marcus asks whether the hooks are load-bearing. Nobody answers."
+      "text": "Harry asks whether the hooks are load-bearing. Nobody answers."
     },
     {
       "t": 520,
@@ -508,7 +600,7 @@
       "type": "hp",
       "actor": "harry",
       "current": 19,
-      "max": 22
+      "max": 20
     },
     {
       "t": 560,
@@ -519,7 +611,7 @@
     {
       "t": 578,
       "type": "level_up",
-      "actor": "actress",
+      "actor": "ronald",
       "level": 3
     },
     {
@@ -544,7 +636,7 @@
     {
       "t": 639,
       "type": "inventory",
-      "actor": "psychic",
+      "actor": "mimi",
       "add": [
         "Resonant Visor"
       ],
@@ -555,20 +647,20 @@
     {
       "t": 640,
       "type": "class",
-      "actor": "psychic",
+      "actor": "mimi",
       "class": "Static Diviner"
     },
     {
       "t": 641,
       "type": "unequip",
-      "actor": "psychic",
+      "actor": "mimi",
       "slot": "head",
       "item": "Cracked Visor"
     },
     {
       "t": 642,
       "type": "equip",
-      "actor": "psychic",
+      "actor": "mimi",
       "slot": "head",
       "item": "Resonant Visor"
     },
@@ -600,7 +692,7 @@
     {
       "t": 740,
       "type": "achievement",
-      "actor": "stuntman",
+      "actor": "ronald",
       "title": "Rigging Expert",
       "desc": "Nobody asked him to swing."
     },
@@ -640,7 +732,7 @@
     {
       "t": 823,
       "type": "note",
-      "text": "The Actress requests a costume change. Denied."
+      "text": "Mimi requests a costume change. Denied."
     },
     {
       "t": 830,

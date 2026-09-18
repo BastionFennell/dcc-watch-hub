@@ -5,7 +5,7 @@
 **Status**: Draft  
 **Input**: Author: "I want a good way to show NPC information, both as they're encountered and
 long term as a sort of glossary." Clarified: on the episode page, what is revealed is tied to the
-current episode's playhead; the glossary is NOT tied to what the device has opened — it lists
+current episode's playhead; the glossary is NOT tied to what the device has opened - it lists
 everything published, ordered by episode. Entity kinds: **Boss**, **Vendor / Guide**, **Ally / Faction**.
 
 ## User Scenarios & Testing *(mandatory)*
@@ -25,11 +25,11 @@ not yet unlocked.
 1. **Given** the playhead before the first `npc` event, **Then** the Encountered strip shows the
    standby line "No entities tagged yet." and the NPCs tab is empty-stated.
 2. **Given** an `npc` `met` event elapses, **Then** the feed shows "Entity · {name} enters the
-   broadcast{ — note}" and the strip shows the entity first (newest first).
+   broadcast{ - note}" and the strip shows the entity first (newest first).
 3. **Given** the entity record is open at t, **When** an `update` event with `unlock` elapses,
    **Then** the newly unlocked fact appears within 500 ms; seeking before it removes the fact.
 4. **Given** a `defeated` event elapses, **Then** the strip badge and the record show "Defeated"
-   and the feed says "{name} is no more{ — note}".
+   and the feed says "{name} is no more{ - note}".
 5. **Given** an `npc` event for an id missing from the registry, **Then** the feed still shows
    the row (using the id as the name) and nothing crashes; no strip entry is created for it.
 6. **Given** the record is open, **When** the viewer activates "Open in the Registry", **Then**
@@ -50,8 +50,8 @@ episode are not listed.
 
 **Acceptance Scenarios**:
 
-1. **Given** three published episodes, **Then** the registry shows sections "Episode 1 — …",
-   "Episode 2 — …", … containing entities by first appearance, and a count per section.
+1. **Given** three published episodes, **Then** the registry shows sections "Episode 1 - …",
+   "Episode 2 - …", … containing entities by first appearance, and a count per section.
 2. **Given** a search term matching an alias, **Then** only matching entries remain (across
    sections); an empty result shows "The Registry has no such entity."
 3. **Given** a kind chip selected, **Then** only that kind remains; chips show counts; multiple
@@ -89,7 +89,7 @@ episode are not listed.
   field2 `action` optionally followed by `:fact-id,fact-id`, field3 note; unknown ids and unknown
   fact ids are warnings.
 - **FR-602**: Overlay state MUST track per entity: first-met time, encounter count, unlocked
-  facts, defeated — all pure functions of the playhead.
+  facts, defeated - all pure functions of the playhead.
 
 **Episode page**
 - **FR-610**: An Encountered strip (desktop, under the party rail; phone: NPCs tab) MUST list
@@ -129,7 +129,7 @@ episode are not listed.
 
 ---
 
-# Revision 2 (2026-09-16) — episode-scoped Registry views
+# Revision 2 (2026-09-16) - episode-scoped Registry views
 
 Author: "I want something like the registry to look at NPCs for a given episode or seen up to this
 episode vs tying it only to the event."
@@ -168,7 +168,7 @@ episode vs tying it only to the event."
 
 ---
 
-# Revision 3 (2026-09-16) — browse the Registry without stopping the video
+# Revision 3 (2026-09-16) - browse the Registry without stopping the video
 
 Author: "Ideally they can look at this registry without stopping the video."
 
@@ -178,7 +178,7 @@ Author: "Ideally they can look at this registry without stopping the video."
 1. **Given** the episode page, **When** the viewer activates "Browse the Registry" on the
    Encountered strip (or in the NPCs tab), **Then** the rail (a bottom sheet on phones) shows the
    Registry scoped to **Through this episode** by default, with the scope select, search, kind
-   chips, and expandable entries — and the video keeps playing.
+   chips, and expandable entries - and the video keeps playing.
 2. **Given** the panel, **When** the viewer expands an entry and activates an appearance from the
    **current** episode, **Then** playback seeks to that moment (no navigation); appearances from
    other episodes are links that open that episode at the moment.
@@ -188,7 +188,7 @@ Author: "Ideally they can look at this registry without stopping the video."
 4. **Given** the panel, **Then** Escape, the close control, or the trigger close it and focus
    returns; opening the panel never pauses or seeks playback by itself.
 5. **Given** the panel is open, **When** the playhead moves, **Then** the panel's content does
-   not change (it is publication-scoped, not playhead-scoped) — the strip beneath still does.
+   not change (it is publication-scoped, not playhead-scoped) - the strip beneath still does.
 6. **Given** the registry index needs other episodes' files, **Then** they are fetched once,
    lazily, when the panel first opens, with a System-voice loading line; a failed file yields the
    existing "could not be indexed" notice inside the panel.
@@ -214,7 +214,7 @@ Author: "Ideally they can look at this registry without stopping the video."
 
 ---
 
-# Revision 4 (2026-09-16) — newest episode first; the panel follows the playhead
+# Revision 4 (2026-09-16) - newest episode first; the panel follows the playhead
 
 Author: "Reverse the order of the registry so the current episode is on top; tie things showing
 up in the registry to events/timestamps in the actual show as well."

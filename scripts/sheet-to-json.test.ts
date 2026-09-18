@@ -36,7 +36,7 @@ function ctx() {
 }
 
 /**
- * The shipped registry, which is what `--registry public/data/npcs.json` loads —
+ * The shipped registry, which is what `--registry public/data/npcs.json` loads -
  * the same file the sample rows name (007 R6).
  */
 const sampleRegistry: Registry = normalizeRegistry(
@@ -219,13 +219,14 @@ describe('convert(scripts/samples/ep1.csv)', () => {
   it('passes the optional crawler sheet fields through untouched', () => {
     const harry = result.episode?.initialState.party.find((crawler) => crawler.id === 'harry');
     expect(harry).toMatchObject({
-      race: 'Human',
-      pronouns: 'he/him',
-      crawlerNumber: '10,491,201',
-      stats: { str: 5, int: 6, con: 6, dex: 7, cha: 4 },
+      race: 'Human-ish',
+      pronouns: 'he/them',
+      crawlerNumber: '1651655',
+      stats: { str: 3, int: 6, con: 5, dex: 2, cha: 4 },
       hotlist: [],
-      skills: [{ name: 'Powerful Strike', rank: 1 }],
     });
+    // 008: the sheet's full skills table rides along unchanged.
+    expect(harry?.skills).toContainEqual({ name: 'Soul Collector (Fabricate Ending)', rank: 3 });
   });
 
   it('maps the npc rows, parsing action[:fact,fact] out of field2 (FR-601)', () => {
@@ -418,11 +419,11 @@ describe('convert edge cases', () => {
 describe('rowToEvent', () => {
   it('treats a first hp row for a party member as normal', () => {
     const result = rowToEvent(
-      sheetRow({ type: 'hp', actor: 'psychic', field1: '14', field2: '18' }),
+      sheetRow({ type: 'hp', actor: 'mimi', field1: '14', field2: '18' }),
       rowCtx(),
     );
     expect(result.warnings).toEqual([]);
-    expect(result.event).toEqual({ t: 10, type: 'hp', actor: 'psychic', current: 14, max: 18 });
+    expect(result.event).toEqual({ t: 10, type: 'hp', actor: 'mimi', current: 14, max: 18 });
   });
 
   it('warns about an hp row for an actor with no party entry', () => {

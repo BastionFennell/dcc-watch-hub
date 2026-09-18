@@ -7,9 +7,9 @@ import { copy } from '../../copy';
 import styles from './MiniMapBadge.module.css';
 
 export interface MiniMapBadgeProps {
-  /** `mapCells(state)` — the revealed set as of the playhead. */
+  /** `mapCells(state)` - the revealed set as of the playhead. */
   cells: MapCellsView;
-  /** `recentlyRevealed(events, t)` — cells revealed in the last 5 s. */
+  /** `recentlyRevealed(events, t)` - cells revealed in the last 5 s. */
   recent: Set<string>;
   /** Whether the expanded map panel is currently open (FR-104). */
   expanded?: boolean;

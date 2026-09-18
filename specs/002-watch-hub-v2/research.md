@@ -35,7 +35,7 @@
 - **Rationale**: The author supplied the sheet as the reference; fans will recognize the shape.
   We reuse its structure and terminology, not its artwork or logo (copyrighted).
 - **Alternatives**: Free-form card (loses recognition); reproducing the sheet's full field set
-  (most fields have no data source; stale fields are worse than absent ones — see R6).
+  (most fields have no data source; stale fields are worse than absent ones - see R6).
 
 ## R4. Rank sparkline
 
@@ -94,7 +94,7 @@
 - **Decision**: `YouTubeTimeSource.seek(t)` stores `pendingSeek = t` when the player is not
   ready; `onReady` applies it with `seekTo(t, true)` then emits a tick. YouTube's documented
   behavior: `seekTo` on a cued (unstarted) player starts playback from `t`; on a paused player
-  it stays paused. So "Rejoin" both positions and starts the broadcast — desirable. The fake
+  it stays paused. So "Rejoin" both positions and starts the broadcast - desirable. The fake
   source already accepts `seek` at any time.
 - **Rationale**: The resume card can be answered before the iframe finishes loading.
 - **Alternatives**: `playerVars.start` (needs the value at construction; the card has not been
@@ -105,7 +105,7 @@
 - **Decision**: `CrawlerFrame` becomes a `<button type="button">` wrapping the frame content
   (keeps its `data-*` test attributes) with `aria-expanded`, `aria-controls="rail-panel"`,
   `cursor: pointer`, hover/focus ring in `--brand-2`, and `aria-pressed`-free semantics.
-  `MiniMapBadge` becomes a `<button>` with `aria-label` "Floor N — open the floor map" (visible text first: WCAG 2.5.3), pointer events
+  `MiniMapBadge` becomes a `<button>` with `aria-label` "Floor N - open the floor map" (visible text first: WCAG 2.5.3), pointer events
   restored, same affordances; its decorative grid stays `aria-hidden`.
 - **Rationale**: FR-104, FR-122; constitution III now permits affordances because the triggers do
   something.

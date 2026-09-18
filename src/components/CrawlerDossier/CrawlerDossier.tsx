@@ -11,7 +11,7 @@ import {
 import styles from './CrawlerDossier.module.css';
 
 export interface CrawlerDossierProps {
-  /** `crawlerDossier(state, events, t, id)` — recomputed every render (FR-103). */
+  /** `crawlerDossier(state, events, t, id)` - recomputed every render (FR-103). */
   dossier: Dossier;
   meta: EpisodeMeta;
 }

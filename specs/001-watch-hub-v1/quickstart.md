@@ -153,9 +153,9 @@ page was loaded in a 320/360/400 px-wide same-origin `<iframe>` and
 
 | Viewport | `/` | `/ep/1` |
 |----------|-----|---------|
-| 320 px | 320 / 320 — no overflow | 320 / 320 — no overflow |
-| 360 px | 360 / 360 — no overflow | 360 / 360 — no overflow |
-| 400 px | 400 / 400 — no overflow | 400 / 400 — no overflow |
+| 320 px | 320 / 320 - no overflow | 320 / 320 - no overflow |
+| 360 px | 360 / 360 - no overflow | 360 / 360 - no overflow |
+| 400 px | 400 / 400 - no overflow | 400 / 400 - no overflow |
 
 No element's right edge exceeded the viewport on either route at any of the three widths.
 Screenshots at 360 px confirm the stack (stage → timeline → rail → feed), the rail wrapping 3 + 2,
@@ -170,13 +170,13 @@ instead of forcing its column's min-content width, and hub card titles and toast
 
 - [x] **Loads an episode page from static hosting with only `show.json` + `ep{N}.json`.**
       Lighthouse network trace on `/ep/1`: the bundle, the stylesheet, `show.json`, `ep1.json`,
-      five portraits, the mark, the favicon — plus YouTube's own requests. No other origin.
+      five portraits, the mark, the favicon - plus YouTube's own requests. No other origin.
 - [x] **Overlay state is correct at t=0, mid-episode, after seeking backward, after seeking
       forward, and after refresh mid-episode.** `EpisodePage.test.tsx`: "shows initial party
       state and an empty feed at t = 0", "updates HP and flashes danger once an hp event has
       elapsed", "rewinds the feed and the rail on a backward seek", "caps the feed at the 8 most
       recent events". *Refresh*: v1 has no resume (parked for v2), so a reload restarts the
-      player at 0:00 and the overlay recomputes from `initialState` — state after reload is a
+      player at 0:00 and the overlay recomputes from `initialState` - state after reload is a
       pure function of the playhead the host reports, by construction; not separately exercised
       in a real browser.
 - [x] **No event ever renders before its `t`.** `selectors.test.ts` "never shows an event before
@@ -184,7 +184,7 @@ instead of forcing its column's min-content width, and hub card titles and toast
       before its time" / "never renders an unknown event type", both asserted at `e.t - 0.001`
       and `e.t` for every fixture event.
 - [x] **Party rail reflects HP/level/status at playhead within 500 ms of any seek.**
-      `EpisodePage.test.tsx` HP/danger/status-pip cases update in the same render as `set(t)` —
+      `EpisodePage.test.tsx` HP/danger/status-pip cases update in the same render as `set(t)` -
       there is no timer between a tick and the rail. In the browser the bound is the
       `YouTubeTimeSource` poll interval, 250 ms, plus one render.
 - [x] **Timeline markers seek correctly.** `EpisodePage.test.tsx` "seeks the source and the
@@ -199,7 +199,7 @@ instead of forcing its column's min-content width, and hub card titles and toast
       screenshot of `/`.
 - [x] **Playable on desktop Chrome/Firefox/Safari; mobile shows stacked layout without
       horizontal scroll.** Chrome 152: verified, including the no-overflow measurements above.
-      **Firefox and Safari: manual, not run** — needs a real browser session; the CSS uses no
+      **Firefox and Safari: manual, not run** - needs a real browser session; the CSS uses no
       engine-specific features beyond `aspect-ratio` and `:focus-visible`, both long-supported.
       Playback itself was exercised through YouTube's own embed, which loaded successfully.
 - [x] **Sheet-to-JSON script converts the sample CSV and flags a deliberately broken row.**

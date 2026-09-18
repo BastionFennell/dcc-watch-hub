@@ -42,7 +42,7 @@ export interface PartyFrame {
 }
 
 export interface FeedItem {
-  /** Index in the episode's event array — a stable React key across seeks. */
+  /** Index in the episode's event array - a stable React key across seeks. */
   id: number;
   t: number;
   kind: EventType;
@@ -437,7 +437,7 @@ export function mapCells(state: OverlayState): MapCellsView {
 /**
  * Cells whose `map_reveal` landed within the last `windowSec` seconds
  * (`t_e <= t < t_e + windowSec`). The minimap uses it to tint just-revealed
- * sectors — a pure function of the playhead, so a backward seek un-tints them
+ * sectors - a pure function of the playhead, so a backward seek un-tints them
  * without any timer (research R5, T034).
  */
 export function recentlyRevealed(
@@ -458,7 +458,7 @@ export function recentlyRevealed(
 /* ------------------------------------------------------------- v2 selectors */
 
 /**
- * One crawler's elapsed, known events, newest first and uncapped — the dossier's
+ * One crawler's elapsed, known events, newest first and uncapped - the dossier's
  * HISTORY section (data-model §3). Party-scoped events belong to no crawler.
  */
 export function crawlerHistory(
@@ -678,7 +678,7 @@ export const GLANCE_HISTORY_ROWS = 3;
 /**
  * The glance card's view model, derived from an already-elapsed `Dossier`, so it
  * inherits time-truth for free (constitution I, FR-202). "Newest" is the last
- * element of each current list — after a removal that is the most recently
+ * element of each current list - after a removal that is the most recently
  * gained item still held (research R3).
  */
 export function crawlerGlance(dossier: Dossier): Glance {
@@ -719,7 +719,7 @@ export interface LogFilters {
 }
 
 /**
- * Every elapsed known event, oldest first and uncapped — the broadcast log
+ * Every elapsed known event, oldest first and uncapped - the broadcast log
  * (005 FR-401). The feed is a rolling eight-item window read newest-first; the
  * log is the whole transcript read top-down, so it is its own loop rather than
  * `feedItems` reversed: nothing here may ever be capped.
@@ -813,7 +813,7 @@ function toEncounter(entity: Entity, state: NpcState): Encounter {
 /**
  * The strip's chips, newest encounter first (FR-610). Entity state is already a
  * pure function of the playhead, so this inherits time-truth for free; an id the
- * registry does not carry has nothing to show and is left out — it stays in the
+ * registry does not carry has nothing to show and is left out - it stays in the
  * feed under its raw id (spec US1 scenario 5).
  */
 export function encounteredNpcs(

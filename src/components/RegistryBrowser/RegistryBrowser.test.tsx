@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 /**
- * T723 — the Registry in the rail (R3 scenarios 1–3, R3-FR-641/642).
+ * T723 - the Registry in the rail (R3 scenarios 1–3, R3-FR-641/642).
  *
  * Mounted under the real providers, because what the panel shows comes from the
  * shared index (R3-FR-644); only the video is absent, and its two controls
- * (`onSeek`, `onShare`) are spies — nothing in here may move the broadcast
+ * (`onSeek`, `onShare`) are spies - nothing in here may move the broadcast
  * unless the viewer activates a moment.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -162,7 +162,7 @@ describe('RegistryBrowser', () => {
     expect(screen.queryByTestId('registry-section-2')).toBeNull();
   });
 
-  it('keeps a scope change inside the panel — it never navigates', async () => {
+  it('keeps a scope change inside the panel - it never navigates', async () => {
     await mountBrowser();
 
     fireEvent.change(screen.getByTestId('registry-scope'), { target: { value: 'all' } });
@@ -196,7 +196,7 @@ describe('RegistryBrowser', () => {
     const { onSeek, onShare } = await mountBrowser();
 
     expand('hoarder');
-    // 118 met, 122 update, 185 update, 195 defeated — all in episode 1.
+    // 118 met, 122 update, 185 update, 195 defeated - all in episode 1.
     const rows = appearances('hoarder');
     expect(rows).toHaveLength(4);
     rows.forEach((row) => {
@@ -256,14 +256,14 @@ describe('RegistryBrowser', () => {
   it('lists only what the playhead has reached, and keeps up as it moves', async () => {
     const { seekTo } = await mountBrowser(undefined, 112);
 
-    // 1:52 — grull-rep and nobody else.
+    // 1:52 - grull-rep and nobody else.
     expect(listed()).toEqual(['grull-rep']);
 
-    // 1:57 — still nothing new; the hoarder is five seconds away (R4 scenario 2).
+    // 1:57 - still nothing new; the hoarder is five seconds away (R4 scenario 2).
     seekTo(117);
     expect(listed()).toEqual(['grull-rep']);
 
-    // 1:58 — met, with one appearance and no facts yet.
+    // 1:58 - met, with one appearance and no facts yet.
     seekTo(118);
     expect(listed()).toEqual(['hoarder', 'grull-rep']);
     expand('hoarder');
@@ -271,16 +271,16 @@ describe('RegistryBrowser', () => {
     expect(facts('hoarder')).toEqual([]);
     expect(within(entry('hoarder')).queryByTestId('registry-defeated')).toBeNull();
 
-    // 2:02 — the lair is released.
+    // 2:02 - the lair is released.
     seekTo(122);
     expect(facts('hoarder')).toEqual(['lair']);
 
-    // 2:15 — the quartermaster is sighted and leads the shelf; the unknown id
+    // 2:15 - the quartermaster is sighted and leads the shelf; the unknown id
     // at 2:20 never appears, registry or no registry.
     seekTo(140);
     expect(listed()).toEqual(['quartermaster', 'hoarder', 'grull-rep']);
 
-    // 3:05 — the weakness; 3:15 — defeated.
+    // 3:05 - the weakness; 3:15 - defeated.
     seekTo(185);
     expect(facts('hoarder')).toEqual(['lair', 'weakness']);
     expect(within(entry('hoarder')).queryByTestId('registry-defeated')).toBeNull();

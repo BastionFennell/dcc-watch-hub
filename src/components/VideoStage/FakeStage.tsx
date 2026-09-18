@@ -23,7 +23,7 @@ export interface FakeStageProps {
 
 /**
  * The dev scrubber (research R14): a black 16:9 box with a range input and a
- * play/pause button driving a `FakeTimeSource` at 1×. Not a product feature —
+ * play/pause button driving a `FakeTimeSource` at 1×. Not a product feature -
  * it exists so the whole page can be driven without a network.
  */
 export function FakeStage({ durationSec, t, onSource, initialT = 0 }: FakeStageProps) {

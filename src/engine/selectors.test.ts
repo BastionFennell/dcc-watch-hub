@@ -590,7 +590,7 @@ describe('feed items for the gear event types', () => {
   });
 });
 
-describe('crawlerDossier — gear and art', () => {
+describe('crawlerDossier - gear and art', () => {
   const dossierAt = (t: number, id = 'harry') =>
     crawlerDossier(reduceTo(episode, t), episode.events, t, id, party);
 
@@ -662,7 +662,7 @@ describe('hotbarSlots', () => {
   });
 });
 
-describe('crawlerGlance — equipped and latest achievement', () => {
+describe('crawlerGlance - equipped and latest achievement', () => {
   const glanceAt = (t: number, id = 'harry') => {
     const dossier = crawlerDossier(reduceTo(episode, t), episode.events, t, id, party);
     if (dossier === null) throw new Error(`no dossier for ${id} at ${t}`);
@@ -708,7 +708,7 @@ describe('logItems', () => {
     expect(logItems(episode.events, 0, party)).toEqual([]);
   });
 
-  it('reads oldest first — the transcript order, not the feed order', () => {
+  it('reads oldest first - the transcript order, not the feed order', () => {
     const items = logItems(episode.events, 62, party);
     expect(items.map((i) => i.t)).toEqual([12, 30, 45, 60, 61, 62]);
     expect(items.map((i) => i.t)).toEqual([...items.map((i) => i.t)].sort((a, b) => a - b));

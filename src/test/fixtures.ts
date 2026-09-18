@@ -20,7 +20,7 @@
  * 007 adds the registry `makeRegistry()` and the `npc` events data-model "Fixture
  * facts" pins down (112 met grull-rep, 118 met hoarder, 122 update unlock lair,
  * 135 seen quartermaster, 140 met unknown-id, 185 update unlock weakness, 195
- * defeated hoarder) — all past t = 100, so every earlier feed count still holds.
+ * defeated hoarder) - all past t = 100, so every earlier feed count still holds.
  */
 import type { Crawler, EpisodeData, Registry, Show } from '../data/types';
 import { normalizeEpisode } from '../data/validate';
@@ -40,7 +40,7 @@ export function makeShow(): Show {
     episodes: [
       {
         id: 1,
-        title: 'Episode 1 — The World Dungeon',
+        title: 'Episode 1 - The World Dungeon',
         youtubeId: 'M7lc1UVf-VE',
         floor: 1,
         durationSec: 240,
@@ -48,7 +48,7 @@ export function makeShow(): Show {
       },
       {
         id: 2,
-        title: 'Episode 2 — The Meat District',
+        title: 'Episode 2 - The Meat District',
         youtubeId: 'M7lc1UVf-VE',
         floor: 1,
         durationSec: 240,
@@ -56,7 +56,7 @@ export function makeShow(): Show {
       },
       {
         id: 3,
-        title: 'Episode 3 — Descent',
+        title: 'Episode 3 - Descent',
         youtubeId: 'M7lc1UVf-VE',
         floor: 2,
         durationSec: 240,
@@ -213,7 +213,7 @@ export function makeEpisode(episodeId = 1): EpisodeData {
  * The show-level entity registry the fixture episode's `npc` events point at
  * (007 data-model "Fixture facts"): a boss with two facts, a vendor with none
  * (so the record's empty-facts line has something to say), and an ally with one.
- * `unknown-id` at t = 140 is deliberately absent — it is the missing-entity case.
+ * `unknown-id` at t = 140 is deliberately absent - it is the missing-entity case.
  */
 export function makeRegistry(): Registry {
   return {

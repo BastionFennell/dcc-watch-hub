@@ -135,14 +135,14 @@ export function applyEvent(state: OverlayState, event: AnyEvent): OverlayState {
       }));
 
     case 'rank':
-      // Individual rank only — DCC has no party rank (T334).
+      // Individual rank only - DCC has no party rank (T334).
       return withCrawler(state, event.actor, (crawler) => ({ ...crawler, rank: event.rank }));
 
     case 'npc': {
       /*
        * Every action creates or updates the entry (research R2): a `seen` before
        * a `met` still means the party has met it, so `firstMet` is the first
-       * event of any action. There is no registry here — an id the registry does
+       * event of any action. There is no registry here - an id the registry does
        * not carry gets state like any other, and the strip omits it later.
        */
       const prior = state.npcs[event.id] as NpcState | undefined;

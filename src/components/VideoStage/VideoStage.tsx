@@ -16,7 +16,7 @@ export interface VideoStageProps {
   onSource: (source: TimeSource) => void;
   /**
    * Phone only (006 FR-500): dock the *same* player as a compact frame pinned
-   * under the header. Nothing is re-parented or remounted — the slot keeps its
+   * under the header. Nothing is re-parented or remounted - the slot keeps its
    * height and CSS moves the stage box, so the host never reloads.
    */
   mini?: boolean;
@@ -24,15 +24,15 @@ export interface VideoStageProps {
   onExitMini?: () => void;
   /**
    * Phone only (FR-501/FR-503): the minimap badge duplicates the Map tab, so
-   * the page does not render it. VideoStage itself owns no overlay — the badge
-   * arrives through `children` — so this only surfaces the decision as
+   * the page does not render it. VideoStage itself owns no overlay - the badge
+   * arrives through `children` - so this only surfaces the decision as
    * `data-hide-badge` on the root, for CSS and for tests; the *suppression*
    * happens where the badge is created (`EpisodePage`, T608).
    */
   hideBadge?: boolean;
   /**
    * Overlay slot, drawn above the player: `AchievementToast`, `MiniMapBadge`,
-   * `NextEpisodeCard` (US3/US4). The caption is no longer one of them — since
+   * `NextEpisodeCard` (US3/US4). The caption is no longer one of them - since
    * T340 it lives in its own row under the stage.
    */
   children?: ReactNode;

@@ -19,7 +19,7 @@ CI workflow plus a GitHub Pages deploy workflow.
 
 **Language/Version**: TypeScript 5.x (strict), Node 20.9.0 (pinned in `.tool-versions`; asdf)  
 **Primary Dependencies**: Vite 6.x, React 19, react-dom 19, react-router 7 (declarative mode),
-`@vitejs/plugin-react` 4.x (Vite 7 / plugin-react 5 need Node ≥ 20.19 — excluded)  
+`@vitejs/plugin-react` 4.x (Vite 7 / plugin-react 5 need Node ≥ 20.19 - excluded)  
 **Dev Dependencies**: Vitest 3, `@testing-library/react`, `@testing-library/jest-dom`, jsdom,
 ESLint 9 flat config + typescript-eslint + eslint-plugin-react-hooks, `tsx` (script runner),
 `csv-parse` (used only by the script), `@types/youtube`, `ajv` (schema tests only)  
@@ -42,12 +42,12 @@ only inside the adapter
 
 | Principle | Gate | Status (pre-design) | Status (post-design) |
 |-----------|------|---------------------|----------------------|
-| I. Time-Truth | Reducer pure; recompute on seek; nothing renders past playhead; unit tests for t=0 / mid / back / forward / no-early-render | PASS — `src/engine/` is pure TS with no React or DOM imports; toast queue and level-up pulse are derived from playhead, not imperative timers | PASS — data-model.md defines derived view models only; no stored overlay state |
-| II. Host-Agnostic Playback | Components consume only `TimeSource`; fake exists; YouTube confined to adapter | PASS — `src/playback/YouTubeTimeSource.ts` is the only file importing `@types/youtube` globals; ESLint `no-restricted-imports`/`no-restricted-globals` rule blocks `YT` outside it | PASS — contracts/time-source.md fixed; dev scrubber uses `FakeTimeSource` |
-| III. Ambient & Diegetic | Default view = stage + rail + ticker; System voice; no audio; no teasing | PASS — no click handlers on frames or minimap; copy lives in `src/copy.ts` for spot-check | PASS — the wireframe's "click a crawler" hint dropped |
-| IV. Static, Dependency-Light | Static build; only React + router at runtime; no blocking fonts; unknown events ignored | PASS — runtime deps: react, react-dom, react-router. All else dev-only | PASS |
-| V. Scope Discipline | No v2/v3 items; no premature optimization; FRs trace to spec | PASS — no memoization of reducer; no localStorage; no minimap interaction | PASS — dev-only `?fake=1` scrubber is a test affordance required by Principle II, tree-shaken from prod |
-| VI. Author-Friendly Pipeline | Converter with warnings vs errors; sample CSV; broken-row test | PASS — `scripts/sheet-to-json.ts` shares `src/data/validate.ts` with the app | PASS — contracts/sheet-csv.md fixes column mapping |
+| I. Time-Truth | Reducer pure; recompute on seek; nothing renders past playhead; unit tests for t=0 / mid / back / forward / no-early-render | PASS - `src/engine/` is pure TS with no React or DOM imports; toast queue and level-up pulse are derived from playhead, not imperative timers | PASS - data-model.md defines derived view models only; no stored overlay state |
+| II. Host-Agnostic Playback | Components consume only `TimeSource`; fake exists; YouTube confined to adapter | PASS - `src/playback/YouTubeTimeSource.ts` is the only file importing `@types/youtube` globals; ESLint `no-restricted-imports`/`no-restricted-globals` rule blocks `YT` outside it | PASS - contracts/time-source.md fixed; dev scrubber uses `FakeTimeSource` |
+| III. Ambient & Diegetic | Default view = stage + rail + ticker; System voice; no audio; no teasing | PASS - no click handlers on frames or minimap; copy lives in `src/copy.ts` for spot-check | PASS - the wireframe's "click a crawler" hint dropped |
+| IV. Static, Dependency-Light | Static build; only React + router at runtime; no blocking fonts; unknown events ignored | PASS - runtime deps: react, react-dom, react-router. All else dev-only | PASS |
+| V. Scope Discipline | No v2/v3 items; no premature optimization; FRs trace to spec | PASS - no memoization of reducer; no localStorage; no minimap interaction | PASS - dev-only `?fake=1` scrubber is a test affordance required by Principle II, tree-shaken from prod |
+| VI. Author-Friendly Pipeline | Converter with warnings vs errors; sample CSV; broken-row test | PASS - `scripts/sheet-to-json.ts` shares `src/data/validate.ts` with the app | PASS - contracts/sheet-csv.md fixes column mapping |
 
 No violations → Complexity Tracking left empty.
 
@@ -152,7 +152,7 @@ No constitution violations to justify.
 
 ## Phase Outputs
 
-- Phase 0: [research.md](./research.md) — all Technical Context unknowns resolved.
+- Phase 0: [research.md](./research.md) - all Technical Context unknowns resolved.
 - Phase 1: [data-model.md](./data-model.md), [contracts/](./contracts/), [quickstart.md](./quickstart.md);
   `CLAUDE.md` updated to point here.
 - Phase 2: `tasks.md` via `/speckit-tasks`.

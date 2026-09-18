@@ -4,10 +4,10 @@ Module `src/playback/resume.ts` (framework-free).
 
 - Key: `dcc-watch-hub:resume:v1:<episodeId>`
 - Value: `{ "episodeId": number, "t": number, "savedAt": ISO-8601 string }`
-- `loadResume(episodeId): ResumeRecord | null` — null on missing, unparsable, wrong `episodeId`,
+- `loadResume(episodeId): ResumeRecord | null` - null on missing, unparsable, wrong `episodeId`,
   non-finite or negative `t`, or any storage exception.
-- `saveResume(episodeId, t): void` — writes; swallows exceptions.
-- `clearResume(episodeId): void` — removes; swallows exceptions.
+- `saveResume(episodeId, t): void` - writes; swallows exceptions.
+- `clearResume(episodeId): void` - removes; swallows exceptions.
 - `storage` is injectable (`createResumeStore(storage?: Storage)`) for tests; default is
   `globalThis.localStorage` resolved lazily inside try/catch.
 

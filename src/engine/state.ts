@@ -1,6 +1,6 @@
 /**
  * Overlay state: the result of folding every elapsed event onto the episode's
- * initial state. Never stored — always recomputed (constitution I, Time-Truth).
+ * initial state. Never stored - always recomputed (constitution I, Time-Truth).
  *
  * Framework-free by rule: no React, no DOM, no clocks, no randomness.
  */
@@ -51,8 +51,8 @@ export interface CrawlerState extends Omit<Crawler, 'gear'> {
 
 /**
  * What the elapsed log says about one entity (007, FR-602). Created by the first
- * `npc` event of any action — a `seen` before a `met` still counts as an
- * encounter (research R2) — and, like everything here, recomputed on every seek.
+ * `npc` event of any action - a `seen` before a `met` still counts as an
+ * encounter (research R2) - and, like everything here, recomputed on every seek.
  */
 export interface NpcState {
   /** `t` of the first event about this entity, whatever its action. */

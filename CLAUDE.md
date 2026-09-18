@@ -11,7 +11,7 @@ CSS Modules, Vitest 3. Commands: `npm run dev | typecheck | lint | test | build 
 
 Hard rules (constitution): overlay state is a pure function of `events.filter(e => e.t <= t)`;
 only `src/playback/YouTubeTimeSource.ts` (and `loadYouTubeApi.ts`) may reference YouTube; nothing beyond
-the active feature scope (007: NPC encounters + registry — no tooltips, stingers, roster, or v3);
+the active feature scope (007: NPC encounters + registry - no tooltips, stingers, roster, or v3);
 no audio; panels never cover the stage on desktop except the modal full record; storage holds the
 playhead only;
 no UI frameworks or webfonts; System-voice copy lives in `src/copy.ts`.

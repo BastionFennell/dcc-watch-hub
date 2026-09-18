@@ -158,7 +158,7 @@ describe('toNumber', () => {
 
 /* --------------------------------------------------- v2: new events + fields */
 
-describe('normalizeEvent — v2 event types', () => {
+describe('normalizeEvent - v2 event types', () => {
   it('keeps a skill event with and without its optional fields', () => {
     expect(normalizeEvent({ t: 80, type: 'skill', actor: 'xo', name: 'Understudy Strike' })).toEqual(
       { t: 80, type: 'skill', actor: 'xo', name: 'Understudy Strike' },
@@ -214,7 +214,7 @@ describe('normalizeEvent — v2 event types', () => {
   });
 });
 
-describe('normalizeCrawler — optional sheet fields', () => {
+describe('normalizeCrawler - optional sheet fields', () => {
   const base = {
     id: 'harry',
     name: 'Harry',
@@ -291,7 +291,7 @@ describe('normalizeCrawler — optional sheet fields', () => {
 
 /* ------------------------------------------ 003 revision 2: equip / unequip */
 
-describe('normalizeEvent — gear events (R2-FR-220)', () => {
+describe('normalizeEvent - gear events (R2-FR-220)', () => {
   it('keeps an equip event for every sheet slot', () => {
     for (const slot of ['head', 'torso', 'arms', 'hands', 'legs', 'feet', 'accessory']) {
       expect(normalizeEvent({ t: 152, type: 'equip', actor: 'harry', slot, item: 'Jacket' })).toEqual(
@@ -344,7 +344,7 @@ describe('normalizeEvent — gear events (R2-FR-220)', () => {
   });
 });
 
-describe('normalizeCrawler — gear and art (R2-FR-220/224)', () => {
+describe('normalizeCrawler - gear and art (R2-FR-220/224)', () => {
   const base = {
     id: 'harry',
     name: 'Harry',

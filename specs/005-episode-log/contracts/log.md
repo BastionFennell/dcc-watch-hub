@@ -2,7 +2,7 @@
 
 ## Selectors (`src/engine/selectors.ts`)
 - `FeedItem` gains `actorId?: string`.
-- `logItems(events, t, party): FeedItem[]` — all known elapsed events, chronological (file order for ties).
+- `logItems(events, t, party): FeedItem[]` - all known elapsed events, chronological (file order for ties).
 - `logCounts(items): { total: number; byType: Partial<Record<EventType, number>>; byActor: Record<string, number> }`
 - `applyLogFilters(items, filters: { types: ReadonlySet<EventType>; actors: ReadonlySet<string> }): FeedItem[]`
 
