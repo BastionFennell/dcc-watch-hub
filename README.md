@@ -766,9 +766,9 @@ video's real length and the sample events are spread across it. Change ids and d
 
 **Crawler portraits** - two are real, two are still placeholders:
 
-- `public/img/crawlers/mimi.jpg` (Mimi Rivers - **real**, 192×192, cropped head-and-shoulders
+- `public/img/crawlers/mimi.png` (Mimi Rivers - **real**, 192×192, cropped head-and-shoulders
   from the render)
-- `public/img/crawlers/ronald.jpg` (Ronald "Madio" Hudson - **real**, 192×192, same crop)
+- `public/img/crawlers/ronald.png` (Ronald "Madio" Hudson - **real**, 192×192, same crop)
 - `public/img/crawlers/harry.svg` (Harry - *placeholder*, generated monochrome SVG bust)
 - `public/img/crawlers/xo.svg` (Xavier "XO" Ortiz - *placeholder*, generated monochrome SVG bust)
 
@@ -777,8 +777,8 @@ renders them at 40 px (32 px on a phone), so square art crops best; keep a bust 
 
 **Crawler full-figure art** - the record's art column. Only the two rendered crawlers have any:
 
-- `public/img/crawlers/mimi-art.jpg` (Mimi Rivers - **real**, 830×1200)
-- `public/img/crawlers/ronald-art.jpg` (Ronald "Madio" Hudson - **real**, 830×1200)
+- `public/img/crawlers/mimi-art.png` (Mimi Rivers - **real**, 830×1200)
+- `public/img/crawlers/ronald-art.png` (Ronald "Madio" Hudson - **real**, 830×1200)
 
 Harry and XO carry no `art` field at all until their renders exist, so the record falls back to
 their bust - which is the intended default, and keeps the fallback path exercised. A crawler's

@@ -86,7 +86,7 @@
           "current": 20,
           "max": 20
         },
-        "portrait": "/img/crawlers/mimi.jpg",
+        "portrait": "/img/crawlers/mimi.png",
         "class": null,
         "inventory": [],
         "rank": null,
@@ -149,7 +149,7 @@
           }
         ],
         "gear": {},
-        "art": "/img/crawlers/mimi-art.jpg"
+        "art": "/img/crawlers/mimi-art.png"
       },
       {
         "id": "ronald",
@@ -161,7 +161,7 @@
           "current": 20,
           "max": 20
         },
-        "portrait": "/img/crawlers/ronald.jpg",
+        "portrait": "/img/crawlers/ronald.png",
         "class": null,
         "inventory": [
           "\"Lucky Charm\" - a small ceramic lady bug",
@@ -219,7 +219,7 @@
           }
         ],
         "gear": {},
-        "art": "/img/crawlers/ronald-art.jpg"
+        "art": "/img/crawlers/ronald-art.png"
       },
       {
         "id": "xo",

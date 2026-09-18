@@ -132,7 +132,7 @@ export function DossierHeader({ dossier, meta }: DossierHeaderProps) {
             {dossier.handle}
             {/* 008: the real sheets name no player, so the credit only appears
                 when the data actually carries one. */}
-            {dossier.player !== '' && (
+            {dossier.player.trim() !== '' && (
               <>
                 <span className={styles.dot} aria-hidden="true">
                   {'·'}

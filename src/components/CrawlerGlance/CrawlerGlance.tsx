@@ -97,7 +97,7 @@ export function CrawlerGlance({ glance, onOpenRecord }: CrawlerGlanceProps) {
             <span>{glance.handle}</span>
             {/* 008: the real sheets name no player, so the credit only appears
                 when the data actually carries one. */}
-            {glance.player !== '' && (
+            {glance.player.trim() !== '' && (
               <>
                 <Separator />
                 <span>{copy.playedBy(glance.player)}</span>
