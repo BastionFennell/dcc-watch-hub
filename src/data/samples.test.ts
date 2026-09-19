@@ -436,7 +436,7 @@ describe('spell refs across the sample episodes', () => {
     const mimi = episode.initialState.party.find((entry) => entry.id === 'mimi');
     expect(mimi?.spells).toContainEqual({ ref: 'frost-scar', rank: 3 });
     expect(mimi?.hotlist).toContainEqual({ ref: 'frost-scar' });
-    expect(mimi?.skills.some((skill) => skill.name === 'Frost Scar')).toBe(false);
+    expect(mimi?.skills?.some((skill) => skill.name === 'Frost Scar')).toBe(false);
     const view = resolveSpell({ ref: 'frost-scar', rank: 3 }, index);
     expect(view.mana).toBe(2);
     expect(view.tags).toEqual(['Attack', 'Ice']);
