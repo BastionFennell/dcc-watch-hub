@@ -16,12 +16,13 @@ export interface ManaSegmentsProps {
  * a single unmistakable notch. The fill is System blue, which is the one colour
  * the overlay reserves for the System's own readouts.
  *
- * A crawler with no pool (no INT, so `max` is 0) gets nothing at all rather than
- * an empty rail: there is no meter to read. The label is `aria-hidden` because
- * the strip's own `aria-label` already opens with the word "Mana".
+ * Every crawler carries a pool (009 revision 1), so the strip always draws: an
+ * empty pool is an empty rail reading "Mana 0 of 0", not a missing row, and the
+ * three surfaces that show mana - card, glance, record - agree at every value.
+ * The label is `aria-hidden` because the strip's own `aria-label` already opens
+ * with the word "Mana".
  */
 export function ManaSegments({ current, max, label = true }: ManaSegmentsProps) {
-  if (max <= 0) return null;
   return (
     <>
       {label ? (

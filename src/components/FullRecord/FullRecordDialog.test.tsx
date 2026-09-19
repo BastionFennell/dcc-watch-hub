@@ -658,12 +658,15 @@ describe('the record’s MANA row', () => {
     expect(screen.getByTestId('dossier-mana')).toHaveTextContent(copy.hpValue(6, 6));
   });
 
-  it('drops the row entirely for a crawler with no pool, HP untouched', () => {
+  it('keeps the row for a crawler with an empty pool, HP untouched', () => {
+    // 009 revision 1: the pool is always there, so the row reads 0/0 rather
+    // than disappearing and resizing VITALS between crawlers.
     open(dossierAt(0, 'xo'));
     const vitals = within(section('vitals'));
-    expect(vitals.queryByTestId('mana-segments')).toBeNull();
-    expect(screen.queryByTestId('dossier-mana')).toBeNull();
-    expect(vitals.queryByText(copy.vitalsMana)).toBeNull();
+    expect(vitals.getByTestId('mana-segments')).toHaveAttribute('aria-label', copy.manaAria(0, 0));
+    expect(vitals.queryAllByTestId('mana-segment')).toHaveLength(0);
+    expect(screen.getByTestId('dossier-mana')).toHaveTextContent(copy.hpValue(0, 0));
+    expect(vitals.getByText(copy.vitalsMana)).toBeInTheDocument();
     expect(vitals.getAllByTestId('hp-segment')).toHaveLength(10);
     expect(screen.getByTestId('dossier-hp')).toHaveTextContent(copy.hpValue(18, 18));
   });

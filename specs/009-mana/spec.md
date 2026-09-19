@@ -23,6 +23,8 @@ closing paren to the witchy kit" (Veil's inventory note).
   `current/max`. Hidden when `max` is 0. Accessible name "Mana 5 of 5". Phone layout unchanged.
 - Timeline/log treat `mana` like `hp` (same colour family as the hp marker; no new legend entry
   unless hp has one).
+- Revision 1: a mana pool is always present, so the MANA row is never hidden; the party cards carry
+  a thin mana bar under HP.
 
 ## Data
 - Sheets: Mimi INT 5 (sheet says Max Mana 5), Veil INT 6 (sheet 6/6), Harry/Ronald/XO per INT.

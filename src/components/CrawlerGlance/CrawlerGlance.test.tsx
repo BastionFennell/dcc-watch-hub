@@ -248,12 +248,17 @@ describe('CrawlerGlance - the MANA row', () => {
     expect(screen.getByTestId('glance-mana')).toHaveTextContent(copy.hpValue(5, 5));
   });
 
-  it('shows no row at all for a crawler with no pool', () => {
-    // X.O. has neither a mana box nor an INT to derive one from.
+  it('still draws the row for a crawler with an empty pool', () => {
+    // X.O. has neither a mana box nor an INT to derive one from. The row stays
+    // (009 revision 1): an empty rail reading 0/0, never a missing line.
     renderGlance(glanceAt(0, 'xo'));
-    expect(screen.queryByTestId('mana-segments')).toBeNull();
-    expect(screen.queryByTestId('glance-mana')).toBeNull();
-    expect(screen.queryByText(copy.vitalsMana)).toBeNull();
+    expect(screen.getByText(copy.vitalsMana)).toBeInTheDocument();
+    expect(screen.getByTestId('mana-segments')).toHaveAttribute(
+      'aria-label',
+      copy.manaAria(0, 0),
+    );
+    expect(screen.queryAllByTestId('mana-segment')).toHaveLength(0);
+    expect(screen.getByTestId('glance-mana')).toHaveTextContent(copy.hpValue(0, 0));
   });
 
   it('leaves the HP strip exactly as it was', () => {

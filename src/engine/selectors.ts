@@ -36,6 +36,8 @@ export interface PartyFrame {
   handle: string;
   level: number;
   hp: { current: number; max: number };
+  /** Clamped the same way the glance and the record clamp it (009). */
+  mana: Hp;
   /** 0–100, clamped; drives the HP bar width. */
   pct: number;
   danger: boolean;
@@ -226,6 +228,7 @@ export function partyFrames(
       handle: crawler.handle,
       level: crawler.level,
       hp: { current, max: crawler.hp.max },
+      mana: manaView(crawler.mana),
       pct: Math.round((current / max) * 100),
       danger: current / max < 0.25,
       levelUpPulse,

@@ -144,6 +144,19 @@ describe('partyFrames', () => {
     expect(pip(139.999)).toEqual(['Poisoned']);
     expect(pip(140)).toEqual([]);
   });
+
+  it('carries the pool at the playhead, clamped, for every crawler (009)', () => {
+    const mana = (t: number, id: string) =>
+      partyFrames(reduceTo(episode, t), episode.events, t).find((f) => f.id === id)?.mana;
+    // The sheet's box wins; the pool is spent at 171 and restored at 172.
+    expect(mana(0, 'psychic')).toEqual({ current: 5, max: 5 });
+    expect(mana(171, 'psychic')).toEqual({ current: 2, max: 5 });
+    expect(mana(172, 'psychic')).toEqual({ current: 5, max: 5 });
+    // Harry has INT and no box, so the pool is derived; X.O. has neither and
+    // reads 0/0 rather than being left off the frame (revision 1).
+    expect(mana(0, 'harry')?.max).toBeGreaterThan(0);
+    expect(mana(0, 'xo')).toEqual({ current: 0, max: 0 });
+  });
 });
 
 describe('activeToast', () => {

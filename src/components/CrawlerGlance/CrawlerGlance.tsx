@@ -115,15 +115,14 @@ export function CrawlerGlance({ glance, onOpenRecord }: CrawlerGlanceProps) {
         </p>
       </div>
 
-      {/* Mana: the same row one line down (009), hidden for a crawler with no pool. */}
-      {glance.mana.max > 0 ? (
-        <div className={styles.manaRow}>
-          <ManaSegments current={glance.mana.current} max={glance.mana.max} />
-          <p className={styles.manaValue} data-testid="glance-mana">
-            {copy.hpValue(glance.mana.current, glance.mana.max)}
-          </p>
-        </div>
-      ) : null}
+      {/* Mana: the same row one line down (009). Every crawler has a pool, so
+          the row always draws - an empty one reads 0/0 (revision 1). */}
+      <div className={styles.manaRow}>
+        <ManaSegments current={glance.mana.current} max={glance.mana.max} />
+        <p className={styles.manaValue} data-testid="glance-mana">
+          {copy.hpValue(glance.mana.current, glance.mana.max)}
+        </p>
+      </div>
 
       {/*
         Two stacked rows: the numbers, then the chart on a row of its own.
