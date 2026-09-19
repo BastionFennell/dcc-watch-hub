@@ -134,3 +134,10 @@ range and page number.
 ### Non-goals
 Spells are not listed in the Dungeon Codex; no random-roll UI; the book text stays in the data
 file only (private repo - flag before any public release).
+
+## Revision 5 (2026-09-18) - fifth crawler, and what stays private
+- Veil Ravencrest (real name Lauren Summers, played by Sarah) joins the party from her sheet:
+  human, she/they, level 1, crawler 13666, Heal + Soul Collector (registry refs), nine skills,
+  inventory with the sheet's notes as descriptions. Placeholder portrait until a render arrives.
+- **Never transcribed**: the sheet's Past Trauma, Loose Ends, and Regrets boxes. They are the
+  player's private backstory, not System-visible data, and have no field in the model on purpose.

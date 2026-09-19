@@ -795,8 +795,9 @@ After adding an episode, add its entry to `public/data/show.json` (`id`, `title`
 ## Placeholders to replace before launch
 
 Everything below is sample data so the site is runnable today, with one exception: as of
-feature 008 the **party is real**. Harry, Mimi Rivers, Ronald "Madio" Hudson and Xavier "XO"
-Ortiz are transcribed from the author's filled Dungeon Crawler Carl RPG character sheets, and
+feature 008 the **party is real**. Harry, Mimi Rivers, Ronald "Madio" Hudson, Xavier "XO"
+Ortiz and Veil Ravencrest are transcribed from the author's filled Dungeon Crawler Carl RPG
+character sheets, and
 the sheets - not this repo - are the source of truth for their names, stats, skills, hotlist,
 inventory and gear. The sheets live in `character-sheets/` and the renders in
 `character-portraits/`; both folders are gitignored source material and are not published.
@@ -820,13 +821,15 @@ The three sample videos are the Blender Foundation's open movies: public, embedd
 different video so switching episodes is visibly a fresh broadcast. Each `durationSec` is that
 video's real length and the sample events are spread across it. Change ids and durations together.
 
-**Crawler portraits** - two are real, two are still placeholders:
+**Crawler portraits** - two are real, three are still placeholders:
 
 - `public/img/crawlers/mimi.png` (Mimi Rivers - **real**, 192×192, cropped head-and-shoulders
   from the render)
 - `public/img/crawlers/ronald.png` (Ronald "Madio" Hudson - **real**, 192×192, same crop)
 - `public/img/crawlers/harry.svg` (Harry - *placeholder*, generated monochrome SVG bust)
 - `public/img/crawlers/xo.svg` (Xavier "XO" Ortiz - *placeholder*, generated monochrome SVG bust)
+- `public/img/crawlers/veil.svg` (Veil Ravencrest - *placeholder*, generated monochrome SVG bust;
+  no render has been delivered for her yet)
 
 Keep the filenames, or update each crawler's `portrait` path in every `ep{N}.json`. The rail
 renders them at 40 px (32 px on a phone), so square art crops best; keep a bust under 40 kB.
@@ -836,7 +839,7 @@ renders them at 40 px (32 px on a phone), so square art crops best; keep a bust 
 - `public/img/crawlers/mimi-art.png` (Mimi Rivers - **real**, 830×1200)
 - `public/img/crawlers/ronald-art.png` (Ronald "Madio" Hudson - **real**, 830×1200)
 
-Harry and XO carry no `art` field at all until their renders exist, so the record falls back to
+Harry, XO and Veil carry no `art` field at all until their renders exist, so the record falls back to
 their bust - which is the intended default, and keeps the fallback path exercised. A crawler's
 `art` field names one of these files. Real art may be any aspect ratio - the column contains it
 rather than cropping it. Keep art under 250 kB so the Lighthouse budget holds.

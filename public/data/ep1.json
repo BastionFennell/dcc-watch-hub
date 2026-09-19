@@ -321,6 +321,122 @@
             "iPhone ProMax w/ charger & 3 power banks"
           ]
         }
+      },
+      {
+        "id": "veil",
+        "name": "Veil Ravencrest",
+        "handle": "Veil",
+        "player": "Sarah",
+        "level": 1,
+        "hp": {
+          "current": 20,
+          "max": 20
+        },
+        "portrait": "/img/crawlers/veil.svg",
+        "class": null,
+        "inventory": [
+          {
+            "name": "Witchy Traveling Kit",
+            "desc": "(small assortment of spell candles, crystals, herbs"
+          },
+          {
+            "name": "Tarot Card Set w/ Embroidered Bag",
+            "desc": "Well used and cared for, from Grandma"
+          },
+          {
+            "name": "EVP Recorder",
+            "desc": "(electronic voice phenomena)"
+          },
+          "Mini Flashlight",
+          {
+            "name": "Smartphone w/ USB Charger",
+            "desc": "No AC brick/adapter"
+          },
+          "Pocket Knife",
+          {
+            "name": "Matchbook",
+            "desc": "17 sticks remaining"
+          },
+          {
+            "name": "Standard Mana Potion",
+            "qty": 5,
+            "desc": "5 Standard Mana Potions, which fully restore your Mana when you spend an Action to drink one."
+          }
+        ],
+        "rank": null,
+        "race": "Human",
+        "pronouns": "she/they",
+        "crawlerNumber": "13666",
+        "stats": {
+          "str": 2,
+          "int": 6,
+          "con": 3,
+          "dex": 4,
+          "cha": 5
+        },
+        "hotlist": [
+          {
+            "ref": "heal"
+          },
+          {
+            "ref": "soul-collector"
+          },
+          {
+            "name": "Standard Mana Potion",
+            "qty": 5,
+            "desc": "5 Standard Mana Potions, which fully restore your Mana when you spend an Action to drink one."
+          }
+        ],
+        "skills": [
+          {
+            "name": "Good First Impression",
+            "rank": 1
+          },
+          {
+            "name": "Detect Lies",
+            "rank": 1
+          },
+          {
+            "name": "Streetwise",
+            "rank": 1
+          },
+          {
+            "name": "Lockpick",
+            "rank": 1
+          },
+          {
+            "name": "Investigation",
+            "rank": 3
+          },
+          {
+            "name": "Engineering",
+            "rank": 3,
+            "desc": "Ghost Hunting Tech/Equipment (AV Engineering/Photography and Development)"
+          },
+          {
+            "name": "Fabricate",
+            "rank": 2
+          },
+          {
+            "name": "Aiming",
+            "rank": 2
+          },
+          {
+            "name": "Unarmed Combat",
+            "rank": 1
+          }
+        ],
+        "spells": [
+          {
+            "ref": "heal",
+            "rank": 1
+          },
+          {
+            "ref": "soul-collector",
+            "rank": 1
+          }
+        ],
+        "gear": {}
       }
     ],
     "map": {
@@ -378,6 +494,13 @@
       "actor": "harry",
       "current": 12,
       "max": 20
+    },
+    {
+      "t": 112,
+      "type": "achievement",
+      "actor": "veil",
+      "title": "Cold Spot Confirmed",
+      "desc": "The recorder heard it first."
     },
     {
       "t": 118,
@@ -485,6 +608,14 @@
       "durationSec": 20
     },
     {
+      "t": 198,
+      "type": "spell",
+      "actor": "veil",
+      "ref": "soul-collector",
+      "rank": 1,
+      "mana": 4
+    },
+    {
       "t": 200,
       "type": "rank",
       "actor": "xo",
@@ -569,6 +700,13 @@
       "source": "Silver Adventurer Box"
     },
     {
+      "t": 282,
+      "type": "loot",
+      "actor": "veil",
+      "item": "Bone-handled Athame",
+      "source": "Bronze Adventurer Box"
+    },
+    {
       "t": 290,
       "type": "hotlist",
       "actor": "harry",
@@ -597,6 +735,13 @@
       "actor": "ronald",
       "slot": "legs",
       "item": "Reinforced Chaps"
+    },
+    {
+      "t": 312,
+      "type": "hp",
+      "actor": "veil",
+      "current": 11,
+      "max": 20
     },
     {
       "t": 317,
@@ -653,6 +798,13 @@
       "type": "hp",
       "actor": "harry",
       "current": 18,
+      "max": 20
+    },
+    {
+      "t": 402,
+      "type": "hp",
+      "actor": "veil",
+      "current": 20,
       "max": 20
     },
     {
