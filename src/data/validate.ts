@@ -23,10 +23,13 @@ import type {
   Registry,
   Show,
   SkillEntry,
+  SpellDef,
   SpellEntry,
+  SpellRegistry,
+  SpellUpgrade,
   UnknownEvent,
 } from './types';
-import { ENTITY_KINDS, GEAR_SLOTS, NPC_ACTIONS } from './types';
+import { ENTITY_KINDS, GEAR_SLOTS, NPC_ACTIONS, SPELL_KINDS } from './types';
 
 export class DataError extends Error {
   constructor(message: string) {
@@ -55,6 +58,18 @@ function toString_(x: unknown): string | null {
   if (typeof x === 'string') return x;
   if (typeof x === 'number' && Number.isFinite(x)) return String(x);
   return null;
+}
+
+/**
+ * A `SpellDef.id` on an entry or a row (008 revision 4). Kebab-case only, so a
+ * sheet cell holding a display name ("Heal") is never mistaken for a registry
+ * id - that is the same test the converter applies to field1.
+ */
+export const SPELL_REF_RE = /^[a-z0-9-]+$/;
+
+function toSpellRef(x: unknown): string | null {
+  const ref = toString_(x);
+  return ref !== null && SPELL_REF_RE.test(ref) ? ref : null;
 }
 
 function toStringList(x: unknown): string[] | null {
@@ -245,7 +260,12 @@ export function normalizeEvent(raw: unknown): AnyEvent {
        * the fact the row carries.
        */
       const name = toString_(raw.name);
-      if (actor === null || name === null || name === '') return unknownEvent(t, raw);
+      const ref = toSpellRef(raw.ref);
+      // 008 revision 4: a row may name the spell, point at the registry, or do
+      // both. Neither leaves nothing to file, so the row is unknown.
+      if (actor === null || ((name === null || name === '') && ref === null)) {
+        return unknownEvent(t, raw);
+      }
       const rank = toSkillRank(raw.rank);
       const mana = toSkillRank(raw.mana);
       const desc = toString_(raw.desc);
@@ -253,7 +273,8 @@ export function normalizeEvent(raw: unknown): AnyEvent {
         t,
         type: 'spell',
         actor,
-        name,
+        ...(name === null || name === '' ? {} : { name }),
+        ...(ref === null ? {} : { ref }),
         ...(rank === null ? {} : { rank }),
         ...(mana === null ? {} : { mana }),
         ...(desc === null ? {} : { desc }),
@@ -352,6 +373,7 @@ function toSkillEntries(x: unknown): SkillEntry[] | null {
  */
 function toNamedEntries<T extends HotlistEntry | InventoryEntry>(
   x: unknown,
+  allowRef = false,
 ): (string | T)[] | null {
   if (!Array.isArray(x)) return null;
   const out: (string | T)[] = [];
@@ -362,11 +384,15 @@ function toNamedEntries<T extends HotlistEntry | InventoryEntry>(
     }
     if (!isRecord(item)) return null;
     const name = toString_(item.name);
-    if (name === null || name === '') return null;
+    // 008 revision 4: a Hotlist mark may point at the spell registry instead of
+    // repeating its name. Inventory has no registry, so it still must name itself.
+    const ref = allowRef ? toSpellRef(item.ref) : null;
+    if ((name === null || name === '') && ref === null) return null;
     const qty = toSkillRank(item.qty);
     const desc = toString_(item.desc);
     out.push({
-      name,
+      ...(name === null || name === '' ? {} : { name }),
+      ...(ref === null ? {} : { ref }),
       ...(qty === null ? {} : { qty }),
       ...(desc === null || desc === '' ? {} : { desc }),
     } as T);
@@ -381,12 +407,14 @@ function toSpellEntries(x: unknown): SpellEntry[] | null {
   for (const item of x) {
     if (!isRecord(item)) return null;
     const name = toString_(item.name);
-    if (name === null || name === '') return null;
+    const ref = toSpellRef(item.ref);
+    if ((name === null || name === '') && ref === null) return null;
     const rank = toSkillRank(item.rank);
     const mana = toSkillRank(item.mana);
     const desc = toString_(item.desc);
     out.push({
-      name,
+      ...(name === null || name === '' ? {} : { name }),
+      ...(ref === null ? {} : { ref }),
       ...(rank === null ? {} : { rank }),
       ...(mana === null ? {} : { mana }),
       ...(desc === null || desc === '' ? {} : { desc }),
@@ -450,7 +478,7 @@ export function normalizeCrawler(raw: Crawler): Crawler {
     else crawler.stats = stats;
   }
   if (crawler.hotlist !== undefined) {
-    const hotlist = toNamedEntries<HotlistEntry>(crawler.hotlist);
+    const hotlist = toNamedEntries<HotlistEntry>(crawler.hotlist, true);
     if (hotlist === null) drop('hotlist');
     else crawler.hotlist = hotlist;
   }
@@ -589,15 +617,25 @@ export function normalizeShow(raw: unknown): Show {
   if (!isShow(raw)) {
     throw new DataError('Show data does not match the show schema.');
   }
-  // 007: the registry pointer is optional, so a malformed one costs the registry
-  // and nothing else - the archive still loads (FR-600).
-  if (raw.registryUrl !== undefined && typeof raw.registryUrl !== 'string') {
-    const show: Show = { ...raw };
+  /*
+   * 007: the registry pointer is optional, so a malformed one costs the registry
+   * and nothing else - the archive still loads (FR-600). 008 revision 4 adds the
+   * spell registry's pointer on exactly the same terms.
+   */
+  const badRegistry = raw.registryUrl !== undefined && typeof raw.registryUrl !== 'string';
+  const badSpells = raw.spellsUrl !== undefined && typeof raw.spellsUrl !== 'string';
+  if (!badRegistry && !badSpells) return raw;
+
+  const show: Show = { ...raw };
+  if (badRegistry) {
     delete show.registryUrl;
     console.warn('Show: dropping malformed "registryUrl".');
-    return show;
   }
-  return raw;
+  if (badSpells) {
+    delete show.spellsUrl;
+    console.warn('Show: dropping malformed "spellsUrl".');
+  }
+  return show;
 }
 
 /* --------------------------------------------------------------- registry */
@@ -688,4 +726,129 @@ export function normalizeRegistry(raw: unknown): Registry {
     entities.push(entity);
   }
   return { entities };
+}
+
+/* -------------------------------------------------- spell registry (008 R4) */
+
+/** The envelope only: every spell inside is judged one at a time. */
+export function isSpellRegistry(x: unknown): x is SpellRegistry {
+  return isRecord(x) && Array.isArray(x.spells);
+}
+
+function toSpellKind(x: unknown): SpellDef['kind'] | null {
+  return typeof x === 'string' && (SPELL_KINDS as readonly string[]).includes(x)
+    ? (x as SpellDef['kind'])
+    : null;
+}
+
+/** `{ rank, text }`. A malformed upgrade is dropped, never fatal. */
+function toUpgrades(x: unknown, spellId: string): SpellUpgrade[] {
+  if (!Array.isArray(x)) {
+    if (x !== undefined) console.warn(`Spell "${spellId}": dropping malformed "upgrades".`);
+    return [];
+  }
+  const upgrades: SpellUpgrade[] = [];
+  for (const raw of x) {
+    if (!isRecord(raw)) {
+      console.warn(`Spell "${spellId}": dropping a malformed upgrade.`);
+      continue;
+    }
+    const rank = toNumber(raw.rank);
+    const text = toString_(raw.text);
+    if (rank === null || !Number.isInteger(rank) || rank < 1 || text === null || text === '') {
+      console.warn(`Spell "${spellId}": dropping an upgrade with no rank or text.`);
+      continue;
+    }
+    upgrades.push({ rank, text });
+  }
+  return upgrades;
+}
+
+/** The chart's inclusive d100 range, or `undefined` when it is not a pair. */
+function toRoll(x: unknown): [number, number] | undefined {
+  if (!Array.isArray(x) || x.length !== 2) return undefined;
+  const lo = toNumber(x[0]);
+  const hi = toNumber(x[1]);
+  if (lo === null || hi === null) return undefined;
+  if (!Number.isInteger(lo) || !Number.isInteger(hi) || lo < 1 || hi > 100 || lo > hi) {
+    return undefined;
+  }
+  return [lo, hi];
+}
+
+/** One spell, or `null` when it is missing something the UI cannot invent. */
+function toSpellDef(raw: unknown): SpellDef | null {
+  if (!isRecord(raw)) return null;
+  const id = toString_(raw.id);
+  const name = toString_(raw.name);
+  const kind = toSpellKind(raw.kind);
+  const manaCost = toNumber(raw.manaCost);
+  const description = toString_(raw.description);
+  if (id === null || !SPELL_REF_RE.test(id)) return null;
+  if (name === null || name === '' || kind === null) return null;
+  if (manaCost === null || manaCost < 0) return null;
+  if (description === null || description === '') return null;
+
+  const aliases = toNonEmptyStringList(raw.aliases);
+  const quote = toString_(raw.quote);
+  const damageType = toString_(raw.damageType);
+  const range = toString_(raw.range);
+  const duration = toString_(raw.duration);
+  const aiFavor = toNumber(raw.aiFavor);
+  const limitations = toString_(raw.limitations);
+  const cooldown = toString_(raw.cooldown);
+  const baseDamage = toString_(raw.baseDamage);
+  const roll = toRoll(raw.roll);
+  const page = toNumber(raw.page);
+
+  return {
+    id,
+    name,
+    ...(aliases.length === 0 ? {} : { aliases }),
+    ...(quote === null || quote === '' ? {} : { quote }),
+    kind,
+    ...(raw.interrupt === true ? { interrupt: true } : {}),
+    ...(damageType === null || damageType === '' ? {} : { damageType }),
+    ...(raw.areaOfEffect === true ? { areaOfEffect: true } : {}),
+    manaCost,
+    ...(range === null || range === '' ? {} : { range }),
+    ...(duration === null || duration === '' ? {} : { duration }),
+    ...(aiFavor === null ? {} : { aiFavor }),
+    ...(limitations === null || limitations === '' ? {} : { limitations }),
+    ...(cooldown === null || cooldown === '' ? {} : { cooldown }),
+    description,
+    ...(baseDamage === null || baseDamage === '' ? {} : { baseDamage }),
+    upgrades: toUpgrades(raw.upgrades, id),
+    ...(roll === undefined ? {} : { roll }),
+    ...(page === null ? {} : { page }),
+  };
+}
+
+/**
+ * Validates the envelope and keeps every well-formed spell (008 revision 4).
+ * `normalizeRegistry`'s twin, and deliberately as forgiving: a malformed spell
+ * (no id, no name, an unknown kind, no cost or no description) is dropped with a
+ * warning and a duplicate id keeps the first, so one bad row never costs the
+ * whole book (constitution IV).
+ */
+export function validateSpells(raw: unknown): SpellRegistry {
+  if (!isSpellRegistry(raw)) {
+    throw new DataError('Spell data does not match the spell registry schema.');
+  }
+  const spells: SpellDef[] = [];
+  const seen = new Set<string>();
+  for (const item of raw.spells as unknown[]) {
+    const spell = toSpellDef(item);
+    if (spell === null) {
+      console.warn('Spells: dropping a malformed spell.');
+      continue;
+    }
+    if (seen.has(spell.id)) {
+      console.warn(`Spells: dropping duplicate spell "${spell.id}".`);
+      continue;
+    }
+    seen.add(spell.id);
+    spells.push(spell);
+  }
+  return { spells };
 }

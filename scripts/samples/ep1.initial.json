@@ -97,8 +97,7 @@
       },
       "hotlist": [
         {
-          "name": "Heal",
-          "desc": "Heal (2 mana) - Rank 1, heal 2 HB slots."
+          "ref": "heal"
         },
         {
           "name": "Standard Mana Potion",
@@ -155,10 +154,8 @@
       ],
       "spells": [
         {
-          "name": "Heal",
-          "rank": 1,
-          "mana": 2,
-          "desc": "Heal (2 mana) - Rank 1, heal 2 HB slots."
+          "ref": "heal",
+          "rank": 1
         }
       ]
     },
@@ -189,7 +186,9 @@
         "cha": 2
       },
       "hotlist": [
-        "Heal Spell (Interrupt) Rank 1 (Max): Mana Cost 2, heal 2 slots"
+        {
+          "ref": "heal"
+        }
       ],
       "skills": [
         {
@@ -227,6 +226,12 @@
         {
           "name": "Unarmed Combat",
           "rank": 3
+        }
+      ],
+      "spells": [
+        {
+          "ref": "heal",
+          "rank": 1
         }
       ]
     },

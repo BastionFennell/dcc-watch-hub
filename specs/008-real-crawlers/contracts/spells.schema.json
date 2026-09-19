@@ -1,0 +1,141 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://dcc-watch-hub/contracts/spells.schema.json",
+  "title": "Spell registry (008 revision 4)",
+  "type": "object",
+  "required": [
+    "spells"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "upgrade": {
+      "type": "object",
+      "required": [
+        "rank",
+        "text"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "rank": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "spell": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "manaCost",
+        "description",
+        "upgrades"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "quote": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "attack",
+            "passive"
+          ]
+        },
+        "interrupt": {
+          "type": "boolean"
+        },
+        "damageType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "areaOfEffect": {
+          "type": "boolean"
+        },
+        "manaCost": {
+          "comment": "0 is the book's \"Mana Cost: None\" (Protective Shell).",
+          "type": "integer",
+          "minimum": 0
+        },
+        "range": {
+          "type": "string",
+          "minLength": 1
+        },
+        "duration": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aiFavor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "limitations": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cooldown": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "baseDamage": {
+          "type": "string",
+          "minLength": 1
+        },
+        "upgrades": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/upgrade"
+          }
+        },
+        "roll": {
+          "comment": "The SPELLS CHART's d100 range, inclusive.",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  },
+  "properties": {
+    "spells": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/spell"
+      }
+    }
+  }
+}

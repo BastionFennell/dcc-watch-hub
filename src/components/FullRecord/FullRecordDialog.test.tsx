@@ -12,7 +12,9 @@ import { reduceTo } from '../../engine/reducer';
 import { crawlerDossier } from '../../engine/selectors';
 import type { Dossier } from '../../engine/selectors';
 import { formatTime } from '../../engine/time';
-import { makeEpisode, makeShow } from '../../test/fixtures';
+import { makeEpisode, makeEpisodeRaw, makeShow, makeSpells } from '../../test/fixtures';
+import { normalizeEpisode } from '../../data/validate';
+import { spellIndex } from '../../engine/spells';
 import { FullRecordDialog } from './FullRecordDialog';
 
 const episode = makeEpisode(1);
@@ -522,11 +524,14 @@ describe('FullRecordDialog - 008 revision 2', () => {
     const base = psychic();
     const many: Dossier = {
       ...base,
+      // Unresolved views (no `id`): a sheet's own spell, not one the book carries.
       spells: Array.from({ length: 9 }, (_, i) => ({
         name: `Cantrip ${i + 1}`,
         rank: i,
         mana: i + 1,
-        desc: `What Cantrip ${i + 1} does.`,
+        description: `What Cantrip ${i + 1} does.`,
+        tags: [],
+        upgrades: [],
       })),
     };
     open(many);
@@ -537,5 +542,77 @@ describe('FullRecordDialog - 008 revision 2', () => {
     expect(row).toHaveTextContent('What Cantrip 1 does.');
     fireEvent.click(screen.getByTestId('record-back'));
     expect(screen.getByTestId('crawler-record')).toHaveAttribute('data-view', 'sheet');
+  });
+});
+
+/* ------------------- 008 revision 4: a sheet entry that points at the book */
+
+describe('FullRecordDialog - registry-backed spells (008 revision 4)', () => {
+  const spells = spellIndex(makeSpells());
+
+  /** The Psychic with her Heal replaced by a `ref` into the book. */
+  function referring(): Dossier {
+    const raw = makeEpisodeRaw() as { initialState: { party: Record<string, unknown>[] } };
+    const psychic = raw.initialState.party.find((crawler) => crawler.id === 'psychic');
+    if (psychic !== undefined) {
+      psychic.spells = [{ ref: 'mending-light', rank: 1 }];
+      psychic.hotlist = [{ ref: 'mending-light' }];
+    }
+    const data = normalizeEpisode(raw);
+    const dossier = crawlerDossier(
+      reduceTo(data, 0),
+      data.events,
+      0,
+      'psychic',
+      data.initialState.party,
+      spells,
+    );
+    if (dossier === null) throw new Error('No dossier for psychic');
+    return dossier;
+  }
+
+  it("names a ref hotbar key from the registry and explains it in the book's words", () => {
+    open(referring());
+    const key = within(section('hotlist')).getByRole('button', {
+      name: copy.hotbarSlotAria(1, 'Mending Light'),
+    });
+    expect(key).toHaveTextContent('Mending Light');
+
+    fireEvent.click(key);
+    const tip = screen.getByTestId('tooltip');
+    expect(tip).toHaveTextContent(copy.spellTags(['Interrupt', 'Passive']) as string);
+    expect(tip).toHaveTextContent(copy.spellMana(2));
+    expect(tip).toHaveTextContent(copy.spellRange('Self only'));
+    expect(tip).toHaveTextContent('Heal 2 HB slots.');
+    expect(tip).toHaveTextContent(copy.spellUpgrade(5, 'Heal 3 HB slots instead.'));
+  });
+
+  it("gives the spell tile the book's cost in its footer and its fields in the tooltip", () => {
+    open(referring());
+    const tile = within(section('spells')).getByTestId('tile');
+    expect(tile).toHaveAttribute('data-name', 'Mending Light');
+    expect(tile).toHaveTextContent(copy.spellMeta(1, 2) as string);
+
+    fireEvent.click(
+      within(section('spells')).getByRole('button', {
+        name: copy.tooltipTrigger('Mending Light'),
+      }),
+    );
+    const tip = screen.getByTestId('tooltip');
+    expect(tip).toHaveTextContent(copy.spellLimitations('Rank 1 maximum'));
+    expect(tip).toHaveTextContent(copy.spellCooldown('10 minutes'));
+    expect(tip).toHaveTextContent(copy.spellDuration('5 seconds'));
+  });
+
+  it('prints the same fields in the spells list view, with no tooltip needed', () => {
+    const base = referring();
+    // Nine spells force the "View all" control the list view lives behind.
+    open({ ...base, spells: Array.from({ length: 9 }, () => base.spells[0]) });
+    fireEvent.click(screen.getByTestId('view-all-spells'));
+    const row = within(section('spells')).getAllByRole('listitem')[0];
+    expect(row).toHaveTextContent(copy.spellTags(['Interrupt', 'Passive']) as string);
+    expect(row).toHaveTextContent(copy.spellMana(2));
+    expect(row).toHaveTextContent('Heal 2 HB slots.');
+    expect(row).toHaveTextContent(copy.spellUpgrade(5, 'Heal 3 HB slots instead.'));
   });
 });

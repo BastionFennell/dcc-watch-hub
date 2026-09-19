@@ -14,6 +14,7 @@ import type {
 } from '../data/types';
 import type { CrawlerState, GearState, NpcState, OverlayState } from './state';
 import { ACCESSORY_CAP, cellKey, fromInitialState } from './state';
+import { entryKey } from './spells';
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
@@ -49,15 +50,18 @@ function union(existing: string[], add: string[], remove: string[]): string[] {
  * carrying appends a bare `{ name }`. A string list and an entry list therefore
  * behave identically, which is the point.
  */
-function unionEntries<T extends { name: string }>(
+function unionEntries<T extends { name?: string; ref?: string }>(
   existing: readonly T[],
   add: readonly string[],
   remove: readonly string[],
 ): T[] {
   const removed = new Set(remove);
-  const kept = existing.filter((entry) => !removed.has(entry.name));
+  // A mark that only carries a `ref` (008 R4) is named by that ref here, so a
+  // row can clear it by id as well as by the name the registry gives it.
+  const names = (entry: T) => [entry.name, entry.ref].filter((x) => x !== undefined);
+  const kept = existing.filter((entry) => !names(entry).some((name) => removed.has(name)));
   for (const name of add) {
-    if (!kept.some((entry) => entry.name === name)) kept.push({ name } as T);
+    if (!kept.some((entry) => names(entry).includes(name))) kept.push({ name } as T);
   }
   return kept;
 }
@@ -88,7 +92,7 @@ function upsertSkill(
  */
 function upsertSpell(
   existing: SpellEntry[],
-  name: string,
+  key: Pick<SpellEntry, 'name' | 'ref'>,
   rank: number | undefined,
   mana: number | undefined,
   desc: string | undefined,
@@ -98,8 +102,20 @@ function upsertSpell(
     ...(mana === undefined ? {} : { mana }),
     ...(desc === undefined ? {} : { desc }),
   };
-  const index = existing.findIndex((spell) => spell.name === name);
-  if (index === -1) return [...existing, { name, ...patch }];
+  // 008 revision 4: the identity of a spell is its registry id when it has one,
+  // so a `ref` row amends the sheet's `{ ref }` entry rather than adding a second.
+  const wanted = entryKey(key);
+  const index = existing.findIndex((spell) => entryKey(spell) === wanted);
+  if (index === -1) {
+    return [
+      ...existing,
+      {
+        ...(key.name === undefined ? {} : { name: key.name }),
+        ...(key.ref === undefined ? {} : { ref: key.ref }),
+        ...patch,
+      },
+    ];
+  }
   if (rank === undefined && mana === undefined && desc === undefined) return existing;
   const spells = existing.slice();
   spells[index] = { ...spells[index], ...patch };
@@ -172,7 +188,16 @@ export function applyEvent(state: OverlayState, event: AnyEvent): OverlayState {
     case 'spell':
       return withCrawler(state, event.actor, (crawler) => ({
         ...crawler,
-        spells: upsertSpell(crawler.spells, event.name, event.rank, event.mana, event.desc),
+        spells: upsertSpell(
+          crawler.spells,
+          {
+            ...(event.name === undefined ? {} : { name: event.name }),
+            ...(event.ref === undefined ? {} : { ref: event.ref }),
+          },
+          event.rank,
+          event.mana,
+          event.desc,
+        ),
       }));
 
     case 'class':

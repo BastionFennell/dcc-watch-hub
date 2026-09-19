@@ -44,6 +44,12 @@ export interface Show {
    * means the show has no registry: no strip, no tab, no `/registry` link.
    */
   registryUrl?: string;
+  /**
+   * Optional show-level spell registry (008 revision 4). Same rules as
+   * `registryUrl`: a leading slash, resolved against `BASE_URL`. Absent means
+   * no crawler sheet can carry a `ref`, and every spell entry stands alone.
+   */
+  spellsUrl?: string;
 }
 
 /* -------------------------------------------------------------- registry */
@@ -79,6 +85,59 @@ export interface Registry {
   entities: Entity[];
 }
 
+/* -------------------------------------------------- spell registry (008 R4) */
+
+/** An `Attack` needs a Spell Skill Check; a `Passive` simply happens. */
+export type SpellKind = 'attack' | 'passive';
+
+export const SPELL_KINDS = ['attack', 'passive'] as const satisfies readonly SpellKind[];
+
+/** One UPGRADES line: "Rank 5: +1d4 base damage". */
+export interface SpellUpgrade {
+  rank: number;
+  text: string;
+}
+
+/**
+ * One row of the book's Spell Skills chapter (008 revision 4), transcribed as
+ * the show's shared definition so a crawler sheet can point at it instead of
+ * restating it. Every field but `id`, `name`, `kind`, `manaCost`,
+ * `description` and `upgrades` is optional, because the book leaves them out.
+ */
+export interface SpellDef {
+  id: string;
+  name: string;
+  /** Parenthesised alternatives on the headline ("Astral Hand, Astral Claw"). */
+  aliases?: string[];
+  /** The System's flavour line under the headline. */
+  quote?: string;
+  kind: SpellKind;
+  /** "Interrupt" on the type line: the Spell can be cast out of turn. */
+  interrupt?: boolean;
+  /** Bludgeoning, Necrotic, Fire, Ice, Electric, Force, Sonic, ... */
+  damageType?: string;
+  areaOfEffect?: boolean;
+  /** 0 is the book's "Mana Cost: None" (Protective Shell). */
+  manaCost: number;
+  range?: string;
+  duration?: string;
+  aiFavor?: number;
+  limitations?: string;
+  cooldown?: string;
+  description: string;
+  baseDamage?: string;
+  /** Empty when the book says "None". */
+  upgrades: SpellUpgrade[];
+  /** The SPELLS CHART's d100 range, inclusive. */
+  roll?: [number, number];
+  page?: number;
+}
+
+/** The whole `spells.json` file: nothing but spell definitions. */
+export interface SpellRegistry {
+  spells: SpellDef[];
+}
+
 /* --------------------------------------------------------------- episode */
 
 /** `[row, col]` into the floor grid. */
@@ -103,7 +162,10 @@ export interface SkillEntry {
  * everywhere and means `{ name }`.
  */
 export interface HotlistEntry {
-  name: string;
+  /** Absent only when `ref` names a registry spell that supplies the name. */
+  name?: string;
+  /** A `SpellDef.id` (008 revision 4): the mark is a spell the book carries. */
+  ref?: string;
   qty?: number;
   desc?: string;
 }
@@ -120,7 +182,14 @@ export interface InventoryEntry {
  * costs to cast, and the full text the record shows in a tooltip.
  */
 export interface SpellEntry {
-  name: string;
+  /** Absent only when `ref` names a registry spell that supplies the name. */
+  name?: string;
+  /**
+   * A `SpellDef.id` (008 revision 4). The entry then inherits the book's name,
+   * mana cost and text; `mana` and `desc` below stay explicit overrides, for
+   * homebrew and scroll-only spells the registry has no row for.
+   */
+  ref?: string;
   rank?: number;
   mana?: number;
   desc?: string;
@@ -320,7 +389,10 @@ export interface SkillEvent extends EventBase {
 export interface SpellEvent extends EventBase {
   type: 'spell';
   actor: string;
-  name: string;
+  /** Absent only when `ref` names a registry spell (008 revision 4). */
+  name?: string;
+  /** A `SpellDef.id`; the upsert key is `ref ?? name`. */
+  ref?: string;
   rank?: number;
   mana?: number;
   desc?: string;

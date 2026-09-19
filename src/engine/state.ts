@@ -49,7 +49,7 @@ export function gearFrom(gear: Gear | undefined): GearState {
  * normalized here (008 revision 2), so nothing downstream ever handles both
  * shapes: `'Torch'` and `{ name: 'Torch' }` are the same state.
  */
-export function entriesFrom<T extends { name: string }>(
+export function entriesFrom<T extends { name?: string }>(
   entries: readonly (string | T)[] | undefined,
 ): T[] {
   return (entries ?? []).map((entry) =>

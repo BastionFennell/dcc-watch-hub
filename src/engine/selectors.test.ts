@@ -29,7 +29,8 @@ import { formatTime } from './time';
 import { normalizeEpisode } from '../data/validate';
 import type { EpisodeData, EventType, Registry } from '../data/types';
 import { isKnownEvent } from '../data/types';
-import { makeEpisode, makeEpisodeRaw, makeRegistry } from '../test/fixtures';
+import { makeEpisode, makeEpisodeRaw, makeRegistry, makeSpells } from '../test/fixtures';
+import { spellIndex } from './spells';
 
 const episode = makeEpisode();
 const party = episode.initialState.party;
@@ -1041,12 +1042,16 @@ describe('008 revision 2 - entries, spells and the hotbar', () => {
         desc: 'Restores your Mana in full when you spend an Action to drink one.',
       },
     ]);
+    // Resolved views since 008 revision 4: a sheet spell the registry does not
+    // carry comes back with no id, no tags and no upgrades.
     expect(dossier?.spells).toEqual([
       {
         name: 'Second Sight',
         rank: 2,
         mana: 3,
-        desc: 'Read the room one beat before it happens.',
+        description: 'Read the room one beat before it happens.',
+        tags: [],
+        upgrades: [],
       },
     ]);
   });
@@ -1080,7 +1085,9 @@ describe('008 revision 2 - entries, spells and the hotbar', () => {
     const dossierAtT = (t: number) =>
       crawlerDossier(reduceTo(withSpell, t), withSpell.events, t, 'harry');
     expect(dossierAtT(40)?.spells).toEqual([]);
-    expect(dossierAtT(60)?.spells).toEqual([{ name: 'Mend', rank: 1, mana: 4 }]);
+    expect(dossierAtT(60)?.spells).toEqual([
+      { name: 'Mend', rank: 1, mana: 4, description: '', tags: [], upgrades: [] },
+    ]);
   });
 });
 
@@ -1090,5 +1097,128 @@ describe('copy.spellMeta (008 revision 2)', () => {
     expect(copy.spellMeta(1, undefined)).toBe('Rank 1');
     expect(copy.spellMeta(undefined, 2)).toBe('2 mana');
     expect(copy.spellMeta(undefined, undefined)).toBeUndefined();
+  });
+});
+
+/* ------------------- 008 revision 4: the shared spell registry in selectors */
+
+describe('008 revision 4 - spell refs reach the dossier, the hotbar and the feed', () => {
+  const spells = spellIndex(makeSpells());
+
+  /** The Psychic, rewritten to point at the book instead of restating it. */
+  const referring = () => {
+    const raw = makeEpisodeRaw() as {
+      initialState: { party: Record<string, unknown>[] };
+      events: unknown[];
+    };
+    const psychic = raw.initialState.party.find((crawler) => crawler.id === 'psychic');
+    if (psychic !== undefined) {
+      psychic.spells = [{ ref: 'mending-light', rank: 1 }];
+      psychic.hotlist = [{ ref: 'mending-light' }, { name: 'Mana Draught', qty: 5 }];
+    }
+    return normalizeEpisode(raw);
+  };
+
+  const dossierOf = (data: EpisodeData, index = spells) =>
+    crawlerDossier(reduceTo(data, 0), data.events, 0, 'psychic', data.initialState.party, index);
+
+  it('resolves a sheet spell against the registry', () => {
+    const dossier = dossierOf(referring());
+    expect(dossier?.spells).toEqual([
+      {
+        id: 'mending-light',
+        name: 'Mending Light',
+        rank: 1,
+        mana: 2,
+        kind: 'passive',
+        tags: ['Interrupt', 'Passive'],
+        range: 'Self only',
+        duration: '5 seconds',
+        limitations: 'Rank 1 maximum',
+        cooldown: '10 minutes',
+        description: 'Heal 2 HB slots.',
+        upgrades: [{ rank: 5, text: 'Heal 3 HB slots instead.' }],
+        quote: 'Still breathing. Impressive.',
+      },
+    ]);
+  });
+
+  it('names a ref hotbar key from the registry and keeps the plain ones', () => {
+    const dossier = dossierOf(referring());
+    const { slots } = hotbarSlots(dossier?.hotlist ?? []);
+    expect(slots[0]).toMatchObject({ name: 'Mending Light' });
+    expect(slots[0]?.spell?.id).toBe('mending-light');
+    expect(slots[1]).toMatchObject({ name: 'Mana Draught', qty: 5 });
+    expect(slots[1]?.spell).toBeUndefined();
+  });
+
+  it('lets the entry beat the registry on mana and text', () => {
+    const raw = makeEpisodeRaw() as { initialState: { party: Record<string, unknown>[] } };
+    const psychic = raw.initialState.party.find((crawler) => crawler.id === 'psychic');
+    if (psychic !== undefined) {
+      psychic.spells = [{ ref: 'mending-light', rank: 1, mana: 9, desc: 'A scroll copy.' }];
+    }
+    const dossier = dossierOf(normalizeEpisode(raw));
+    expect(dossier?.spells[0]).toMatchObject({
+      id: 'mending-light',
+      mana: 9,
+      description: 'A scroll copy.',
+      range: 'Self only',
+    });
+  });
+
+  it('falls back to the ref itself when the registry has never heard of it', () => {
+    const raw = makeEpisodeRaw() as { initialState: { party: Record<string, unknown>[] } };
+    const psychic = raw.initialState.party.find((crawler) => crawler.id === 'psychic');
+    if (psychic !== undefined) psychic.spells = [{ ref: 'no-such-spell', rank: 2 }];
+    const dossier = dossierOf(normalizeEpisode(raw));
+    expect(dossier?.spells).toEqual([
+      { name: 'no-such-spell', rank: 2, tags: [], description: '', upgrades: [] },
+    ]);
+  });
+
+  it('degrades to the entry alone when no registry is passed at all', () => {
+    const dossier = dossierOf(referring(), spellIndex(null));
+    expect(dossier?.spells).toEqual([
+      { name: 'mending-light', rank: 1, tags: [], description: '', upgrades: [] },
+    ]);
+    expect(hotbarSlots(dossier?.hotlist ?? []).slots[0]).toEqual({ name: 'mending-light' });
+  });
+
+  it('upserts a spell row by its ref, not by the name the book gives it', () => {
+    const data = referring();
+    const raw = makeEpisodeRaw() as {
+      initialState: { party: Record<string, unknown>[] };
+      events: unknown[];
+    };
+    const psychic = raw.initialState.party.find((crawler) => crawler.id === 'psychic');
+    if (psychic !== undefined) psychic.spells = [{ ref: 'mending-light', rank: 1 }];
+    raw.events = [
+      ...raw.events,
+      { t: 50, type: 'spell', actor: 'psychic', ref: 'mending-light', rank: 4 },
+    ];
+    const amended = normalizeEpisode(raw);
+    const dossier = crawlerDossier(
+      reduceTo(amended, 60),
+      amended.events,
+      60,
+      'psychic',
+      amended.initialState.party,
+      spells,
+    );
+    expect(dossier?.spells).toHaveLength(1);
+    expect(dossier?.spells[0]).toMatchObject({ id: 'mending-light', rank: 4 });
+    expect(dossierOf(data)?.spells[0].rank).toBe(1);
+  });
+
+  it("names a ref spell row in the feed by the book's name", () => {
+    const rowed = withEvents([
+      { t: 5, type: 'spell', actor: 'psychic', ref: 'mending-light', rank: 3 },
+    ]);
+    const item = feedItems(rowed.events, 10, 8, rowed.initialState.party, null, spells)[0];
+    expect(item.text).toBe(copy.feedText.spell('The Psychic', 'Mending Light', 3));
+    // Without the book it still reads, under the raw id.
+    const bare = feedItems(rowed.events, 10, 8, rowed.initialState.party)[0];
+    expect(bare.text).toBe(copy.feedText.spell('The Psychic', 'mending-light', 3));
   });
 });

@@ -559,6 +559,33 @@ export const copy = {
 
   /** Names the tooltip's trigger: the key or tile explains itself on demand. */
   tooltipTrigger: (name: string) => `${name}, show details`,
+
+  /* --- appended by 008 revision 4 (the shared spell registry) --- */
+
+  /**
+   * The book's type line for a spell the registry carries: "Interrupt · Passive",
+   * "Attack · Fire · Area of Effect". Absent when there is nothing to say.
+   */
+  spellTags: (tags: readonly string[]): string | undefined =>
+    tags.length === 0 ? undefined : tags.join(' · '),
+
+  /**
+   * The numbers line under the tag line, assembled from whichever of Mana,
+   * Range and Duration the book gives: "Mana 2 · Range Self only".
+   */
+  /** The book prints "Mana Cost: None" for free spells; the registry stores 0. */
+  spellMana: (mana: number) => (mana === 0 ? 'Mana none' : `Mana ${mana}`),
+  spellRange: (range: string) => `Range ${range}`,
+  spellDuration: (duration: string) => `Duration ${duration}`,
+
+  /** The labelled lines the book prints on their own. */
+  spellLimitations: (text: string) => `Limitations: ${text}`,
+  spellCooldown: (text: string) => `Cooldown: ${text}`,
+  spellBaseDamage: (text: string) => `Base Damage: ${text}`,
+
+  /** The UPGRADES block: its heading, then one line per rank. */
+  spellUpgrades: 'Upgrades',
+  spellUpgrade: (rank: number, text: string) => `Rank ${rank}: ${text}`,
 } as const;
 
 export type Copy = typeof copy;

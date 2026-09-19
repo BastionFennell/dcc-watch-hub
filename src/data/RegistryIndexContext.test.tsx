@@ -14,7 +14,7 @@ import type { ReactNode } from 'react';
 import { ShowProvider } from './ShowContext';
 import { RegistryProvider } from './RegistryContext';
 import { RegistryIndexProvider, useRegistryIndex } from './RegistryIndexContext';
-import { makeEpisodeRaw, makeRegistry, makeShow } from '../test/fixtures';
+import { makeEpisodeRaw, makeRegistry, makeShow, makeSpells } from '../test/fixtures';
 
 /** Every URL the tree asked for, in order. */
 let requested: string[] = [];
@@ -34,6 +34,7 @@ function stubFetch({ failing = [] as number[] } = {}) {
     requested.push(url);
     if (url.includes('show.json')) return json(makeShow());
     if (url.includes('npcs.json')) return json(makeRegistry());
+    if (url.includes('spells.json')) return json(makeSpells());
     const episodeId = Number(/ep(\d+)\.json/.exec(url)?.[1] ?? 1);
     if (failing.includes(episodeId)) return Promise.reject(new Error('transmission lost'));
     return json(makeEpisodeRaw(episodeId));

@@ -33,9 +33,6 @@
         },
         {
           "type": "object",
-          "required": [
-            "name"
-          ],
           "additionalProperties": false,
           "properties": {
             "name": {
@@ -48,8 +45,25 @@
             },
             "desc": {
               "type": "string"
+            },
+            "ref": {
+              "type": "string",
+              "pattern": "^[a-z0-9-]+$"
             }
-          }
+          },
+          "anyOf": [
+            {
+              "required": [
+                "name"
+              ]
+            },
+            {
+              "required": [
+                "ref"
+              ]
+            }
+          ],
+          "comment": "008 revision 4: `ref` points at a SpellDef id; an entry needs a name or a ref."
         }
       ]
     },
@@ -234,9 +248,6 @@
     },
     "spellEntry": {
       "type": "object",
-      "required": [
-        "name"
-      ],
       "additionalProperties": false,
       "properties": {
         "name": {
@@ -253,8 +264,25 @@
         },
         "desc": {
           "type": "string"
+        },
+        "ref": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
         }
-      }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "name"
+          ]
+        },
+        {
+          "required": [
+            "ref"
+          ]
+        }
+      ],
+      "comment": "008 revision 4: `ref` inherits name, mana and text from the spell registry; `mana` and `desc` override it."
     },
     "gearSlot": {
       "enum": [
@@ -620,11 +648,26 @@
                   },
                   "desc": {
                     "type": "string"
+                  },
+                  "ref": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9-]+$"
                   }
                 },
                 "required": [
-                  "actor",
-                  "name"
+                  "actor"
+                ],
+                "anyOf": [
+                  {
+                    "required": [
+                      "name"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "ref"
+                    ]
+                  }
                 ]
               },
               {

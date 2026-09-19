@@ -15,7 +15,7 @@ import { RegistryProvider } from '../../data/RegistryContext';
 import { RegistryIndexProvider } from '../../data/RegistryIndexContext';
 import { RegistryBrowser } from './RegistryBrowser';
 import { copy } from '../../copy';
-import { makeEpisode, makeEpisodeRaw, makeRegistry, makeShow } from '../../test/fixtures';
+import { makeEpisode, makeEpisodeRaw, makeRegistry, makeShow, makeSpells } from '../../test/fixtures';
 
 /*
  * The fixture's episode 1 npc beats, which every playhead case below quotes:
@@ -63,6 +63,7 @@ function stubFetch() {
     const url = String(input);
     if (url.includes('show.json')) return json(makeShow());
     if (url.includes('npcs.json')) return json(makeRegistry());
+    if (url.includes('spells.json')) return json(makeSpells());
     const episodeId = Number(/ep(\d+)\.json/.exec(url)?.[1] ?? 1);
     return json(episodeId === 2 ? makeEpisode2Raw() : makeEpisodeRaw(episodeId));
   });

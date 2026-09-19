@@ -11,9 +11,11 @@ import {
   normalizeShow,
   sortEvents,
   toNumber,
+  isSpellRegistry,
+  validateSpells,
 } from './validate';
 import type { AnyEvent } from './types';
-import { makeEpisode, makeEpisodeRaw, makeRegistry, makeShow } from '../test/fixtures';
+import { makeEpisode, makeEpisodeRaw, makeRegistry, makeShow, makeSpells } from '../test/fixtures';
 
 describe('normalizeEvent', () => {
   it('keeps a well-formed known event', () => {
@@ -671,5 +673,145 @@ describe('normalizeEvent - spell (008 R2)', () => {
   it('demotes a spell with no actor or no name', () => {
     expect(normalizeEvent({ t: 1, type: 'spell', name: 'Heal' }).type).toBe('unknown');
     expect(normalizeEvent({ t: 1, type: 'spell', actor: 'mimi', name: '' }).type).toBe('unknown');
+  });
+});
+
+/* --------------------------------------- 008 revision 4: the spell registry */
+
+describe('normalizeEvent - spell refs (008 R4)', () => {
+  it('keeps a row that points at the registry instead of naming the spell', () => {
+    expect(normalizeEvent({ t: 9, type: 'spell', actor: 'mimi', ref: 'heal', rank: 1 })).toEqual({
+      t: 9,
+      type: 'spell',
+      actor: 'mimi',
+      ref: 'heal',
+      rank: 1,
+    });
+  });
+
+  it('keeps both when the row carries a ref and a name', () => {
+    expect(normalizeEvent({ t: 9, type: 'spell', actor: 'mimi', ref: 'heal', name: 'Heal' })).toEqual(
+      { t: 9, type: 'spell', actor: 'mimi', name: 'Heal', ref: 'heal' },
+    );
+  });
+
+  it('drops a ref that is not kebab-case rather than the row', () => {
+    expect(normalizeEvent({ t: 9, type: 'spell', actor: 'mimi', name: 'Heal', ref: 'Heal' })).toEqual(
+      { t: 9, type: 'spell', actor: 'mimi', name: 'Heal' },
+    );
+  });
+
+  it('demotes a row with neither a name nor a ref', () => {
+    expect(normalizeEvent({ t: 9, type: 'spell', actor: 'mimi' }).type).toBe('unknown');
+    expect(normalizeEvent({ t: 9, type: 'spell', actor: 'mimi', ref: 'Heal' }).type).toBe('unknown');
+  });
+});
+
+describe('normalizeCrawler - ref entries (008 R4)', () => {
+  const base = { id: 'mimi', name: 'Mimi', handle: '', player: '', level: 1, hp: { current: 1, max: 1 }, portrait: '/p.png', class: null, inventory: [], rank: null };
+
+  it('keeps a hotlist mark and a spell that only carry a ref', () => {
+    const crawler = normalizeCrawler({
+      ...base,
+      hotlist: [{ ref: 'heal' }],
+      spells: [{ ref: 'heal', rank: 1 }],
+    } as never);
+    expect(crawler.hotlist).toEqual([{ ref: 'heal' }]);
+    expect(crawler.spells).toEqual([{ ref: 'heal', rank: 1 }]);
+  });
+
+  it('drops the whole list when an entry has neither a name nor a ref', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const crawler = normalizeCrawler({ ...base, spells: [{ rank: 1 }] } as never);
+    expect(crawler.spells).toBeUndefined();
+    warn.mockRestore();
+  });
+
+  it('gives inventory no ref of its own - there is no item registry', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const crawler = normalizeCrawler({ ...base, inventory: [{ ref: 'heal' }] } as never);
+    expect(crawler.inventory).toEqual([]);
+    warn.mockRestore();
+  });
+});
+
+describe('normalizeShow (spellsUrl)', () => {
+  it('preserves a string spellsUrl', () => {
+    expect(normalizeShow({ ...makeShow(), spellsUrl: '/data/spells.json' }).spellsUrl).toBe(
+      '/data/spells.json',
+    );
+  });
+
+  it('drops a spellsUrl that is not a string, with a warning, keeping registryUrl', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const show = normalizeShow({ ...makeShow(), spellsUrl: 7 });
+    expect(show.spellsUrl).toBeUndefined();
+    expect(show.registryUrl).toBe('/data/npcs.json');
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('leaves a show with no spellsUrl alone', () => {
+    const { spellsUrl: _spellsUrl, ...noSpells } = makeShow();
+    expect(normalizeShow(noSpells).spellsUrl).toBeUndefined();
+  });
+});
+
+describe('validateSpells', () => {
+  it('guards the envelope', () => {
+    expect(isSpellRegistry({ spells: [] })).toBe(true);
+    expect(isSpellRegistry({})).toBe(false);
+    expect(() => validateSpells({})).toThrow(DataError);
+  });
+
+  it('keeps a whole registry unchanged', () => {
+    expect(validateSpells(makeSpells())).toEqual(makeSpells());
+  });
+
+  it('drops a spell missing something the UI cannot invent', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { spells } = validateSpells({
+      spells: [
+        { id: 'ok', name: 'Ok', kind: 'passive', manaCost: 0, description: 'x', upgrades: [] },
+        { id: 'no-kind', name: 'No Kind', manaCost: 1, description: 'x', upgrades: [] },
+        { id: 'Bad Id', name: 'Bad', kind: 'attack', manaCost: 1, description: 'x', upgrades: [] },
+        { id: 'no-desc', name: 'No Desc', kind: 'attack', manaCost: 1, upgrades: [] },
+      ],
+    });
+    expect(spells.map((spell) => spell.id)).toEqual(['ok']);
+    warn.mockRestore();
+  });
+
+  it('keeps the first of two spells sharing an id', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { spells } = validateSpells({
+      spells: [
+        { id: 'heal', name: 'Heal', kind: 'passive', manaCost: 2, description: 'a', upgrades: [] },
+        { id: 'heal', name: 'Other', kind: 'attack', manaCost: 9, description: 'b', upgrades: [] },
+      ],
+    });
+    expect(spells).toHaveLength(1);
+    expect(spells[0].name).toBe('Heal');
+    warn.mockRestore();
+  });
+
+  it('drops a malformed upgrade or roll without costing the spell', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { spells } = validateSpells({
+      spells: [
+        {
+          id: 'heal',
+          name: 'Heal',
+          kind: 'passive',
+          manaCost: 2,
+          description: 'a',
+          upgrades: [{ rank: 5, text: 'good' }, { rank: 0, text: 'bad rank' }, { rank: 6 }],
+          roll: [80, 20],
+        },
+      ],
+    });
+    expect(spells[0].upgrades).toEqual([{ rank: 5, text: 'good' }]);
+    expect(spells[0].roll).toBeUndefined();
+    warn.mockRestore();
   });
 });

@@ -17,7 +17,7 @@ import { App } from '../App';
 import { copy } from '../copy';
 import { resumeKey } from '../playback/resume';
 import { __fakeSources } from '../components/VideoStage/FakeStage';
-import { makeEpisodeRaw, makeRegistry, makeShow } from '../test/fixtures';
+import { makeEpisodeRaw, makeRegistry, makeShow, makeSpells } from '../test/fixtures';
 
 /** The one media query the page branches on (`useIsPhone`, `usePanel`). */
 const PHONE_QUERY = '(max-width: 900px)';
@@ -40,6 +40,14 @@ function stubFetch(withRegistry = true) {
     if (url.includes('npcs.json')) {
       return Promise.resolve(
         new Response(JSON.stringify(makeRegistry()), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
+    }
+    if (url.includes('spells.json')) {
+      return Promise.resolve(
+        new Response(JSON.stringify(makeSpells()), {
           status: 200,
           headers: { 'content-type': 'application/json' },
         }),

@@ -10,10 +10,17 @@ import { join, resolve } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
-import type { InitialState, Registry } from '../src/data/types';
-import { convert, parseArgs, parseTimecode, rowToEvent } from './sheet-to-json';
+import type { InitialState, Registry, SpellRegistry } from '../src/data/types';
+import {
+  convert,
+  initialStateSpellWarnings,
+  parseArgs,
+  parseTimecode,
+  rowToEvent,
+  spellField1,
+} from './sheet-to-json';
 import type { RowContext, SheetRow } from './sheet-to-json';
-import { normalizeRegistry } from '../src/data/validate';
+import { normalizeRegistry, validateSpells } from '../src/data/validate';
 
 const root = resolve(__dirname, '..');
 const samples = resolve(root, 'scripts/samples');
@@ -48,6 +55,11 @@ function ctxWithRegistry() {
   return { ...ctx(), registry: sampleRegistry };
 }
 
+/** The shipped spell registry - what `--spells public/data/spells.json` loads. */
+const sampleSpells: SpellRegistry = validateSpells(
+  JSON.parse(readFileSync(resolve(root, 'public/data/spells.json'), 'utf8')) as unknown,
+);
+
 /** 1-based data row (header excluded) of the first line containing `needle`. */
 function dataRow(csv: string, needle: string): number {
   const lines = csv.trimEnd().split('\n').slice(1);
@@ -60,9 +72,10 @@ function warningFor(warnings: string[], row: number, needle: string): string | u
   return warnings.find((w) => w.startsWith(`row ${row}:`) && w.includes(needle));
 }
 
-function rowCtx(registry?: Registry): RowContext {
+function rowCtx(registry?: Registry, spells?: SpellRegistry): RowContext {
   return {
     ...(registry === undefined ? {} : { registry }),
+    ...(spells === undefined ? {} : { spells }),
     partyIds: new Set(initialState.party.map((crawler) => crawler.id)),
     durationSec: 240,
     hpState: new Map(
@@ -769,5 +782,127 @@ describe('rowToEvent - spell (008 revision 2)', () => {
     expect(
       rowToEvent(sheetRow({ type: 'spell', field1: 'Heal' }), rowCtx()).warnings,
     ).toContain('spell row has no actor');
+  });
+});
+
+/* ------------------------- 008 revision 4: spell refs and `--spells` (R4) */
+
+describe('spellField1 (008 revision 4)', () => {
+  it('reads a kebab-case cell as a registry id when --spells is given', () => {
+    expect(spellField1('heal', rowCtx(undefined, sampleSpells))).toEqual({
+      key: { ref: 'heal' },
+      warnings: [],
+    });
+  });
+
+  it('reads a display name as a name, even with --spells', () => {
+    expect(spellField1('Heal', rowCtx(undefined, sampleSpells))).toEqual({
+      key: { name: 'Heal' },
+      warnings: [],
+    });
+  });
+
+  it('reads every cell as a name without --spells, kebab-case included', () => {
+    expect(spellField1('heal', rowCtx())).toEqual({ key: { name: 'heal' }, warnings: [] });
+  });
+
+  it('warns about an id the registry does not carry, and keeps the row', () => {
+    const result = spellField1('no-such-spell', rowCtx(undefined, sampleSpells));
+    expect(result.key).toEqual({ name: 'no-such-spell' });
+    expect(result.warnings).toEqual([
+      'unknown spell "no-such-spell" (not in the spell registry)',
+    ]);
+  });
+});
+
+describe('rowToEvent - spell refs (008 revision 4)', () => {
+  it('emits a ref instead of a name, keeping rank and cost', () => {
+    const result = rowToEvent(
+      sheetRow({ type: 'spell', actor: 'mimi', field1: 'heal', field2: '1', field3: '2' }),
+      rowCtx(undefined, sampleSpells),
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.event).toEqual({ t: 10, type: 'spell', actor: 'mimi', ref: 'heal', rank: 1, mana: 2 });
+  });
+
+  it('still emits a name for an unknown id, and says so', () => {
+    const result = rowToEvent(
+      sheetRow({ type: 'spell', actor: 'mimi', field1: 'no-such-spell' }),
+      rowCtx(undefined, sampleSpells),
+    );
+    expect(result.event).toEqual({ t: 10, type: 'spell', actor: 'mimi', name: 'no-such-spell' });
+    expect(result.warnings).toContain('unknown spell "no-such-spell" (not in the spell registry)');
+  });
+
+  it('leaves an existing CSV that writes a display name alone', () => {
+    const result = rowToEvent(
+      sheetRow({ type: 'spell', actor: 'mimi', field1: 'Heal' }),
+      rowCtx(undefined, sampleSpells),
+    );
+    expect(result.event).toEqual({ t: 10, type: 'spell', actor: 'mimi', name: 'Heal' });
+  });
+});
+
+describe('initialStateSpellWarnings (008 revision 4)', () => {
+  it('finds nothing to say about the shipped initial state', () => {
+    expect(initialStateSpellWarnings(initialState, sampleSpells)).toEqual([]);
+  });
+
+  it('flags a ref in the party the registry does not carry', () => {
+    const broken: InitialState = {
+      ...initialState,
+      party: initialState.party.map((crawler) =>
+        crawler.id === 'mimi'
+          ? { ...crawler, spells: [{ ref: 'no-such-spell' }], hotlist: [{ ref: 'also-missing' }] }
+          : crawler,
+      ),
+    };
+    expect(initialStateSpellWarnings(broken, sampleSpells)).toEqual([
+      'initial state: mimi points at unknown spell "no-such-spell"',
+      'initial state: mimi points at unknown spell "also-missing"',
+    ]);
+  });
+
+  it('says nothing at all without --spells', () => {
+    expect(initialStateSpellWarnings(initialState, null)).toEqual([]);
+  });
+});
+
+describe('convert with --spells (008 revision 4)', () => {
+  it("turns the sample sheet spell row into a ref and validates", () => {
+    const result = convert(read('ep1.csv'), { ...ctxWithRegistry(), spells: sampleSpells });
+    expect(result.errors).toEqual([]);
+    const spellEvents = (result.episode?.events ?? []).filter((event) => event.type === 'spell');
+    expect(spellEvents.length).toBeGreaterThanOrEqual(1);
+    for (const event of spellEvents) {
+      expect(event).toMatchObject({ ref: 'heal' });
+    }
+    expect(validateEpisode(result.episode)).toBe(true);
+  });
+
+  it('keeps the same sheet as a name-only conversion without the flag', () => {
+    const result = convert(read('ep1.csv'), ctxWithRegistry());
+    const spellEvents = (result.episode?.events ?? []).filter((event) => event.type === 'spell');
+    for (const event of spellEvents) {
+      expect(event).toMatchObject({ name: 'heal' });
+    }
+  });
+});
+
+describe('parseArgs --spells (008 revision 4)', () => {
+  const base = ['in.csv', '--episode', '1', '--duration', '240', '--initial-state', 'i.json', '--out', 'o.json'];
+
+  it('is absent unless asked for', () => {
+    const parsed = parseArgs(base);
+    expect('options' in parsed && parsed.options.spells).toBeUndefined();
+  });
+
+  it('carries the path when given', () => {
+    const parsed = parseArgs([...base, '--spells', 'public/data/spells.json']);
+    expect('options' in parsed && parsed.options.spells).toBe('public/data/spells.json');
+  });
+
+  it('rejects an empty path', () => {
+    expect(parseArgs([...base, '--spells='])).toEqual({ error: '--spells <path> must name a file' });
   });
 });

@@ -14,7 +14,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { MemoryRouter, useLocation } from 'react-router';
 import { App } from './../App';
 import { copy } from '../copy';
-import { makeEpisodeRaw, makeRegistry, makeShow } from '../test/fixtures';
+import { makeEpisodeRaw, makeRegistry, makeShow, makeSpells } from '../test/fixtures';
 
 interface RawEpisode {
   episodeId: number;
@@ -73,6 +73,7 @@ function stubFetch({ failing = [], withoutRegistry = false }: StubOptions = {}) 
       return json(show);
     }
     if (url.includes('npcs.json')) return json(makeRegistry());
+    if (url.includes('spells.json')) return json(makeSpells());
 
     const episodeId = Number(/ep(\d+)\.json/.exec(url)?.[1] ?? 1);
     if (failing.includes(episodeId)) return Promise.reject(new Error('transmission lost'));
@@ -516,6 +517,8 @@ describe('the Registry reads newest first', () => {
       const url = String(input);
       if (url.includes('show.json')) return json(makeShow());
       if (url.includes('npcs.json')) return json(makeRegistry());
+      if (url.includes('spells.json')) return json(makeSpells());
+    if (url.includes('spells.json')) return json(makeSpells());
       const episodeId = Number(/ep(\d+)\.json/.exec(url)?.[1] ?? 1);
       return json(episodeRawWith(episodeId, beats[episodeId] ?? []));
     });

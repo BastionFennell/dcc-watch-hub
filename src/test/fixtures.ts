@@ -22,7 +22,7 @@
  * 135 seen quartermaster, 140 met unknown-id, 185 update unlock weakness, 195
  * defeated hoarder) - all past t = 100, so every earlier feed count still holds.
  */
-import type { Crawler, EpisodeData, Registry, Show } from '../data/types';
+import type { Crawler, EpisodeData, Registry, Show, SpellRegistry } from '../data/types';
 import { normalizeEpisode } from '../data/validate';
 
 export function makeShow(): Show {
@@ -68,6 +68,7 @@ export function makeShow(): Show {
       discord: 'https://discord.gg/REPLACE_ME',
     },
     registryUrl: '/data/npcs.json',
+    spellsUrl: '/data/spells.json',
   };
 }
 
@@ -267,6 +268,51 @@ export function makeRegistry(): Registry {
         floor: 1,
         intro: 'Keeps the ledger of everything the floor still owes.',
         facts: [{ id: 'debt', text: 'It never forgives a debt; it only defers one.' }],
+      },
+    ],
+  };
+}
+
+/**
+ * A two-spell stand-in for the book (008 revision 4). `mending-light` carries
+ * every optional field the tooltip can print - aliases, Interrupt, a duration, a
+ * limitation, a cooldown and an upgrade - and `cinder-snap` is the plain attack
+ * case with a damage type, an AI Favor, Base Damage and no upgrades at all.
+ */
+export function makeSpells(): SpellRegistry {
+  return {
+    spells: [
+      {
+        id: 'mending-light',
+        name: 'Mending Light',
+        aliases: ['Mend'],
+        quote: 'Still breathing. Impressive.',
+        kind: 'passive',
+        interrupt: true,
+        manaCost: 2,
+        range: 'Self only',
+        duration: '5 seconds',
+        limitations: 'Rank 1 maximum',
+        cooldown: '10 minutes',
+        description: 'Heal 2 HB slots.',
+        upgrades: [{ rank: 5, text: 'Heal 3 HB slots instead.' }],
+        roll: [1, 40],
+        page: 38,
+      },
+      {
+        id: 'cinder-snap',
+        name: 'Cinder Snap',
+        kind: 'attack',
+        damageType: 'Fire',
+        areaOfEffect: true,
+        manaCost: 7,
+        range: 'Melee',
+        aiFavor: 1,
+        description: 'Brilliant flame leaps from your fingers.',
+        baseDamage: '1d4 + Int Fire',
+        upgrades: [],
+        roll: [41, 100],
+        page: 38,
       },
     ],
   };

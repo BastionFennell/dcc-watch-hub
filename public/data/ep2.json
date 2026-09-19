@@ -100,8 +100,7 @@
         },
         "hotlist": [
           {
-            "name": "Heal",
-            "desc": "Heal (2 mana) - Rank 1, heal 2 HB slots."
+            "ref": "heal"
           },
           {
             "name": "Standard Mana Potion",
@@ -158,10 +157,8 @@
         ],
         "spells": [
           {
-            "name": "Heal",
-            "rank": 1,
-            "mana": 2,
-            "desc": "Heal (2 mana) - Rank 1, heal 2 HB slots."
+            "ref": "heal",
+            "rank": 1
           }
         ],
         "gear": {},
@@ -194,7 +191,9 @@
           "cha": 2
         },
         "hotlist": [
-          "Heal Spell (Interrupt) Rank 1 (Max): Mana Cost 2, heal 2 slots"
+          {
+            "ref": "heal"
+          }
         ],
         "skills": [
           {
@@ -235,7 +234,13 @@
           }
         ],
         "gear": {},
-        "art": "/img/crawlers/ronald-art.png"
+        "art": "/img/crawlers/ronald-art.png",
+        "spells": [
+          {
+            "ref": "heal",
+            "rank": 1
+          }
+        ]
       },
       {
         "id": "xo",
@@ -491,7 +496,7 @@
       "t": 266,
       "type": "spell",
       "actor": "mimi",
-      "name": "Heal",
+      "ref": "heal",
       "rank": 1,
       "mana": 2
     },
@@ -698,7 +703,7 @@
       "t": 693,
       "type": "spell",
       "actor": "mimi",
-      "name": "Heal",
+      "ref": "heal",
       "rank": 2,
       "mana": 2
     },

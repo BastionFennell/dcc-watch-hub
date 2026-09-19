@@ -1,14 +1,8 @@
 import type { ReactNode, Ref } from 'react';
-import type {
-  CrawlerStats,
-  EpisodeMeta,
-  HotlistEntry,
-  InventoryEntry,
-  SkillEntry,
-  SpellEntry,
-} from '../../data/types';
+import type { CrawlerStats, EpisodeMeta, InventoryEntry, SkillEntry } from '../../data/types';
 import type { Dossier, DossierAchievement, FeedItem, RankPoint } from '../../engine/selectors';
 import { GEAR_SLOT_ORDER, hotbarSlots } from '../../engine/selectors';
+import type { HotlistView, SpellView } from '../../engine/spells';
 import type { GearState } from '../../engine/state';
 import { formatTime } from '../../engine/time';
 import { copy } from '../../copy';
@@ -112,6 +106,103 @@ function tooltipBody(name: string, desc?: string, meta?: string): ReactNode | un
       <span className={tip.title}>{name}</span>
       {desc}
       {meta === undefined ? null : <span className={tip.meta}>{meta}</span>}
+    </>
+  );
+}
+
+/* --- 008 revision 4: the book's own fields, wherever a spell is explained --- */
+
+/**
+ * One registry-backed spell as the book prints it, minus the headline: the type
+ * line, then Mana / Range / Duration, the labelled lines, the description, Base
+ * Damage, and the UPGRADES block. The tooltip puts the name above this; the
+ * spells list view puts the row's own label above it, so the two surfaces show
+ * exactly the same fields (spec R4).
+ */
+function spellDetails(view: SpellView): ReactNode[] {
+  const lines: ReactNode[] = [];
+  const tags = copy.spellTags(view.tags);
+  if (tags !== undefined) {
+    lines.push(
+      <span key="tags" className={tip.tags}>
+        {tags}
+      </span>,
+    );
+  }
+
+  // Mana, Range and Duration read as one line, in the book's order.
+  const numbers: string[] = [];
+  if (view.mana !== undefined) numbers.push(copy.spellMana(view.mana));
+  if (view.range !== undefined) numbers.push(copy.spellRange(view.range));
+  if (view.duration !== undefined) numbers.push(copy.spellDuration(view.duration));
+  if (numbers.length > 0) {
+    lines.push(
+      <span key="numbers" className={tip.line}>
+        {numbers.join(' · ')}
+      </span>,
+    );
+  }
+
+  if (view.limitations !== undefined) {
+    lines.push(
+      <span key="limitations" className={tip.line}>
+        {copy.spellLimitations(view.limitations)}
+      </span>,
+    );
+  }
+  if (view.cooldown !== undefined) {
+    lines.push(
+      <span key="cooldown" className={tip.line}>
+        {copy.spellCooldown(view.cooldown)}
+      </span>,
+    );
+  }
+  if (view.description !== '') {
+    lines.push(
+      <span key="description" className={tip.line}>
+        {view.description}
+      </span>,
+    );
+  }
+  if (view.baseDamage !== undefined) {
+    lines.push(
+      <span key="baseDamage" className={tip.line}>
+        {copy.spellBaseDamage(view.baseDamage)}
+      </span>,
+    );
+  }
+  if (view.upgrades.length > 0) {
+    lines.push(
+      <span key="upgrades" className={tip.blockHead}>
+        {copy.spellUpgrades}
+      </span>,
+      ...view.upgrades.map((upgrade, index) => (
+        <span key={`upgrade-${index}`} className={tip.line}>
+          {copy.spellUpgrade(upgrade.rank, upgrade.text)}
+        </span>
+      )),
+    );
+  }
+  return lines;
+}
+
+/**
+ * A spell's tooltip. A resolved entry gets the book's fields; one the registry
+ * does not carry keeps the plain body revision 2 gave it - its own text and the
+ * sheet's numbers - so homebrew and half-filled sheets are unchanged.
+ */
+function spellTooltipBody(view: SpellView): ReactNode | undefined {
+  if (view.id === undefined) {
+    return tooltipBody(
+      view.name,
+      view.description === '' ? undefined : view.description,
+      copy.spellMeta(view.rank, view.mana),
+    );
+  }
+  return (
+    <>
+      <span className={tip.title}>{view.name}</span>
+      {spellDetails(view)}
     </>
   );
 }
@@ -296,10 +387,10 @@ export function DossierStats({ stats }: DossierStatsProps) {
 export type DossierListKind = 'hotlist' | 'inventory' | 'skills' | 'spells';
 
 export type DossierListProps = (
-  | { kind: 'hotlist'; items: readonly HotlistEntry[] }
+  | { kind: 'hotlist'; items: readonly HotlistView[] }
   | { kind: 'inventory'; items: readonly InventoryEntry[] }
   | { kind: 'skills'; items: readonly SkillEntry[] }
-  | { kind: 'spells'; items: readonly SpellEntry[] }
+  | { kind: 'spells'; items: readonly SpellView[] }
 ) &
   SectionHeadingProps;
 
@@ -308,7 +399,8 @@ interface ListRow {
   name: string;
   /** Rank, mana cost, or a quantity - whatever the section's meta column is. */
   meta?: string;
-  desc?: string;
+  /** A node since 008 revision 4: a registry spell prints the book's fields. */
+  desc?: ReactNode;
 }
 
 /** `data-item` per section: the singular noun the record has always used. */
@@ -330,10 +422,21 @@ function listRows(props: DossierListProps): ListRow[] {
     case 'spells':
       return props.items.map((spell) => {
         const meta = copy.spellMeta(spell.rank, spell.mana);
+        // A resolved spell shows everything the tooltip shows; an unresolved one
+        // still shows only whatever text the sheet wrote for it.
+        const details = spell.id === undefined ? null : spellDetails(spell);
+        const desc =
+          details === null
+            ? spell.description === ''
+              ? undefined
+              : spell.description
+            : details.length === 0
+              ? undefined
+              : details;
         return {
           name: spell.name,
           ...(meta === undefined ? {} : { meta }),
-          ...(spell.desc === undefined ? {} : { desc: spell.desc }),
+          ...(desc === undefined ? {} : { desc }),
         };
       });
     default:
@@ -471,7 +574,7 @@ export function DossierHistory({
 /* --- 003 revision 2: the record's MMO-shaped sections (research R8) --- */
 
 export interface DossierHotbarProps extends SectionHeadingProps {
-  hotlist: readonly HotlistEntry[];
+  hotlist: readonly HotlistView[];
 }
 
 /**
@@ -497,9 +600,18 @@ export function DossierHotbar({ hotlist, headingRef }: DossierHotbarProps) {
               : entry.qty === undefined || entry.qty <= 1
                 ? copy.hotbarSlotAria(index + 1, entry.name)
                 : copy.hotbarSlotQtyAria(index + 1, entry.name, entry.qty);
-          // The key explains itself only when the sheet gave it something to
-          // say; without a description it stays the inert key it always was.
-          const body = tooltipBody(entry?.name ?? '', entry?.desc);
+          /*
+           * The key explains itself only when the sheet gave it something to
+           * say; without a description it stays the inert key it always was.
+           * A mark pointing at the spell registry (008 R4) shows the book's
+           * fields instead of a bare paragraph.
+           */
+          const body =
+            entry === null
+              ? undefined
+              : entry.spell === undefined
+                ? tooltipBody(entry.name, entry.desc)
+                : spellTooltipBody(entry.spell);
           return (
             <li
               key={index}
@@ -578,7 +690,7 @@ export type DossierTilesKind = 'skills' | 'spells' | 'inventory' | 'achievements
 
 export type DossierTilesProps = (
   | { kind: 'skills'; items: readonly SkillEntry[] }
-  | { kind: 'spells'; items: readonly SpellEntry[] }
+  | { kind: 'spells'; items: readonly SpellView[] }
   | { kind: 'inventory'; items: readonly InventoryEntry[] }
   | { kind: 'achievements'; items: readonly DossierAchievement[] }
 ) & {
@@ -598,15 +710,18 @@ function Tile({
   name,
   footer,
   desc,
+  body: prebuilt,
   qty,
 }: {
   item: string;
   name: string;
   footer?: string;
   desc?: string;
+  /** 008 revision 4: a spell tile hands in the book's body already built. */
+  body?: ReactNode;
   qty?: number;
 }) {
-  const body = tooltipBody(name, desc, footer);
+  const body = prebuilt ?? tooltipBody(name, desc, footer);
   const face = (
     <>
       <span className={styles.itemLabel}>{name}</span>
@@ -654,15 +769,18 @@ export function DossierTiles(props: DossierTilesProps) {
                 />
               ))
             : props.kind === 'spells'
-              ? props.items.slice(0, max).map((spell) => (
-                  <Tile
-                    key={spell.name}
-                    item="spell"
-                    name={spell.name}
-                    footer={copy.spellMeta(spell.rank, spell.mana)}
-                    desc={spell.desc}
-                  />
-                ))
+              ? props.items.slice(0, max).map((spell) => {
+                  const body = spellTooltipBody(spell);
+                  return (
+                    <Tile
+                      key={spell.id ?? spell.name}
+                      item="spell"
+                      name={spell.name}
+                      footer={copy.spellMeta(spell.rank, spell.mana)}
+                      {...(body === undefined ? {} : { body })}
+                    />
+                  );
+                })
               : props.kind === 'achievements'
                 ? props.items.slice(0, max).map((achievement) => (
                     <Tile

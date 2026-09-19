@@ -9,7 +9,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { App } from './App';
 import { copy } from './copy';
-import { makeEpisodeRaw, makeRegistry, makeShow } from './test/fixtures';
+import { makeEpisodeRaw, makeRegistry, makeShow, makeSpells } from './test/fixtures';
 
 function stubFetch(ok = true) {
   vi.stubGlobal('fetch', (input: RequestInfo | URL) => {
@@ -19,7 +19,9 @@ function stubFetch(ok = true) {
       ? makeShow()
       : url.includes('npcs.json')
         ? makeRegistry()
-        : makeEpisodeRaw(1);
+        : url.includes('spells.json')
+          ? makeSpells()
+          : makeEpisodeRaw(1);
     return Promise.resolve(
       new Response(JSON.stringify(body), {
         status: 200,

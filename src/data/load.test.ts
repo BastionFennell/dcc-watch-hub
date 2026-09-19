@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fetchRegistry, joinBase } from './load';
+import { fetchRegistry, fetchSpells, joinBase } from './load';
 import { DataError } from './validate';
-import { makeRegistry, makeShow } from '../test/fixtures';
+import { makeRegistry, makeShow, makeSpells } from '../test/fixtures';
 
 describe('joinBase', () => {
   it('leaves root-based deploys untouched', () => {
@@ -79,5 +79,50 @@ describe('fetchRegistry', () => {
   it('throws DataError when the file is not a registry', async () => {
     stub(ok({ crawlers: [] }));
     await expect(fetchRegistry(makeShow())).rejects.toBeInstanceOf(DataError);
+  });
+});
+
+describe('fetchSpells (008 revision 4)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  function stub(response: () => Response): string[] {
+    const asked: string[] = [];
+    vi.stubGlobal('fetch', (input: RequestInfo | URL) => {
+      asked.push(String(input));
+      return Promise.resolve(response());
+    });
+    return asked;
+  }
+
+  function ok(body: unknown): () => Response {
+    return () =>
+      new Response(JSON.stringify(body), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+  }
+
+  it('returns null, and fetches nothing, for a show with no spellsUrl', async () => {
+    const asked = stub(ok(makeSpells()));
+    const { spellsUrl: _spellsUrl, ...show } = makeShow();
+    await expect(fetchSpells(show)).resolves.toBeNull();
+    await expect(fetchSpells({ ...show, spellsUrl: '' })).resolves.toBeNull();
+    expect(asked).toEqual([]);
+  });
+
+  it('reads and validates the declared file, against the deploy base', async () => {
+    vi.stubEnv('BASE_URL', '/dcc-watch-hub/');
+    const asked = stub(ok(makeSpells()));
+    const spells = await fetchSpells(makeShow());
+    expect(spells?.spells.map((spell) => spell.id)).toEqual(['mending-light', 'cinder-snap']);
+    expect(asked).toEqual(['/dcc-watch-hub/data/spells.json']);
+    vi.unstubAllEnvs();
+  });
+
+  it('throws DataError when the file is missing or is not a spell registry', async () => {
+    stub(() => new Response('nope', { status: 404, statusText: 'Not Found' }));
+    await expect(fetchSpells(makeShow())).rejects.toBeInstanceOf(DataError);
+    stub(ok({ entities: [] }));
+    await expect(fetchSpells(makeShow())).rejects.toBeInstanceOf(DataError);
   });
 });

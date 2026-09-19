@@ -112,7 +112,7 @@ with a populated feed and no network.
 | `src/pages/` | `EpisodePage`, `HubPage`, `RegistryPage`, `NotFoundPage` |
 | `src/copy.ts` | **every** user-facing string, in the System's voice |
 | `src/styles/tokens.css` | the colour/spacing/type tokens from spec §6 |
-| `public/data/` | `show.json` + `ep{N}.json` + `npcs.json` (static, fetched at load) |
+| `public/data/` | `show.json` + `ep{N}.json` + `npcs.json` + `spells.json` (static, fetched at load) |
 | `scripts/sheet-to-json.ts` | editor CSV → `ep{N}.json` converter |
 
 ---
@@ -660,6 +660,34 @@ or `/codex` asks - `RegistryIndexProvider` (`src/data/RegistryIndexContext.tsx`)
 index for both, with a System-voice "The System is indexing the archive." line until it lands and
 the same "could not be indexed" notice inside the panel when a file fails.
 
+## The spell registry
+
+The Crawlers book prints every spell once - name, flavour line, type line, mana cost, range,
+duration, AI Favor, limitations, cooldown, description, base damage and an UPGRADES block - so the
+site prints it once too. `public/data/spells.json` holds the whole Spell Skills chapter (23 spells,
+the d100 SPELLS CHART's full range), and `show.json` points at it with `spellsUrl`, exactly the way
+`registryUrl` points at `npcs.json`. The schema is
+`specs/008-real-crawlers/contracts/spells.schema.json`.
+
+A crawler sheet then **points at a spell instead of restating it**. A `spells[]` entry or a
+`hotlist[]` mark may carry `ref` (a spell id) in place of `name`:
+
+```json
+"hotlist": [{ "ref": "heal" }, { "name": "Standard Mana Potion", "qty": 5, "desc": "..." }],
+"spells": [{ "ref": "heal", "rank": 1 }]
+```
+
+The entry inherits the book's name, mana cost and full text; `rank` stays the crawler's own, and
+`mana` / `desc` written on the entry are explicit overrides, kept for homebrew and scroll-only
+spells the book has no row for. Resolution lives in `src/engine/spells.ts` (`resolveSpell`,
+`resolveHotlist`) and is pure, so the hotbar key, the spell tile, its tooltip and the list view all
+read the same resolved view. A `ref` the file does not carry falls back to the entry's own fields
+(and to the ref as a name), and a missing or malformed `spells.json` degrades to an empty registry
+with a console warning - the page still renders, spells just read as the sheet wrote them.
+
+The text is transcribed from the Crawlers book and lives in the data file only. This is a private
+repo; check with the author before any public release.
+
 ## Authoring episode data
 
 The editor logs events in a Google Sheet during the edit pass and exports CSV. Header row
@@ -685,7 +713,7 @@ required; columns are `timecode,type,actor,field1,field2,field3`
 | `status` | add (`;`) | remove (`;`) | – |
 | `inventory` | add (`;`) | remove (`;`) | – |
 | `skill` | name | rank (number, optional) | desc (optional) |
-| `spell` | name | rank (number, optional) | mana cost (number, optional) |
+| `spell` | name, or a `spells.json` id with `--spells` | rank (number, optional) | mana cost (number, optional) |
 | `class` | class | – | – |
 | `hotlist` | add (`;`) | remove (`;`) | – |
 | `equip` | slot (`head`/`torso`/`arms`/`hands`/`legs`/`feet`/`accessory`) | item | – |
@@ -700,6 +728,7 @@ npm run sheet-to-json -- path/to/ep4.csv \
   --episode 4 --duration 5400 \
   --initial-state scripts/samples/ep1.initial.json \
   --registry public/data/npcs.json \
+  --spells public/data/spells.json \
   --out public/data/ep4.json
 ```
 
@@ -707,17 +736,23 @@ npm run sheet-to-json -- path/to/ep4.csv \
 id and fact ids are checked (warnings only - see **Entities and the Codex** above). Without
 it no id is checked, because the registry is show-level data the converter is not otherwise given.
 
+`--spells` is optional in the same way and names `spells.json` (see **The spell registry** below).
+With it, a `spell` row whose field1 is kebab-case (`heal`) is read as a registry id and written as
+`ref`; anything else (`Heal`) stays a display name, so older sheets are untouched. An id the file
+does not carry is a warning and falls back to a name, and every `ref` in `--initial-state` is
+checked too.
+
 `--initial-state` is a JSON file holding the episode's `initialState` (`party` and `map`).
 Each crawler there may carry the optional sheet fields the dossier renders - `race`, `pronouns`,
 `crawlerNumber`, `stats` (`{ str, int, con, dex, cha }`), `hotlist[]`, `skills[]`
-(`{ name, rank?, desc? }`), `spells[]` (`{ name, rank?, mana?, desc? }`), `gear`
+(`{ name, rank?, desc? }`), `spells[]` (`{ name?, ref?, rank?, mana?, desc? }`), `gear`
 (`{ head?, torso?, arms?, hands?, legs?, feet?, accessories[]? }`)
 and `art` (a full-figure image path; the record falls back to the bust without it). They need no new CSV columns, and v1 files without them keep working: the
 dossier simply omits what it does not know.
 
 `hotlist[]` and `inventory[]` take either a plain string or an object
-(`{ name, qty?, desc? }`) - a string is the shorthand for `{ name }`, so every older file reads
-exactly as it did. `qty` draws the `x5` box on the hotbar key and the `x5` meta in a list view;
+(`{ name, qty?, desc? }`, plus `ref` on a hotlist mark) - a string is the shorthand for
+`{ name }`, so every older file reads exactly as it did. `qty` draws the `x5` box on the hotbar key and the `x5` meta in a list view;
 `desc` is the sheet's own paragraph and is what the tooltip shows. A paragraph does not belong
 in a CSV cell, so this structure lives in `--initial-state` only: `hotlist`, `inventory` and
 `spell` rows in the sheet still name entries by their short name alone, and a `hotlist` or
@@ -729,7 +764,7 @@ accessory `unequip` with no item - the last one worn comes off, a legacy `rank` 
 `crawler` in field1 - the rank is read out of field2, and - only with `--registry` - an `npc`
 row naming an entity or a fact the registry does not have); **errors write nothing and
 exit 1** (unparseable timecode, missing header column, non-numeric numeric field, empty required
-field, an `equip`/`unequip` slot that is not one of the seven, a `spell` row with no name or a
+field, an `equip`/`unequip` slot that is not one of the seven, a `spell` row with no name or ref or a
 rank or mana cost that is not a non-negative integer, a `rank` row with `party` in
 field1 - DCC has no party rank).
 

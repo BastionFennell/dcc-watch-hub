@@ -108,3 +108,33 @@
   color: var(--text-3);
   font-variant-numeric: tabular-nums;
 }
+
+/* --- 008 revision 4: a registry-backed spell prints the book's fields --- */
+
+/* The type line: "Interrupt · Passive", "Attack · Fire · Area of Effect". */
+.tags {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+/* Every other field the book prints on its own line. */
+.line {
+  display: block;
+  margin-top: var(--space-2);
+}
+
+/* The UPGRADES heading above its "Rank 5: ..." lines. */
+.blockHead {
+  display: block;
+  margin-top: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}

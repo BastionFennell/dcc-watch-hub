@@ -3,8 +3,14 @@
  * (constitution IV). `dataUrl` values keep the leading slash the handoff schema
  * shows and are resolved against the deploy base at fetch time (research R3).
  */
-import type { EpisodeData, EpisodeMeta, Registry, Show } from './types';
-import { DataError, normalizeEpisode, normalizeRegistry, normalizeShow } from './validate';
+import type { EpisodeData, EpisodeMeta, Registry, Show, SpellRegistry } from './types';
+import {
+  DataError,
+  normalizeEpisode,
+  normalizeRegistry,
+  normalizeShow,
+  validateSpells,
+} from './validate';
 
 const SHOW_URL = '/data/show.json';
 
@@ -52,6 +58,17 @@ export async function fetchRegistry(show: Show): Promise<Registry | null> {
   const url = show.registryUrl;
   if (url === undefined || url === '') return null;
   return normalizeRegistry(await fetchJson(joinBase(baseUrl(), url)));
+}
+
+/**
+ * The show's spell registry (008 revision 4), or `null` when the show declares
+ * no `spellsUrl`. Same contract as `fetchRegistry`: a show without one is not a
+ * failure, a declared file that cannot be read is.
+ */
+export async function fetchSpells(show: Show): Promise<SpellRegistry | null> {
+  const url = show.spellsUrl;
+  if (url === undefined || url === '') return null;
+  return validateSpells(await fetchJson(joinBase(baseUrl(), url)));
 }
 
 export async function fetchEpisode(meta: EpisodeMeta): Promise<EpisodeData> {

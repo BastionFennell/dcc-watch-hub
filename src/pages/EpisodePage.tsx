@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router';
 import { useShow } from '../data/ShowContext';
 import { useRegistry } from '../data/RegistryContext';
@@ -21,6 +21,7 @@ import {
   recentlyRevealed,
   timelineMarkers,
 } from '../engine/selectors';
+import { spellIndex } from '../engine/spells';
 import type { TimeSource } from '../playback/TimeSource';
 import { formatTime } from '../engine/time';
 import { usePlayhead } from '../playback/usePlayhead';
@@ -73,7 +74,13 @@ export function EpisodePage() {
    * every piece of NPC chrome below is simply absent and `npc` events still
    * show in the feed under their raw id (spec Edge Cases).
    */
-  const { registry } = useRegistry();
+  const { registry, spells } = useRegistry();
+  /*
+   * The book's spells (008 R4), indexed once. A sheet entry carrying `ref`
+   * inherits its name and text from here; without the file (or with a ref it
+   * does not carry) the entry falls back to whatever the sheet itself says.
+   */
+  const spellsById = useMemo(() => spellIndex(spells), [spells]);
 
   const [source, setSource] = useState<TimeSource | null>(null);
   const [episode, setEpisode] = useState<EpisodeData | null>(null);
@@ -233,10 +240,10 @@ export function EpisodePage() {
   const currentEpisodeId = meta.id;
 
   const frames = state && episode ? partyFrames(state, episode.events, t) : [];
-  const items = episode ? feedItems(episode.events, t, 8, party, registry) : [];
+  const items = episode ? feedItems(episode.events, t, 8, party, registry, spellsById) : [];
   // The whole elapsed transcript, oldest first - the feed's eight rows are a
   // window onto this (005 FR-401).
-  const log = episode ? logItems(episode.events, t, party, registry) : [];
+  const log = episode ? logItems(episode.events, t, party, registry, spellsById) : [];
   const sponsor = episode ? activeSponsor(episode.events, t, party) : null;
   // A pinned sponsor is not repeated in the list; it rejoins the feed when its window closes.
   const listed = sponsor ? items.filter((item) => item.id !== sponsor.id) : items;
@@ -258,7 +265,7 @@ export function EpisodePage() {
   // either direction is correct with no extra work (constitution I, FR-103).
   const dossier =
     panel.kind === 'dossier' && state && episode
-      ? crawlerDossier(state, episode.events, t, panel.crawlerId, party)
+      ? crawlerDossier(state, episode.events, t, panel.crawlerId, party, spellsById)
       : null;
 
   /** The open entity record, derived at render time like everything else. */

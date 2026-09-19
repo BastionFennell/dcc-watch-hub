@@ -20,12 +20,13 @@ import type {
   NpcEvent,
   Registry,
   SkillEntry,
-  SpellEntry,
 } from '../data/types';
 import { isKnownEvent } from '../data/types';
 import { copy } from '../copy';
 import type { GearState, NpcState, OverlayState } from './state';
 import { cellKey } from './state';
+import type { HotlistView, SpellIndex, SpellView } from './spells';
+import { NO_SPELLS, resolveHotlist, resolveSpell } from './spells';
 
 /* ------------------------------------------------------------------ types */
 
@@ -146,11 +147,15 @@ export interface Dossier {
   art?: string;
   /** Worn gear as of the playhead, one item or null per slot (R2-FR-220). */
   gear: GearState;
-  /** Normalized entries (008 R2): a string in the data reads as `{ name }`. */
-  hotlist: HotlistEntry[];
+  /**
+   * Normalized entries (008 R2), resolved against the spell registry (008 R4):
+   * a string in the data reads as `{ name }`, and a `{ ref }` mark reads as the
+   * book's name with the book's text behind it.
+   */
+  hotlist: HotlistView[];
   skills: SkillEntry[];
-  /** The sheet's SPELLS section as of the playhead (008 R2). */
-  spells: SpellEntry[];
+  /** The sheet's SPELLS section as of the playhead, resolved (008 R2/R4). */
+  spells: SpellView[];
   inventory: InventoryEntry[];
   achievements: DossierAchievement[];
   history: FeedItem[];
@@ -256,6 +261,7 @@ function toFeedItem(
   id: number,
   party: PartyNames,
   registry?: Registry | null,
+  spells: SpellIndex = NO_SPELLS,
 ): FeedItem | null {
   const label = copy.labels[event.type];
   const actorId = 'actor' in event ? event.actor : undefined;
@@ -299,7 +305,13 @@ function toFeedItem(
     case 'skill':
       return { ...base, actorName, text: copy.feedText.skill(who, event.name, event.rank) };
     case 'spell':
-      return { ...base, actorName, text: copy.feedText.spell(who, event.name, event.rank) };
+      // 008 revision 4: a row that only carries a `ref` still reads as the
+      // book's name, so the feed never files "mimi inscribes heal".
+      return {
+        ...base,
+        actorName,
+        text: copy.feedText.spell(who, resolveSpell(event, spells).name, event.rank),
+      };
     case 'class':
       return { ...base, actorName, text: copy.feedText.classChange(who, event.class) };
     case 'hotlist':
@@ -335,13 +347,14 @@ export function feedItems(
   n = 8,
   party: PartyNames = [],
   registry?: Registry | null,
+  spells: SpellIndex = NO_SPELLS,
 ): FeedItem[] {
   const items: FeedItem[] = [];
   for (let i = 0; i < events.length; i += 1) {
     const event = events[i];
     if (event.t > t) continue;
     if (!isKnownEvent(event)) continue;
-    const item = toFeedItem(event, i, party, registry);
+    const item = toFeedItem(event, i, party, registry, spells);
     if (item) items.push(item);
   }
   return items.slice(-n).reverse();
@@ -475,6 +488,7 @@ export function crawlerHistory(
   actorId: string,
   party: PartyNames = [],
   registry?: Registry | null,
+  spells: SpellIndex = NO_SPELLS,
 ): FeedItem[] {
   const items: FeedItem[] = [];
   for (let i = 0; i < events.length; i += 1) {
@@ -482,7 +496,7 @@ export function crawlerHistory(
     if (event.t > t) continue;
     if (!isKnownEvent(event)) continue;
     if (!('actor' in event) || event.actor !== actorId) continue;
-    const item = toFeedItem(event, i, party, registry);
+    const item = toFeedItem(event, i, party, registry, spells);
     if (item) items.push(item);
   }
   return items.reverse();
@@ -529,6 +543,7 @@ export function crawlerDossier(
   t: number,
   actorId: string,
   party: PartyNames = state.party,
+  spells: SpellIndex = NO_SPELLS,
 ): Dossier | null {
   const crawler = state.party.find((entry) => entry.id === actorId);
   if (crawler === undefined) return null;
@@ -564,12 +579,12 @@ export function crawlerDossier(
     ...(crawler.stats === undefined ? {} : { stats: crawler.stats }),
     ...(crawler.art === undefined ? {} : { art: crawler.art }),
     gear: crawler.gear,
-    hotlist: crawler.hotlist,
+    hotlist: crawler.hotlist.map((entry) => resolveHotlist(entry, spells)),
     skills: crawler.skills,
-    spells: crawler.spells,
+    spells: crawler.spells.map((entry) => resolveSpell(entry, spells)),
     inventory: crawler.inventory,
     achievements,
-    history: crawlerHistory(events, t, actorId, party),
+    history: crawlerHistory(events, t, actorId, party, undefined, spells),
   };
 }
 
@@ -653,7 +668,7 @@ export const GEAR_SLOT_ORDER = [
 
 /** The record's ten-slot hotbar, plus how many entries did not fit (R2-FR-221). */
 export interface Hotbar {
-  slots: (HotlistEntry | null)[];
+  slots: (HotlistView | null)[];
   overflow: number;
 }
 
@@ -661,10 +676,17 @@ export interface Hotbar {
  * Pads the hotlist to `n` fixed slots and counts the rest, so the hotbar is a
  * pure function of the elapsed hotlist and never changes size (R2-FR-221).
  */
-export function hotbarSlots(hotlist: readonly HotlistEntry[], n = 10): Hotbar {
-  const slots: (HotlistEntry | null)[] = [];
-  for (let i = 0; i < n; i += 1) slots.push(hotlist[i] ?? null);
-  return { slots, overflow: Math.max(0, hotlist.length - n) };
+export function hotbarSlots(
+  hotlist: readonly (HotlistEntry | HotlistView)[],
+  n = 10,
+  spells: SpellIndex = NO_SPELLS,
+): Hotbar {
+  // Already-resolved views pass straight through: `crawlerDossier` resolves the
+  // whole hotlist, so the hotbar is only asked to pad and count.
+  const views = hotlist.map((entry) => ('spell' in entry ? entry : resolveHotlist(entry, spells)));
+  const slots: (HotlistView | null)[] = [];
+  for (let i = 0; i < n; i += 1) slots.push(views[i] ?? null);
+  return { slots, overflow: Math.max(0, views.length - n) };
 }
 
 /** Worn gear as rows: one per filled slot, then one per accessory. */
@@ -740,13 +762,14 @@ export function logItems(
   t: number,
   party: PartyNames = [],
   registry?: Registry | null,
+  spells: SpellIndex = NO_SPELLS,
 ): FeedItem[] {
   const items: FeedItem[] = [];
   for (let i = 0; i < events.length; i += 1) {
     const event = events[i];
     if (event.t > t) continue;
     if (!isKnownEvent(event)) continue;
-    const item = toFeedItem(event, i, party, registry);
+    const item = toFeedItem(event, i, party, registry, spells);
     if (item) items.push(item);
   }
   return items;
@@ -853,12 +876,13 @@ export function npcMoments(
   id: string,
   party: PartyNames = [],
   registry?: Registry | null,
+  spells: SpellIndex = NO_SPELLS,
 ): FeedItem[] {
   const moments: FeedItem[] = [];
   for (let i = 0; i < events.length; i += 1) {
     const event = events[i];
     if (event.type !== 'npc' || event.t > t || event.id !== id) continue;
-    const item = toFeedItem(event, i, party, registry);
+    const item = toFeedItem(event, i, party, registry, spells);
     if (item) moments.push(item);
   }
   return moments.reverse();
