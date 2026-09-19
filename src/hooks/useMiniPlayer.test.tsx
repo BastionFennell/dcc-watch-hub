@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * T601 — `useMiniPlayer` (contracts/mobile.md "Hooks", research R1). The
+ * T601 - `useMiniPlayer` (contracts/mobile.md "Hooks", research R1). The
  * `IntersectionObserver` is a stub that hands its callback back to the test, so
  * "the sentinel left the top of the screen" is a function call, not a scroll.
  */

@@ -1,6 +1,6 @@
 /**
  * The cross-episode index (T712, research R5/R7). These are pure-data tests: no
- * DOM, no fetch — the page's job is to hand `registryIndex` a map, and this is
+ * DOM, no fetch - the page's job is to hand `registryIndex` a map, and this is
  * every rule about what comes back.
  */
 import { readFileSync } from 'node:fs';
@@ -373,7 +373,7 @@ describe('scopeRegistry', () => {
       [2, 20],
       [2, 30],
     ]);
-    // Context from episode 1 is kept — the viewer already watched it — and so
+    // Context from episode 1 is kept - the viewer already watched it - and so
     // is the defeat it recorded (spec R2 scenario 3).
     expect(hoarder.facts.map((fact) => fact.id)).toEqual(['lair', 'weakness']);
     expect(hoarder.defeatedIn).toBe(1);
@@ -404,7 +404,7 @@ describe('scopeRegistry', () => {
 
 /**
  * R2-SC-605: the same rules against the shipped sample archive, read off disk
- * exactly as `samples.test.ts` does — the hand-computed subsets the quickstart
+ * exactly as `samples.test.ts` does - the hand-computed subsets the quickstart
  * quotes.
  */
 describe('scopeRegistry over public/data', () => {
@@ -508,7 +508,7 @@ describe('registrySections', () => {
 
     expect(sections).toHaveLength(1);
     expect(sections[0].episodeId).toBe(2);
-    // The Hoarder debuts in episode 1 and still shelves here (R2 scenario 3) —
+    // The Hoarder debuts in episode 1 and still shelves here (R2 scenario 3) -
     // below the ally this episode introduced.
     expect(ids(sections[0].entries)).toEqual(['quartermaster', 'hoarder']);
   });
@@ -574,7 +574,7 @@ describe('registrySections over public/data', () => {
       ['ghaza-provisioner', 'the-lamplighter', 'the-tollkeeper'],
       // Episode 2 debuts: 810, 100.
       ['signal-choir', 'mother-of-pipes'],
-      // Episode 1 debuts: 205, 165, 130 — the entity met last leads.
+      // Episode 1 debuts: 205, 165, 130 - the entity met last leads.
       ['quartermaster-vel', 'grull-rep', 'the-hoarder'],
     ]);
   });

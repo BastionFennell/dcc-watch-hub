@@ -2,12 +2,12 @@
  * Resume-where-you-left-off (US3, FR-130..FR-133, contracts/resume-storage.md).
  *
  * The hook owns three jobs and nothing else:
- *  1. Offer — on mount (and on episode change) load the saved record and offer
+ *  1. Offer - on mount (and on episode change) load the saved record and offer
  *     it when it is far enough from both ends to be worth rejoining.
- *  2. Save — while playing, at most once every 5 s; immediately on pause, on
+ *  2. Save - while playing, at most once every 5 s; immediately on pause, on
  *     `pagehide`, on `visibilitychange` → hidden, on episode change and on
  *     unmount. Never while the viewer still owes us an answer.
- *  3. Clear — when playback ends or the playhead reaches the last 30 s.
+ *  3. Clear - when playback ends or the playhead reaches the last 30 s.
  *
  * Constitution I: only the playhead is persisted. Nothing here reads, writes,
  * or derives overlay state; on rejoin the overlay is recomputed from the
@@ -44,8 +44,8 @@ export interface ResumeOptions {
   /**
    * Suppress the offer for this visit (004 FR-301): a deep link already names
    * the moment the viewer asked for, so a card offering another one would be
-   * arguing with them. The stored record is left alone — not read, not cleared
-   * — and ordinary saving carries on, so the next plain visit resumes from
+   * arguing with them. The stored record is left alone - not read, not cleared
+   * - and ordinary saving carries on, so the next plain visit resumes from
    * wherever this one got to (spec US1 scenario 2).
    */
   suppressOffer?: boolean;
@@ -100,7 +100,7 @@ export function useResume(
     playing: playhead.playing,
     ended: playhead.ended,
   });
-  /** Mirrors `pending` synchronously — effects and callbacks cannot wait for a render. */
+  /** Mirrors `pending` synchronously - effects and callbacks cannot wait for a render. */
   const offerRef = useRef<ResumeOffer | null>(null);
   /** Wall-clock stamp of the last write, for the 5 s throttle. */
   const lastSaveAtRef = useRef(0);
@@ -112,7 +112,7 @@ export function useResume(
    * False until the playhead is known to belong to this episode. On an episode
    * change React re-renders with the new `meta` one commit before the new
    * source's playhead resets, and that stale time must not be saved under the
-   * new id — nor count as "the viewer played past the offer". The first
+   * new id - nor count as "the viewer played past the offer". The first
    * episode needs no such proof (and the dev scrubber may open at `?t=`).
    */
   const armedRef = useRef(false);
@@ -121,7 +121,7 @@ export function useResume(
   const queuedSeekRef = useRef<number | null>(null);
   /**
    * `suppressOffer` for the load effect, which must not re-run when the flag
-   * changes — it is read at the moment the record would be loaded, and the
+   * changes - it is read at the moment the record would be loaded, and the
    * guard effect below covers the (page-impossible) late flip.
    */
   const suppressRef = useRef(suppressOffer);
@@ -238,7 +238,7 @@ export function useResume(
     }
 
     if (ended || inTail(t, durationSec)) {
-      // Finished: the saved position is worthless and must not come back — and
+      // Finished: the saved position is worthless and must not come back - and
       // neither may the offer to rejoin it, which would otherwise sit on the
       // stage next to the ended card with nothing left to restore.
       if (offerRef.current !== null) resolveOffer();

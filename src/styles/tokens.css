@@ -1,5 +1,5 @@
 /*
- * Design tokens — handoff spec §6 and specs/001-watch-hub-v1/wireframe.html.
+ * Design tokens - handoff spec §6 and specs/001-watch-hub-v1/wireframe.html.
  * These colors are requirements, not suggestions (constitution: Technical Constraints).
  */
 :root {
@@ -67,7 +67,7 @@
   --space-8: 24px;
   --space-9: 32px;
 
-  /* Typography — no webfonts: nothing may block first render */
+  /* Typography - no webfonts: nothing may block first render */
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
   --text-2xs: 10px;

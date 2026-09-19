@@ -15,6 +15,8 @@ import type {
   EventType,
   GearSlot,
   Hp,
+  HotlistEntry,
+  InventoryEntry,
   NpcEvent,
   Registry,
   SkillEntry,
@@ -23,6 +25,8 @@ import { isKnownEvent } from '../data/types';
 import { copy } from '../copy';
 import type { GearState, NpcState, OverlayState } from './state';
 import { cellKey } from './state';
+import type { HotlistView, SpellIndex, SpellView } from './spells';
+import { NO_SPELLS, resolveHotlist, resolveSpell } from './spells';
 
 /* ------------------------------------------------------------------ types */
 
@@ -42,7 +46,7 @@ export interface PartyFrame {
 }
 
 export interface FeedItem {
-  /** Index in the episode's event array — a stable React key across seeks. */
+  /** Index in the episode's event array - a stable React key across seeks. */
   id: number;
   t: number;
   kind: EventType;
@@ -143,9 +147,16 @@ export interface Dossier {
   art?: string;
   /** Worn gear as of the playhead, one item or null per slot (R2-FR-220). */
   gear: GearState;
-  hotlist: string[];
+  /**
+   * Normalized entries (008 R2), resolved against the spell registry (008 R4):
+   * a string in the data reads as `{ name }`, and a `{ ref }` mark reads as the
+   * book's name with the book's text behind it.
+   */
+  hotlist: HotlistView[];
   skills: SkillEntry[];
-  inventory: string[];
+  /** The sheet's SPELLS section as of the playhead, resolved (008 R2/R4). */
+  spells: SpellView[];
+  inventory: InventoryEntry[];
   achievements: DossierAchievement[];
   history: FeedItem[];
 }
@@ -250,6 +261,7 @@ function toFeedItem(
   id: number,
   party: PartyNames,
   registry?: Registry | null,
+  spells: SpellIndex = NO_SPELLS,
 ): FeedItem | null {
   const label = copy.labels[event.type];
   const actorId = 'actor' in event ? event.actor : undefined;
@@ -292,6 +304,14 @@ function toFeedItem(
       return { ...base, actorName, text: copy.feedText.inventory(who, event.add, event.remove) };
     case 'skill':
       return { ...base, actorName, text: copy.feedText.skill(who, event.name, event.rank) };
+    case 'spell':
+      // 008 revision 4: a row that only carries a `ref` still reads as the
+      // book's name, so the feed never files "mimi inscribes heal".
+      return {
+        ...base,
+        actorName,
+        text: copy.feedText.spell(who, resolveSpell(event, spells).name, event.rank),
+      };
     case 'class':
       return { ...base, actorName, text: copy.feedText.classChange(who, event.class) };
     case 'hotlist':
@@ -327,13 +347,14 @@ export function feedItems(
   n = 8,
   party: PartyNames = [],
   registry?: Registry | null,
+  spells: SpellIndex = NO_SPELLS,
 ): FeedItem[] {
   const items: FeedItem[] = [];
   for (let i = 0; i < events.length; i += 1) {
     const event = events[i];
     if (event.t > t) continue;
     if (!isKnownEvent(event)) continue;
-    const item = toFeedItem(event, i, party, registry);
+    const item = toFeedItem(event, i, party, registry, spells);
     if (item) items.push(item);
   }
   return items.slice(-n).reverse();
@@ -437,7 +458,7 @@ export function mapCells(state: OverlayState): MapCellsView {
 /**
  * Cells whose `map_reveal` landed within the last `windowSec` seconds
  * (`t_e <= t < t_e + windowSec`). The minimap uses it to tint just-revealed
- * sectors — a pure function of the playhead, so a backward seek un-tints them
+ * sectors - a pure function of the playhead, so a backward seek un-tints them
  * without any timer (research R5, T034).
  */
 export function recentlyRevealed(
@@ -458,7 +479,7 @@ export function recentlyRevealed(
 /* ------------------------------------------------------------- v2 selectors */
 
 /**
- * One crawler's elapsed, known events, newest first and uncapped — the dossier's
+ * One crawler's elapsed, known events, newest first and uncapped - the dossier's
  * HISTORY section (data-model §3). Party-scoped events belong to no crawler.
  */
 export function crawlerHistory(
@@ -467,6 +488,7 @@ export function crawlerHistory(
   actorId: string,
   party: PartyNames = [],
   registry?: Registry | null,
+  spells: SpellIndex = NO_SPELLS,
 ): FeedItem[] {
   const items: FeedItem[] = [];
   for (let i = 0; i < events.length; i += 1) {
@@ -474,7 +496,7 @@ export function crawlerHistory(
     if (event.t > t) continue;
     if (!isKnownEvent(event)) continue;
     if (!('actor' in event) || event.actor !== actorId) continue;
-    const item = toFeedItem(event, i, party, registry);
+    const item = toFeedItem(event, i, party, registry, spells);
     if (item) items.push(item);
   }
   return items.reverse();
@@ -521,6 +543,7 @@ export function crawlerDossier(
   t: number,
   actorId: string,
   party: PartyNames = state.party,
+  spells: SpellIndex = NO_SPELLS,
 ): Dossier | null {
   const crawler = state.party.find((entry) => entry.id === actorId);
   if (crawler === undefined) return null;
@@ -556,11 +579,12 @@ export function crawlerDossier(
     ...(crawler.stats === undefined ? {} : { stats: crawler.stats }),
     ...(crawler.art === undefined ? {} : { art: crawler.art }),
     gear: crawler.gear,
-    hotlist: crawler.hotlist,
+    hotlist: crawler.hotlist.map((entry) => resolveHotlist(entry, spells)),
     skills: crawler.skills,
+    spells: crawler.spells.map((entry) => resolveSpell(entry, spells)),
     inventory: crawler.inventory,
     achievements,
-    history: crawlerHistory(events, t, actorId, party),
+    history: crawlerHistory(events, t, actorId, party, undefined, spells),
   };
 }
 
@@ -644,7 +668,7 @@ export const GEAR_SLOT_ORDER = [
 
 /** The record's ten-slot hotbar, plus how many entries did not fit (R2-FR-221). */
 export interface Hotbar {
-  slots: (string | null)[];
+  slots: (HotlistView | null)[];
   overflow: number;
 }
 
@@ -652,10 +676,17 @@ export interface Hotbar {
  * Pads the hotlist to `n` fixed slots and counts the rest, so the hotbar is a
  * pure function of the elapsed hotlist and never changes size (R2-FR-221).
  */
-export function hotbarSlots(hotlist: readonly string[], n = 10): Hotbar {
-  const slots: (string | null)[] = [];
-  for (let i = 0; i < n; i += 1) slots.push(hotlist[i] ?? null);
-  return { slots, overflow: Math.max(0, hotlist.length - n) };
+export function hotbarSlots(
+  hotlist: readonly (HotlistEntry | HotlistView)[],
+  n = 10,
+  spells: SpellIndex = NO_SPELLS,
+): Hotbar {
+  // Already-resolved views pass straight through: `crawlerDossier` resolves the
+  // whole hotlist, so the hotbar is only asked to pad and count.
+  const views = hotlist.map((entry) => ('spell' in entry ? entry : resolveHotlist(entry, spells)));
+  const slots: (HotlistView | null)[] = [];
+  for (let i = 0; i < n; i += 1) slots.push(views[i] ?? null);
+  return { slots, overflow: Math.max(0, views.length - n) };
 }
 
 /** Worn gear as rows: one per filled slot, then one per accessory. */
@@ -678,7 +709,7 @@ export const GLANCE_HISTORY_ROWS = 3;
 /**
  * The glance card's view model, derived from an already-elapsed `Dossier`, so it
  * inherits time-truth for free (constitution I, FR-202). "Newest" is the last
- * element of each current list — after a removal that is the most recently
+ * element of each current list - after a removal that is the most recently
  * gained item still held (research R3).
  */
 export function crawlerGlance(dossier: Dossier): Glance {
@@ -719,7 +750,7 @@ export interface LogFilters {
 }
 
 /**
- * Every elapsed known event, oldest first and uncapped — the broadcast log
+ * Every elapsed known event, oldest first and uncapped - the broadcast log
  * (005 FR-401). The feed is a rolling eight-item window read newest-first; the
  * log is the whole transcript read top-down, so it is its own loop rather than
  * `feedItems` reversed: nothing here may ever be capped.
@@ -731,13 +762,14 @@ export function logItems(
   t: number,
   party: PartyNames = [],
   registry?: Registry | null,
+  spells: SpellIndex = NO_SPELLS,
 ): FeedItem[] {
   const items: FeedItem[] = [];
   for (let i = 0; i < events.length; i += 1) {
     const event = events[i];
     if (event.t > t) continue;
     if (!isKnownEvent(event)) continue;
-    const item = toFeedItem(event, i, party, registry);
+    const item = toFeedItem(event, i, party, registry, spells);
     if (item) items.push(item);
   }
   return items;
@@ -813,7 +845,7 @@ function toEncounter(entity: Entity, state: NpcState): Encounter {
 /**
  * The strip's chips, newest encounter first (FR-610). Entity state is already a
  * pure function of the playhead, so this inherits time-truth for free; an id the
- * registry does not carry has nothing to show and is left out — it stays in the
+ * registry does not carry has nothing to show and is left out - it stays in the
  * feed under its raw id (spec US1 scenario 5).
  */
 export function encounteredNpcs(
@@ -844,12 +876,13 @@ export function npcMoments(
   id: string,
   party: PartyNames = [],
   registry?: Registry | null,
+  spells: SpellIndex = NO_SPELLS,
 ): FeedItem[] {
   const moments: FeedItem[] = [];
   for (let i = 0; i < events.length; i += 1) {
     const event = events[i];
     if (event.type !== 'npc' || event.t > t || event.id !== id) continue;
-    const item = toFeedItem(event, i, party, registry);
+    const item = toFeedItem(event, i, party, registry, spells);
     if (item) moments.push(item);
   }
   return moments.reverse();

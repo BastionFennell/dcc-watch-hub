@@ -20,9 +20,9 @@
  * 007 adds the registry `makeRegistry()` and the `npc` events data-model "Fixture
  * facts" pins down (112 met grull-rep, 118 met hoarder, 122 update unlock lair,
  * 135 seen quartermaster, 140 met unknown-id, 185 update unlock weakness, 195
- * defeated hoarder) — all past t = 100, so every earlier feed count still holds.
+ * defeated hoarder) - all past t = 100, so every earlier feed count still holds.
  */
-import type { Crawler, EpisodeData, Registry, Show } from '../data/types';
+import type { Crawler, EpisodeData, Registry, Show, SpellRegistry } from '../data/types';
 import { normalizeEpisode } from '../data/validate';
 
 export function makeShow(): Show {
@@ -40,7 +40,7 @@ export function makeShow(): Show {
     episodes: [
       {
         id: 1,
-        title: 'Episode 1 — The World Dungeon',
+        title: 'Episode 1 - The World Dungeon',
         youtubeId: 'M7lc1UVf-VE',
         floor: 1,
         durationSec: 240,
@@ -48,7 +48,7 @@ export function makeShow(): Show {
       },
       {
         id: 2,
-        title: 'Episode 2 — The Meat District',
+        title: 'Episode 2 - The Meat District',
         youtubeId: 'M7lc1UVf-VE',
         floor: 1,
         durationSec: 240,
@@ -56,7 +56,7 @@ export function makeShow(): Show {
       },
       {
         id: 3,
-        title: 'Episode 3 — Descent',
+        title: 'Episode 3 - Descent',
         youtubeId: 'M7lc1UVf-VE',
         floor: 2,
         durationSec: 240,
@@ -68,6 +68,7 @@ export function makeShow(): Show {
       discord: 'https://discord.gg/REPLACE_ME',
     },
     registryUrl: '/data/npcs.json',
+    spellsUrl: '/data/spells.json',
   };
 }
 
@@ -106,9 +107,29 @@ export function makeEpisodeRaw(episodeId = 1): unknown {
           race: 'Human',
           pronouns: 'he/him',
         }),
+        /*
+         * 008 revision 2: the one crawler whose sheet carries structure. Harry
+         * keeps the plain string entries every earlier test asserts on, so the
+         * two shapes are exercised side by side in the same episode.
+         */
         crawler('psychic', 'The Psychic', 3, 20, 'Signal', 'Rae', {
           race: 'Human',
           pronouns: 'she/her',
+          hotlist: [
+            {
+              name: 'Mana Draught',
+              qty: 5,
+              desc: 'Restores your Mana in full when you spend an Action to drink one.',
+            },
+          ],
+          spells: [
+            {
+              name: 'Second Sight',
+              rank: 2,
+              mana: 3,
+              desc: 'Read the room one beat before it happens.',
+            },
+          ],
         }),
         crawler('harry', 'Harry', 2, 22, 'Harry', 'Marcus', {
           race: 'Human',
@@ -213,7 +234,7 @@ export function makeEpisode(episodeId = 1): EpisodeData {
  * The show-level entity registry the fixture episode's `npc` events point at
  * (007 data-model "Fixture facts"): a boss with two facts, a vendor with none
  * (so the record's empty-facts line has something to say), and an ally with one.
- * `unknown-id` at t = 140 is deliberately absent — it is the missing-entity case.
+ * `unknown-id` at t = 140 is deliberately absent - it is the missing-entity case.
  */
 export function makeRegistry(): Registry {
   return {
@@ -247,6 +268,51 @@ export function makeRegistry(): Registry {
         floor: 1,
         intro: 'Keeps the ledger of everything the floor still owes.',
         facts: [{ id: 'debt', text: 'It never forgives a debt; it only defers one.' }],
+      },
+    ],
+  };
+}
+
+/**
+ * A two-spell stand-in for the book (008 revision 4). `mending-light` carries
+ * every optional field the tooltip can print - aliases, Interrupt, a duration, a
+ * limitation, a cooldown and an upgrade - and `cinder-snap` is the plain attack
+ * case with a damage type, an AI Favor, Base Damage and no upgrades at all.
+ */
+export function makeSpells(): SpellRegistry {
+  return {
+    spells: [
+      {
+        id: 'mending-light',
+        name: 'Mending Light',
+        aliases: ['Mend'],
+        quote: 'Still breathing. Impressive.',
+        kind: 'passive',
+        interrupt: true,
+        manaCost: 2,
+        range: 'Self only',
+        duration: '5 seconds',
+        limitations: 'Rank 1 maximum',
+        cooldown: '10 minutes',
+        description: 'Heal 2 HB slots.',
+        upgrades: [{ rank: 5, text: 'Heal 3 HB slots instead.' }],
+        roll: [1, 40],
+        page: 38,
+      },
+      {
+        id: 'cinder-snap',
+        name: 'Cinder Snap',
+        kind: 'attack',
+        damageType: 'Fire',
+        areaOfEffect: true,
+        manaCost: 7,
+        range: 'Melee',
+        aiFavor: 1,
+        description: 'Brilliant flame leaps from your fingers.',
+        baseDamage: '1d4 + Int Fire',
+        upgrades: [],
+        roll: [41, 100],
+        page: 38,
       },
     ],
   };

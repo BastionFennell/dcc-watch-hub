@@ -3,7 +3,7 @@
  * border, a muted "Floor n" header and a 1 px-gapped grid of sector cells.
  *
  * Since v2 the badge is also the expanded map's trigger (FR-122), so it takes a
- * pointer and shows hover/focus affordances — but it keeps the ambient, flat
+ * pointer and shows hover/focus affordances - but it keeps the ambient, flat
  * look until one of those happens.
  */
 .badge {
@@ -37,7 +37,7 @@
 /*
  * The badge while its map panel is open (T131), driven off `aria-expanded` so it
  * cannot drift from the accessible state. Same border treatment as the crawler
- * frame — `--brand-line` at 3.98:1 on --panel, brighter than the hover border —
+ * frame - `--brand-line` at 3.98:1 on --panel, brighter than the hover border -
  * but no background wash: the revealed cells are `--brand-deep` and would
  * disappear into it. The header brightens instead.
  */

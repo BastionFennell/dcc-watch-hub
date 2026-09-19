@@ -18,7 +18,7 @@ function phoneQuery(): MediaQueryList | null {
 
 /**
  * True at phone/tablet widths (≤ 900 px), false wherever `matchMedia` is
- * missing — so a host without it (or jsdom) always gets the desktop tree, which
+ * missing - so a host without it (or jsdom) always gets the desktop tree, which
  * is the one every existing test asserts (FR-505).
  *
  * Viewer state, not overlay state (constitution I): nothing here is derived from

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-/** T406 — the share confirmation (FR-302/304, US2 scenarios 4 and 5). */
+/** T406 - the share confirmation (FR-302/304, US2 scenarios 4 and 5). */
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { copy } from '../../copy';

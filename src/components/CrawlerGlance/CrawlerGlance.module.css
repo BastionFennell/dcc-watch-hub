@@ -1,6 +1,6 @@
 /*
  * The rail's glance card (FR-200..FR-203, R2-FR-201, research R4). Same sheet
- * vocabulary as the dossier — System-blue header, mono caps labels — but every
+ * vocabulary as the dossier - System-blue header, mono caps labels - but every
  * row is single-line and the two list blocks reserve their rows in CSS, so the
  * card's height never grows with the episode (FR-201, R2-SC-201).
  */
@@ -104,7 +104,7 @@
 
 /*
  * The chart's own row (T313). The 120×32 viewBox draws at its natural size in a
- * 32 px-tall box — half again as large as the squeezed inline version — and the
+ * 32 px-tall box - half again as large as the squeezed inline version - and the
  * box is reserved even when there is no series, so every card is one height.
  */
 .rankSpark {
@@ -336,7 +336,7 @@
   gap: var(--space-1);
   min-width: 0;
   /* The rows the crawler has not earned yet are simply absent (revision 2: the
-     "—" placeholders are gone), so the block reserves their height instead. */
+     "-" placeholders are gone), so the block reserves their height instead. */
   min-height: calc(3 * var(--text-xs) * 1.5 + 2 * var(--space-1));
 }
 

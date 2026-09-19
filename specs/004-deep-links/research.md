@@ -7,11 +7,11 @@
   until ready (contract §6). Returns `linkedT` so the page can pass `suppressOffer` to `useResume`.
   In DEV with `?fake=1`, `FakeStage` keeps initializing at `t` (already implemented), and the
   one-shot seek is a no-op because the fake source already reports `t`.
-- **Alternatives**: hash fragments (`#t=`) — survive fewer copy/paste paths; `start` playerVar —
+- **Alternatives**: hash fragments (`#t=`) - survive fewer copy/paste paths; `start` playerVar -
   requires the value at player construction and is host-specific.
 
 ## R2. Autoplay behaviour
-- Seeking a cued YouTube player starts playback (documented host behaviour) — a deep link
+- Seeking a cued YouTube player starts playback (documented host behaviour) - a deep link
   therefore plays from `t`, which is what a shared clip should do. If the host blocks autoplay
   with sound, the player positions at `t` paused; overlay is correct either way.
 

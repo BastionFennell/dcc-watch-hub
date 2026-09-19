@@ -121,7 +121,7 @@ US2 owns `src/components/SiteHeader/**`, `src/components/NextEpisodeCard/**`, `s
 - [X] T012 Create `src/engine/time.ts` (`formatTime(sec)` → `m:ss`/`mm:ss` under 1 h, `h:mm:ss`
   at/after; floors fractional seconds) and `src/engine/selectors.ts` per data-model.md §3:
   `elapsed`, `partyFrames` (with `danger`, `levelUpPulse` window 1.2 s), `feedItems(events, t, n=8)`
-  (known types only, newest first, each `{ id, t, kind, label, text, actorName? }` — `id` =
+  (known types only, newest first, each `{ id, t, kind, label, text, actorName? }` - `id` =
   index in the original array so React keys are stable), `activeSponsor`, `activeToast` (FIFO
   math: `start_i = max(t_i, end_{i-1})`, `end_i = start_i + 6`), `timelineMarkers(events, durationSec, party)`
   (chapter kind→color token name, achievement, level_up; `pos` clamped 0..1; label rules),
@@ -138,7 +138,7 @@ US2 owns `src/components/SiteHeader/**`, `src/components/NextEpisodeCard/**`, `s
   subscribing in `useEffect`, initial `t = source?.getTime() ?? 0`, cleanup unsubscribes.
 - [X] T015 [P] Create sample data: `public/data/show.json` (title "Dungeon Crawl Cast"; season 1;
   Floor 1 label "Floor 1" episodes [1,2]; Floor 2 label "Floor 2" episodes [3]; episodes 1–3
-  with titles "Episode 1 — The World Dungeon", "Episode 2 — The Meat District", "Episode 3 — Descent";
+  with titles "Episode 1 - The World Dungeon", "Episode 2 - The Meat District", "Episode 3 - Descent";
   `youtubeId: "M7lc1UVf-VE"` for all; `durationSec: 240`; `dataUrl: "/data/epN.json"`; links
   `https://www.youtube.com/@DungeonCrawlCast` and `https://discord.gg/REPLACE_ME`), and
   `public/data/ep1.json`, `ep2.json`, `ep3.json` each with the five crawlers
@@ -176,7 +176,7 @@ US2 owns `src/components/SiteHeader/**`, `src/components/NextEpisodeCard/**`, `s
 
 ---
 
-## Phase 3: User Story 1 — Watch an episode with a synchronized System feed (Priority: P1) 🎯 MVP
+## Phase 3: User Story 1 - Watch an episode with a synchronized System feed (Priority: P1) 🎯 MVP
 
 **Goal**: Episode page plays the YouTube embed with party rail and event feed that are a pure
 function of the playhead; correct after any seek.
@@ -240,7 +240,7 @@ time-truth invariants at the page level.
 
 ---
 
-## Phase 4: User Story 2 — Navigate the broadcast archive (Priority: P2)
+## Phase 4: User Story 2 - Navigate the broadcast archive (Priority: P2)
 
 **Goal**: Hub page grouped by floor, persistent slim header with prev/next + dropdown + links,
 ended-state next-episode card, not-found handling.
@@ -288,7 +288,7 @@ ends; ended card navigates; `/ep/999` shows System not-found.
 
 ---
 
-## Phase 5: User Story 3 — Jump to moments via the event timeline (Priority: P3)
+## Phase 5: User Story 3 - Jump to moments via the event timeline (Priority: P3)
 
 **Goal**: Marker bar under the stage; hover labels; click seeks.
 
@@ -308,7 +308,7 @@ and overlay follows (assert via `FakeTimeSource.getTime()` in test).
 
 ---
 
-## Phase 6: User Story 4 — Stage moments: toasts, minimap, sponsors (Priority: P4)
+## Phase 6: User Story 4 - Stage moments: toasts, minimap, sponsors (Priority: P4)
 
 **Goal**: 6 s FIFO achievement toast; non-interactive minimap badge; pinned active sponsor.
 
@@ -319,7 +319,7 @@ pinned during its window only.
 - [X] T033 [P] [US4] Create `src/components/AchievementToast/AchievementToast.tsx` + `.module.css`:
   absolutely positioned top-left (8 px inset), System blue box (`--system-bg`/`--system-fg`), mono
   caps "NEW ACHIEVEMENT" label, title bold + desc, max-width 65%, fade-in 200 ms (no exit
-  animation — it is removed when the selector returns null), `role="status"` `aria-live="polite"`.
+  animation - it is removed when the selector returns null), `role="status"` `aria-live="polite"`.
   Props: `toast: Toast | null`.
 - [X] T034 [P] [US4] Create `src/components/MiniMapBadge/MiniMapBadge.tsx` + `.module.css`: bottom-right
   (8 px inset), 96×64 panel with hairline-2 border, header `IconMap` + "Floor {n}" (`--text-3` 11 px),
@@ -328,7 +328,7 @@ pinned during its window only.
   `aria-hidden` decorative plus an `sr-only` summary "{n} of {total} sectors revealed". Props:
   `cells: ReturnType<typeof mapCells>`, `recent: Set<string>`.
 - [X] T035 [US4] Wire toast, minimap, and pinned `activeSponsor` into `EpisodePage.tsx` /
-  `VideoStage` children (sponsor pinned slot already supported by `EventFeed` props — pass
+  `VideoStage` children (sponsor pinned slot already supported by `EventFeed` props - pass
   `activeSponsor(events, t)`). Add `recentlyRevealed(events, t, windowSec = 5)` to
   `src/engine/selectors.ts` with a unit test. Extend `EpisodePage.test.tsx`: toast text at
   `t=60`, still at `65.9`, second toast at `66`, none after `78`; `set(59)` → no toast; minimap
@@ -338,7 +338,7 @@ pinned during its window only.
 
 ---
 
-## Phase 7: User Story 5 — Convert an editor's sheet export into episode data (Priority: P5)
+## Phase 7: User Story 5 - Convert an editor's sheet export into episode data (Priority: P5)
 
 **Goal**: `npm run sheet-to-json` turns a CSV into schema-valid `ep{N}.json` with warnings.
 

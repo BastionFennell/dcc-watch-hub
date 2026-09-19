@@ -1,10 +1,19 @@
 /**
  * Overlay state: the result of folding every elapsed event onto the episode's
- * initial state. Never stored — always recomputed (constitution I, Time-Truth).
+ * initial state. Never stored - always recomputed (constitution I, Time-Truth).
  *
  * Framework-free by rule: no React, no DOM, no clocks, no randomness.
  */
-import type { Crawler, Gear, InitialState, MapState, SkillEntry } from '../data/types';
+import type {
+  Crawler,
+  Gear,
+  HotlistEntry,
+  InitialState,
+  InventoryEntry,
+  MapState,
+  SkillEntry,
+  SpellEntry,
+} from '../data/types';
 
 /**
  * The normalized gear state (R2-FR-220): one item or nothing per worn slot, and
@@ -35,24 +44,42 @@ export function gearFrom(gear: Gear | undefined): GearState {
   };
 }
 
+/**
+ * Every list the sheet writes as "a string, or a string with structure" is
+ * normalized here (008 revision 2), so nothing downstream ever handles both
+ * shapes: `'Torch'` and `{ name: 'Torch' }` are the same state.
+ */
+export function entriesFrom<T extends { name?: string }>(
+  entries: readonly (string | T)[] | undefined,
+): T[] {
+  return (entries ?? []).map((entry) =>
+    typeof entry === 'string' ? ({ name: entry } as T) : ({ ...entry } as T),
+  );
+}
+
 /** `gear` is replaced by the normalized `GearState`, so it is omitted here. */
-export interface CrawlerState extends Omit<Crawler, 'gear'> {
+export interface CrawlerState
+  extends Omit<Crawler, 'gear' | 'hotlist' | 'inventory' | 'skills' | 'spells'> {
   /** Derived; empty at t = 0 (the initial-state schema has no status field). */
   statuses: string[];
   /** Achievement titles earned so far, in order. */
   achievements: string[];
   /** Seeded from `Crawler.skills`; `skill` events upsert by name (v2). */
   skills: SkillEntry[];
+  /** Seeded from `Crawler.spells`; `spell` events upsert by name (008 R2). */
+  spells: SpellEntry[];
   /** Seeded from `Crawler.hotlist`; `hotlist` events add and remove (v2). */
-  hotlist: string[];
+  hotlist: HotlistEntry[];
+  /** Seeded from `Crawler.inventory`; `inventory` and `loot` events move it. */
+  inventory: InventoryEntry[];
   /** Seeded from `Crawler.gear`; `equip`/`unequip` events move it (R2). */
   gear: GearState;
 }
 
 /**
  * What the elapsed log says about one entity (007, FR-602). Created by the first
- * `npc` event of any action — a `seen` before a `met` still counts as an
- * encounter (research R2) — and, like everything here, recomputed on every seek.
+ * `npc` event of any action - a `seen` before a `met` still counts as an
+ * encounter (research R2) - and, like everything here, recomputed on every seek.
  */
 export interface NpcState {
   /** `t` of the first event about this entity, whatever its action. */
@@ -79,11 +106,12 @@ export function fromInitialState(init: InitialState): OverlayState {
     party: init.party.map((crawler) => ({
       ...crawler,
       hp: { ...crawler.hp },
-      inventory: [...crawler.inventory],
+      inventory: entriesFrom<InventoryEntry>(crawler.inventory),
       statuses: [],
       achievements: [],
       skills: (crawler.skills ?? []).map((skill) => ({ ...skill })),
-      hotlist: [...(crawler.hotlist ?? [])],
+      spells: (crawler.spells ?? []).map((spell) => ({ ...spell })),
+      hotlist: entriesFrom<HotlistEntry>(crawler.hotlist),
       gear: gearFrom(crawler.gear),
     })),
     map: {

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * The rail panel's two presentations (T607). `'rail'` is the frame every earlier
- * feature renders — in place, no portal, no backdrop — and `'sheet'` is the phone
+ * feature renders - in place, no portal, no backdrop - and `'sheet'` is the phone
  * bottom sheet from 006 (FR-504, research R3): portalled to `document.body` over
  * a dim backdrop, dismissed by a downward drag past a quarter of its height.
  *
@@ -53,7 +53,7 @@ function stubSheetHeight(height: number) {
   return sheet;
 }
 
-describe('RailPanel — rail presentation (unchanged)', () => {
+describe('RailPanel - rail presentation (unchanged)', () => {
   it('renders a labelled region in place with a close control', () => {
     const { container, onClose } = renderPanel();
     const panel = screen.getByTestId('rail-panel');
@@ -83,7 +83,7 @@ describe('RailPanel — rail presentation (unchanged)', () => {
   });
 });
 
-describe('RailPanel — sheet presentation', () => {
+describe('RailPanel - sheet presentation', () => {
   it('portals a backdrop, a handle and the same region to the body', () => {
     const { container } = renderPanel('sheet');
     const backdrop = screen.getByTestId('sheet-backdrop');

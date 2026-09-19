@@ -2,7 +2,7 @@
 
 | Path | Page | Data |
 |------|------|------|
-| `/` | HubPage — "Broadcast archive" grouped by floor | show.json |
+| `/` | HubPage - "Broadcast archive" grouped by floor | show.json |
 | `/ep/:id` | EpisodePage | show.json + episode `dataUrl` |
 | `*` | NotFoundPage (System voice) | show.json (for header) |
 

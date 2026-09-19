@@ -10,7 +10,7 @@ import { FeedItemView } from '../EventFeed/FeedItem';
 import { LogFilters } from './LogFilters';
 import styles from './EpisodeLog.module.css';
 
-/** How often the count may change its text — once a second (research R5). */
+/** How often the count may change its text - once a second (research R5). */
 export const COUNT_THROTTLE_MS = 1_000;
 
 /**
@@ -20,7 +20,7 @@ export const COUNT_THROTTLE_MS = 1_000;
 export const FOLLOW_SLACK_PX = 24;
 
 export interface EpisodeLogProps {
-  /** `logItems(events, t, party)` — the whole elapsed log, oldest first. */
+  /** `logItems(events, t, party)` - the whole elapsed log, oldest first. */
   items: FeedItem[];
   party: readonly { id: string; name: string }[];
   /** The playhead the page derived `items` at (005 FR-405). */
@@ -172,7 +172,7 @@ export function EpisodeLog({
       data-testid="episode-log"
       data-open={open ? 'true' : undefined}
       data-embedded={embedded ? 'true' : undefined}
-      /* The playhead this log was derived at — the measurable half of FR-405. */
+      /* The playhead this log was derived at - the measurable half of FR-405. */
       data-t={Math.max(0, Math.floor(t))}
     >
       <div className={styles.bar}>

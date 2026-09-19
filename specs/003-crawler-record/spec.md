@@ -50,7 +50,7 @@ change, confirm the card's height does not grow as lists grow.
 ### User Story 2 - Open the full record (Priority: P2)
 
 From the glance card, the viewer opens the full record: a wide, modal dialog laid out like the
-official sheet in landscape — identity and vitals across the top, stats, then columns for
+official sheet in landscape - identity and vitals across the top, stats, then columns for
 Hotlist and Skills, Inventory and Achievements, and History. It keeps updating with the
 playhead while open. Escape, the close control, or clicking the backdrop closes it and returns
 focus to the "Open full record" button. On a phone it is a full-screen page with the same
@@ -91,8 +91,8 @@ verify updates, close by each method, verify focus return; at 400 px verify stac
 - Glance card for a crawler with no rank events: "Unranked", no sparkline, rank row still present.
 - Newest-entry text longer than the row: single line, ellipsized, full text in the record.
 - The record open while the panel is switched to the map (keyboard shortcut or click on the
-  badge is impossible while modal; if the panel closes for any other reason — episode change,
-  data reload — the record closes too).
+  badge is impossible while modal; if the panel closes for any other reason - episode change,
+  data reload - the record closes too).
 - Resume card and record: the record cannot open before data loads, and the resume card only
   appears at start; if both exist, the record is above and answering the resume card is deferred.
 - Very small heights (short laptop): the glance card may scroll as a last resort; the record
@@ -166,13 +166,13 @@ panel's kicker becomes "CRAWLER GLANCE" and the record's kicker "CRAWLER RECORD"
 
 ---
 
-# Revision 2 (2026-09-15) — author feedback after the first build
+# Revision 2 (2026-09-15) - author feedback after the first build
 
 Author, on the glance card: "We don't need the skills list in the sideboard (the PCs will have a
-ton of skills very quickly). Similar for inventory — better to just show equipped items. Maybe
+ton of skills very quickly). Similar for inventory - better to just show equipped items. Maybe
 instead of achievements we show the most recent achievement? What are the two dashes in history?"
 On the record: "We'll need room for full character art on the sheet. Make the hotlist look like an
-actual MMO hotlist. Similar feedback for skills, inventory, achievements, etc. — maybe those can
+actual MMO hotlist. Similar feedback for skills, inventory, achievements, etc. - maybe those can
 be expanded into a different list view?"
 
 The dashes were placeholder rows keeping the card's height fixed; they are removed (R2-FR-201).
@@ -200,7 +200,7 @@ The dashes were placeholder rows keeping the card's height fixed; they are remov
 2. **Given** the Hotlist, **Then** it renders as a hotbar of ten square slots numbered 1–10,
    entries filling slots in order, empty slots drawn dim; on a phone the bar wraps to two rows of five.
 3. **Given** gear, **Then** a Gear section lists the sheet's slots (Head, Torso, Arms, Hands,
-   Legs, Feet, Accessories) with the equipped item or "—" per slot.
+   Legs, Feet, Accessories) with the equipped item or "-" per slot.
 4. **Given** Skills, Inventory, Achievements, **Then** each is a tile grid (square-ish tiles with
    the name, and rank / time where relevant) showing at most eight tiles, with "View all (N)"
    when there are more; History shows its latest eight rows with "View all (N)".
@@ -236,12 +236,12 @@ The dashes were placeholder rows keeping the card's height fixed; they are remov
   opens the list view and returns focus correctly; Escape order holds.
 - **R2-SC-204**: Lighthouse accessibility 100; no horizontal scroll at 360 px in any record view.
 
-## Revision 2 — amendments carried by the UX review triage
+## Revision 2 - amendments carried by the UX review triage
 
 Source: `specs/reviews/2026-09-15-ux-review-triage.md` (2026-09-15). Both items below change a
 decision made in an earlier spec, so they are recorded here rather than left implicit.
 
-### Revision 2 — party rank removed (author: DCC has individual rank only); supersedes v2 FR-141
+### Revision 2 - party rank removed (author: DCC has individual rank only); supersedes v2 FR-141
 
 The author confirmed on 2026-09-15 that DCC has no party rank: a crawler's standing is the only
 rank the System keeps. **v2 FR-141** ("the feed header MUST show the party's current rank …") is
@@ -262,14 +262,14 @@ superseded and no longer implemented.
 - Copy removed: `feedText.rankParty`, `partyRankLine`. `EventFeed` no longer takes a
   `partyRank` prop and the feed header carries no party line.
 
-### Revision 2 — the stage caption moved out of the stage; deviates from v1 §5
+### Revision 2 - the stage caption moved out of the stage; deviates from v1 §5
 
 v1 §5 places the caption "Ep {n} · Floor {n} · {time}" inside the stage, bottom-left. In a real
 YouTube embed the host's own control bar covers exactly that corner, so the caption was either
 hidden or illegible, and the episode title was never shown anywhere visible (review 0.11/0.13).
 
 The caption now sits in its own slim row between the stage and the timeline
-(`data-testid="stage-caption-row"`): `Ep N · Floor N — {title}` on the left, `formatTime(t)` on
+(`data-testid="stage-caption-row"`): `Ep N · Floor N - {title}` on the left, `formatTime(t)` on
 the right. The left half is the page's single `<h1>`, which retires the sr-only heading that
 duplicated the title. `stageCaption(meta, t)` and `copy.feedText.stageCaption` are removed with
 their last caller; `--stage-overlay-bottom` stays, because the minimap badge still needs to

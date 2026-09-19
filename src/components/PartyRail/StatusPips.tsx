@@ -5,7 +5,7 @@ export interface StatusPipsProps {
 }
 
 /**
- * Small rounded chips under the HP bar. Purely informational — never clickable,
+ * Small rounded chips under the HP bar. Purely informational - never clickable,
  * and spans only, because the v2 frame around them is a `<button>`.
  *
  * The row is rendered even when it is empty (review 0.10, T339): debuffs come

@@ -6,7 +6,7 @@
 **Input**: User description: "Build v1 of the Dungeon Crawl Cast Watch Hub from the handoff spec
 (`dcc-watch-hub-spec.md`) and wireframe (`specs/001-watch-hub-v1/wireframe.html`): a static
 watch-along site where a YouTube episode plays with a synchronized, spoiler-safe overlay styled as
-the in-fiction System's broadcast feed — party status, event ticker, achievement toasts, minimap
+the in-fiction System's broadcast feed - party status, event ticker, achievement toasts, minimap
 badge, sponsor slots, event-marked timeline, a site header with episode navigation, a hub page
 listing episodes by floor, and an editor script that converts a sheet export into episode data."
 

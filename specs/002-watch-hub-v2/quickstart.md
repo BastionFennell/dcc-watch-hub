@@ -23,11 +23,11 @@ seconds, so `t=560` opens the scrubber at 9:20.
 - Map: same page → click the **Floor 1** badge → the expanded map with two labels, "The Meat
   District" (revealed 2:03) and "The Rot Market" (7:20). Scrub past 9:40 for the third, "The
   Gutter Stair". Zoom with the buttons or `+`/`-`, drag to pan, `0` or **Fit** to reset.
-  Clicking a crawler frame while the map is open swaps it for the dossier — one panel at a time.
+  Clicking a crawler frame while the map is open swaps it for the dossier - one panel at a time.
 - Resume: open `/ep/1` (no `?t=`, no `?fake=1`), play past 0:30, reload → "Rejoin at m:ss" card;
   choose **Rejoin** → video and overlay land at that time. Play to the end, reload → no card.
   Note: opening with `?t=` starts the fake source past the 5 s grace window, which answers the
-  offer by itself — use a plain `/ep/1` to see the card.
+  offer by itself - use a plain `/ep/1` to see the card.
 - Party rank: feed header shows "Party rank #61" from 5:17 (the episode's only party rank
   event); before that the line is omitted.
 
@@ -83,17 +83,17 @@ human or a second browser is marked **manual, not run**.
 - **Active trigger state.** With a panel open its trigger now says so visually as well as via
   `aria-expanded`: the crawler frame takes a `--brand-line` border and a `--brand-deep` wash
   (its `Lv N` / `HP` line steps up to `--text-2`, which keeps 6.79:1 over the wash), and the
-  minimap badge takes the same border with a brighter header — no wash there, because the
+  minimap badge takes the same border with a brighter header - no wash there, because the
   revealed cells are `--brand-deep` and would vanish into it. Both selectors key off
   `[aria-expanded='true']`, so the visual state cannot drift from the announced one.
 - **Focus order.** The close control is the first focusable node in every panel; asserted in
   `EpisodePage.test.tsx` ("puts the close control first in every panel's focus order"), which
   also pins the map's order to close → Zoom in → Fit → viewport (Zoom out is disabled at the
   fit step and therefore out of the tab order).
-- **Names.** Panel region is labelled by its title (`Harry — System record`, `Floor 1`); the
+- **Names.** Panel region is labelled by its title (`Harry - System record`, `Floor 1`); the
   focusable map viewport gained `role="group"` + `copy.mapViewportLabel`; the minimap badge's
-  accessible name now opens with its visible text — **`Floor 1 — open the floor map`** instead
-  of `Open the floor map` — because axe's `label-content-name-mismatch` (WCAG 2.5.3 Label in
+  accessible name now opens with its visible text - **`Floor 1 - open the floor map`** instead
+  of `Open the floor map` - because axe's `label-content-name-mismatch` (WCAG 2.5.3 Label in
   Name) flagged the old name. `contracts/panels.md`, `research.md` R9, `spec.md` FR-122 and
   `tasks.md` T101 still quote the bare string and need the author's amendment.
 - **Reduced motion.** *Measured* with Chrome's `--force-prefers-reduced-motion=reduce`:
@@ -106,10 +106,10 @@ human or a second browser is marked **manual, not run**.
   first, the panel second (`EpisodePage.test.tsx` "lets the Episodes menu win the first
   Escape"). `ResumeCard` now calls `stopPropagation()` on the Escape it answers. Note for the
   author: because `document` bubbles *before* `window`, that call cannot actually pre-empt
-  `usePanel` — if a viewer opens a dossier while the resume card is up, one Escape still does
+  `usePanel` - if a viewer opens a dossier while the resume card is up, one Escape still does
   both. Making the card win needs a behavioural change (capture phase, or a guard in
   `usePanel`), so it was flagged rather than made.
-- **Lighthouse accessibility 100** on `/ep/1` and `/`, with *no* audit scoring below 1 —
+- **Lighthouse accessibility 100** on `/ep/1` and `/`, with *no* audit scoring below 1 -
   including the zero-weight informational ones.
 
 ### Responsive (T132)
@@ -127,21 +127,21 @@ compared with `clientWidth`, with a dossier and then the map open.
 No element's right edge exceeded the viewport at any width, in any of the three states.
 
 - **Close reachable without scrolling**: the ≤ 900 px panel is `position: fixed; inset: 0` with a
-  non-scrolling header, so the close button sits at `top: 8px`, `bottom: 36px` at every width —
+  non-scrolling header, so the close button sits at `top: 8px`, `bottom: 36px` at every width -
   in view before any scrolling, on both the dossier and the map.
 - **Scroll lock**: `body.panel-open` present and `overflow: hidden` computed at 320/360/400 px;
   absent at 1440 px, where the panel is a card in the rail rather than an overlay.
 - **Dossier header grid**: the six definitions (Race, Pronouns, Crawler #, Level, Class, Floor)
-  drop to a single column below 480 px — measured `grid-template-columns: 300px` at 320 px,
+  drop to a single column below 480 px - measured `grid-template-columns: 300px` at 320 px,
   `340px` at 360 px, `380px` at 400 px, six rows for six definitions.
-- **Map controls**: one row at every width — 75 + 82 + 45 px, right edge 223 px, inside even a
+- **Map controls**: one row at every width - 75 + 82 + 45 px, right edge 223 px, inside even a
   320 px viewport. `flex-wrap: wrap` was added so a longer translation wraps rather than
   overflows.
 - **Desktop: the stage never moves.** *Measured* at 1440×900: the stage's
   `getBoundingClientRect` is `{x: 16, y: 60, width: 1072, height: 603}` both before and after
   opening Harry's dossier, and the rail column keeps its 320 px width (it grows 445 → 828 px
-  tall, entirely within the viewport). The panel scrolls internally — body `scrollHeight` 963
-  vs `clientHeight` 774, `overflow-y: auto` — so nothing in the stage column can reflow. The CSS
+  tall, entirely within the viewport). The panel scrolls internally - body `scrollHeight` 963
+  vs `clientHeight` 774, `overflow-y: auto` - so nothing in the stage column can reflow. The CSS
   reason: the rail is the grid's second track (`minmax(320px, 1fr)`) and the panel is capped at
   `calc(100vh - var(--header-h) - 2 * var(--space-6))` with `overflow: hidden` on the frame, so
   panel height can never feed back into the row. `EpisodePage.test.tsx` carries the structural
@@ -168,8 +168,8 @@ afterwards):
 | `/ep/1` | **100** | **100** | 0.4 s | 0.5 s | 0 ms | 0 |
 | `/` | **100** | **100** | 0.4 s | 0.4 s | 0 ms | 0 |
 
-Caveat, as in v1: localhost numbers on a fast machine. Lighthouse cannot open a panel — `?panel=`
-is DEV-only — so these are the ambient page; the panels add no requests and no layout shift
+Caveat, as in v1: localhost numbers on a fast machine. Lighthouse cannot open a panel - `?panel=`
+is DEV-only - so these are the ambient page; the panels add no requests and no layout shift
 above the fold (see the stage-rect measurement above).
 
 ### Copy (T134)
@@ -202,34 +202,34 @@ features" above holds:
 
 ### Success criteria (T135)
 
-- [x] **SC-101 — dossier open/switch/close by mouse and keyboard; content correct at event
+- [x] **SC-101 - dossier open/switch/close by mouse and keyboard; content correct at event
       boundaries.** `EpisodePage.test.tsx`: open, switch without an intermediate close, toggle
       shut, close control, Escape with focus return to the frame, `aria-expanded` on every
       frame. Content swept at `t=560/300/289/259/239/153` in a real browser (table above).
       *Keyboard activation itself is the native `<button>` behaviour and was not separately
-      driven with Enter/Space in a real browser — **manual, not run**.*
-- [x] **SC-102 — the expanded map labels exactly the reveals ≤ t; zoom/pan/fit; close restores
+      driven with Enter/Space in a real browser - **manual, not run**.*
+- [x] **SC-102 - the expanded map labels exactly the reveals ≤ t; zoom/pan/fit; close restores
       the feed.** `EpisodePage.test.tsx` labels at 100 / 180 / back to 100; `FloorMap.test.tsx`
       zoom steps, disabled limits, Fit reset, `+` / `0` keys; browser walk at 100 / 560 / 600.
-      *Drag-to-pan is exercised only through synthetic pointer events in jsdom — a real
+      *Drag-to-pan is exercised only through synthetic pointer events in jsdom - a real
       mouse/touch drag is **manual, not run**.*
-- [x] **SC-103 — a saved position ≥ 30 s produces the rejoin card; rejoin lands there; the last
+- [x] **SC-103 - a saved position ≥ 30 s produces the rejoin card; rejoin lands there; the last
       30 s and the end clear it.** `useResume.test.tsx` (22 tests: thresholds at 29 / 30 /
       duration−29, save cadence, `pagehide`, ended, retrying rejoin, throwing store) plus five
       page tests (rejoin seeks to 120 and the feed header reads 2:00, start-over clears, end
       clears, 10 s makes no offer, blocked storage is silent). *Private-window behaviour is
-      covered by the blocked-storage test, not by an actual private window — **manual, not
+      covered by the blocked-storage test, not by an actual private window - **manual, not
       run**.*
-- [x] **SC-104 — sparklines plot exactly the elapsed rank events and expose a text summary.**
+- [x] **SC-104 - sparklines plot exactly the elapsed rank events and expose a text summary.**
       `EpisodePage.test.tsx`: three points and `copy.sparklineSummary(4188, 3550, 3, 3012)` at
       t=200, one point and no polyline at t=120, "Unranked" and no chart for a crawler with no
       rank events. Confirmed in the browser at t=560 / 300 / 259.
-- [x] **SC-105 — no v1 regressions; Lighthouse ≥ 90; 360 px with a panel open has no horizontal
+- [x] **SC-105 - no v1 regressions; Lighthouse ≥ 90; 360 px with a panel open has no horizontal
       scroll.** 326/326 tests (the v1 suite untouched); Lighthouse performance 100 /
       accessibility 100 on `/ep/1` and `/`; 360 px measured at 360/360 with a dossier and with
-      the map open. *Firefox and Safari are **manual, not run** — this machine measured Chrome
+      the map open. *Firefox and Safari are **manual, not run** - this machine measured Chrome
       152 only.*
-- [x] **SC-106 — the ambient view is unchanged except the new trigger affordances and the party
+- [x] **SC-106 - the ambient view is unchanged except the new trigger affordances and the party
       rank line.** Every style added in Phase 7 is scoped to `[aria-expanded='true']`, so with
       no panel open the rail, badge and dossier styles compute exactly as before; the only
       always-on additions are the sparkline baseline (inside a panel) and the map viewport's

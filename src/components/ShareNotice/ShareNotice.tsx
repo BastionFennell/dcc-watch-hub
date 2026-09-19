@@ -19,8 +19,8 @@ const MESSAGE: Record<Exclude<ShareStatus, 'idle'>, string> = {
 /**
  * The System's confirmation under the caption row (004 US2, FR-302/304).
  *
- * The live region is always in the document — an `aria-live` container that
- * appears at the same moment as its text is announced unreliably — and the box
+ * The live region is always in the document - an `aria-live` container that
+ * appears at the same moment as its text is announced unreliably - and the box
  * inside it comes and goes. Empty, the container has no box model at all, so
  * the stage above it never moves (no CLS).
  *

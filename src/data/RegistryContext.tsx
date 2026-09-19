@@ -8,19 +8,28 @@
  */
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import type { Registry } from './types';
-import { fetchRegistry } from './load';
+import type { Registry, SpellRegistry } from './types';
+import { fetchRegistry, fetchSpells } from './load';
 import { useShow } from './ShowContext';
 
 export interface RegistryContextValue {
   /** `null` until it lands, and for a show that declares no `registryUrl`. */
   registry: Registry | null;
+  /**
+   * The book's spells (008 revision 4). It rides along with the entity registry
+   * because it is the same kind of thing - one show-level file, fetched once,
+   * read by every episode - and a second provider would only duplicate this one.
+   * `null` until it lands, for a show with no `spellsUrl`, and for a file that
+   * failed: a sheet entry then falls back to whatever it says itself.
+   */
+  spells: SpellRegistry | null;
   error: Error | null;
   loading: boolean;
 }
 
 const RegistryContext = createContext<RegistryContextValue>({
   registry: null,
+  spells: null,
   error: null,
   loading: true,
 });
@@ -34,6 +43,7 @@ const RegistryContext = createContext<RegistryContextValue>({
 export function RegistryProvider({ children }: { children: ReactNode }) {
   const { show, loading: showLoading } = useShow();
   const [registry, setRegistry] = useState<Registry | null>(null);
+  const [spells, setSpells] = useState<SpellRegistry | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -42,6 +52,22 @@ export function RegistryProvider({ children }: { children: ReactNode }) {
     let live = true;
     setLoading(true);
     setError(null);
+    /*
+     * The spell registry is loaded beside the entity registry but never blocks
+     * it: a missing or malformed spells.json costs the book's text on a few
+     * tooltips, so it is warned about and swallowed rather than surfaced as the
+     * page's error (spec R4: "degrades to an empty registry, never a blank page").
+     */
+    fetchSpells(show)
+      .then((next) => {
+        if (live) setSpells(next);
+      })
+      .catch((cause: unknown) => {
+        if (!live) return;
+        setSpells(null);
+        console.warn(`Spells: could not load the spell registry (${String(cause)}).`);
+      });
+
     fetchRegistry(show)
       .then((next) => {
         if (!live) return;
@@ -61,7 +87,7 @@ export function RegistryProvider({ children }: { children: ReactNode }) {
 
   return (
     <RegistryContext.Provider
-      value={{ registry, error, loading: loading && (showLoading || show !== null) }}
+      value={{ registry, spells, error, loading: loading && (showLoading || show !== null) }}
     >
       {children}
     </RegistryContext.Provider>

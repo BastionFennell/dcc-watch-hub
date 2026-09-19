@@ -43,7 +43,7 @@ interface Swipe {
  * log as a WAI-ARIA tabs widget with automatic activation.
  *
  * All four panels stay mounted and are hidden with `hidden`, not unmounted, so
- * the log's follow position and the map's zoom survive a tab switch — the
+ * the log's follow position and the map's zoom survive a tab switch - the
  * content itself is derived from the playhead on every render anyway
  * (constitution I). Selection moves by tap, by arrow key (focus follows, wrap),
  * and by a horizontal swipe on the panel area; `touch-action: pan-y` leaves
@@ -95,7 +95,7 @@ export function MobileTabs({ tabs, initial, onChange, label }: MobileTabsProps) 
   }
 
   const startSwipe = useCallback((event: PointerEvent<HTMLDivElement>) => {
-    // Panes may own the horizontal axis themselves — the floor map is dragged
+    // Panes may own the horizontal axis themselves - the floor map is dragged
     // to pan, and a pan that crossed the 40 px threshold would also flick the
     // strip to the next tab. A pane opts out by marking its gesture surface
     // `data-swipe-ignore`; the gesture is then simply never started.

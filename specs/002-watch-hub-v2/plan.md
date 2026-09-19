@@ -33,12 +33,12 @@ module, +6 selectors, ~+60 tests
 
 | Principle | Gate | Pre-design | Post-design |
 |-----------|------|------------|-------------|
-| I. Time-Truth | Panels and sparklines derive from `reduceTo` + elapsed events; storage holds playhead only; resume recomputes overlay at restored t | PASS — new selectors are pure; `resume.ts` stores `{episodeId,t,savedAt}` | PASS — data-model §3 lists every derived model; no cached panel state |
-| II. Host-Agnostic Playback | Resume seeks through `TimeSource.seek`; adapter gains a queued seek for the not-ready case, still behind the interface | PASS | PASS — contracts/time-source.md amended (seek before ready) |
-| III. Ambient & Diegetic | Panels open only by click/keypress, close by explicit action, never cover the stage on desktop; ambient view unchanged; triggers get affordances now that they do something | PASS | PASS — hover/focus styles only on real triggers |
+| I. Time-Truth | Panels and sparklines derive from `reduceTo` + elapsed events; storage holds playhead only; resume recomputes overlay at restored t | PASS - new selectors are pure; `resume.ts` stores `{episodeId,t,savedAt}` | PASS - data-model §3 lists every derived model; no cached panel state |
+| II. Host-Agnostic Playback | Resume seeks through `TimeSource.seek`; adapter gains a queued seek for the not-ready case, still behind the interface | PASS | PASS - contracts/time-source.md amended (seek before ready) |
+| III. Ambient & Diegetic | Panels open only by click/keypress, close by explicit action, never cover the stage on desktop; ambient view unchanged; triggers get affordances now that they do something | PASS | PASS - hover/focus styles only on real triggers |
 | IV. Static, Dependency-Light | No new deps; sparkline and map are inline SVG; storage optional | PASS | PASS |
-| V. Scope Discipline | Only the four confirmed items; no stingers/roster/v3; sheet fields limited to what the log can keep current | PASS | PASS — research R6 lists sheet fields deliberately excluded |
-| VI. Author-Friendly Pipeline | New event types get converter rows, schema branches, samples, tests in the same change | PASS | PASS — contracts/sheet-csv.md amended |
+| V. Scope Discipline | Only the four confirmed items; no stingers/roster/v3; sheet fields limited to what the log can keep current | PASS | PASS - research R6 lists sheet fields deliberately excluded |
+| VI. Author-Friendly Pipeline | New event types get converter rows, schema branches, samples, tests in the same change | PASS | PASS - contracts/sheet-csv.md amended |
 
 No violations → Complexity Tracking empty.
 

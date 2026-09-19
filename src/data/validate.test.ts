@@ -11,9 +11,11 @@ import {
   normalizeShow,
   sortEvents,
   toNumber,
+  isSpellRegistry,
+  validateSpells,
 } from './validate';
 import type { AnyEvent } from './types';
-import { makeEpisode, makeEpisodeRaw, makeRegistry, makeShow } from '../test/fixtures';
+import { makeEpisode, makeEpisodeRaw, makeRegistry, makeShow, makeSpells } from '../test/fixtures';
 
 describe('normalizeEvent', () => {
   it('keeps a well-formed known event', () => {
@@ -158,7 +160,7 @@ describe('toNumber', () => {
 
 /* --------------------------------------------------- v2: new events + fields */
 
-describe('normalizeEvent — v2 event types', () => {
+describe('normalizeEvent - v2 event types', () => {
   it('keeps a skill event with and without its optional fields', () => {
     expect(normalizeEvent({ t: 80, type: 'skill', actor: 'xo', name: 'Understudy Strike' })).toEqual(
       { t: 80, type: 'skill', actor: 'xo', name: 'Understudy Strike' },
@@ -214,7 +216,7 @@ describe('normalizeEvent — v2 event types', () => {
   });
 });
 
-describe('normalizeCrawler — optional sheet fields', () => {
+describe('normalizeCrawler - optional sheet fields', () => {
   const base = {
     id: 'harry',
     name: 'Harry',
@@ -291,7 +293,7 @@ describe('normalizeCrawler — optional sheet fields', () => {
 
 /* ------------------------------------------ 003 revision 2: equip / unequip */
 
-describe('normalizeEvent — gear events (R2-FR-220)', () => {
+describe('normalizeEvent - gear events (R2-FR-220)', () => {
   it('keeps an equip event for every sheet slot', () => {
     for (const slot of ['head', 'torso', 'arms', 'hands', 'legs', 'feet', 'accessory']) {
       expect(normalizeEvent({ t: 152, type: 'equip', actor: 'harry', slot, item: 'Jacket' })).toEqual(
@@ -344,7 +346,7 @@ describe('normalizeEvent — gear events (R2-FR-220)', () => {
   });
 });
 
-describe('normalizeCrawler — gear and art (R2-FR-220/224)', () => {
+describe('normalizeCrawler - gear and art (R2-FR-220/224)', () => {
   const base = {
     id: 'harry',
     name: 'Harry',
@@ -572,5 +574,244 @@ describe('normalizeShow (registryUrl)', () => {
   it('leaves a show with no registry alone', () => {
     const { registryUrl: _registryUrl, ...noRegistry } = makeShow();
     expect(normalizeShow(noRegistry).registryUrl).toBeUndefined();
+  });
+});
+
+/* ---------------------- 008 revision 2: entries with structure, and spells */
+
+describe('normalizeCrawler - structured entries and spells (008 R2)', () => {
+  const base = {
+    id: 'mimi',
+    name: 'Mimi Rivers',
+    handle: 'Crawler Mimi',
+    player: '',
+    level: 1,
+    hp: { current: 20, max: 20 },
+    portrait: '/img/crawlers/mimi.png',
+    class: null,
+    inventory: [],
+    rank: null,
+  };
+
+  it('keeps string and object entries side by side', () => {
+    const crawler = normalizeCrawler({
+      ...base,
+      hotlist: ['Door', { name: 'Standard Mana Potion', qty: 5, desc: 'Fully restores Mana.' }],
+      inventory: [{ name: 'Torch' }, 'Rope'],
+    });
+    expect(crawler.hotlist).toEqual([
+      'Door',
+      { name: 'Standard Mana Potion', qty: 5, desc: 'Fully restores Mana.' },
+    ]);
+    expect(crawler.inventory).toEqual([{ name: 'Torch' }, 'Rope']);
+  });
+
+  it('drops a malformed quantity or description without losing the entry', () => {
+    const crawler = normalizeCrawler({
+      ...base,
+      hotlist: [{ name: 'Heal', qty: -1, desc: '' }],
+    });
+    expect(crawler.hotlist).toEqual([{ name: 'Heal' }]);
+  });
+
+  it('drops a hotlist whose entry has no name at all, with a warning', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const crawler = normalizeCrawler({ ...base, hotlist: [{ qty: 5 }] } as never);
+    expect(crawler.hotlist).toBeUndefined();
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('empties a malformed inventory rather than deleting the required field', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const crawler = normalizeCrawler({ ...base, inventory: 'Torch' } as never);
+    expect(crawler.inventory).toEqual([]);
+    warn.mockRestore();
+  });
+
+  it('keeps a skill description and a well-formed spell list', () => {
+    const crawler = normalizeCrawler({
+      ...base,
+      skills: [{ name: 'Frost Scar', rank: 3, desc: 'A scar of rime.' }],
+      spells: [{ name: 'Heal', rank: 1, mana: 2, desc: 'Heal 2 HB slots.' }],
+    });
+    expect(crawler.skills).toEqual([{ name: 'Frost Scar', rank: 3, desc: 'A scar of rime.' }]);
+    expect(crawler.spells).toEqual([{ name: 'Heal', rank: 1, mana: 2, desc: 'Heal 2 HB slots.' }]);
+  });
+
+  it('drops a malformed spell list, with a warning', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const crawler = normalizeCrawler({ ...base, spells: [{ rank: 1 }] } as never);
+    expect(crawler.spells).toBeUndefined();
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+});
+
+describe('normalizeEvent - spell (008 R2)', () => {
+  it('keeps a well-formed spell row', () => {
+    expect(
+      normalizeEvent({ t: 72, type: 'spell', actor: 'mimi', name: 'Heal', rank: 1, mana: 2 }),
+    ).toEqual({ t: 72, type: 'spell', actor: 'mimi', name: 'Heal', rank: 1, mana: 2 });
+  });
+
+  it('keeps a spell with nothing but a name', () => {
+    expect(normalizeEvent({ t: 1, type: 'spell', actor: 'mimi', name: 'Heal' })).toEqual({
+      t: 1,
+      type: 'spell',
+      actor: 'mimi',
+      name: 'Heal',
+    });
+  });
+
+  it('drops a malformed rank or cost rather than the row', () => {
+    expect(
+      normalizeEvent({ t: 1, type: 'spell', actor: 'mimi', name: 'Heal', rank: 'x', mana: -2 }),
+    ).toEqual({ t: 1, type: 'spell', actor: 'mimi', name: 'Heal' });
+  });
+
+  it('demotes a spell with no actor or no name', () => {
+    expect(normalizeEvent({ t: 1, type: 'spell', name: 'Heal' }).type).toBe('unknown');
+    expect(normalizeEvent({ t: 1, type: 'spell', actor: 'mimi', name: '' }).type).toBe('unknown');
+  });
+});
+
+/* --------------------------------------- 008 revision 4: the spell registry */
+
+describe('normalizeEvent - spell refs (008 R4)', () => {
+  it('keeps a row that points at the registry instead of naming the spell', () => {
+    expect(normalizeEvent({ t: 9, type: 'spell', actor: 'mimi', ref: 'heal', rank: 1 })).toEqual({
+      t: 9,
+      type: 'spell',
+      actor: 'mimi',
+      ref: 'heal',
+      rank: 1,
+    });
+  });
+
+  it('keeps both when the row carries a ref and a name', () => {
+    expect(normalizeEvent({ t: 9, type: 'spell', actor: 'mimi', ref: 'heal', name: 'Heal' })).toEqual(
+      { t: 9, type: 'spell', actor: 'mimi', name: 'Heal', ref: 'heal' },
+    );
+  });
+
+  it('drops a ref that is not kebab-case rather than the row', () => {
+    expect(normalizeEvent({ t: 9, type: 'spell', actor: 'mimi', name: 'Heal', ref: 'Heal' })).toEqual(
+      { t: 9, type: 'spell', actor: 'mimi', name: 'Heal' },
+    );
+  });
+
+  it('demotes a row with neither a name nor a ref', () => {
+    expect(normalizeEvent({ t: 9, type: 'spell', actor: 'mimi' }).type).toBe('unknown');
+    expect(normalizeEvent({ t: 9, type: 'spell', actor: 'mimi', ref: 'Heal' }).type).toBe('unknown');
+  });
+});
+
+describe('normalizeCrawler - ref entries (008 R4)', () => {
+  const base = { id: 'mimi', name: 'Mimi', handle: '', player: '', level: 1, hp: { current: 1, max: 1 }, portrait: '/p.png', class: null, inventory: [], rank: null };
+
+  it('keeps a hotlist mark and a spell that only carry a ref', () => {
+    const crawler = normalizeCrawler({
+      ...base,
+      hotlist: [{ ref: 'heal' }],
+      spells: [{ ref: 'heal', rank: 1 }],
+    } as never);
+    expect(crawler.hotlist).toEqual([{ ref: 'heal' }]);
+    expect(crawler.spells).toEqual([{ ref: 'heal', rank: 1 }]);
+  });
+
+  it('drops the whole list when an entry has neither a name nor a ref', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const crawler = normalizeCrawler({ ...base, spells: [{ rank: 1 }] } as never);
+    expect(crawler.spells).toBeUndefined();
+    warn.mockRestore();
+  });
+
+  it('gives inventory no ref of its own - there is no item registry', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const crawler = normalizeCrawler({ ...base, inventory: [{ ref: 'heal' }] } as never);
+    expect(crawler.inventory).toEqual([]);
+    warn.mockRestore();
+  });
+});
+
+describe('normalizeShow (spellsUrl)', () => {
+  it('preserves a string spellsUrl', () => {
+    expect(normalizeShow({ ...makeShow(), spellsUrl: '/data/spells.json' }).spellsUrl).toBe(
+      '/data/spells.json',
+    );
+  });
+
+  it('drops a spellsUrl that is not a string, with a warning, keeping registryUrl', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const show = normalizeShow({ ...makeShow(), spellsUrl: 7 });
+    expect(show.spellsUrl).toBeUndefined();
+    expect(show.registryUrl).toBe('/data/npcs.json');
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('leaves a show with no spellsUrl alone', () => {
+    const { spellsUrl: _spellsUrl, ...noSpells } = makeShow();
+    expect(normalizeShow(noSpells).spellsUrl).toBeUndefined();
+  });
+});
+
+describe('validateSpells', () => {
+  it('guards the envelope', () => {
+    expect(isSpellRegistry({ spells: [] })).toBe(true);
+    expect(isSpellRegistry({})).toBe(false);
+    expect(() => validateSpells({})).toThrow(DataError);
+  });
+
+  it('keeps a whole registry unchanged', () => {
+    expect(validateSpells(makeSpells())).toEqual(makeSpells());
+  });
+
+  it('drops a spell missing something the UI cannot invent', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { spells } = validateSpells({
+      spells: [
+        { id: 'ok', name: 'Ok', kind: 'passive', manaCost: 0, description: 'x', upgrades: [] },
+        { id: 'no-kind', name: 'No Kind', manaCost: 1, description: 'x', upgrades: [] },
+        { id: 'Bad Id', name: 'Bad', kind: 'attack', manaCost: 1, description: 'x', upgrades: [] },
+        { id: 'no-desc', name: 'No Desc', kind: 'attack', manaCost: 1, upgrades: [] },
+      ],
+    });
+    expect(spells.map((spell) => spell.id)).toEqual(['ok']);
+    warn.mockRestore();
+  });
+
+  it('keeps the first of two spells sharing an id', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { spells } = validateSpells({
+      spells: [
+        { id: 'heal', name: 'Heal', kind: 'passive', manaCost: 2, description: 'a', upgrades: [] },
+        { id: 'heal', name: 'Other', kind: 'attack', manaCost: 9, description: 'b', upgrades: [] },
+      ],
+    });
+    expect(spells).toHaveLength(1);
+    expect(spells[0].name).toBe('Heal');
+    warn.mockRestore();
+  });
+
+  it('drops a malformed upgrade or roll without costing the spell', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { spells } = validateSpells({
+      spells: [
+        {
+          id: 'heal',
+          name: 'Heal',
+          kind: 'passive',
+          manaCost: 2,
+          description: 'a',
+          upgrades: [{ rank: 5, text: 'good' }, { rank: 0, text: 'bad rank' }, { rank: 6 }],
+          roll: [80, 20],
+        },
+      ],
+    });
+    expect(spells[0].upgrades).toEqual([{ rank: 5, text: 'good' }]);
+    expect(spells[0].roll).toBeUndefined();
+    warn.mockRestore();
   });
 });

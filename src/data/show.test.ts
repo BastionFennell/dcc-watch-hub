@@ -13,9 +13,9 @@ describe('ordering', () => {
   it('orders episodes across two floors', () => {
     expect(orderedEpisodeIds(makeShow())).toEqual([1, 2, 3]);
     expect(orderedEpisodes(makeShow()).map((e) => e.title)).toEqual([
-      'Episode 1 — The World Dungeon',
-      'Episode 2 — The Meat District',
-      'Episode 3 — Descent',
+      'Episode 1 - The World Dungeon',
+      'Episode 2 - The Meat District',
+      'Episode 3 - Descent',
     ]);
   });
 
@@ -52,7 +52,7 @@ describe('episodesByFloor', () => {
     const show = makeShow();
     show.episodes.push({
       id: 4,
-      title: 'Episode 4 — Unfiled',
+      title: 'Episode 4 - Unfiled',
       youtubeId: 'M7lc1UVf-VE',
       floor: 2,
       durationSec: 240,

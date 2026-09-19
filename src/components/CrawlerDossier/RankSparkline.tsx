@@ -3,12 +3,12 @@ import { copy } from '../../copy';
 import styles from './CrawlerDossier.module.css';
 
 export interface RankSparklineProps {
-  /** `rankSeries(events, t, scope)` — elapsed points only (FR-140). */
+  /** `rankSeries(events, t, scope)` - elapsed points only (FR-140). */
   series: RankSeries;
   /**
    * Fill the caller's row instead of keeping the 120×32 box's ratio (T333): the
    * glance card gives the chart a row of its own, so it may stretch to it.
-   * Default off — the dossier's vitals keep the v2 proportions.
+   * Default off - the dossier's vitals keep the v2 proportions.
    */
   stretch?: boolean;
 }
@@ -20,7 +20,7 @@ const PAD = 4;
 /**
  * A dependency-light rank chart (research R4): x is the point index, so a burst
  * of updates stays readable, and y is inverted because a lower rank number is a
- * better rank. Zero points renders nothing — the dossier prints "Unranked".
+ * better rank. Zero points renders nothing - the dossier prints "Unranked".
  */
 export function RankSparkline({ series, stretch = false }: RankSparklineProps) {
   const { points, current, best } = series;
@@ -48,7 +48,7 @@ export function RankSparkline({ series, stretch = false }: RankSparklineProps) {
       /*
        * An SVG root clips to its viewBox, and the end dot sits PAD from the
        * right edge with a radius that outgrows PAD as soon as `stretch` scales
-       * the box up — so the current-rank dot rendered sliced (T330 visual
+       * the box up - so the current-rank dot rendered sliced (T330 visual
        * review). Painting outside the box keeps every dot whole and leaves the
        * record's unstretched chart exactly as it was.
        */

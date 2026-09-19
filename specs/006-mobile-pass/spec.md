@@ -36,8 +36,8 @@ space where the stage was does not collapse, so nothing jumps.
 
 ### User Story 2 - The overlay is one tap away (Priority: P1)
 
-Directly beneath the stage (and its caption row and timeline), a row of tabs — **Feed**, **Party**,
-**Map**, **Log** — replaces the stacked page. Feed is selected by default and shows the ticker
+Directly beneath the stage (and its caption row and timeline), a row of tabs - **Feed**, **Party**,
+**Map**, **Log** - replaces the stacked page. Feed is selected by default and shows the ticker
 (and sponsor slot). Party shows the crawler frames in a two-column grid. Map shows the floor map
 inline with its controls. Log shows the broadcast log open (its own header and filters). Swiping
 left/right on the pane area switches tabs; arrow keys work on the tab list. The selected tab
@@ -83,12 +83,12 @@ it closes it. The full record remains a full-screen modal.
 ### User Story 4 - No ragged party row (Priority: P3)
 
 On phones the five crawler frames sit in a two-column grid inside the Party tab (the fifth spans
-both columns or sits alone at left — consistently), replacing the horizontal strip.
+both columns or sits alone at left - consistently), replacing the horizontal strip.
 
 ### Edge Cases
 
 - Landscape phone (e.g. 844×390): the mini-player still docks; the tabs remain; the sheet is 70 vh
-  of a short viewport — allow it to reach 85 vh when the viewport is under 500 px tall.
+  of a short viewport - allow it to reach 85 vh when the viewport is under 500 px tall.
 - Tablet portrait (768 px): treated as phone (≤ 900).
 - Reduced motion: no slide/scroll animations; states switch instantly.
 - The record dialog open while the mini-player is docked: the dialog covers everything (as now).

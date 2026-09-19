@@ -3,7 +3,7 @@
  *
  * `/ep/<id>?t=<seconds>` names a whole second inside the final edit. Parsing is
  * framework-free and total: anything that is not a finite second inside the
- * episode is `null`, which every caller reads as "no link was given" — the page
+ * episode is `null`, which every caller reads as "no link was given" - the page
  * then behaves exactly as it does on a bare visit (spec US1 scenario 3).
  *
  * Constitution I is untouched by any of this: a deep link only moves the
@@ -19,7 +19,7 @@ export const DEEP_LINK_PARAM = 't';
  *
  * `search` may be given with or without its leading `?` (`useLocation().search`
  * carries one, a hand-built string often does not). Decimals are floored, so
- * `?t=156.9` is 2:36 and not 2:37 — the second the viewer was watching.
+ * `?t=156.9` is 2:36 and not 2:37 - the second the viewer was watching.
  */
 export function parseDeepLinkT(search: string, durationSec: number): number | null {
   if (!Number.isFinite(durationSec) || durationSec < 0) return null;
@@ -37,7 +37,7 @@ export function parseDeepLinkT(search: string, durationSec: number): number | nu
   return t;
 }
 
-/** The search string a share link carries — never the dev flags (FR-305). */
+/** The search string a share link carries - never the dev flags (FR-305). */
 export function momentSearch(t: number): string {
   const whole = Number.isFinite(t) ? Math.max(0, Math.floor(t)) : 0;
   return `?${DEEP_LINK_PARAM}=${whole}`;

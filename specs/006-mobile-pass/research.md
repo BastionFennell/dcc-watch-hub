@@ -2,7 +2,7 @@
 
 ## R1. Docking without reloading the player
 - **Decision**: never re-parent the iframe. The stage wrapper gets `data-mini` and CSS makes it
-  `position: fixed; top: calc(var(--header-h) + 8px)` — **revised in T611** to
+  `position: fixed; top: calc(var(--header-h) + 8px)` - **revised in T611** to
   `calc(var(--header-h-compact) + var(--tabstrip-h) + 8px)`, i.e. under the sticky tab strip
   (R2), and the width capped to 170 px under `(max-height: 500px)`; `right: 8px;
   width: min(45vw, 260px);
@@ -22,8 +22,8 @@
   (`position: sticky; top: var(--header-h-compact); z-index: 16`, opaque `--canvas` background,
   hairline bottom border), not in the flow. In the flow it slid *under* the fixed mini-player:
   at 430 × 932 the document's scroll ends with the strip parked behind the frame, leaving the
-  Map and Log tabs untappable. The frame now clears it by construction —
-  `top: calc(var(--header-h-compact) + var(--tabstrip-h) + 8px)` — and `--tabstrip-h` (44 px,
+  Map and Log tabs untappable. The frame now clears it by construction -
+  `top: calc(var(--header-h-compact) + var(--tabstrip-h) + 8px)` - and `--tabstrip-h` (44 px,
   `tokens.css`) is the single number the strip's `min-height` and that offset both read, so the
   two cannot drift.
 - WAI-ARIA tabs: `role="tablist"` with `aria-label`, `role="tab"` buttons (`aria-selected`,

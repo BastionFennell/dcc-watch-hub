@@ -13,7 +13,7 @@ export interface ResumeCardProps {
 /**
  * The resume offer (US3, FR-131): a System-styled card centered over the stage
  * asking whether to rejoin at the saved time or start from the top. It is a
- * dialog in the ARIA sense but not a modal one — it dismisses on either choice
+ * dialog in the ARIA sense but not a modal one - it dismisses on either choice
  * and never traps focus, because the page behind it is a broadcast, not a form.
  *
  * Escape answers "start over", the conservative choice: nothing is seeked and

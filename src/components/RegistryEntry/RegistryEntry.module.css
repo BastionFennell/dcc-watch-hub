@@ -1,6 +1,6 @@
 /*
- * A glossary entry (007, FR-620). It borrows the hub card's box — panel fill,
- * hairline border, large radius — because both are "one filed thing you can
+ * A glossary entry (007, FR-620). It borrows the hub card's box - panel fill,
+ * hairline border, large radius - because both are "one filed thing you can
  * open", and the kind tints are the same three the Encountered strip uses:
  * boss --danger, vendor --amber-fg, ally --marker-levelup. The tint carries the
  * disc and a left strip only, with --canvas text on it; informational text
@@ -53,7 +53,7 @@
   background: var(--brand-deep);
   /*
     The brand ground is lighter than the panel, and the dimmest text step falls
-    to 4.0:1 on it — under AA for the 10 px mono labels inside an expanded entry
+    to 4.0:1 on it - under AA for the 10 px mono labels inside an expanded entry
     (axe, 007 R3). One step up, for this entry only.
   */
   --text-3: var(--text-2);

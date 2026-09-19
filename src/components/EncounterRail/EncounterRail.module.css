@@ -1,11 +1,11 @@
 /*
  * The Encountered strip (FR-610, research R3). Same vocabulary as the party
- * rail's frames — panel box, hairline border, hover/focus ring — because a chip
+ * rail's frames - panel box, hairline border, hover/focus ring - because a chip
  * does exactly what a frame does: it opens the one rail panel.
  *
  * Kind tints are the timeline/accent tokens: boss --danger, vendor --amber-fg,
  * ally --marker-levelup. They carry the disc only, with --canvas text on them
- * (4.68:1, 12.6:1 and 9.2:1) — as a foreground on --panel --danger measures
+ * (4.68:1, 12.6:1 and 9.2:1) - as a foreground on --panel --danger measures
  * 4.24:1, so the kind badge is plain --text-3 (4.51:1) and the tint is a border.
  */
 .rail {
@@ -15,7 +15,7 @@
   min-width: 0;
 }
 
-/* Title left, the episode's Registry link right — one row, wrapping on a phone. */
+/* Title left, the episode's Registry link right - one row, wrapping on a phone. */
 .head {
   display: flex;
   flex-wrap: wrap;
@@ -25,7 +25,7 @@
 }
 
 /* The panel trigger beside the title (007 R3). It reads as the link it replaced
-   — the underline is the affordance — but it is a button, because it opens the
+   - the underline is the affordance - but it is a button, because it opens the
    Registry in the rail rather than leaving the broadcast. */
 .browse {
   margin-left: auto;
@@ -218,7 +218,7 @@
 /*
  * The desktop strip: one line that scrolls sideways, never wraps (spec edge
  * case "very many entities on one floor"). `contain: paint` for the same reason
- * the party rail's phone strip needs it — without it the overflow reaches the
+ * the party rail's phone strip needs it - without it the overflow reaches the
  * root box and the whole page scrolls sideways (T330 measurement).
  */
 .rail[data-layout='row'] .chips {

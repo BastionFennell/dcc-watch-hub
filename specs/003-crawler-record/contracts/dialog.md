@@ -13,9 +13,9 @@
 
 Copy: kicker `recordKicker` "CRAWLER RECORD", title = crawler name, close `panelClose`,
 glance kicker `glanceKicker` "CRAWLER GLANCE", button `openRecord` "Open full record",
-ledger labels reuse `dossierSections.*`, `ledgerCount(n)`, `historyPlaceholder` "—".
+ledger labels reuse `dossierSections.*`, `ledgerCount(n)`, `historyPlaceholder` "-".
 
-## Revision 2 — views
+## Revision 2 - views
 
 `FullRecordDialog` owns `view: 'sheet' | 'skills' | 'inventory' | 'achievements' | 'history'`.
 - Title: `recordTitle(name)` on the sheet; `recordListTitle(name, categoryLabel)` in a list view.

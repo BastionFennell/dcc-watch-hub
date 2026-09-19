@@ -32,24 +32,24 @@ const equippedRows = () => screen.queryAllByTestId('glance-equipped-row');
 const historyRows = () => screen.queryAllByTestId('glance-history-row');
 
 describe('CrawlerGlance', () => {
-  it('shows the identity header with separators a screen reader can hear', () => {
+  it('shows the identity header with the credit and separators a screen reader can hear', () => {
     const { container } = renderGlance(glanceAt(200));
     expect(screen.getByTestId('crawler-glance')).toHaveAttribute('data-crawler', 'harry');
     expect(screen.getByTestId('glance-name')).toHaveTextContent('Harry');
 
-    // The player is credited, not repeated as a bare name (UX review 0.8), and
-    // each half of the line is its own element with a real separator between
-    // them (0.7) — so the accessible text reads "Harry, played by Marcus".
+    // The player is credited on its own line; the handle is gone because it
+    // only repeated the name (008 r3).
     expect(screen.getByText(copy.playedBy('Marcus'))).toBeInTheDocument();
+    expect(screen.getByTestId('glance-header').textContent).not.toContain('Harry·');
     const header = screen.getByTestId('glance-header');
     expect(header).toHaveTextContent('Compensated Anarchist');
     expect(header).toHaveTextContent(copy.levelShort(2));
-    // The "·" carries no literal spaces any more — the rows around it are flex
+    // The "·" carries no literal spaces any more - the rows around it are flex
     // containers, which trimmed them, so the spacing is a margin now (T330).
-    expect(header.textContent).toContain(`Harry·${copy.srSeparator}played by Marcus`);
+    expect(header.textContent).toContain(`Compensated Anarchist·${copy.srSeparator}`);
     const dots = container.querySelectorAll('[aria-hidden="true"]');
-    expect(dots.length).toBeGreaterThanOrEqual(2);
-    expect(header.querySelectorAll('.sr-only')).toHaveLength(2);
+    expect(dots.length).toBeGreaterThanOrEqual(1);
+    expect(header.querySelectorAll('.sr-only')).toHaveLength(1);
   });
 
   it('labels the HP strip and keeps the sheet’s ten segments (T344)', () => {
@@ -90,7 +90,7 @@ describe('CrawlerGlance', () => {
     expect(within(rank()).getByText(copy.unranked)).toBeInTheDocument();
     expect(screen.queryByTestId('rank-sparkline')).not.toBeInTheDocument();
     expect(screen.queryByTestId('glance-rank-delta')).not.toBeInTheDocument();
-    // Two rows either way — numbers, then the chart's reserved box (SC-201).
+    // Two rows either way - numbers, then the chart's reserved box (SC-201).
     expect(rank().children).toHaveLength(2);
     expect(spark()).toBeEmptyDOMElement();
 
@@ -158,7 +158,7 @@ describe('CrawlerGlance', () => {
     expect(block()).toHaveTextContent('Ten mobs, one door.');
     expect(block()).toHaveTextContent(formatTime(60));
 
-    // Before the award, the System files the section as empty — no dash row.
+    // Before the award, the System files the section as empty - no dash row.
     rerender(<CrawlerGlance glance={glanceAt(20)} onOpenRecord={onOpenRecord} />);
     expect(block()).toHaveTextContent(copy.dossierEmpty.achievements);
     expect(block()).not.toHaveTextContent('Gate Crasher');
@@ -170,13 +170,13 @@ describe('CrawlerGlance', () => {
     expect(historyRows()[0]).toHaveTextContent(formatTime(200));
 
     // Two moments by 50 (the loot at 30, the HP drop at 45): two rows, and the
-    // block keeps its three-row height in CSS instead of padding with "—".
+    // block keeps its three-row height in CSS instead of padding with "-".
     rerender(<CrawlerGlance glance={glanceAt(50)} onOpenRecord={onOpenRecord} />);
     expect(historyRows()).toHaveLength(2);
 
     rerender(<CrawlerGlance glance={glanceAt(20)} onOpenRecord={onOpenRecord} />);
     expect(historyRows()).toHaveLength(0);
-    expect(screen.getByTestId('glance-history')).not.toHaveTextContent('—');
+    expect(screen.getByTestId('glance-history')).not.toHaveTextContent('-');
     expect(screen.getByTestId('glance-history-list').className).toMatch(/historyRows/);
   });
 

@@ -16,7 +16,7 @@ v1 code is on `main`; read `specs/001-watch-hub-v1/` for the existing architectu
 | Wave | Tasks | Agents |
 |------|-------|--------|
 | 1 | Phase 1 + Phase 2 (T101–T112) | one agent (types, engine, data, converter, storage, adapter are coupled) |
-| 2 | Phase 3 (US1) + Phase 4 (US4) (T113–T121) ∥ Phase 5 (US2, T122–T124 only — not T125) ∥ Phase 6 (US3, T126–T128 only — not T129) | three agents; ownership below |
+| 2 | Phase 3 (US1) + Phase 4 (US4) (T113–T121) ∥ Phase 5 (US2, T122–T124 only - not T125) ∥ Phase 6 (US3, T126–T128 only - not T129) | three agents; ownership below |
 | 3 | T125, T129 (page wiring for map + resume) + T130 | one agent |
 | 4 | Phase 7 (T131–T135) | one agent |
 
@@ -39,7 +39,7 @@ Everyone appends to `src/copy.ts` only at the end of the file. Nobody in wave 2 
   on record.", "Hotlist empty.", "No skills logged.", "Nothing carried.", "No achievements yet.",
   "No moments logged."), "Unranked", "Unclassed", rank labels (Current, Best), sparkline summary
   `(from, to, count, best) => string`, map kicker "SYSTEM CARTOGRAPHY", map title `(floor) => 'Floor N'`,
-  map controls (Zoom in, Zoom out, Fit), map trigger label `(floor) => "Floor N — open the floor map"`, map summary
+  map controls (Zoom in, Zoom out, Fit), map trigger label `(floor) => "Floor N - open the floor map"`, map summary
   `(revealed, total, labels) => string`, resume kicker "BROADCAST BOOKMARK", resume title
   `(time) => 'Rejoin at m:ss?'`, resume body "The System has your place marked.", resume actions
   ("Rejoin the broadcast", "Start from the beginning"), party rank line `(rank) => 'Party rank #N'`,
@@ -56,7 +56,7 @@ Everyone appends to `src/copy.ts` only at the end of the file. Nobody in wave 2 
 - [X] T104 `src/data/types.ts`: add `SkillEntry { name; rank? }`, `CrawlerStats`, optional `Crawler`
   fields (`race`, `pronouns`, `crawlerNumber`, `stats`, `hotlist`, `skills`), events `SkillEvent`,
   `ClassEvent`, `HotlistEvent`, extend `Event`, `EventType`, `KNOWN_EVENT_TYPES`.
-- [X] T105 `src/data/validate.ts`: normalize the three events (coerce `rank`, split nothing — arrays
+- [X] T105 `src/data/validate.ts`: normalize the three events (coerce `rank`, split nothing - arrays
   arrive as arrays) and the optional crawler fields (drop malformed optional fields with a
   `console.warn`, never throw); extend `src/data/validate.test.ts`.
 - [X] T106 `src/engine/state.ts` + `src/engine/reducer.ts`: `CrawlerState` gains `skills`, `hotlist`
@@ -87,7 +87,7 @@ Everyone appends to `src/copy.ts` only at the end of the file. Nobody in wave 2 
 
 ---
 
-## Phase 3: User Story 1 — Crawler dossier (Priority: P1) 🎯
+## Phase 3: User Story 1 - Crawler dossier (Priority: P1) 🎯
 
 - [X] T113 [P] [US1] `src/hooks/usePanel.ts` per `contracts/panels.md` (state, open/toggle/close,
   Escape with menu-first rule, focus return, `body.panel-open` at ≤ 900 px via `matchMedia`, reset
@@ -108,7 +108,7 @@ Everyone appends to `src/copy.ts` only at the end of the file. Nobody in wave 2 
   `data-danger`, `data-levelup` on the button); props gain `expanded: boolean`, `onActivate(el)`;
   hover/focus ring, `cursor: pointer`. `PartyRail` passes `activeId` and `onActivate`.
 - [X] T118 [US1] `src/pages/EpisodePage.tsx` + `.module.css`: use `usePanel`; right rail renders
-  `EventFeed` when `none`, else `RailPanel` wrapping `CrawlerDossier` (map body comes in T125 — leave a
+  `EventFeed` when `none`, else `RailPanel` wrapping `CrawlerDossier` (map body comes in T125 - leave a
   clear `case 'map'` slot rendering `null` for now); wire `PartyRail` trigger; reset panel on episode change.
 - [X] T119 [US1] Extend `src/pages/EpisodePage.test.tsx`: click Harry → dossier region with his name,
   class "Compensated Anarchist" at 200, hotlist "Crowbar" at 200 and "Door" at 110, skills for X.O.
@@ -117,7 +117,7 @@ Everyone appends to `src/copy.ts` only at the end of the file. Nobody in wave 2 
   switches; clicking Harry again closes; `aria-expanded` toggles; menu-first Escape (open the
   Episodes `<details>`, press Escape → menu closed, panel still open; press again → panel closed).
 
-## Phase 4: User Story 4 — Rank sparklines (Priority: P4)
+## Phase 4: User Story 4 - Rank sparklines (Priority: P4)
 
 - [X] T120 [P] [US4] `src/components/CrawlerDossier/RankSparkline.tsx` + css per research R4; props
   `{ series: RankSeries }`; renders nothing with zero points; `role="img"` + `aria-label` from
@@ -132,7 +132,7 @@ Everyone appends to `src/copy.ts` only at the end of the file. Nobody in wave 2 
 
 ---
 
-## Phase 5: User Story 2 — Expanded floor map (Priority: P2)
+## Phase 5: User Story 2 - Expanded floor map (Priority: P2)
 
 - [X] T122 [P] [US2] `src/components/FloorMap/FloorMap.tsx` + `.module.css` per research R5: props
   `{ cells: MapCellsView; recent: Set<string>; labels: MapLabel[]; floor: number }`; SVG grid, labels
@@ -152,7 +152,7 @@ Everyone appends to `src/copy.ts` only at the end of the file. Nobody in wave 2 
 
 ---
 
-## Phase 6: User Story 3 — Resume (Priority: P3)
+## Phase 6: User Story 3 - Resume (Priority: P3)
 
 - [X] T126 [P] [US3] `src/playback/useResume.ts` per `contracts/resume-storage.md` (throttle via
   `Date.now()` ref, `pagehide`/`visibilitychange` listeners, unmount save, clear rules, `pending`,

@@ -1,11 +1,14 @@
 import type { ReactNode, Ref } from 'react';
-import type { CrawlerStats, EpisodeMeta, SkillEntry } from '../../data/types';
+import type { CrawlerStats, EpisodeMeta, InventoryEntry, SkillEntry } from '../../data/types';
 import type { Dossier, DossierAchievement, FeedItem, RankPoint } from '../../engine/selectors';
 import { GEAR_SLOT_ORDER, hotbarSlots } from '../../engine/selectors';
+import type { HotlistView, SpellView } from '../../engine/spells';
 import type { GearState } from '../../engine/state';
 import { formatTime } from '../../engine/time';
 import { copy } from '../../copy';
 import { FeedItemView } from '../EventFeed/FeedItem';
+import { Tooltip } from '../Tooltip/Tooltip';
+import tip from '../Tooltip/Tooltip.module.css';
 import { HpSegments } from './HpSegments';
 import { RankSparkline } from './RankSparkline';
 import styles from './CrawlerDossier.module.css';
@@ -19,7 +22,7 @@ import styles from './CrawlerDossier.module.css';
  * seek simply removes what the crawler has not earned yet (constitution I), and
  * every list item carries `data-item` / `data-name` with its label in its own
  * `<span>` so a later per-item explanation can attach without restructuring
- * (FR-214 — no tooltip today).
+ * (FR-214 - no tooltip today).
  */
 
 const STAT_KEYS = ['str', 'int', 'con', 'dex', 'cha'] as const;
@@ -87,10 +90,137 @@ function Empty({ children }: { children: string }) {
   return <p className={styles.empty}>{children}</p>;
 }
 
+/* --- 008 revision 2: short names on the sheet, the full text on demand --- */
+
+/**
+ * The body of an entry's tooltip: the entry's own name as a bold first line
+ * (the key or tile clamps it, so the tooltip is where it is read in full), the
+ * sheet's text, and the sheet's numbers as a mono footer where there are any.
+ * `undefined` when the entry explains nothing - `Tooltip` then renders its
+ * trigger's contents bare, with no button and no affordance (R2 scope).
+ */
+function tooltipBody(name: string, desc?: string, meta?: string): ReactNode | undefined {
+  if (desc === undefined) return undefined;
+  return (
+    <>
+      <span className={tip.title}>{name}</span>
+      {desc}
+      {meta === undefined ? null : <span className={tip.meta}>{meta}</span>}
+    </>
+  );
+}
+
+/* --- 008 revision 4: the book's own fields, wherever a spell is explained --- */
+
+/**
+ * One registry-backed spell as the book prints it, minus the headline: the type
+ * line, then Mana / Range / Duration, the labelled lines, the description, Base
+ * Damage, and the UPGRADES block. The tooltip puts the name above this; the
+ * spells list view puts the row's own label above it, so the two surfaces show
+ * exactly the same fields (spec R4).
+ */
+function spellDetails(view: SpellView): ReactNode[] {
+  const lines: ReactNode[] = [];
+  const tags = copy.spellTags(view.tags);
+  if (tags !== undefined) {
+    lines.push(
+      <span key="tags" className={tip.tags}>
+        {tags}
+      </span>,
+    );
+  }
+
+  // Mana, Range and Duration read as one line, in the book's order.
+  const numbers: string[] = [];
+  if (view.mana !== undefined) numbers.push(copy.spellMana(view.mana));
+  if (view.range !== undefined) numbers.push(copy.spellRange(view.range));
+  if (view.duration !== undefined) numbers.push(copy.spellDuration(view.duration));
+  if (numbers.length > 0) {
+    lines.push(
+      <span key="numbers" className={tip.line}>
+        {numbers.join(' · ')}
+      </span>,
+    );
+  }
+
+  if (view.limitations !== undefined) {
+    lines.push(
+      <span key="limitations" className={tip.line}>
+        {copy.spellLimitations(view.limitations)}
+      </span>,
+    );
+  }
+  if (view.cooldown !== undefined) {
+    lines.push(
+      <span key="cooldown" className={tip.line}>
+        {copy.spellCooldown(view.cooldown)}
+      </span>,
+    );
+  }
+  if (view.description !== '') {
+    lines.push(
+      <span key="description" className={tip.line}>
+        {view.description}
+      </span>,
+    );
+  }
+  if (view.baseDamage !== undefined) {
+    lines.push(
+      <span key="baseDamage" className={tip.line}>
+        {copy.spellBaseDamage(view.baseDamage)}
+      </span>,
+    );
+  }
+  if (view.upgrades.length > 0) {
+    lines.push(
+      <span key="upgrades" className={tip.blockHead}>
+        {copy.spellUpgrades}
+      </span>,
+      ...view.upgrades.map((upgrade, index) => (
+        <span key={`upgrade-${index}`} className={tip.line}>
+          {copy.spellUpgrade(upgrade.rank, upgrade.text)}
+        </span>
+      )),
+    );
+  }
+  return lines;
+}
+
+/**
+ * A spell's tooltip. A resolved entry gets the book's fields; one the registry
+ * does not carry keeps the plain body revision 2 gave it - its own text and the
+ * sheet's numbers - so homebrew and half-filled sheets are unchanged.
+ */
+function spellTooltipBody(view: SpellView): ReactNode | undefined {
+  if (view.id === undefined) {
+    return tooltipBody(
+      view.name,
+      view.description === '' ? undefined : view.description,
+      copy.spellMeta(view.rank, view.mana),
+    );
+  }
+  return (
+    <>
+      <span className={tip.title}>{view.name}</span>
+      {spellDetails(view)}
+    </>
+  );
+}
+
+/** The corner box on a key or tile that holds more than one of a thing. */
+function Qty({ qty, testId }: { qty: number | undefined; testId: string }) {
+  if (qty === undefined || qty <= 1) return null;
+  return (
+    <span className={styles.qtyBox} data-testid={testId}>
+      {copy.qty(qty)}
+    </span>
+  );
+}
+
 /**
  * One definition row of the identity grid. `field` is a styling hook only: the
  * crawler number is a long digit group that must never be split across lines
- * (T330 visual review — it was rendering as "10,491,2 / 01").
+ * (T330 visual review - it was rendering as "10,491,2 / 01").
  */
 function Row({ label, value, field }: { label: string; value: ReactNode; field?: string }) {
   return (
@@ -122,20 +252,11 @@ export function DossierHeader({ dossier, meta }: DossierHeaderProps) {
           <h3 className={styles.name} data-testid="dossier-name">
             {dossier.name}
           </h3>
-          {/*
-            A real separator, not a CSS-only one (UX review 0.7): the dot is
-            decorative and hidden, and the comma beside it is what an accessible
-            name reads, so this is "Harry, played by Marcus" and never
-            "Harryplayed by Marcus" (T338).
-          */}
-          <p className={styles.handle}>
-            {dossier.handle}
-            <span className={styles.dot} aria-hidden="true">
-              {'·'}
-            </span>
-            <span className="sr-only">{copy.srSeparator}</span>
-            {copy.playedBy(dossier.player)}
-          </p>
+          {/* The handle repeats the name, so only the credit remains, when
+              there is one. */}
+          {dossier.player.trim() !== '' && (
+            <p className={styles.handle}>{copy.playedBy(dossier.player)}</p>
+          )}
         </div>
       </header>
 
@@ -263,14 +384,76 @@ export function DossierStats({ stats }: DossierStatsProps) {
   );
 }
 
+export type DossierListKind = 'hotlist' | 'inventory' | 'skills' | 'spells';
+
 export type DossierListProps = (
-  | { kind: 'hotlist'; items: readonly string[] }
-  | { kind: 'inventory'; items: readonly string[] }
+  | { kind: 'hotlist'; items: readonly HotlistView[] }
+  | { kind: 'inventory'; items: readonly InventoryEntry[] }
   | { kind: 'skills'; items: readonly SkillEntry[] }
+  | { kind: 'spells'; items: readonly SpellView[] }
 ) &
   SectionHeadingProps;
 
-/** HOTLIST / SKILLS / INVENTORY — the three plain-name lists. */
+/** What one row of a list view says, whichever section it came from. */
+interface ListRow {
+  name: string;
+  /** Rank, mana cost, or a quantity - whatever the section's meta column is. */
+  meta?: string;
+  /** A node since 008 revision 4: a registry spell prints the book's fields. */
+  desc?: ReactNode;
+}
+
+/** `data-item` per section: the singular noun the record has always used. */
+const LIST_ITEM_NAME: Record<DossierListKind, string> = {
+  hotlist: 'hotlist',
+  inventory: 'inventory',
+  skills: 'skill',
+  spells: 'spell',
+};
+
+function listRows(props: DossierListProps): ListRow[] {
+  switch (props.kind) {
+    case 'skills':
+      return props.items.map((skill) => ({
+        name: skill.name,
+        ...(skill.rank === undefined ? {} : { meta: copy.skillRank(skill.rank) }),
+        ...(skill.desc === undefined ? {} : { desc: skill.desc }),
+      }));
+    case 'spells':
+      return props.items.map((spell) => {
+        const meta = copy.spellMeta(spell.rank, spell.mana);
+        // A resolved spell shows everything the tooltip shows; an unresolved one
+        // still shows only whatever text the sheet wrote for it.
+        const details = spell.id === undefined ? null : spellDetails(spell);
+        const desc =
+          details === null
+            ? spell.description === ''
+              ? undefined
+              : spell.description
+            : details.length === 0
+              ? undefined
+              : details;
+        return {
+          name: spell.name,
+          ...(meta === undefined ? {} : { meta }),
+          ...(desc === undefined ? {} : { desc }),
+        };
+      });
+    default:
+      return props.items.map((entry) => ({
+        name: entry.name,
+        ...(entry.qty === undefined || entry.qty <= 1 ? {} : { meta: copy.qty(entry.qty) }),
+        ...(entry.desc === undefined ? {} : { desc: entry.desc }),
+      }));
+  }
+}
+
+/**
+ * HOTLIST / SKILLS / SPELLS / INVENTORY as plain rows - the stacked dossier, and
+ * the record's "View all" views. Since 008 revision 2 a row also carries what
+ * the sheet wrote about the entry, beneath the name: a list view has the room
+ * the tiles do not, so nothing there hides behind a tooltip.
+ */
 export function DossierList(props: DossierListProps) {
   const { kind, headingRef } = props;
   if (props.items.length === 0) {
@@ -284,25 +467,20 @@ export function DossierList(props: DossierListProps) {
   return (
     <Section name={kind} title={copy.dossierSections[kind]} headingRef={headingRef}>
       <ul className={styles.list}>
-        {props.kind === 'skills'
-          ? props.items.map((skill) => (
-              <li
-                key={skill.name}
-                className={styles.listItem}
-                data-item="skill"
-                data-name={skill.name}
-              >
-                <span className={styles.itemLabel}>{skill.name}</span>
-                {skill.rank === undefined ? null : (
-                  <span className={styles.itemMeta}>{copy.skillRank(skill.rank)}</span>
-                )}
-              </li>
-            ))
-          : props.items.map((entry) => (
-              <li key={entry} className={styles.listItem} data-item={kind} data-name={entry}>
-                <span className={styles.itemLabel}>{entry}</span>
-              </li>
-            ))}
+        {listRows(props).map((row) => (
+          <li
+            key={row.name}
+            className={styles.listItem}
+            data-item={LIST_ITEM_NAME[kind]}
+            data-name={row.name}
+          >
+            <span className={styles.itemLabel}>{row.name}</span>
+            {row.meta === undefined ? null : <span className={styles.itemMeta}>{row.meta}</span>}
+            {row.desc === undefined ? null : (
+              <span className={styles.itemDesc}>{row.desc}</span>
+            )}
+          </li>
+        ))}
       </ul>
     </Section>
   );
@@ -396,7 +574,7 @@ export function DossierHistory({
 /* --- 003 revision 2: the record's MMO-shaped sections (research R8) --- */
 
 export interface DossierHotbarProps extends SectionHeadingProps {
-  hotlist: readonly string[];
+  hotlist: readonly HotlistView[];
 }
 
 /**
@@ -410,30 +588,50 @@ export function DossierHotbar({ hotlist, headingRef }: DossierHotbarProps) {
   return (
     <Section name="hotlist" title={copy.dossierSections.hotlist} headingRef={headingRef}>
       <ul className={styles.hotbar} data-overflow={overflow === 0 ? undefined : 'true'}>
-        {slots.map((entry, index) => (
-          <li
-            key={index}
-            className={styles.hotbarSlot}
-            data-testid="hotbar-slot"
-            data-filled={entry === null ? undefined : 'true'}
-            data-item={entry === null ? undefined : 'hotlist'}
-            data-name={entry ?? undefined}
-            /*
-             * The visible name is clamped to two lines, so the slot states its
-             * own name instead of leaving a reader with a truncated line and a
-             * bare digit (T330). No `title`: a native tooltip on a slot that
-             * does nothing is exactly what constitution III forbids.
-             */
-            aria-label={
-              entry === null
-                ? copy.hotbarSlotEmptyAria(index + 1)
-                : copy.hotbarSlotAria(index + 1, entry)
-            }
-          >
-            <span className={styles.hotbarNumber}>{copy.hotbarSlot(index + 1)}</span>
-            {entry === null ? null : <span className={styles.itemLabel}>{entry}</span>}
-          </li>
-        ))}
+        {slots.map((entry, index) => {
+          /*
+           * The visible name is clamped to two lines, so the key states its own
+           * name instead of leaving a reader with a truncated line and a bare
+           * digit (T330), and says how many it holds when it holds a stack.
+           */
+          const label =
+            entry === null
+              ? copy.hotbarSlotEmptyAria(index + 1)
+              : entry.qty === undefined || entry.qty <= 1
+                ? copy.hotbarSlotAria(index + 1, entry.name)
+                : copy.hotbarSlotQtyAria(index + 1, entry.name, entry.qty);
+          /*
+           * The key explains itself only when the sheet gave it something to
+           * say; without a description it stays the inert key it always was.
+           * A mark pointing at the spell registry (008 R4) shows the book's
+           * fields instead of a bare paragraph.
+           */
+          const body =
+            entry === null
+              ? undefined
+              : entry.spell === undefined
+                ? tooltipBody(entry.name, entry.desc)
+                : spellTooltipBody(entry.spell);
+          return (
+            <li
+              key={index}
+              className={styles.hotbarSlot}
+              data-testid="hotbar-slot"
+              data-filled={entry === null ? undefined : 'true'}
+              data-item={entry === null ? undefined : 'hotlist'}
+              data-name={entry?.name ?? undefined}
+              aria-label={body === undefined ? label : undefined}
+            >
+              <span className={styles.hotbarNumber}>{copy.hotbarSlot(index + 1)}</span>
+              <Qty qty={entry?.qty} testId="hotbar-qty" />
+              {entry === null ? null : (
+                <Tooltip content={body} className={styles.hotbarTrigger} label={label}>
+                  <span className={styles.itemLabel}>{entry.name}</span>
+                </Tooltip>
+              )}
+            </li>
+          );
+        })}
         {overflow === 0 ? null : (
           <li className={styles.hotbarOverflow} data-testid="hotbar-overflow">
             {copy.hotbarOverflow(overflow)}
@@ -450,7 +648,7 @@ export interface DossierGearProps extends SectionHeadingProps {
 
 /**
  * GEAR: every slot on the official sheet, in sheet order, with what is worn in
- * it or "—" (R2 US2 scenario 3). Accessories are one row holding the whole
+ * it or "-" (R2 US2 scenario 3). Accessories are one row holding the whole
  * list, because the sheet has one accessory line.
  */
 export function DossierGear({ gear, headingRef }: DossierGearProps) {
@@ -488,11 +686,12 @@ export function DossierGear({ gear, headingRef }: DossierGearProps) {
   );
 }
 
-export type DossierTilesKind = 'skills' | 'inventory' | 'achievements';
+export type DossierTilesKind = 'skills' | 'spells' | 'inventory' | 'achievements';
 
 export type DossierTilesProps = (
   | { kind: 'skills'; items: readonly SkillEntry[] }
-  | { kind: 'inventory'; items: readonly string[] }
+  | { kind: 'spells'; items: readonly SpellView[] }
+  | { kind: 'inventory'; items: readonly InventoryEntry[] }
   | { kind: 'achievements'; items: readonly DossierAchievement[] }
 ) & {
   /** Tiles shown before "View all" takes over (R2 US2 scenario 4). */
@@ -501,20 +700,44 @@ export type DossierTilesProps = (
   viewAllRef?: Ref<HTMLButtonElement>;
 } & SectionHeadingProps;
 
-/** One tile: the name, then rank or time as a mono caps footer (research R8). */
+/**
+ * One tile: the name, then rank, cost or time as a mono caps footer (research
+ * R8). Since 008 revision 2 a tile whose entry carries the sheet's text is a
+ * tooltip trigger; one that does not is the inert tile it always was.
+ */
 function Tile({
   item,
   name,
   footer,
+  desc,
+  body: prebuilt,
+  qty,
 }: {
   item: string;
   name: string;
   footer?: string;
+  desc?: string;
+  /** 008 revision 4: a spell tile hands in the book's body already built. */
+  body?: ReactNode;
+  qty?: number;
 }) {
-  return (
-    <li className={styles.tile} data-testid="tile" data-item={item} data-name={name}>
+  const body = prebuilt ?? tooltipBody(name, desc, footer);
+  const face = (
+    <>
       <span className={styles.itemLabel}>{name}</span>
       {footer === undefined ? null : <span className={styles.tileFooter}>{footer}</span>}
+    </>
+  );
+  return (
+    <li className={styles.tile} data-testid="tile" data-item={item} data-name={name}>
+      <Qty qty={qty} testId="tile-qty" />
+      {body === undefined ? (
+        face
+      ) : (
+        <Tooltip content={body} className={styles.tileTrigger} label={copy.tooltipTrigger(name)}>
+          {face}
+        </Tooltip>
+      )}
     </li>
   );
 }
@@ -536,20 +759,30 @@ export function DossierTiles(props: DossierTilesProps) {
       ) : (
         <ul className={styles.tiles}>
           {props.kind === 'skills'
-            ? props.items
-                .slice(0, max)
-                .map((skill) => (
-                  <Tile
-                    key={skill.name}
-                    item="skill"
-                    name={skill.name}
-                    footer={skill.rank === undefined ? undefined : copy.skillRank(skill.rank)}
-                  />
-                ))
-            : props.kind === 'achievements'
-              ? props.items
-                  .slice(0, max)
-                  .map((achievement) => (
+            ? props.items.slice(0, max).map((skill) => (
+                <Tile
+                  key={skill.name}
+                  item="skill"
+                  name={skill.name}
+                  footer={skill.rank === undefined ? undefined : copy.skillRank(skill.rank)}
+                  desc={skill.desc}
+                />
+              ))
+            : props.kind === 'spells'
+              ? props.items.slice(0, max).map((spell) => {
+                  const body = spellTooltipBody(spell);
+                  return (
+                    <Tile
+                      key={spell.id ?? spell.name}
+                      item="spell"
+                      name={spell.name}
+                      footer={copy.spellMeta(spell.rank, spell.mana)}
+                      {...(body === undefined ? {} : { body })}
+                    />
+                  );
+                })
+              : props.kind === 'achievements'
+                ? props.items.slice(0, max).map((achievement) => (
                     <Tile
                       key={`${achievement.t}-${achievement.title}`}
                       item="achievement"
@@ -557,9 +790,15 @@ export function DossierTiles(props: DossierTilesProps) {
                       footer={formatTime(achievement.t)}
                     />
                   ))
-              : props.items
-                  .slice(0, max)
-                  .map((entry) => <Tile key={entry} item="inventory" name={entry} />)}
+                : props.items.slice(0, max).map((entry) => (
+                    <Tile
+                      key={entry.name}
+                      item="inventory"
+                      name={entry.name}
+                      desc={entry.desc}
+                      qty={entry.qty}
+                    />
+                  ))}
         </ul>
       )}
       {cut ? (

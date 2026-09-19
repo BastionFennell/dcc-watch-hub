@@ -29,7 +29,8 @@ import { formatTime } from './time';
 import { normalizeEpisode } from '../data/validate';
 import type { EpisodeData, EventType, Registry } from '../data/types';
 import { isKnownEvent } from '../data/types';
-import { makeEpisode, makeEpisodeRaw, makeRegistry } from '../test/fixtures';
+import { makeEpisode, makeEpisodeRaw, makeRegistry, makeSpells } from '../test/fixtures';
+import { spellIndex } from './spells';
 
 const episode = makeEpisode();
 const party = episode.initialState.party;
@@ -438,8 +439,8 @@ describe('crawlerDossier', () => {
   });
 
   it('lists hotlist, skills, inventory and achievements as of t', () => {
-    expect(dossierAt(110)?.hotlist).toEqual(['Door']);
-    expect(dossierAt(200)?.hotlist).toEqual(['Crowbar']);
+    expect(dossierAt(110)?.hotlist.map((e) => e.name)).toEqual(['Door']);
+    expect(dossierAt(200)?.hotlist.map((e) => e.name)).toEqual(['Crowbar']);
     expect(dossierAt(200)?.skills).toEqual([{ name: 'Powerful Strike', rank: 1 }]);
     // X.O. logs nine skills by 200; the first one is upserted to rank 2 at 160.
     expect(dossierAt(200, 'xo')?.skills).toHaveLength(9);
@@ -453,8 +454,8 @@ describe('crawlerDossier', () => {
 
   it('removes what has not been earned yet on a backward seek', () => {
     // Harry loots the crowbar at 30 and trades it for a torch at 150.
-    expect(dossierAt(40)?.inventory).toEqual(['Enchanted Crowbar']);
-    expect(dossierAt(200)?.inventory).toEqual(['Torch']);
+    expect(dossierAt(40)?.inventory.map((e) => e.name)).toEqual(['Enchanted Crowbar']);
+    expect(dossierAt(200)?.inventory.map((e) => e.name)).toEqual(['Torch']);
     expect(dossierAt(20)?.inventory).toEqual([]);
     expect(dossierAt(20)?.history).toEqual([]);
   });
@@ -590,7 +591,7 @@ describe('feed items for the gear event types', () => {
   });
 });
 
-describe('crawlerDossier — gear and art', () => {
+describe('crawlerDossier - gear and art', () => {
   const dossierAt = (t: number, id = 'harry') =>
     crawlerDossier(reduceTo(episode, t), episode.events, t, id, party);
 
@@ -635,22 +636,23 @@ describe('hotbarSlots', () => {
   });
 
   it('fills slots in order and leaves the rest dim', () => {
-    const { slots, overflow } = hotbarSlots(['The Hoarder', 'The Doorway']);
-    expect(slots.slice(0, 2)).toEqual(['The Hoarder', 'The Doorway']);
+    const { slots, overflow } = hotbarSlots([{ name: 'The Hoarder' }, { name: 'The Doorway' }]);
+    expect(slots.slice(0, 2)).toEqual([{ name: 'The Hoarder' }, { name: 'The Doorway' }]);
     expect(slots.slice(2).every((slot) => slot === null)).toBe(true);
     expect(slots).toHaveLength(10);
     expect(overflow).toBe(0);
   });
 
   it('counts everything past the tenth slot', () => {
-    const many = Array.from({ length: 13 }, (_, i) => `Mark ${i + 1}`);
+    const many = Array.from({ length: 13 }, (_, i) => ({ name: `Mark ${i + 1}` }));
     const { slots, overflow } = hotbarSlots(many);
     expect(slots).toEqual(many.slice(0, 10));
     expect(overflow).toBe(3);
   });
 
   it('honours a custom slot count', () => {
-    expect(hotbarSlots(['a', 'b', 'c'], 2)).toEqual({ slots: ['a', 'b'], overflow: 1 });
+    const abc = [{ name: 'a' }, { name: 'b' }, { name: 'c' }];
+    expect(hotbarSlots(abc, 2)).toEqual({ slots: [{ name: 'a' }, { name: 'b' }], overflow: 1 });
   });
 
   it('reads the fixture: Harry overflows the bar at 210', () => {
@@ -662,7 +664,7 @@ describe('hotbarSlots', () => {
   });
 });
 
-describe('crawlerGlance — equipped and latest achievement', () => {
+describe('crawlerGlance - equipped and latest achievement', () => {
   const glanceAt = (t: number, id = 'harry') => {
     const dossier = crawlerDossier(reduceTo(episode, t), episode.events, t, id, party);
     if (dossier === null) throw new Error(`no dossier for ${id} at ${t}`);
@@ -708,7 +710,7 @@ describe('logItems', () => {
     expect(logItems(episode.events, 0, party)).toEqual([]);
   });
 
-  it('reads oldest first — the transcript order, not the feed order', () => {
+  it('reads oldest first - the transcript order, not the feed order', () => {
     const items = logItems(episode.events, 62, party);
     expect(items.map((i) => i.t)).toEqual([12, 30, 45, 60, 61, 62]);
     expect(items.map((i) => i.t)).toEqual([...items.map((i) => i.t)].sort((a, b) => a - b));
@@ -1023,5 +1025,200 @@ describe('npcMoments and npcRecord (FR-611)', () => {
     expect(npcRecord(state, episode.events, registry, 'nobody', party, 200)).toBeNull();
     expect(npcRecord(reduceTo(episode, 111), episode.events, registry, 'hoarder', party, 111)).toBeNull();
     expect(npcRecord(state, episode.events, null, 'hoarder', party, 200)).toBeNull();
+  });
+});
+
+/* ---------------- 008 revision 2: structured entries, spells, hotbar slots */
+
+describe('008 revision 2 - entries, spells and the hotbar', () => {
+  const at = (t: number, id: string) => crawlerDossier(reduceTo(episode, t), episode.events, t, id);
+
+  it('carries the sheet structure through to the dossier', () => {
+    const dossier = at(0, 'psychic');
+    expect(dossier?.hotlist).toEqual([
+      {
+        name: 'Mana Draught',
+        qty: 5,
+        desc: 'Restores your Mana in full when you spend an Action to drink one.',
+      },
+    ]);
+    // Resolved views since 008 revision 4: a sheet spell the registry does not
+    // carry comes back with no id, no tags and no upgrades.
+    expect(dossier?.spells).toEqual([
+      {
+        name: 'Second Sight',
+        rank: 2,
+        mana: 3,
+        description: 'Read the room one beat before it happens.',
+        tags: [],
+        upgrades: [],
+      },
+    ]);
+  });
+
+  it('gives a crawler with no spell list an empty one, never undefined', () => {
+    expect(at(200, 'harry')?.spells).toEqual([]);
+  });
+
+  it('pads the hotbar with entries, keeping quantity and text', () => {
+    const { slots, overflow } = hotbarSlots(at(0, 'psychic')?.hotlist ?? []);
+    expect(slots[0]).toMatchObject({ name: 'Mana Draught', qty: 5 });
+    expect(slots.slice(1).every((slot) => slot === null)).toBe(true);
+    expect(overflow).toBe(0);
+  });
+
+  it('labels and narrates a spell row', () => {
+    const withSpell = withEvents([
+      { t: 5, type: 'spell', actor: 'psychic', name: 'Second Sight', rank: 3 },
+    ]);
+    const item = feedItems(withSpell.events, 10, 8, withSpell.initialState.party)[0];
+    expect(item.kind).toBe('spell');
+    expect(item.label).toBe(copy.labels.spell);
+    expect(item.text).toBe(copy.feedText.spell('The Psychic', 'Second Sight', 3));
+    expect(item.actorId).toBe('psychic');
+  });
+
+  it('spells reach the dossier as of the playhead and not before', () => {
+    const withSpell = withEvents([
+      { t: 50, type: 'spell', actor: 'harry', name: 'Mend', rank: 1, mana: 4 },
+    ]);
+    const dossierAtT = (t: number) =>
+      crawlerDossier(reduceTo(withSpell, t), withSpell.events, t, 'harry');
+    expect(dossierAtT(40)?.spells).toEqual([]);
+    expect(dossierAtT(60)?.spells).toEqual([
+      { name: 'Mend', rank: 1, mana: 4, description: '', tags: [], upgrades: [] },
+    ]);
+  });
+});
+
+describe('copy.spellMeta (008 revision 2)', () => {
+  it('joins whatever halves the sheet gave', () => {
+    expect(copy.spellMeta(1, 2)).toBe('Rank 1 · 2 mana');
+    expect(copy.spellMeta(1, undefined)).toBe('Rank 1');
+    expect(copy.spellMeta(undefined, 2)).toBe('2 mana');
+    expect(copy.spellMeta(undefined, undefined)).toBeUndefined();
+  });
+});
+
+/* ------------------- 008 revision 4: the shared spell registry in selectors */
+
+describe('008 revision 4 - spell refs reach the dossier, the hotbar and the feed', () => {
+  const spells = spellIndex(makeSpells());
+
+  /** The Psychic, rewritten to point at the book instead of restating it. */
+  const referring = () => {
+    const raw = makeEpisodeRaw() as {
+      initialState: { party: Record<string, unknown>[] };
+      events: unknown[];
+    };
+    const psychic = raw.initialState.party.find((crawler) => crawler.id === 'psychic');
+    if (psychic !== undefined) {
+      psychic.spells = [{ ref: 'mending-light', rank: 1 }];
+      psychic.hotlist = [{ ref: 'mending-light' }, { name: 'Mana Draught', qty: 5 }];
+    }
+    return normalizeEpisode(raw);
+  };
+
+  const dossierOf = (data: EpisodeData, index = spells) =>
+    crawlerDossier(reduceTo(data, 0), data.events, 0, 'psychic', data.initialState.party, index);
+
+  it('resolves a sheet spell against the registry', () => {
+    const dossier = dossierOf(referring());
+    expect(dossier?.spells).toEqual([
+      {
+        id: 'mending-light',
+        name: 'Mending Light',
+        rank: 1,
+        mana: 2,
+        kind: 'passive',
+        tags: ['Interrupt', 'Passive'],
+        range: 'Self only',
+        duration: '5 seconds',
+        limitations: 'Rank 1 maximum',
+        cooldown: '10 minutes',
+        description: 'Heal 2 HB slots.',
+        upgrades: [{ rank: 5, text: 'Heal 3 HB slots instead.' }],
+        quote: 'Still breathing. Impressive.',
+      },
+    ]);
+  });
+
+  it('names a ref hotbar key from the registry and keeps the plain ones', () => {
+    const dossier = dossierOf(referring());
+    const { slots } = hotbarSlots(dossier?.hotlist ?? []);
+    expect(slots[0]).toMatchObject({ name: 'Mending Light' });
+    expect(slots[0]?.spell?.id).toBe('mending-light');
+    expect(slots[1]).toMatchObject({ name: 'Mana Draught', qty: 5 });
+    expect(slots[1]?.spell).toBeUndefined();
+  });
+
+  it('lets the entry beat the registry on mana and text', () => {
+    const raw = makeEpisodeRaw() as { initialState: { party: Record<string, unknown>[] } };
+    const psychic = raw.initialState.party.find((crawler) => crawler.id === 'psychic');
+    if (psychic !== undefined) {
+      psychic.spells = [{ ref: 'mending-light', rank: 1, mana: 9, desc: 'A scroll copy.' }];
+    }
+    const dossier = dossierOf(normalizeEpisode(raw));
+    expect(dossier?.spells[0]).toMatchObject({
+      id: 'mending-light',
+      mana: 9,
+      description: 'A scroll copy.',
+      range: 'Self only',
+    });
+  });
+
+  it('falls back to the ref itself when the registry has never heard of it', () => {
+    const raw = makeEpisodeRaw() as { initialState: { party: Record<string, unknown>[] } };
+    const psychic = raw.initialState.party.find((crawler) => crawler.id === 'psychic');
+    if (psychic !== undefined) psychic.spells = [{ ref: 'no-such-spell', rank: 2 }];
+    const dossier = dossierOf(normalizeEpisode(raw));
+    expect(dossier?.spells).toEqual([
+      { name: 'no-such-spell', rank: 2, tags: [], description: '', upgrades: [] },
+    ]);
+  });
+
+  it('degrades to the entry alone when no registry is passed at all', () => {
+    const dossier = dossierOf(referring(), spellIndex(null));
+    expect(dossier?.spells).toEqual([
+      { name: 'mending-light', rank: 1, tags: [], description: '', upgrades: [] },
+    ]);
+    expect(hotbarSlots(dossier?.hotlist ?? []).slots[0]).toEqual({ name: 'mending-light' });
+  });
+
+  it('upserts a spell row by its ref, not by the name the book gives it', () => {
+    const data = referring();
+    const raw = makeEpisodeRaw() as {
+      initialState: { party: Record<string, unknown>[] };
+      events: unknown[];
+    };
+    const psychic = raw.initialState.party.find((crawler) => crawler.id === 'psychic');
+    if (psychic !== undefined) psychic.spells = [{ ref: 'mending-light', rank: 1 }];
+    raw.events = [
+      ...raw.events,
+      { t: 50, type: 'spell', actor: 'psychic', ref: 'mending-light', rank: 4 },
+    ];
+    const amended = normalizeEpisode(raw);
+    const dossier = crawlerDossier(
+      reduceTo(amended, 60),
+      amended.events,
+      60,
+      'psychic',
+      amended.initialState.party,
+      spells,
+    );
+    expect(dossier?.spells).toHaveLength(1);
+    expect(dossier?.spells[0]).toMatchObject({ id: 'mending-light', rank: 4 });
+    expect(dossierOf(data)?.spells[0].rank).toBe(1);
+  });
+
+  it("names a ref spell row in the feed by the book's name", () => {
+    const rowed = withEvents([
+      { t: 5, type: 'spell', actor: 'psychic', ref: 'mending-light', rank: 3 },
+    ]);
+    const item = feedItems(rowed.events, 10, 8, rowed.initialState.party, null, spells)[0];
+    expect(item.text).toBe(copy.feedText.spell('The Psychic', 'Mending Light', 3));
+    // Without the book it still reads, under the raw id.
+    const bare = feedItems(rowed.events, 10, 8, rowed.initialState.party)[0];
+    expect(bare.text).toBe(copy.feedText.spell('The Psychic', 'mending-light', 3));
   });
 });

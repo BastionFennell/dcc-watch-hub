@@ -6,7 +6,7 @@ import { copy } from '../../copy';
 import styles from './RegistryToolbar.module.css';
 
 export interface RegistryToolbarProps {
-  /** Every published episode in broadcast order — the select's options. */
+  /** Every published episode in broadcast order - the select's options. */
   episodes: readonly EpisodeMeta[];
   scope: RegistryScope;
   /** The raw option value (`all`, `through-N`, `ep-N`); the caller parses it. */
@@ -22,12 +22,12 @@ export interface RegistryToolbarProps {
 }
 
 /**
- * Scope, search and kind chips — the Registry's three controls, in the order
+ * Scope, search and kind chips - the Registry's three controls, in the order
  * they narrow each other (R2-FR-633, R3-FR-641).
  *
  * One component for the page and the panel: the testids and the copy are the
  * same in both, and only the layout differs, so a viewer who has used one knows
- * the other. Every piece of state lives with the caller — the page keeps its
+ * the other. Every piece of state lives with the caller - the page keeps its
  * scope in the URL, the panel keeps its own (R3-FR-641).
  */
 export function RegistryToolbar({
@@ -48,7 +48,7 @@ export function RegistryToolbar({
     >
       {/*
         The first control, before the search: it decides what there is to
-        search. A plain labelled `<select>` — keyboard-first, and the platform's
+        search. A plain labelled `<select>` - keyboard-first, and the platform's
         own picker on a phone (R2-FR-633).
       */}
       <select

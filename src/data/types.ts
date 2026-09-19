@@ -44,6 +44,12 @@ export interface Show {
    * means the show has no registry: no strip, no tab, no `/registry` link.
    */
   registryUrl?: string;
+  /**
+   * Optional show-level spell registry (008 revision 4). Same rules as
+   * `registryUrl`: a leading slash, resolved against `BASE_URL`. Absent means
+   * no crawler sheet can carry a `ref`, and every spell entry stands alone.
+   */
+  spellsUrl?: string;
 }
 
 /* -------------------------------------------------------------- registry */
@@ -79,6 +85,59 @@ export interface Registry {
   entities: Entity[];
 }
 
+/* -------------------------------------------------- spell registry (008 R4) */
+
+/** An `Attack` needs a Spell Skill Check; a `Passive` simply happens. */
+export type SpellKind = 'attack' | 'passive';
+
+export const SPELL_KINDS = ['attack', 'passive'] as const satisfies readonly SpellKind[];
+
+/** One UPGRADES line: "Rank 5: +1d4 base damage". */
+export interface SpellUpgrade {
+  rank: number;
+  text: string;
+}
+
+/**
+ * One row of the book's Spell Skills chapter (008 revision 4), transcribed as
+ * the show's shared definition so a crawler sheet can point at it instead of
+ * restating it. Every field but `id`, `name`, `kind`, `manaCost`,
+ * `description` and `upgrades` is optional, because the book leaves them out.
+ */
+export interface SpellDef {
+  id: string;
+  name: string;
+  /** Parenthesised alternatives on the headline ("Astral Hand, Astral Claw"). */
+  aliases?: string[];
+  /** The System's flavour line under the headline. */
+  quote?: string;
+  kind: SpellKind;
+  /** "Interrupt" on the type line: the Spell can be cast out of turn. */
+  interrupt?: boolean;
+  /** Bludgeoning, Necrotic, Fire, Ice, Electric, Force, Sonic, ... */
+  damageType?: string;
+  areaOfEffect?: boolean;
+  /** 0 is the book's "Mana Cost: None" (Protective Shell). */
+  manaCost: number;
+  range?: string;
+  duration?: string;
+  aiFavor?: number;
+  limitations?: string;
+  cooldown?: string;
+  description: string;
+  baseDamage?: string;
+  /** Empty when the book says "None". */
+  upgrades: SpellUpgrade[];
+  /** The SPELLS CHART's d100 range, inclusive. */
+  roll?: [number, number];
+  page?: number;
+}
+
+/** The whole `spells.json` file: nothing but spell definitions. */
+export interface SpellRegistry {
+  spells: SpellDef[];
+}
+
 /* --------------------------------------------------------------- episode */
 
 /** `[row, col]` into the floor grid. */
@@ -89,10 +148,51 @@ export interface Hp {
   max: number;
 }
 
-/** One row of the sheet's SKILLS section (v2, FR-113). */
+/** One row of the sheet's SKILLS section (v2, FR-113; `desc` added by 008 R2). */
 export interface SkillEntry {
   name: string;
   rank?: number;
+  /** The sheet's Notes column, shown in the tile's tooltip (008 R2). */
+  desc?: string;
+}
+
+/**
+ * One Hotlist mark (008 revision 2). The sheet writes a short name, sometimes a
+ * count, and sometimes a paragraph explaining it; a plain string is still legal
+ * everywhere and means `{ name }`.
+ */
+export interface HotlistEntry {
+  /** Absent only when `ref` names a registry spell that supplies the name. */
+  name?: string;
+  /** A `SpellDef.id` (008 revision 4): the mark is a spell the book carries. */
+  ref?: string;
+  qty?: number;
+  desc?: string;
+}
+
+/** One carried item (008 revision 2). Same shape, same string shorthand. */
+export interface InventoryEntry {
+  name: string;
+  qty?: number;
+  desc?: string;
+}
+
+/**
+ * One inscribed spell (008 revision 2): the sheet's name, its rank, what it
+ * costs to cast, and the full text the record shows in a tooltip.
+ */
+export interface SpellEntry {
+  /** Absent only when `ref` names a registry spell that supplies the name. */
+  name?: string;
+  /**
+   * A `SpellDef.id` (008 revision 4). The entry then inherits the book's name,
+   * mana cost and text; `mana` and `desc` below stay explicit overrides, for
+   * homebrew and scroll-only spells the registry has no row for.
+   */
+  ref?: string;
+  rank?: number;
+  mana?: number;
+  desc?: string;
 }
 
 /**
@@ -140,7 +240,8 @@ export interface Crawler {
   hp: Hp;
   portrait: string;
   class: string | null;
-  inventory: string[];
+  /** Strings are the v1 shorthand for `{ name }` (008 R2). */
+  inventory: (string | InventoryEntry)[];
   rank: number | null;
 
   /* Optional sheet fields (v2, FR-113). Absent in every v1 file. */
@@ -148,8 +249,10 @@ export interface Crawler {
   pronouns?: string;
   crawlerNumber?: string | number;
   stats?: CrawlerStats;
-  hotlist?: string[];
+  hotlist?: (string | HotlistEntry)[];
   skills?: SkillEntry[];
+  /** The sheet's spell list (008 revision 2); absent means none inscribed. */
+  spells?: SpellEntry[];
 
   /* Optional gear and art (003 revision 2, R2-FR-220/224). */
   /** Gear worn at t = 0; `equip`/`unequip` events move it from there. */
@@ -220,7 +323,7 @@ export interface LevelUpEvent extends EventBase {
 }
 
 /**
- * One crawler's standing on the leaderboard. DCC has individual rank only —
+ * One crawler's standing on the leaderboard. DCC has individual rank only -
  * there is no party rank (003 revision 2, T334; supersedes v1/v2 FR-141).
  */
 export interface RankEvent extends EventBase {
@@ -276,6 +379,22 @@ export interface SkillEvent extends EventBase {
   actor: string;
   name: string;
   rank?: number;
+  desc?: string;
+}
+
+/**
+ * Adds a spell, or amends it when rank, mana cost or text is given (008 R2).
+ * Upserts by name, exactly like `skill`.
+ */
+export interface SpellEvent extends EventBase {
+  type: 'spell';
+  actor: string;
+  /** Absent only when `ref` names a registry spell (008 revision 4). */
+  name?: string;
+  /** A `SpellDef.id`; the upsert key is `ref ?? name`. */
+  ref?: string;
+  rank?: number;
+  mana?: number;
   desc?: string;
 }
 
@@ -352,6 +471,7 @@ export type Event =
   | InventoryEvent
   | NoteEvent
   | SkillEvent
+  | SpellEvent
   | ClassEvent
   | HotlistEvent
   | EquipEvent
@@ -385,6 +505,7 @@ export const KNOWN_EVENT_TYPES = [
   'inventory',
   'note',
   'skill',
+  'spell',
   'class',
   'hotlist',
   'equip',

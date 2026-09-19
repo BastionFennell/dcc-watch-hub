@@ -7,15 +7,22 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
-import type { EpisodeData, NpcEvent, Registry, Show } from './types';
-import { isRegistry, isShow, normalizeEpisode, normalizeRegistry } from './validate';
+import type { EpisodeData, NpcEvent, Registry, Show, SpellRegistry } from './types';
+import { isRegistry, isShow, isSpellRegistry, normalizeEpisode, normalizeRegistry, validateSpells } from './validate';
+import { resolveSpell, spellIndex } from '../engine/spells';
 import { orderedEpisodeIds } from './show';
 
 const root = resolve(__dirname, '../..');
 // 007 extends the 003 contracts: the episode gains the `npc` branch, the show
 // gains `registryUrl`, and the registry file has a schema of its own.
 const contracts = resolve(root, 'specs/007-npc-registry/contracts');
-const episodeSchemaPath = resolve(contracts, 'episode.schema.json');
+// 008 revision 2 extends the episode contract again (structured hotlist and
+// inventory entries, a spell list, a `spell` event), and revision 4 extends the
+// show ("spellsUrl") and adds the spell registry's own schema. Only the entity
+// registry's schema is unchanged, so that one stays where 007 left it.
+const episodeSchemaPath = resolve(root, 'specs/008-real-crawlers/contracts/episode.schema.json');
+const showSchemaPath = resolve(root, 'specs/008-real-crawlers/contracts/show.schema.json');
+const spellsSchemaPath = resolve(root, 'specs/008-real-crawlers/contracts/spells.schema.json');
 const dataDir = resolve(root, 'public/data');
 
 function readJson(path: string): unknown {
@@ -25,9 +32,10 @@ function readJson(path: string): unknown {
 const ajv = new Ajv({ strict: false, allErrors: true });
 addFormats(ajv);
 
-const validateShow = ajv.compile(readJson(resolve(contracts, 'show.schema.json')) as object);
+const validateShow = ajv.compile(readJson(showSchemaPath) as object);
 const validateEpisode = ajv.compile(readJson(episodeSchemaPath) as object);
 const validateRegistry = ajv.compile(readJson(resolve(contracts, 'npcs.schema.json')) as object);
+const validateSpellSchema = ajv.compile(readJson(spellsSchemaPath) as object);
 
 const showRaw = readJson(resolve(dataDir, 'show.json'));
 
@@ -98,6 +106,7 @@ describe.each(show.episodes.map((meta) => [meta.id, meta] as const))(
         'inventory',
         'note',
         'skill',
+        'spell',
         'class',
         'hotlist',
         'equip',
@@ -126,6 +135,20 @@ describe.each(show.episodes.map((meta) => [meta.id, meta] as const))(
           expect(ids, `actor ${event.actor} at t=${event.t}`).toContain(event.actor);
         }
       }
+    });
+
+    // 008: the invented sample party is gone. Every episode ships the same
+    // crawlers read off the author's filled sheets, in rail order - four at
+    // first, and Veil Ravencrest when her sheet arrived.
+    it('carries the five real crawlers', () => {
+      const episode = normalizeEpisode(raw);
+      expect(episode.initialState.party.map((crawler) => crawler.id)).toEqual([
+        'harry',
+        'mimi',
+        'ronald',
+        'xo',
+        'veil',
+      ]);
     });
 
     it('points every portrait at a file that exists', () => {
@@ -196,6 +219,7 @@ describe('public/data/npcs.json', () => {
       expect(existsSync(resolve(root, `public${entity.portrait}`)), entity.id).toBe(true);
     }
   });
+
 });
 
 describe('npc events across the sample episodes', () => {
@@ -259,5 +283,162 @@ describe('npc events across the sample episodes', () => {
     );
     expect(late?.event.id).toBe('the-hoarder');
     expect(late?.event.unlock).toEqual(['ledger']);
+  });
+});
+
+/* ------------------------------------- 008 revision 4: the spell registry */
+
+const spellsRaw = readJson(resolve(root, `public${show.spellsUrl ?? '/data/spells.json'}`));
+
+describe('public/data/spells.json', () => {
+  it('is the file show.json points at', () => {
+    expect(show.spellsUrl).toBe('/data/spells.json');
+    expect(existsSync(resolve(root, `public${show.spellsUrl}`))).toBe(true);
+  });
+
+  it('validates against contracts/spells.schema.json', () => {
+    const ok = validateSpellSchema(spellsRaw);
+    expect(validateSpellSchema.errors ?? []).toEqual([]);
+    expect(ok).toBe(true);
+  });
+
+  it('passes the runtime guard with nothing dropped', () => {
+    expect(isSpellRegistry(spellsRaw)).toBe(true);
+    const registry = validateSpells(spellsRaw);
+    expect(registry.spells).toHaveLength((spellsRaw as SpellRegistry).spells.length);
+  });
+
+  /*
+   * The chart's d100 column is the proof that the whole chapter is here: the
+   * ranges must tile 1-100 with no gap and no overlap. A missing spell shows up
+   * as a hole, a duplicated one as a collision.
+   */
+  it('covers the SPELLS CHART: 23 entries whose roll ranges tile 1-100', () => {
+    const { spells } = validateSpells(spellsRaw);
+    expect(spells).toHaveLength(23);
+
+    const rolled = spells
+      .filter((spell) => spell.roll !== undefined)
+      .sort((a, b) => (a.roll as [number, number])[0] - (b.roll as [number, number])[0]);
+    expect(rolled).toHaveLength(spells.length);
+
+    let next = 1;
+    for (const spell of rolled) {
+      const [lo, hi] = spell.roll as [number, number];
+      expect(lo, `${spell.id} starts where the previous entry ended`).toBe(next);
+      next = hi + 1;
+    }
+    expect(next).toBe(101);
+  });
+
+  it('resolves every chart name and alias to exactly one spell', () => {
+    const { spells } = validateSpells(spellsRaw);
+    const labels = spells.flatMap((spell) => [spell.name, ...(spell.aliases ?? [])]);
+    // Case-insensitive, because a sheet writes "Heal Others" and a chart "HEAL OTHERS".
+    const byLabel = new Map<string, string[]>();
+    for (const spell of spells) {
+      for (const label of [spell.name, ...(spell.aliases ?? [])]) {
+        const key = label.toLowerCase();
+        byLabel.set(key, [...(byLabel.get(key) ?? []), spell.id]);
+      }
+    }
+    expect(byLabel.size).toBe(labels.length);
+    for (const [label, ids] of byLabel) {
+      expect(ids, `${label} names one spell`).toHaveLength(1);
+    }
+
+    const ids = spells.map((spell) => spell.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const id of ids) expect(id).toMatch(/^[a-z0-9-]+$/);
+  });
+
+  /*
+   * The "all cases" check the author asked for: the model must have somewhere to
+   * put every shape the book prints, so each optional field has to be exercised
+   * by at least one real entry - including the empty UPGRADES block.
+   */
+  it('exercises every optional field of the model at least once', () => {
+    const { spells } = validateSpells(spellsRaw);
+    const some = (predicate: (spell: (typeof spells)[number]) => boolean) =>
+      spells.filter(predicate).length;
+
+    expect(some((s) => (s.aliases ?? []).length > 0), 'aliases').toBeGreaterThanOrEqual(1);
+    expect(some((s) => s.quote !== undefined), 'quote').toBeGreaterThanOrEqual(1);
+    expect(some((s) => s.interrupt === true), 'interrupt').toBeGreaterThanOrEqual(1);
+    expect(some((s) => s.areaOfEffect === true), 'areaOfEffect').toBeGreaterThanOrEqual(1);
+    expect(some((s) => s.damageType !== undefined), 'damageType').toBeGreaterThanOrEqual(1);
+    expect(some((s) => s.range !== undefined), 'range').toBeGreaterThanOrEqual(1);
+    expect(some((s) => s.duration !== undefined), 'duration').toBeGreaterThanOrEqual(1);
+    expect(some((s) => s.aiFavor !== undefined), 'aiFavor').toBeGreaterThanOrEqual(1);
+    expect(some((s) => s.limitations !== undefined), 'limitations').toBeGreaterThanOrEqual(1);
+    expect(some((s) => s.cooldown !== undefined), 'cooldown').toBeGreaterThanOrEqual(1);
+    expect(some((s) => s.baseDamage !== undefined), 'baseDamage').toBeGreaterThanOrEqual(1);
+    expect(some((s) => s.page !== undefined), 'page').toBeGreaterThanOrEqual(1);
+    expect(some((s) => s.upgrades.length === 0), 'an empty UPGRADES block').toBeGreaterThanOrEqual(
+      1,
+    );
+    expect(some((s) => s.upgrades.length > 0), 'a filled UPGRADES block').toBeGreaterThanOrEqual(1);
+    expect(some((s) => s.kind === 'attack'), 'an attack spell').toBeGreaterThanOrEqual(1);
+    expect(some((s) => s.kind === 'passive'), 'a passive spell').toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('spell refs across the sample episodes', () => {
+  const index = spellIndex(validateSpells(spellsRaw));
+
+  it('points every sheet entry and every spell row at a spell the book carries', () => {
+    let refs = 0;
+    for (const meta of show.episodes) {
+      const episode = normalizeEpisode(readJson(resolve(root, `public${meta.dataUrl}`)));
+      for (const crawler of episode.initialState.party) {
+        for (const entry of crawler.spells ?? []) {
+          if (entry.ref === undefined) continue;
+          refs += 1;
+          expect(index.has(entry.ref), `ep${meta.id} ${crawler.id} spell ${entry.ref}`).toBe(true);
+        }
+        for (const entry of crawler.hotlist ?? []) {
+          if (typeof entry === 'string' || entry.ref === undefined) continue;
+          refs += 1;
+          expect(index.has(entry.ref), `ep${meta.id} ${crawler.id} hotlist ${entry.ref}`).toBe(
+            true,
+          );
+        }
+      }
+      for (const event of episode.events) {
+        if (event.type !== 'spell' || event.ref === undefined) continue;
+        refs += 1;
+        expect(index.has(event.ref), `ep${meta.id} t=${event.t} ${event.ref}`).toBe(true);
+      }
+    }
+    expect(refs, 'the samples actually use the registry').toBeGreaterThanOrEqual(12);
+  });
+
+  it('gives Mimi and Ronald the same Heal, straight from the book', () => {
+    const episode = normalizeEpisode(readJson(resolve(root, 'public/data/ep1.json')));
+    for (const id of ['mimi', 'ronald']) {
+      const crawler = episode.initialState.party.find((entry) => entry.id === id);
+      expect((crawler?.spells ?? [])[0], id).toEqual({ ref: 'heal', rank: 1 });
+      expect(crawler?.hotlist?.[0], id).toEqual({ ref: 'heal' });
+
+      const view = resolveSpell((crawler?.spells ?? [])[0], index);
+      expect(view.name).toBe('Heal');
+      expect(view.mana).toBe(2);
+      expect(view.rank).toBe(1);
+      expect(view.tags).toEqual(['Interrupt', 'Passive']);
+      expect(view.description).toBe('Heal 2 HB slots.');
+      // The sheets no longer restate the book's text on the crawler.
+      expect((crawler?.spells ?? [])[0].desc).toBeUndefined();
+    }
+  });
+
+  it('gives Mimi Frost Scar as a spell and a hotlist key, not a skill', () => {
+    const episode = normalizeEpisode(readJson(resolve(root, 'public/data/ep1.json')));
+    const mimi = episode.initialState.party.find((entry) => entry.id === 'mimi');
+    expect(mimi?.spells).toContainEqual({ ref: 'frost-scar', rank: 3 });
+    expect(mimi?.hotlist).toContainEqual({ ref: 'frost-scar' });
+    expect(mimi?.skills.some((skill) => skill.name === 'Frost Scar')).toBe(false);
+    const view = resolveSpell({ ref: 'frost-scar', rank: 3 }, index);
+    expect(view.mana).toBe(2);
+    expect(view.tags).toEqual(['Attack', 'Ice']);
   });
 });

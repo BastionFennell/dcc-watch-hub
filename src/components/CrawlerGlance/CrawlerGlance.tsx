@@ -7,7 +7,7 @@ import { RankSparkline } from '../CrawlerDossier/RankSparkline';
 import styles from './CrawlerGlance.module.css';
 
 export interface CrawlerGlanceProps {
-  /** `crawlerGlance(crawlerDossier(...))` — recomputed every render (FR-202). */
+  /** `crawlerGlance(crawlerDossier(...))` - recomputed every render (FR-202). */
   glance: Glance;
   /** Receives the button itself, so the dialog can return focus to it (FR-210). */
   onOpenRecord: (trigger: HTMLButtonElement) => void;
@@ -21,7 +21,7 @@ const EQUIPPED_CAP = 7;
 
 /**
  * A separator a screen reader can hear (UX review 0.7). The "·" is decorative
- * punctuation, so it is hidden and a comma is read in its place — otherwise the
+ * punctuation, so it is hidden and a comma is read in its place - otherwise the
  * two names run together as one word ("Harryplayed by Marcus").
  */
 function Separator() {
@@ -46,7 +46,7 @@ function rankDeltaOf(points: readonly RankPoint[]): number | null {
   return delta === 0 ? null : delta;
 }
 
-/** `Torso · Patched Jacket` — one worn slot, one line (R2-FR-201). */
+/** `Torso · Patched Jacket` - one worn slot, one line (R2-FR-201). */
 function EquippedRow({ row }: { row: EquippedItem }) {
   return (
     <li className={styles.equippedRow} data-testid="glance-equipped-row" data-slot={row.slot}>
@@ -63,7 +63,7 @@ function EquippedRow({ row }: { row: EquippedItem }) {
  * awarded, the last three moments, and the single control that opens the full
  * record.
  *
- * Revision 2 dropped the four ledger rows and the "—" placeholders the author
+ * Revision 2 dropped the four ledger rows and the "-" placeholders the author
  * asked about: every section is now either bounded by the sheet (seven gear
  * slots, one achievement) or reserved in CSS (the sparkline's row, the three
  * history rows), so the card's height still does not move with the episode
@@ -93,11 +93,11 @@ export function CrawlerGlance({ glance, onOpenRecord }: CrawlerGlanceProps) {
           <h3 className={styles.name} data-testid="glance-name">
             {glance.name}
           </h3>
-          <p className={styles.handle}>
-            <span>{glance.handle}</span>
-            <Separator />
-            <span>{copy.playedBy(glance.player)}</span>
-          </p>
+          {/* The handle repeats the name (the sheets already carry the
+              preferred name), so only the credit remains, when there is one. */}
+          {glance.player.trim() !== '' && (
+            <p className={styles.handle}>{copy.playedBy(glance.player)}</p>
+          )}
           <p className={styles.classLine}>
             <span>{glance.class ?? copy.unclassed}</span>
             <Separator />
@@ -118,8 +118,8 @@ export function CrawlerGlance({ glance, onOpenRecord }: CrawlerGlanceProps) {
         Two stacked rows: the numbers, then the chart on a row of its own.
         Beside the numbers the rail squeezed it to ~80 px (T313 visual review),
         so here it stretches across the whole row (T333's `stretch`). The row is
-        reserved whether or not there is a series to draw — `RankSparkline`
-        renders nothing when unranked — so an unranked crawler's card is exactly
+        reserved whether or not there is a series to draw - `RankSparkline`
+        renders nothing when unranked - so an unranked crawler's card is exactly
         as tall as a ranked one (FR-201, SC-201). The label stays on both, so the
         row always says what the numbers are (UX review 1.4).
       */}
@@ -212,8 +212,8 @@ export function CrawlerGlance({ glance, onOpenRecord }: CrawlerGlanceProps) {
       </section>
 
       {/*
-        RECENT MOMENTS: up to three, and nothing at all when there are none —
-        the "—" rows the author asked about are gone (revision 2). The list keeps
+        RECENT MOMENTS: up to three, and nothing at all when there are none -
+        the "-" rows the author asked about are gone (revision 2). The list keeps
         its three-row `min-height` in CSS, so the card's height holds anyway.
       */}
       <section className={styles.block} data-testid="glance-history">

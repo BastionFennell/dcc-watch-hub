@@ -4,14 +4,17 @@
  * Contract: specs/001-watch-hub-v1/contracts/sheet-csv.md, extended by
  * specs/002-watch-hub-v2/contracts/sheet-csv.md (skill / class / hotlist rows) and by
  * specs/003-crawler-record/data-model.md (equip / unequip rows: field1 slot, field2 item) and by
- * specs/007-npc-registry/contracts/npc.md (npc row: field1 id, field2 action[:fact,fact], field3 note).
+ * specs/007-npc-registry/contracts/npc.md (npc row: field1 id, field2 action[:fact,fact], field3 note)
+ * and by specs/008-real-crawlers (spell row: field1 name - or, with `--spells`, a registry id -
+ * field2 rank, field3 mana; hotlist and inventory rows still name entries by their short name
+ * alone, and the structure an entry carries - quantity, description - lives in `--initial-state`).
  *
  *   npm run sheet-to-json -- scripts/samples/ep1.csv --episode 1 --duration 240 \
  *     --initial-state scripts/samples/ep1.initial.json --out public/data/ep1.json
  *
  * Warnings (unknown actor, impossible HP, timecode past the duration, unknown type or
- * chapter kind, an accessory unequip with no item, and — only with `--registry` — an
- * unknown entity or fact id) are reported and the file is still written. Only malformed
+ * chapter kind, an accessory unequip with no item, and - only with `--registry` / `--spells` - an
+ * unknown entity, fact or spell id) are reported and the file is still written. Only malformed
  * input (unparseable timecode, missing column, non-numeric numeric, empty required field,
  * an unknown gear slot, an unknown npc action) is an error, and then nothing is written.
  *
@@ -22,9 +25,22 @@ import { mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'csv-parse/sync';
-import type { Cell, EpisodeData, Hp, InitialState, Registry } from '../src/data/types';
+import type {
+  Cell,
+  EpisodeData,
+  Hp,
+  InitialState,
+  Registry,
+  SpellRegistry,
+} from '../src/data/types';
 import { CHAPTER_KINDS, GEAR_SLOTS, NPC_ACTIONS } from '../src/data/types';
-import { normalizeEpisode, normalizeRegistry, toNumber } from '../src/data/validate';
+import {
+  SPELL_REF_RE,
+  normalizeEpisode,
+  normalizeRegistry,
+  toNumber,
+  validateSpells,
+} from '../src/data/validate';
 
 /* ----------------------------------------------------------------- shapes */
 
@@ -62,6 +78,12 @@ export interface RowContext {
    * episode conversion is not required to have on hand.
    */
   registry?: Registry | null;
+  /**
+   * The show's spell registry, when the editor passed `--spells` (008 R4).
+   * Absent means a `spell` row's field1 is always a display name: without the
+   * book on hand there is no id to point at.
+   */
+  spells?: SpellRegistry | null;
 }
 
 export interface RowResult {
@@ -76,10 +98,12 @@ export interface ConvertContext {
   initialState: InitialState;
   /** Optional: enables the `npc` row's id and fact-id warnings (007 R6). */
   registry?: Registry | null;
+  /** Optional: turns a kebab-case `spell` field1 into a `ref` (008 R4). */
+  spells?: SpellRegistry | null;
 }
 
 export interface ConvertResult {
-  /** Absent when `errors` is non-empty — nothing should be written. */
+  /** Absent when `errors` is non-empty - nothing should be written. */
   episode?: EpisodeData;
   warnings: string[];
   errors: string[];
@@ -95,6 +119,7 @@ const ACTOR_EVENT_TYPES = new Set([
   'status',
   'inventory',
   'skill',
+  'spell',
   'class',
   'hotlist',
   'equip',
@@ -206,6 +231,59 @@ function npcWarnings(id: string, unlock: readonly string[], ctx: RowContext): st
   for (const fact of unlock) {
     if (!entity.facts.some((candidate) => candidate.id === fact)) {
       warnings.push(`unknown fact ${JSON.stringify(fact)} on entity ${JSON.stringify(id)}`);
+    }
+  }
+  return warnings;
+}
+
+/**
+ * How a `spell` row's field1 is read (008 R4). With `--spells` on hand, a
+ * kebab-case cell is a registry id and becomes `ref`; anything else - and every
+ * cell at all without the flag - is the spell's display name, so an existing CSV
+ * that writes "Heal" keeps meaning "Heal".
+ */
+export function spellField1(
+  field1: string,
+  ctx: RowContext,
+): { key: { name?: string; ref?: string }; warnings: string[] } {
+  const spells = ctx.spells;
+  if (!spells || !SPELL_REF_RE.test(field1)) return { key: { name: field1 }, warnings: [] };
+  const known = spells.spells.some((spell) => spell.id === field1);
+  return known
+    ? { key: { ref: field1 }, warnings: [] }
+    : {
+        // Falls back to a name so the row still converts; the editor gets told.
+        key: { name: field1 },
+        warnings: [`unknown spell ${JSON.stringify(field1)} (not in the spell registry)`],
+      };
+}
+
+/**
+ * Every `ref` the initial state points at, checked against `--spells` (008 R4).
+ * The crawler sheets are where a typo is most expensive - it would render as the
+ * raw id on every episode - so the converter reads them even though it never
+ * rewrites them.
+ */
+export function initialStateSpellWarnings(
+  initialState: InitialState,
+  spells: SpellRegistry | null | undefined,
+): string[] {
+  if (!spells) return [];
+  const ids = new Set(spells.spells.map((spell) => spell.id));
+  const warnings: string[] = [];
+  for (const crawler of initialState.party ?? []) {
+    const refs: string[] = [];
+    for (const entry of crawler.spells ?? []) {
+      if (entry.ref !== undefined) refs.push(entry.ref);
+    }
+    for (const entry of crawler.hotlist ?? []) {
+      if (typeof entry !== 'string' && entry.ref !== undefined) refs.push(entry.ref);
+    }
+    for (const ref of refs) {
+      if (ids.has(ref)) continue;
+      warnings.push(
+        `initial state: ${crawler.id} points at unknown spell ${JSON.stringify(ref)}`,
+      );
     }
   }
   return warnings;
@@ -367,6 +445,41 @@ export function rowToEvent(row: SheetRow, ctx: RowContext): RowResult {
       };
       break;
     }
+    case 'spell': {
+      /*
+       * 008 revision 2: field1 name, field2 rank, field3 mana cost. The spell's
+       * full text is not a CSV cell - a paragraph does not belong in a sheet
+       * column, so it lives in `--initial-state` (or an earlier file) and the
+       * event only ever amends the numbers. Since revision 4 field1 may instead
+       * be a registry id, and then the name comes from the book.
+       */
+      if (field1 === '') {
+        errors.push('empty required field: name (field1) on spell');
+        break;
+      }
+      const spell = spellField1(field1, ctx);
+      warnings.push(...spell.warnings);
+      const numbers: Record<string, number> = {};
+      let bad = false;
+      for (const [key, raw, column] of [
+        ['rank', field2, 'field2'],
+        ['mana', field3, 'field3'],
+      ] as const) {
+        if (raw === '') continue;
+        const value = toNumber(raw);
+        if (value === null || !Number.isInteger(value) || value < 0) {
+          errors.push(
+            `spell ${key} (${column}) must be a non-negative integer, got ${JSON.stringify(raw)}`,
+          );
+          bad = true;
+          continue;
+        }
+        numbers[key] = value;
+      }
+      if (bad) break;
+      event = { t, type, actor, ...spell.key, ...numbers };
+      break;
+    }
     case 'equip':
     case 'unequip': {
       if (!(GEAR_SLOTS as readonly string[]).includes(field1)) {
@@ -495,7 +608,9 @@ export function convert(csvText: string, ctx: ConvertContext): ConvertResult {
       ]),
     ),
     ...(ctx.registry === undefined ? {} : { registry: ctx.registry }),
+    ...(ctx.spells === undefined ? {} : { spells: ctx.spells }),
   };
+  warnings.push(...initialStateSpellWarnings(ctx.initialState, ctx.spells));
 
   const errors: string[] = [];
   const events: RawEvent[] = [];
@@ -540,6 +655,8 @@ export interface CliOptions {
   out: string;
   /** Optional path to the show's registry; enables the `npc` id warnings. */
   registry?: string;
+  /** Optional path to spells.json; enables `ref` in `spell` rows (008 R4). */
+  spells?: string;
 }
 
 export type ArgsResult = { help: true } | { options: CliOptions } | { error: string };
@@ -554,6 +671,9 @@ export const USAGE = `usage: npm run sheet-to-json -- <csv> --episode <n> --dura
   --out <path>            where to write ep{N}.json
   --registry <path>       optional npcs.json; npc rows naming an entity or fact
                           it does not carry are warned about
+  --spells <path>         optional spells.json; a kebab-case spell field1 is
+                          then a registry id, and every ref in the rows and in
+                          --initial-state is checked against it
   --help                  print this message`;
 
 export function parseArgs(argv: string[]): ArgsResult {
@@ -609,6 +729,11 @@ export function parseArgs(argv: string[]): ArgsResult {
     return { error: '--registry <path> must name a file' };
   }
 
+  const spells = flags.get('spells');
+  if (spells !== undefined && spells === '') {
+    return { error: '--spells <path> must name a file' };
+  }
+
   return {
     options: {
       csv: positional[0],
@@ -618,6 +743,7 @@ export function parseArgs(argv: string[]): ArgsResult {
       out,
       // Absent unless asked for, so "no registry" and "an empty one" stay distinct.
       ...(registry === undefined ? {} : { registry }),
+      ...(spells === undefined ? {} : { spells }),
     },
   };
 }
@@ -667,11 +793,26 @@ export function main(argv: string[]): number {
     }
   }
 
+  let spells: SpellRegistry | null = null;
+  if (options.spells !== undefined) {
+    try {
+      spells = validateSpells(
+        JSON.parse(readFileSync(resolve(options.spells), 'utf8')) as unknown,
+      );
+    } catch (error) {
+      process.stderr.write(
+        `error: cannot read --spells ${options.spells}: ${(error as Error).message}\n`,
+      );
+      return 2;
+    }
+  }
+
   const result = convert(csvText, {
     episodeId: options.episode,
     durationSec: options.duration,
     initialState,
     ...(options.registry === undefined ? {} : { registry }),
+    ...(options.spells === undefined ? {} : { spells }),
   });
 
   for (const warning of result.warnings) process.stderr.write(`WARN ${warning}\n`);

@@ -25,7 +25,7 @@
   "episodes": [
     {
       "id": 1,
-      "title": "Episode 1 — The World Dungeon",
+      "title": "Episode 1 - The World Dungeon",
       "youtubeId": "aqz-KE-bpKQ",
       "floor": 1,
       "durationSec": 635,
@@ -33,7 +33,7 @@
     },
     {
       "id": 2,
-      "title": "Episode 2 — The Meat District",
+      "title": "Episode 2 - The Meat District",
       "youtubeId": "eRsGyueVLvQ",
       "floor": 1,
       "durationSec": 888,
@@ -41,7 +41,7 @@
     },
     {
       "id": 3,
-      "title": "Episode 3 — Descent",
+      "title": "Episode 3 - Descent",
       "youtubeId": "R6MlUcmOul8",
       "floor": 2,
       "durationSec": 734,
@@ -52,5 +52,6 @@
     "youtube": "https://www.youtube.com/@DungeonCrawlCast",
     "discord": "https://discord.gg/REPLACE_ME"
   },
-  "registryUrl": "/data/npcs.json"
+  "registryUrl": "/data/npcs.json",
+  "spellsUrl": "/data/spells.json"
 }

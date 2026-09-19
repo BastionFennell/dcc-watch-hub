@@ -9,7 +9,7 @@ import styles from './EventFeed.module.css';
 export interface EventFeedProps {
   /** Newest first, already capped at 8 by `feedItems` (FR-020). */
   items: FeedItem[];
-  /** `activeSponsor(events, t)` — pinned above the list while its window holds. */
+  /** `activeSponsor(events, t)` - pinned above the list while its window holds. */
   sponsor: FeedItem | null;
   /** The playhead, for the synced header (FR-023). */
   t: number;

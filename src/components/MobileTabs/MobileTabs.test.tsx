@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * The phone tab strip (006 T604/T605, research R2/R5). The widget is checked
- * through the ARIA it exposes — roles, `aria-selected`, roving `tabIndex` — so
+ * through the ARIA it exposes - roles, `aria-selected`, roving `tabIndex` - so
  * these assertions are the same ones assistive tech makes.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';

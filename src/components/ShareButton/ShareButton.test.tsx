@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-/** T406 — the share control (FR-302/303). */
+/** T406 - the share control (FR-302/303). */
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { copy } from '../../copy';

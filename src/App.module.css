@@ -25,7 +25,7 @@
   top: var(--space-4);
 }
 
-/* Archive load failure — the System admits nothing but a recalibration. */
+/* Archive load failure - the System admits nothing but a recalibration. */
 .failure {
   max-width: 640px;
   margin: 0 auto;

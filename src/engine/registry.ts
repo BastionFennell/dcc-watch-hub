@@ -4,7 +4,7 @@
  * Where `selectors.ts` reads one episode at one playhead, this reads *every*
  * published episode whole: the glossary is not tied to what the device has
  * watched, only to what the show has published. Nothing here is playhead-aware,
- * so no time-truth invariant applies — the input is the complete event log of
+ * so no time-truth invariant applies - the input is the complete event log of
  * every episode the archive lists.
  *
  * Framework-free (constitution I/IV): no React, no DOM, no fetch.
@@ -39,7 +39,7 @@ export interface RegistryEntry {
   entity: Entity;
   /** The episode this entity first appears in, in broadcast order. */
   firstEpisode: number;
-  /** Its timecode inside that episode — the tie-break between two debuts. */
+  /** Its timecode inside that episode - the tie-break between two debuts. */
   firstT: number;
   /** Registry order, filtered to facts some published episode unlocks. */
   facts: RegistryFact[];
@@ -71,7 +71,7 @@ interface Accumulator {
  * Index every entity that appears in any published episode.
  *
  * `episodes` maps an episode id to its loaded data, or to `null` when the fetch
- * failed — a failure costs that episode's beats and nothing else (spec US2
+ * failed - a failure costs that episode's beats and nothing else (spec US2
  * scenario 6). An id the show lists but the map does not carry at all counts as
  * missing too. Entities that never appear anywhere are omitted entirely, and an
  * `npc` beat naming an id the registry does not carry is skipped (the episode
@@ -173,9 +173,9 @@ export function registryIndex(
 /**
  * What slice of the archive the Registry is showing.
  *
- * `through` is "everything published up to and including this episode" — what a
+ * `through` is "everything published up to and including this episode" - what a
  * viewer who has watched that far is allowed to know. `only` is "what this one
- * episode is about" — a narrower cast, but still carrying the context earlier
+ * episode is about" - a narrower cast, but still carrying the context earlier
  * episodes released, because the viewer already has it.
  */
 export type RegistryScope =
@@ -188,7 +188,7 @@ const ALL_SCOPE: RegistryScope = { kind: 'all' };
 /**
  * Read the `scope` search param. Leniently: anything that is not `through-N` or
  * `ep-N` for an episode the show actually lists falls back to the whole archive
- * rather than to an error page (R2-FR-631) — a hand-edited or stale URL still
+ * rather than to an error page (R2-FR-631) - a hand-edited or stale URL still
  * opens something.
  */
 export function parseRegistryScope(param: string | null, show: Show): RegistryScope {
@@ -218,7 +218,7 @@ export function scopeParam(scope: RegistryScope): string | null {
 
 /**
  * Narrow a whole index to one scope (R2-FR-630). Pure: same entries in, same
- * entries out, in the same order — only trimmed.
+ * entries out, in the same order - only trimmed.
  *
  * Ordering is broadcast order, not numeric id order, so "at or before episode N"
  * asks `orderedEpisodeIds` where each episode sits.
@@ -226,7 +226,7 @@ export function scopeParam(scope: RegistryScope): string | null {
  * - **through N**: entities that debut at or before N; facts and appearances
  *   from later episodes are dropped, and a defeat that has not happened yet is
  *   not announced.
- * - **only N**: entities with any beat in N, their appearances narrowed to N —
+ * - **only N**: entities with any beat in N, their appearances narrowed to N -
  *   but facts released at or before N are kept, and a defeat at or before N
  *   still reads, because that is history the viewer already has (spec R2
  *   scenario 3). Nothing later ever leaks.
@@ -301,13 +301,13 @@ export interface RegistrySection {
  *
  * Under "all" and "through N" an entry sits under the episode it debuts in; an
  * episode that debuts nobody has no bar at all. Under "only N" there is exactly
- * one bar — the episode being watched — and the whole cast sits under it,
+ * one bar - the episode being watched - and the whole cast sits under it,
  * because that is what the view is about.
  *
  * Revision 4 turns both orders around. The archive grows at its far end, so what
  * a viewer is most likely to be looking for is what the show added last: the
  * latest episode leads, and inside a shelf the entity introduced latest leads.
- * `registryIndex` still returns broadcast order — reversing here keeps that
+ * `registryIndex` still returns broadcast order - reversing here keeps that
  * index (and every scope built from it) a plain chronology, with the
  * presentation order living in the one function that lays the shelves out.
  */
@@ -361,7 +361,7 @@ export function registrySections(
 /**
  * The current episode as of the playhead (R4-FR-651).
  *
- * Everywhere else in the Registry an episode is read whole — the glossary is
+ * Everywhere else in the Registry an episode is read whole - the glossary is
  * publication-scoped, not watch-scoped. The panel beside the broadcast is the
  * exception: it sits next to a running video, so listing an entity the viewer
  * has not reached yet would spoil the very episode they are watching. Clipping
@@ -381,7 +381,7 @@ export function clipEpisodeToPlayhead(episode: EpisodeData, t: number): EpisodeD
 /**
  * `registryIndex` with the current episode clipped to the playhead (R4-FR-651).
  *
- * Every other episode is read whole, exactly as the page reads it — only the
+ * Every other episode is read whole, exactly as the page reads it - only the
  * episode on the stage follows the viewer. The map is copied rather than
  * mutated, so the cached index inputs stay the archive's own.
  */

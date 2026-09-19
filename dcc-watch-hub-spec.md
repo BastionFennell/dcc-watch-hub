@@ -1,10 +1,10 @@
-# Dungeon Crawl Cast — Watch Hub ("System Feed") — v1 Spec
+# Dungeon Crawl Cast - Watch Hub ("System Feed") - v1 Spec
 
 Handoff doc for Claude Code. Build v1 exactly as scoped; v2/v3 items are parked at the bottom and must not leak into v1.
 
 ## 1. Concept
 
-A watch-along site for the Dungeon Crawl Cast actual play show. The viewer watches an episode with a synchronized, interactive overlay styled as the in-fiction System's broadcast feed — party status, live event ticker, achievements, map, and sponsor slots, all derived from a per-episode event log synced to the video playhead. The viewer is positioned as a member of the (in-fiction) galactic audience.
+A watch-along site for the Dungeon Crawl Cast actual play show. The viewer watches an episode with a synchronized, interactive overlay styled as the in-fiction System's broadcast feed - party status, live event ticker, achievements, map, and sponsor slots, all derived from a per-episode event log synced to the video playhead. The viewer is positioned as a member of the (in-fiction) galactic audience.
 
 **Design principles (non-negotiable):**
 1. **Time-truth.** All overlay state is a pure function of the event log filtered to `event.t <= playhead`. Scrubbing backward rewinds the feed. Nothing may render ahead of the playhead (no spoilers).
@@ -23,7 +23,7 @@ A watch-along site for the Dungeon Crawl Cast actual play show. The viewer watch
 
 ## 3. Architecture
 
-- Stack: Vite + React + TypeScript (or Preact if bundle size matters; author's choice). Plain CSS or CSS modules — no heavy UI framework.
+- Stack: Vite + React + TypeScript (or Preact if bundle size matters; author's choice). Plain CSS or CSS modules - no heavy UI framework.
 - Deploy target: static host (GitHub Pages / Netlify / Cloudflare Pages).
 - All episode data fetched as static JSON at page load.
 
@@ -50,7 +50,7 @@ v1 ships one implementation: `YouTubeTimeSource` wrapping the IFrame Player API 
 state(t) = reduce(episode.initialState, events.filter(e => e.t <= t))
 ```
 
-- Reducer is pure and deterministic. On seek, recompute from `initialState` (event counts are small; no memoization needed in v1 — do not prematurely optimize).
+- Reducer is pure and deterministic. On seek, recompute from `initialState` (event counts are small; no memoization needed in v1 - do not prematurely optimize).
 - A `selector` layer derives view models: party frames, ticker items (last N events, newest first), active toast (achievement within last 6s of playhead), timeline markers, map cell states, current sponsor.
 
 ## 4. Data schemas
@@ -72,7 +72,7 @@ state(t) = reduce(episode.initialState, events.filter(e => e.t <= t))
   "episodes": [
     {
       "id": 1,
-      "title": "Episode 1 — The World Dungeon",
+      "title": "Episode 1 - The World Dungeon",
       "youtubeId": "XXXXXXXXXXX",
       "floor": 1,
       "durationSec": 5400,
@@ -161,7 +161,7 @@ Editor logs events in a Google Sheet during the edit pass with columns: `timecod
 - Slim (≤48px), dark, collapses/shrinks on scroll. Mobile: collapses to mark + episode label + menu.
 
 ### Behavior details
-- **PartyRail:** HP bar animates on change; frame border flashes danger color when HP < 25%; level-up pulses the frame. Clicking a frame is a no-op in v1 (cursor default — do not tease v2).
+- **PartyRail:** HP bar animates on change; frame border flashes danger color when HP < 25%; level-up pulses the frame. Clicking a frame is a no-op in v1 (cursor default - do not tease v2).
 - **EventFeed:** shows last 8 events at playhead; scrubbing back removes future items. System messages styled as blue System boxes; sponsors as purple slots.
 - **AchievementToast:** one at a time, FIFO queue if events cluster.
 - **EventTimeline:** thin bar, chapter/event markers positioned by `t/durationSec`; click = `seek(t)`. Tooltip label on hover.
@@ -187,7 +187,7 @@ Editor logs events in a Google Sheet during the edit pass with columns: `timecod
 - [ ] Sheet-to-JSON script converts the sample CSV and flags a deliberately broken row.
 - [ ] Lighthouse perf ≥ 90 on episode page (static JSON, no blocking fonts).
 
-## 8. Parked (v2/v3 — do not build)
+## 8. Parked (v2/v3 - do not build)
 
 - v2: click-open character sheets (inventory/skills/hot list history), interactive minimap with pan/labels, localStorage resume, stinger sounds (opt-in), roster page with commissioned art, per-crawler fame/rank sparklines.
 - v3: self-hosted/alternate video sources (new TimeSource impls), live premiere sync, sponsor slot management, accounts.

@@ -19,7 +19,7 @@ import {
 import styles from './FullRecordDialog.module.css';
 
 export interface FullRecordDialogProps {
-  /** `crawlerDossier(...)` at the playhead — recomputed every render (FR-212). */
+  /** `crawlerDossier(...)` at the playhead - recomputed every render (FR-212). */
   dossier: Dossier;
   meta: EpisodeMeta;
   open: boolean;
@@ -32,7 +32,13 @@ const TITLE_ID = 'crawler-record-title';
 const BODY_ID = 'crawler-record-body';
 
 /** The sheet, or one category opened in full (contracts/dialog.md Revision 2). */
-export type RecordView = 'sheet' | 'skills' | 'inventory' | 'achievements' | 'history';
+export type RecordView =
+  | 'sheet'
+  | 'skills'
+  | 'spells'
+  | 'inventory'
+  | 'achievements'
+  | 'history';
 
 /** Tiles and history rows shown on the sheet before "View all" takes over. */
 const SHEET_MAX = 8;
@@ -40,7 +46,7 @@ const SHEET_MAX = 8;
 /**
  * The full record (US2, FR-210..FR-214, R2-FR-221..224): the one overlay allowed
  * to cover the stage (constitution III, 1.2.0). Revision 2 lays it out the way
- * the author asked — the crawler's full-figure art down the left at the sheet's
+ * the author asked - the crawler's full-figure art down the left at the sheet's
  * height, identity / vitals / stats beside it, then an MMO hotbar, the gear
  * sheet, and bag-style tile grids that cap at eight and hand the rest to a list
  * view (research R8/R9).
@@ -49,7 +55,7 @@ const SHEET_MAX = 8;
  * to the sheet whenever the record closes (R2-FR-223), so reopening a crawler
  * never lands mid-navigation. Everything else it draws is a pure function of
  * the `Dossier` it is handed: no `TimeSource`, no playback call, so a seek
- * behind it — in any view — flows straight through (FR-212).
+ * behind it - in any view - flows straight through (FR-212).
  */
 export function FullRecordDialog({
   dossier,
@@ -174,7 +180,7 @@ export function FullRecordDialog({
         {/*
           `tabIndex={0}`: the sheet scrolls internally (FR-212), so without a tab
           stop a keyboard could not scroll a record longer than the viewport
-          (axe scrollable-region-focusable, WCAG 2.1.1 — T313). It joins the
+          (axe scrollable-region-focusable, WCAG 2.1.1 - T313). It joins the
           dialog's own focus cycle; no role and no label, so it stays a plain
           group to assistive tech.
         */}
@@ -227,6 +233,14 @@ export function FullRecordDialog({
                     onViewAll={() => openView('skills')}
                     viewAllRef={viewAllRef('skills')}
                   />
+                  {/* 008 revision 2: the sheet's SPELLS block, between SKILLS and INVENTORY. */}
+                  <DossierTiles
+                    kind="spells"
+                    items={dossier.spells}
+                    max={SHEET_MAX}
+                    onViewAll={() => openView('spells')}
+                    viewAllRef={viewAllRef('spells')}
+                  />
                   <DossierTiles
                     kind="inventory"
                     items={dossier.inventory}
@@ -267,6 +281,9 @@ export function FullRecordDialog({
               */}
               {view === 'skills' ? (
                 <DossierList kind="skills" items={dossier.skills} headingRef={headingRef} />
+              ) : null}
+              {view === 'spells' ? (
+                <DossierList kind="spells" items={dossier.spells} headingRef={headingRef} />
               ) : null}
               {view === 'inventory' ? (
                 <DossierList kind="inventory" items={dossier.inventory} headingRef={headingRef} />

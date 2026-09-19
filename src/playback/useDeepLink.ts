@@ -3,12 +3,12 @@
  *
  * The hook is deliberately tiny: it reads the moment out of the location, and
  * the first time a `TimeSource` exists for that `(episode, search)` pair it
- * seeks there — once. The YouTube adapter queues a seek issued before the
+ * seeks there - once. The YouTube adapter queues a seek issued before the
  * player is ready (time-source contract §6), so calling this above the source
  * is safe and is in fact the normal case.
  *
  * `linkedT` is returned straight from the parse, so the page knows a link is in
- * play on the very first render — before the seek has had a chance to run —
+ * play on the very first render - before the seek has had a chance to run -
  * which is what `useResume`'s `suppressOffer` needs (FR-301).
  *
  * Constitution I/II: the only thing that happens here is `source.seek(t)`. No

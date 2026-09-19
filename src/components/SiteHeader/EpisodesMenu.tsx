@@ -19,7 +19,7 @@ export interface EpisodesMenuProps {
 /**
  * The "Episodes" dropdown: a plain `<details>` so it works without JS state,
  * keyboard handling, or a popover library. It closes itself whenever the route
- * changes — what "closes on navigation" means for a `<Link>` inside `<details>`.
+ * changes - what "closes on navigation" means for a `<Link>` inside `<details>`.
  *
  * At phone widths the summary keeps its label for screen readers and shows the
  * `IconMenu` glyph instead (FR-052); the same panel then also carries the show

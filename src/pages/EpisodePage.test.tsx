@@ -2,8 +2,8 @@
 /**
  * Page-level proof of the time-truth invariants (constitution I; SC-002/003/004).
  *
- * The whole page is driven by the dev `FakeStage`'s `FakeTimeSource` — no network,
- * no video host — which is exactly the guarantee constitution II asks for.
+ * The whole page is driven by the dev `FakeStage`'s `FakeTimeSource` - no network,
+ * no video host - which is exactly the guarantee constitution II asks for.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
@@ -17,7 +17,7 @@ import { resumeKey } from '../playback/resume';
 import { parseDeepLinkT } from '../playback/deepLink';
 import { LOG_OPEN_KEY } from '../prefs/logOpen';
 import { __fakeSources } from '../components/VideoStage/FakeStage';
-import { makeEpisode, makeEpisodeRaw, makeRegistry, makeShow } from '../test/fixtures';
+import { makeEpisode, makeEpisodeRaw, makeRegistry, makeShow, makeSpells } from '../test/fixtures';
 
 const episode = makeEpisode(1);
 const party = episode.initialState.party;
@@ -34,7 +34,7 @@ interface RawEpisode {
 
 /**
  * Episode 2's own `npc` beats (007 R3): one amendment to the entity episode 1
- * introduces, so the Registry panel has an appearance in *another* episode —
+ * introduces, so the Registry panel has an appearance in *another* episode -
  * the case that must stay a link rather than become a seek (R3 scenario 2).
  */
 function makeEpisode2Raw(): unknown {
@@ -67,6 +67,14 @@ function stubFetch(episodeOk = true, withRegistry = true) {
     if (url.includes('npcs.json')) {
       return Promise.resolve(
         new Response(JSON.stringify(makeRegistry()), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
+    }
+    if (url.includes('spells.json')) {
+      return Promise.resolve(
+        new Response(JSON.stringify(makeSpells()), {
           status: 200,
           headers: { 'content-type': 'application/json' },
         }),
@@ -124,7 +132,7 @@ function feedCount(): number {
   return screen.queryAllByTestId('feed-item').length;
 }
 
-/** Clicks a crawler frame — the dossier trigger (contracts/panels.md). */
+/** Clicks a crawler frame - the dossier trigger (contracts/panels.md). */
 function clickFrame(crawlerId: string): void {
   fireEvent.click(frame(crawlerId));
 }
@@ -134,7 +142,7 @@ function glance(): HTMLElement {
   return screen.getByTestId('crawler-glance');
 }
 
-/** The modal full record (US2) — the only overlay allowed over the stage. */
+/** The modal full record (US2) - the only overlay allowed over the stage. */
 function record(): HTMLElement {
   return screen.getByTestId('crawler-record');
 }
@@ -419,7 +427,7 @@ describe('EpisodePage', () => {
     seek(110);
     expect(screen.getByTestId('active-sponsor')).toBeInTheDocument();
 
-    seek(130); // t + durationSec — the window is half-open
+    seek(130); // t + durationSec - the window is half-open
     expect(screen.queryByTestId('active-sponsor')).not.toBeInTheDocument();
   });
 
@@ -433,7 +441,7 @@ describe('EpisodePage', () => {
     act(() => source.end());
 
     const stage = within(screen.getByTestId('video-stage'));
-    expect(stage.getByText('Episode 2 — The Meat District')).toBeInTheDocument();
+    expect(stage.getByText('Episode 2 - The Meat District')).toBeInTheDocument();
     expect(stage.getByRole('link', { name: copy.nextEpisodeCard })).toHaveAttribute(
       'href',
       '/ep/2?fake=1',
@@ -534,7 +542,7 @@ describe('EpisodePage', () => {
     ]);
     expect(worn[1]).toHaveTextContent('Torch');
 
-    // The newest award, with its time — one line, not the whole list.
+    // The newest award, with its time - one line, not the whole list.
     const latest = within(panel).getByTestId('glance-latest-achievement');
     expect(within(latest).getByText('Gate Crasher')).toBeInTheDocument();
     expect(within(latest).getByText(formatTime(60))).toBeInTheDocument();
@@ -546,7 +554,7 @@ describe('EpisodePage', () => {
     // Three history rows here, and never a placeholder dash: the card holds its
     // height in CSS instead (review 0.1, R2-FR-201).
     expect(within(panel).getAllByTestId('glance-history-row')).toHaveLength(3);
-    expect(within(panel).queryByText(/^—$/)).not.toBeInTheDocument();
+    expect(within(panel).queryByText(/^-$/)).not.toBeInTheDocument();
 
     // The single control that leads deeper, and nothing else (FR-203).
     expect(within(panel).getByTestId('open-record')).toHaveTextContent(copy.openRecord);
@@ -588,7 +596,7 @@ describe('EpisodePage', () => {
     expect(within(section('stats')).getByText(copy.statLabels.dex)).toBeInTheDocument();
     expect(within(section('stats')).getByText('7')).toBeInTheDocument();
 
-    // Every list in full — this is the deep view the glance card summarizes (FR-211).
+    // Every list in full - this is the deep view the glance card summarizes (FR-211).
     expect(within(section('hotlist')).getByText('Crowbar')).toBeInTheDocument();
     expect(within(section('skills')).getByText('Powerful Strike')).toBeInTheDocument();
     expect(within(section('inventory')).getByText('Torch')).toBeInTheDocument();
@@ -629,7 +637,7 @@ describe('EpisodePage', () => {
     expect(screen.queryByTestId('crawler-record')).not.toBeInTheDocument();
     expect(document.activeElement).toBe(screen.getByTestId('open-record'));
 
-    // With no record open the next Escape belongs to the panel again — one
+    // With no record open the next Escape belongs to the panel again - one
     // press, one dismissal, menu first (spec edge case, FR-104).
     pressEscapeFrom(document.body);
     expect(screen.queryByTestId('rail-panel')).not.toBeInTheDocument();
@@ -738,7 +746,7 @@ describe('EpisodePage', () => {
     expect(slots[0]).toHaveAttribute('aria-label', copy.hotbarSlotAria(1, 'Crowbar'));
     expect(slots[9]).toHaveAttribute('aria-label', copy.hotbarSlotAria(10, 'The Understudy'));
 
-    // A second before the bulk add: the same ten keys, one lit, no marker — the
+    // A second before the bulk add: the same ten keys, one lit, no marker - the
     // bar never reflows with the playhead (R2 US2 scenario 2).
     seek(200);
     const earlier = within(section('hotlist')).getAllByTestId('hotbar-slot');
@@ -748,7 +756,7 @@ describe('EpisodePage', () => {
     expect(within(section('hotlist')).queryByTestId('hotbar-overflow')).not.toBeInTheDocument();
   });
 
-  it('files worn gear by slot on the record, and empty slots as "—"', async () => {
+  it('files worn gear by slot on the record, and empty slots as "-"', async () => {
     const { seek } = await mountEpisode();
     seek(200);
     clickFrame('harry');
@@ -807,7 +815,7 @@ describe('EpisodePage', () => {
     seek(140);
     expect(worn().map((row) => row.split(':')[0])).toEqual(['hands']);
 
-    // 152 jacket, 153 charm — the crowbar is still in hand until 168.
+    // 152 jacket, 153 charm - the crowbar is still in hand until 168.
     seek(160);
     expect(worn().map((row) => row.split(':')[0])).toEqual(['torso', 'hands', 'accessory']);
     expect(worn()[1]).toContain('Enchanted Crowbar');
@@ -886,7 +894,7 @@ describe('EpisodePage', () => {
     expect(glance()).toBeInTheDocument();
     expect(document.body).toHaveClass('dialog-open');
 
-    // Second Escape: the record closes and nothing else does — the glance card
+    // Second Escape: the record closes and nothing else does - the glance card
     // and its panel survive, and focus returns to the trigger (FR-210).
     pressEscapeFrom(document.body);
     expect(screen.queryByTestId('crawler-record')).not.toBeInTheDocument();
@@ -912,7 +920,7 @@ describe('EpisodePage', () => {
     expect(art).toHaveAccessibleName(copy.artAlt('Harry'));
 
     // X.O. has no `art` in the data, so the same column carries the bust
-    // instead — the record never opens with a hole in it (R2 US2 scenario 1).
+    // instead - the record never opens with a hole in it (R2 US2 scenario 1).
     fireEvent.click(screen.getByTestId('record-close'));
     clickFrame('xo');
     openRecord();
@@ -1277,7 +1285,7 @@ describe('EpisodePage', () => {
 
   /* ------------------------------------------- v2 US2: the expanded floor map (T125) */
 
-  /** The minimap badge — the map panel's trigger (contracts/panels.md). */
+  /** The minimap badge - the map panel's trigger (contracts/panels.md). */
   function badge(): HTMLElement {
     return screen.getByTestId('minimap-badge');
   }
@@ -1314,7 +1322,7 @@ describe('EpisodePage', () => {
     expect(mapLabelText()).toEqual(['The Meat District']);
   });
 
-  it('lets a dossier replace the open map — one panel at a time', async () => {
+  it('lets a dossier replace the open map - one panel at a time', async () => {
     const { seek } = await mountEpisode();
     seek(100);
 
@@ -1510,7 +1518,7 @@ describe('EpisodePage', () => {
 
     // The rail swaps its contents; the stage column keeps the same nodes in the
     // same order, so nothing above or beside the video can reflow (FR-102).
-    // jsdom has no layout, so this is the structural half of the claim — the
+    // jsdom has no layout, so this is the structural half of the claim - the
     // geometric half is CSS-only and recorded in the quickstart Results.
     expect(rail).toHaveAttribute('data-panel', 'dossier');
     expect(screen.getByTestId('video-stage')).toBe(stage);
@@ -2008,7 +2016,7 @@ describe('EpisodePage', () => {
     seek(200);
     fireEvent.click(chip('hoarder'));
 
-    // 118 met, 122 update, 185 update, 195 defeated — newest first.
+    // 118 met, 122 update, 185 update, 195 defeated - newest first.
     const moments = screen.getAllByTestId('npc-moment');
     expect(moments).toHaveLength(4);
     expect(within(moments[0]).getByTestId('feed-time')).toHaveTextContent(formatTime(195));
@@ -2054,7 +2062,7 @@ describe('EpisodePage', () => {
     const pauseSpy = vi.spyOn(source, 'pause');
 
     // The strip stands by from t = 0, so the trigger is there before any entity
-    // has been tagged — and revision 2's link is not (R3 scenario 1).
+    // has been tagged - and revision 2's link is not (R3 scenario 1).
     expect(within(screen.getByTestId('encounter-rail')).queryByTestId('encounter-registry-link'))
       .toBeNull();
     const browse = browseButton();
@@ -2099,7 +2107,7 @@ describe('EpisodePage', () => {
     const here = within(entry('hoarder')).getAllByTestId('registry-appearance');
     expect(here[0]).toHaveAttribute('data-current', 'true');
     fireEvent.click(here[0]);
-    // 118: the Hoarder enters the broadcast — no navigation (R3 scenario 2).
+    // 118: the Hoarder enters the broadcast - no navigation (R3 scenario 2).
     expect(source.getTime()).toBe(118);
 
     // Widen the scope to reach episode 2's amendment, which stays a link.
@@ -2247,5 +2255,64 @@ describe('EpisodePage', () => {
     // The events still show, under their raw ids.
     expect(screen.getAllByText(copy.feedText.npcDefeated('hoarder')).length).toBeGreaterThan(0);
     expect(screen.queryByText(copy.feedText.npcDefeated('The Hoarder'))).not.toBeInTheDocument();
+  });
+});
+
+/* ------- 008 revision 2: quantities, tooltips and SPELLS on the page (R2) */
+
+describe('EpisodePage - the record explains itself (008 revision 2)', () => {
+  it('boxes a quantity on the hotbar and explains the key on click', async () => {
+    await mountEpisode();
+    clickFrame('psychic');
+    openRecord();
+
+    const slot = within(section('hotlist')).getAllByTestId('hotbar-slot')[0];
+    expect(slot).toHaveAttribute('data-name', 'Mana Draught');
+    expect(within(slot).getByTestId('hotbar-qty')).toHaveTextContent(copy.qty(5));
+
+    const trigger = within(slot).getByRole('button', {
+      name: copy.hotbarSlotQtyAria(1, 'Mana Draught', 5),
+    });
+    expect(screen.queryByTestId('tooltip')).not.toBeInTheDocument();
+    fireEvent.click(trigger);
+    expect(screen.getByTestId('tooltip')).toHaveTextContent(
+      'Restores your Mana in full when you spend an Action to drink one.',
+    );
+
+    // Escape closes the tooltip and leaves the record standing (R2 acceptance).
+    pressEscape();
+    expect(screen.queryByTestId('tooltip')).not.toBeInTheDocument();
+    expect(screen.getByTestId('crawler-record')).toBeInTheDocument();
+  });
+
+  it('files the crawler spells as tiles between skills and inventory', async () => {
+    await mountEpisode();
+    clickFrame('psychic');
+    openRecord();
+
+    const tile = within(section('spells')).getByTestId('tile');
+    expect(tile).toHaveAttribute('data-item', 'spell');
+    expect(tile).toHaveAttribute('data-name', 'Second Sight');
+    expect(tile).toHaveTextContent(copy.spellMeta(2, 3) as string);
+
+    fireEvent.click(
+      within(tile).getByRole('button', { name: copy.tooltipTrigger('Second Sight') }),
+    );
+    expect(screen.getByTestId('tooltip')).toHaveTextContent(
+      'Read the room one beat before it happens.',
+    );
+  });
+
+  it('leaves a crawler with no spells and plain hotlist marks exactly as before', async () => {
+    const { seek } = await mountEpisode();
+    seek(210);
+    clickFrame('harry');
+    openRecord();
+
+    expect(within(section('spells')).getByText(copy.dossierEmpty.spells)).toBeInTheDocument();
+    const slot = within(section('hotlist')).getAllByTestId('hotbar-slot')[0];
+    expect(slot).toHaveAttribute('aria-label', copy.hotbarSlotAria(1, 'Crowbar'));
+    expect(within(slot).queryByRole('button')).not.toBeInTheDocument();
+    expect(within(slot).queryByTestId('hotbar-qty')).not.toBeInTheDocument();
   });
 });

@@ -3,7 +3,7 @@
  *
  * Framework-free and storage-agnostic: the store takes any `Storage`, so tests
  * inject an in-memory (or throwing) stub. Constitution I limits what may live
- * here — the playhead and nothing derived from the event log.
+ * here - the playhead and nothing derived from the event log.
  *
  * Every call is wrapped in try/catch: a browser in private mode, a disabled
  * site-data setting or a full quota must never reach the viewer.

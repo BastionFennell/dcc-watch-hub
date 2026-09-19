@@ -6,7 +6,7 @@ import { FeedItemView } from '../EventFeed/FeedItem';
 import styles from './NpcRecord.module.css';
 
 export interface NpcRecordProps {
-  /** `npcRecord(state, events, registry, id, party, t)` — recomputed every render. */
+  /** `npcRecord(state, events, registry, id, party, t)` - recomputed every render. */
   record: NpcRecordView;
   /**
    * The episode being watched. The Registry link carries it as a scope, so the
@@ -20,7 +20,7 @@ export interface NpcRecordProps {
   onShare(t: number): void;
   /**
    * 007 R3: opens the Registry panel on this entity instead of leaving for the
-   * page (R3 scenario 3). When it is given, the link below becomes a button —
+   * page (R3 scenario 3). When it is given, the link below becomes a button -
    * the broadcast keeps playing and the panel's own footer carries the way out.
    */
   onOpenRegistry?(id: string): void;
@@ -44,7 +44,7 @@ function Separator() {
 /** The disc's stand-in when an entity has no portrait (spec Assumptions). */
 /**
  * The entity record (FR-611, research R4): the glance card's vocabulary applied
- * to an entity — a kind-tinted header, the spoiler-free intro, its status, the
+ * to an entity - a kind-tinted header, the spoiler-free intro, its status, the
  * facts the System has released at or before the playhead, and every moment
  * about it so far.
  *

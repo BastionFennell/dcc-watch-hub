@@ -8,3 +8,7 @@ coverage
 # Author reference material (copyrighted; not part of the site)
 /Carl Character Sheet*.pdf
 *.pdf
+
+# Author source material: filled character sheets and full-res renders live outside git; optimized copies ship under public/img
+/character-sheets/
+/character-portraits/

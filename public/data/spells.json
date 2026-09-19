@@ -1,0 +1,396 @@
+{
+  "spells": [
+    {
+      "id": "astral-paw",
+      "name": "Astral Paw",
+      "aliases": ["Astral Hand", "Astral Claw"],
+      "quote": "You have summoned an astral paw. Yes, just the paw. Budget constraints.",
+      "kind": "passive",
+      "manaCost": 12,
+      "range": "30 feet",
+      "duration": "Until the end of combat or 5 minutes",
+      "description": "You conjure a spectral hand, paw, or claw, looking much like your own. You can use this astral appendage to manipulate objects up to 30ft away by spending an Action. You can use the Astral Paw to make Skill Checks but suffer Disadvantage due to a lack of fine control.",
+      "upgrades": [
+        {
+          "rank": 5,
+          "text": "Your Pugilism and Slice Attacks with the Paw add 1 Astral Paw Rank damage die."
+        }
+      ],
+      "roll": [1, 6],
+      "page": 36
+    },
+    {
+      "id": "confusing-fog",
+      "name": "Confusing Fog",
+      "quote": "Visibility reduced. Decision-making questionable.",
+      "kind": "passive",
+      "manaCost": 6,
+      "range": "40 feet",
+      "duration": "Until the end of two full rounds of combat or 20 seconds",
+      "cooldown": "15 minutes",
+      "description": "You create a billowing cloud of fog that you, your party members, and friendly NPCs can see through, but it obscures the area from Mobs, making it more difficult for them to attack you. Mobs attack with Disadvantage (see Mob Advantage and Disadvantage in Rules for Survival, p. 14) against targets in the fog. This fog fills a 25 by 25ft area. Smart Mobs may attempt to move the combat out of the fog if able.",
+      "upgrades": [
+        {
+          "rank": 5,
+          "text": "The fog fills a 50 by 50ft area, and its duration is 1 minute."
+        }
+      ],
+      "roll": [7, 11],
+      "page": 36
+    },
+    {
+      "id": "dirt-clod",
+      "name": "Dirt Clod",
+      "quote": "You have weaponized dirt.",
+      "kind": "attack",
+      "damageType": "Bludgeoning",
+      "manaCost": 1,
+      "range": "100 feet",
+      "aiFavor": 2,
+      "description": "You hurl a magical clod of dirt, leaving dirt and pebbles strewn about near the target.",
+      "baseDamage": "1d2 + Int Bludgeoning",
+      "upgrades": [{ "rank": 5, "text": "+2d2 base damage" }],
+      "roll": [12, 15],
+      "page": 37
+    },
+    {
+      "id": "drain-life",
+      "name": "Drain Life",
+      "quote": "Organic tether deployed. Try not to think about where it’s been.",
+      "kind": "attack",
+      "damageType": "Necrotic",
+      "manaCost": 14,
+      "range": "30 feet",
+      "description": "For a brief instant, you create a disgusting blood vein that reaches out and wraps itself around your target.",
+      "baseDamage": "1d6 + Int Necrotic",
+      "upgrades": [
+        {
+          "rank": 5,
+          "text": "+1d6 base damage, and if the target loses at least 3 HB slots, you heal 1 HB slot."
+        }
+      ],
+      "roll": [16, 20],
+      "page": 37
+    },
+    {
+      "id": "fireball",
+      "name": "Fireball",
+      "quote": "It almost reluctantly meanders toward you. Then your world explodes.",
+      "kind": "attack",
+      "damageType": "Fire",
+      "areaOfEffect": true,
+      "manaCost": 45,
+      "range": "80 feet",
+      "cooldown": "Once per scene",
+      "description": "A creeping beach ball-sized sphere of fire emanates from you. Since it moves so slowly, your attack is made with Disadvantage. When the impact zone has been determined, each creature in a 10ft Blast radius takes full damage. On Fail, roll 1d8 for direction (see Figure 1, p. 35). The amount the Skill Check missed by is the distance away in feet it impacts.",
+      "baseDamage": "1d12 + Int Fire, 10ft Blast radius",
+      "upgrades": [
+        {
+          "rank": 5,
+          "text": "+1d12 base damage. Those who lose 1 or more HB slots via this attack gain the Burned Debuff."
+        }
+      ],
+      "roll": [21, 22],
+      "page": 37
+    },
+    {
+      "id": "fire-fingers",
+      "name": "Fire Fingers",
+      "quote": "Fire Fingers activated. Try not to make it weird.",
+      "kind": "attack",
+      "damageType": "Fire",
+      "manaCost": 3,
+      "range": "Melee",
+      "aiFavor": 1,
+      "description": "Brilliant flame leaps from your fingers.",
+      "baseDamage": "1d4 + Int Fire",
+      "upgrades": [{ "rank": 5, "text": "+1d4 base damage" }],
+      "roll": [23, 27],
+      "page": 38
+    },
+    {
+      "id": "frost-scar",
+      "name": "Frost Scar",
+      "quote": "Frigid status achieved; relationships may suffer.",
+      "kind": "attack",
+      "damageType": "Ice",
+      "manaCost": 2,
+      "range": "Melee",
+      "aiFavor": 1,
+      "description": "With a slice of your frigid hand, you leave a scar of rime on your target.",
+      "baseDamage": "1d4 + Int Ice",
+      "upgrades": [
+        {
+          "rank": 5,
+          "text": "+1d4 base damage, and the target cannot heal themselves in the next combat round."
+        }
+      ],
+      "roll": [28, 31],
+      "page": 38
+    },
+    {
+      "id": "heal",
+      "name": "Heal",
+      "quote": "Congratulations on not dying… yet.",
+      "kind": "passive",
+      "interrupt": true,
+      "manaCost": 2,
+      "range": "Self only",
+      "limitations": "Rank 1 maximum",
+      "description": "Heal 2 HB slots.",
+      "upgrades": [],
+      "roll": [32, 32],
+      "page": 38
+    },
+    {
+      "id": "heal-others",
+      "name": "Heal Others",
+      "quote": "Tell me you’re a Cleric without...",
+      "kind": "passive",
+      "interrupt": true,
+      "manaCost": 6,
+      "range": "30 feet",
+      "limitations": "You can’t cast this Spell on yourself.",
+      "description": "A wave of positive vibes engulfs the target. They heal 1d4 HB slots.",
+      "upgrades": [{ "rank": 5, "text": "The target heals 1d6 HB slots." }],
+      "roll": [33, 38],
+      "page": 38
+    },
+    {
+      "id": "hole",
+      "name": "Hole",
+      "quote": "It’s a hole. This will absolutely be misused.",
+      "kind": "passive",
+      "manaCost": 12,
+      "range": "10 feet",
+      "duration": "Until the end of the combat or 5 minutes.",
+      "limitations": "Can’t be used on saferoom doors or living things.",
+      "description": "You create a temporary cylindrical hole in a surface or material within range, to a depth of 1 inch per Spell Rank and a diameter of 2ft. Anything that can fit in the hole can pass through it if the hole is deep enough to penetrate to the other side of the surface.",
+      "upgrades": [
+        {
+          "rank": 5,
+          "text": "You can reduce the diameter of the hole to a smaller size when cast."
+        }
+      ],
+      "roll": [39, 44],
+      "page": 38
+    },
+    {
+      "id": "ice-blast",
+      "name": "Ice Blast",
+      "quote": "Hope they brought a jacket.",
+      "kind": "attack",
+      "damageType": "Ice",
+      "manaCost": 9,
+      "range": "40 feet",
+      "description": "With the howl of blizzard winds, you let loose a compact pocket of freezing cold and ice.",
+      "baseDamage": "1d8 + Int Ice",
+      "upgrades": [{ "rank": 5, "text": "+1d8 base damage" }],
+      "roll": [45, 48],
+      "page": 38
+    },
+    {
+      "id": "lightning-bolt",
+      "name": "Lightning Bolt",
+      "quote": "Bolt released, viewership spike detected.",
+      "kind": "attack",
+      "damageType": "Electric",
+      "manaCost": 15,
+      "range": "100 feet",
+      "description": "With a thunderous clap, you let loose a bolt of lightning.",
+      "baseDamage": "1d10 + Int Electric",
+      "upgrades": [{ "rank": 5, "text": "+1d10 base damage" }],
+      "roll": [49, 52],
+      "page": 38
+    },
+    {
+      "id": "magic-missile",
+      "name": "Magic Missile",
+      "quote": "Standard Spell detected. Viewers appreciate the nostalgia.",
+      "kind": "attack",
+      "damageType": "Force",
+      "manaCost": 5,
+      "range": "Within your line of sight",
+      "aiFavor": 1,
+      "description": "From glowing eyes, fingers, or whatever, a streak of pure force shoots out.",
+      "baseDamage": "1d4 + Int Force",
+      "upgrades": [
+        {
+          "rank": 5,
+          "text": "+1d4 base damage, and you can cast the Spell at a higher or lower Mana cost. 3 Mana: -4 damage. 4 Mana: -2 damage. 6 Mana: Add 1 Rank damage die."
+        }
+      ],
+      "roll": [53, 56],
+      "page": 38
+    },
+    {
+      "id": "protective-shell",
+      "name": "Protective Shell",
+      "quote": "Hope activated. Try not to waste it.",
+      "kind": "passive",
+      "interrupt": true,
+      "manaCost": 0,
+      "range": "Self",
+      "duration": "5 seconds (only long enough to push foes away, and protect against a single physical attack)",
+      "cooldown": "30 hours",
+      "limitations": "Spell must be imbued onto something you are wearing. The shell cannot be moved by any means.",
+      "description": "You create a 10 + Int-foot radius magic shell around yourself and nearby party members. This shell pushes away all Mobs in its Area, which is the shell’s radius + 5ft. Mobs cannot enter the shell (unless non-corporeal) or physically attack those inside. The shell does not protect against magic effects. Crawlers inside may attack as usual.",
+      "upgrades": [
+        {
+          "rank": 5,
+          "text": "Duration is 10 seconds. In addition to knocking enemies away, it protects the occupants from all non-Spell attacks originating from outside the shell until the end of the current combat round."
+        }
+      ],
+      "roll": [57, 57],
+      "page": 39
+    },
+    {
+      "id": "puddle-jumper",
+      "name": "Puddle Jumper",
+      "quote": "Teleportation doesn’t suck.",
+      "kind": "passive",
+      "manaCost": 20,
+      "range": "Line-of-sight to the destination surface.",
+      "limitations": "There is a 10-second delay before the effect takes place.",
+      "cooldown": "5 hours",
+      "description": "You and up to 3 party members of your choice teleport to another location. Everyone feels a tingling sensation while waiting for the effect to resolve.",
+      "upgrades": [
+        {
+          "rank": 5,
+          "text": "The delay is 2 seconds, and the destination doesn’t have to be a surface."
+        }
+      ],
+      "roll": [58, 63],
+      "page": 39
+    },
+    {
+      "id": "second-chance",
+      "name": "Second Chance",
+      "quote": "Everyone deserves one. Except for Phil. Never Phil.",
+      "kind": "passive",
+      "manaCost": 10,
+      "range": "10 feet",
+      "duration": "1 minute",
+      "description": "You raise a Mob with a level lower than your own from the dead. The Mob temporarily becomes your Undead Minion with half of its original HB slots. You spend one Action to command it, then it acts independently with 1 Move Action and 1 other Action (usually an attack) until given new instructions.",
+      "upgrades": [
+        {
+          "rank": 5,
+          "text": "The Mob can be up to 5 levels higher than you, and the duration is 5 minutes."
+        }
+      ],
+      "roll": [64, 66],
+      "page": 40
+    },
+    {
+      "id": "shield",
+      "name": "Shield",
+      "quote": "Enjoy the illusion of safety.",
+      "kind": "passive",
+      "interrupt": true,
+      "manaCost": 8,
+      "range": "Self",
+      "duration": "5 minutes",
+      "description": "You are surrounded by a translucent force field that moves with you and reduces non-magic damage you take. The shield has 2 HB slots, each with your Con Mod. When you take damage, reduce these HB slots first. The Spell ends early if the shield loses all its HB slots. You can’t heal a shield.",
+      "upgrades": [{ "rank": 5, "text": "The Shield has 5 HB slots." }],
+      "roll": [67, 72],
+      "page": 40
+    },
+    {
+      "id": "shock-treatment",
+      "name": "Shock Treatment",
+      "quote": "Electrical therapy initiated; consent not required.",
+      "kind": "attack",
+      "damageType": "Electric",
+      "manaCost": 2,
+      "range": "30 feet",
+      "aiFavor": 2,
+      "description": "Like a deranged emperor, bolts of electricity shoot out from your fingers.",
+      "baseDamage": "1d2 + Int Electric",
+      "upgrades": [
+        {
+          "rank": 5,
+          "text": "+1d2 base damage, and you may choose to afflict the target with the Stunned Debuff instead of dealing damage."
+        }
+      ],
+      "roll": [73, 76],
+      "page": 40
+    },
+    {
+      "id": "soul-collector",
+      "name": "Soul Collector",
+      "quote": "This soul appears… reusable.",
+      "kind": "attack",
+      "damageType": "Necrotic",
+      "manaCost": 4,
+      "range": "50 feet",
+      "aiFavor": 1,
+      "description": "With a twist of the hand, you siphon the spirit from your target.",
+      "baseDamage": "1d4 + Int Necrotic",
+      "upgrades": [
+        {
+          "rank": 5,
+          "text": "+1d4 base damage, and if this Spell deals the killing blow to a foe of at least half your level, it deals +1 bonus damage until you complete a long rest. This damage bonus is cumulative up to the Spell’s Rank."
+        }
+      ],
+      "roll": [77, 80],
+      "page": 40
+    },
+    {
+      "id": "thunderlash",
+      "name": "Thunderlash",
+      "quote": "Loud noises and bad decisions go hand-in-hand.",
+      "kind": "attack",
+      "damageType": "Sonic",
+      "manaCost": 12,
+      "range": "50 feet",
+      "description": "You unleash a whip-like emanation of pure sound which thunders through the air.",
+      "baseDamage": "1d10 + Int Sonic",
+      "upgrades": [{ "rank": 5, "text": "+1d10 base damage" }],
+      "roll": [81, 84],
+      "page": 40
+    },
+    {
+      "id": "torch",
+      "name": "Torch",
+      "quote": "Congratulations. You can now see what’s trying to kill you.",
+      "kind": "passive",
+      "manaCost": 1,
+      "range": "Self",
+      "duration": "Until you enter a saferoom or descend to a new floor.",
+      "description": "You create a magical orb of light that follows slightly above and behind you. It provides bright light for a 20ft radius and dim light for a 20ft radius past that.",
+      "upgrades": [
+        { "rank": 5, "text": "You can move the orb up to 20 feet away from you." }
+      ],
+      "roll": [85, 92],
+      "page": 40
+    },
+    {
+      "id": "unnecessary-force",
+      "name": "Unnecessary Force",
+      "quote": "Excessive force authorized. Paperwork waived.",
+      "kind": "attack",
+      "damageType": "Force",
+      "manaCost": 13,
+      "range": "40 feet",
+      "description": "A shockwave akin to that of an A-bomb crashes over your target.",
+      "baseDamage": "1d12 + Int Force",
+      "upgrades": [{ "rank": 5, "text": "+1d12 base damage" }],
+      "roll": [93, 96],
+      "page": 41
+    },
+    {
+      "id": "wisp-armor",
+      "name": "Wisp Armor",
+      "quote": "Empty minds are surprisingly easy to protect.",
+      "kind": "passive",
+      "manaCost": 5,
+      "range": "Self",
+      "duration": "5 minutes",
+      "cooldown": "5 minutes",
+      "description": "You conjure a protective barrier that reduces all magic damage (typically Spells) down to its Rank 1 base damage (1d + Stat Mod) without any Upgrades or other bonuses. This Spell also makes you immune to mind control.",
+      "upgrades": [{ "rank": 5, "text": "The duration is 10 minutes." }],
+      "roll": [97, 100],
+      "page": 41
+    }
+  ]
+}

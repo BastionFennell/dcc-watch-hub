@@ -5,7 +5,7 @@
  * read, and building it costs every published episode file. Doing that on the
  * episode page the moment it mounts would spend the viewer's bandwidth on a
  * glossary they may never open, so nothing happens until someone calls
- * `load()` — the page on mount, the panel when it first opens. After that the
+ * `load()` - the page on mount, the panel when it first opens. After that the
  * result is cached for the visit: a second `load()` is a no-op, and switching
  * between the page and the panel re-uses the same fetches.
  *
@@ -60,7 +60,7 @@ export function RegistryIndexProvider({ children }: { children: ReactNode }) {
 
   /*
    * Every published episode at once. A rejected fetch lands as `null` rather
-   * than taking the index down with it — `registryIndex` files that episode
+   * than taking the index down with it - `registryIndex` files that episode
    * under `missingEpisodes` and indexes the rest (US2 scenario 6).
    *
    * Deliberately without a cleanup flag: under StrictMode the effect runs,

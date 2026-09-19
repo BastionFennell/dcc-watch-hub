@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * The panel state machine (contracts/panels.md, T113). Everything here is
- * viewer state — no episode data is involved, so the hook can be driven bare.
+ * viewer state - no episode data is involved, so the hook can be driven bare.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';

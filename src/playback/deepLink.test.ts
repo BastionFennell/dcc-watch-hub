@@ -1,5 +1,5 @@
 /**
- * T401 — `?t=` parsing (research R6: a table, so every rejected shape is named).
+ * T401 - `?t=` parsing (research R6: a table, so every rejected shape is named).
  * Framework-free: no DOM beyond `URLSearchParams`, which node has.
  */
 import { describe, expect, it } from 'vitest';

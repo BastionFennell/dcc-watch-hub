@@ -35,7 +35,7 @@ export interface RegistryEntryProps {
  * everything the published archive has released about it (FR-620).
  *
  * The disclosure is a plain button + region rather than `<details>` because the
- * page owns which entries are open — the hash seeds one, and the button has to
+ * page owns which entries are open - the hash seeds one, and the button has to
  * agree with that state (research R5). Nothing here is playhead-aware: the
  * registry lists what the show published, not what this device has watched.
  */

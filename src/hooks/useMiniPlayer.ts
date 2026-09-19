@@ -35,7 +35,7 @@ function prefersReducedMotion(): boolean {
  * The phone mini-player's one bit of state (FR-500, research R1).
  *
  * An `IntersectionObserver` watches a sentinel at the top of the stage's slot,
- * inset by the header's height, and reports "scrolled past" — not merely "out of
+ * inset by the header's height, and reports "scrolled past" - not merely "out of
  * view", which is also true before the viewer has reached the stage at all.
  * Hence the `boundingClientRect.top` check: only a sentinel that has gone *up*
  * past the header docks the player.

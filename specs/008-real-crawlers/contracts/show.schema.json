@@ -1,0 +1,133 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://dcc-watch-hub/contracts/show.v3.schema.json",
+  "title": "Show (008 revision 4: the spell registry)",
+  "type": "object",
+  "required": [
+    "title",
+    "seasons",
+    "episodes",
+    "links"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "seasons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "season",
+          "floors"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "season": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "floors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "floor",
+                "label",
+                "episodes"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "floor": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "episodes": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "episodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "youtubeId",
+          "floor",
+          "durationSec",
+          "dataUrl"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "youtubeId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{11}$"
+          },
+          "floor": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "durationSec": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "dataUrl": {
+            "type": "string",
+            "pattern": "^/.+\\.json$"
+          }
+        }
+      }
+    },
+    "links": {
+      "type": "object",
+      "required": [
+        "youtube",
+        "discord"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "youtube": {
+          "type": "string",
+          "format": "uri"
+        },
+        "discord": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "registryUrl": {
+      "type": "string",
+      "pattern": "^/.+[.]json$"
+    },
+    "spellsUrl": {
+      "comment": "008 revision 4: the shared spell registry, loaded exactly like registryUrl.",
+      "type": "string",
+      "pattern": "^/.+[.]json$"
+    }
+  }
+}

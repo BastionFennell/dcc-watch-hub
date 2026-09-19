@@ -2,7 +2,7 @@
 /**
  * The party rail's two layouts (006 T605). The row layout is the desktop rail
  * and its phone strip; the grid is the phone Party pane. Only the attribute can
- * be asserted here — jsdom applies no CSS module, so the two-column track list
+ * be asserted here - jsdom applies no CSS module, so the two-column track list
  * and the odd-last-frame span live in `PartyRail.module.css` and are checked at
  * phone widths in T611.
  */

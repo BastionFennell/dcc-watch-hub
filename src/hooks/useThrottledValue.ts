@@ -6,8 +6,8 @@ import { useEffect, useRef, useState } from 'react';
  * The broadcast log's count sits in a polite live region, and while the
  * broadcast plays it changes every time an event elapses. Without a floor a
  * screen reader would read a queue of counts nobody asked for (005 FR-406,
- * research R5). The first change after mount lands immediately — it is the
- * follow-up storm that needs spacing — and the last value in any window always
+ * research R5). The first change after mount lands immediately - it is the
+ * follow-up storm that needs spacing - and the last value in any window always
  * wins, so the text is never left stale.
  *
  * This throttles a *viewer notice*, never overlay state: the value handed in is

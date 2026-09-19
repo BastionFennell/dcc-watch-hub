@@ -7,7 +7,7 @@ import styles from './EpisodeLog.module.css';
 export interface LogFiltersProps {
   /**
    * Elapsed counts over the *unfiltered* log, so a chip says what it would
-   * find — and so a kind with nothing elapsed has no chip at all.
+   * find - and so a kind with nothing elapsed has no chip at all.
    */
   counts: LogCounts;
   party: readonly { id: string; name: string }[];
@@ -49,7 +49,7 @@ function Chip({ testId, label, count, pressed, onToggle }: ChipProps) {
 
 /**
  * The log's two chip groups: the event types and the crawlers the log actually
- * holds (005 FR-402). A kind with nothing elapsed has no chip — the chips are a
+ * holds (005 FR-402). A kind with nothing elapsed has no chip - the chips are a
  * reading of the log so far, not a catalogue of what an episode might contain,
  * and they arrive as the broadcast produces them. Selection combines as
  * type-any AND crawler-any, which is `applyLogFilters`' job; this component

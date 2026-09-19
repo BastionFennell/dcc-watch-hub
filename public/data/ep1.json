@@ -3,203 +3,442 @@
   "initialState": {
     "party": [
       {
-        "id": "stuntman",
-        "name": "The Stuntman",
-        "handle": "Dungeon Crawler Danny",
-        "player": "Danny",
-        "level": 1,
-        "hp": {
-          "current": 22,
-          "max": 22
-        },
-        "portrait": "/img/crawlers/stuntman.svg",
-        "class": null,
-        "inventory": [
-          "Utility Harness"
-        ],
-        "rank": null,
-        "race": "Human",
-        "pronouns": "he/him",
-        "crawlerNumber": "4,102,116",
-        "stats": {
-          "str": 7,
-          "int": 4,
-          "con": 7,
-          "dex": 6,
-          "cha": 5
-        },
-        "hotlist": [
-          "The Doorway"
-        ],
-        "skills": [
-          {
-            "name": "Reckless Tumble",
-            "rank": 1
-          }
-        ],
-        "gear": {
-          "head": "Scuffed Helmet",
-          "torso": "Padded Stunt Vest",
-          "feet": "Grip Boots"
-        }
-      },
-      {
-        "id": "psychic",
-        "name": "The Psychic",
-        "handle": "Static Bloom",
-        "player": "Rae",
-        "level": 1,
-        "hp": {
-          "current": 18,
-          "max": 18
-        },
-        "portrait": "/img/crawlers/psychic.svg",
-        "class": null,
-        "inventory": [
-          "Cracked Visor"
-        ],
-        "rank": null,
-        "race": "Human",
-        "pronouns": "she/her",
-        "crawlerNumber": "9,338,470",
-        "stats": {
-          "str": 3,
-          "int": 8,
-          "con": 4,
-          "dex": 5,
-          "cha": 7
-        },
-        "hotlist": [],
-        "skills": [
-          {
-            "name": "Static Read",
-            "rank": 1
-          }
-        ],
-        "gear": {
-          "head": "Cracked Visor",
-          "torso": "Static Shawl"
-        }
-      },
-      {
         "id": "harry",
-        "name": "Harry",
-        "handle": "Harold the Unhoused",
-        "player": "Marcus",
-        "level": 1,
-        "hp": {
-          "current": 22,
-          "max": 22
-        },
-        "portrait": "/img/crawlers/harry.svg",
-        "class": null,
-        "inventory": [
-          "Bent Pry Bar"
-        ],
-        "rank": null,
-        "race": "Human",
-        "pronouns": "he/him",
-        "crawlerNumber": "10,491,201",
-        "stats": {
-          "str": 5,
-          "int": 6,
-          "con": 6,
-          "dex": 7,
-          "cha": 4
-        },
-        "hotlist": [],
-        "skills": [
-          {
-            "name": "Powerful Strike",
-            "rank": 1
-          }
-        ],
-        "gear": {
-          "hands": "Bent Pry Bar",
-          "legs": "Work Trousers"
-        },
-        "art": "/img/crawlers/harry-art.svg"
-      },
-      {
-        "id": "xo",
-        "name": "X.O.",
-        "handle": "Executive Officer",
-        "player": "Jules",
+        "name": "Harold \"Harry\" Wallace",
+        "handle": "Harry",
+        "player": "Bobby",
         "level": 1,
         "hp": {
           "current": 20,
           "max": 20
         },
-        "portrait": "/img/crawlers/xo.svg",
+        "portrait": "/img/crawlers/harry.svg",
         "class": null,
         "inventory": [
-          "Signal Flare"
+          "Netbook w satchel case",
+          "Handheld retro emulator",
+          "Bag of weed/vape",
+          "Dumpy clothes"
         ],
         "rank": null,
-        "race": "Crocodilian",
-        "pronouns": "they/them",
-        "crawlerNumber": "2,776,845",
+        "race": "Human-ish",
+        "pronouns": "he/them",
+        "crawlerNumber": "1651655",
         "stats": {
-          "str": 6,
-          "int": 5,
-          "con": 8,
-          "dex": 4,
-          "cha": 3
-        },
-        "hotlist": [
-          "The Quartermaster"
-        ],
-        "skills": [
-          {
-            "name": "Signal Discipline",
-            "rank": 1
-          }
-        ],
-        "gear": {
-          "arms": "Signal Bracers",
-          "accessories": [
-            "Quartermaster Tag"
-          ]
-        }
-      },
-      {
-        "id": "actress",
-        "name": "The Actress",
-        "handle": "Second Billing",
-        "player": "Nia",
-        "level": 1,
-        "hp": {
-          "current": 19,
-          "max": 19
-        },
-        "portrait": "/img/crawlers/actress.svg",
-        "class": null,
-        "inventory": [
-          "Stage Blood (x3)"
-        ],
-        "rank": null,
-        "race": "Human",
-        "pronouns": "she/her",
-        "crawlerNumber": "6,204,998",
-        "stats": {
-          "str": 4,
+          "str": 3,
           "int": 6,
           "con": 5,
-          "dex": 8,
-          "cha": 9
+          "dex": 2,
+          "cha": 4
         },
         "hotlist": [],
         "skills": [
           {
-            "name": "Stage Presence",
+            "name": "Streetwise",
+            "rank": 1
+          },
+          {
+            "name": "Stealth",
+            "rank": 1
+          },
+          {
+            "name": "Investigation",
+            "rank": 1
+          },
+          {
+            "name": "Fabricate",
+            "rank": 1
+          },
+          {
+            "name": "Deception",
+            "rank": 3
+          },
+          {
+            "name": "Performance (writing)",
+            "rank": 3
+          },
+          {
+            "name": "Determine Value",
+            "rank": 2
+          },
+          {
+            "name": "Perception",
+            "rank": 2
+          },
+          {
+            "name": "Soul Collector (Fabricate Ending)",
+            "rank": 3
+          },
+          {
+            "name": "Unarmed",
+            "rank": 3
+          }
+        ],
+        "gear": {}
+      },
+      {
+        "id": "mimi",
+        "name": "Mimi Rivers",
+        "handle": "Crawler Mimi",
+        "player": "Lulu",
+        "level": 1,
+        "hp": {
+          "current": 20,
+          "max": 20
+        },
+        "portrait": "/img/crawlers/mimi.png",
+        "class": null,
+        "inventory": [],
+        "rank": null,
+        "pronouns": "she/her",
+        "stats": {
+          "str": 2,
+          "int": 5,
+          "con": 4,
+          "dex": 3,
+          "cha": 6
+        },
+        "hotlist": [
+          {
+            "ref": "heal"
+          },
+          {
+            "name": "Standard Mana Potion",
+            "qty": 5,
+            "desc": "5 Standard Mana Potions, which fully restore your Mana when you spend an Action to drink one."
+          },
+          {
+            "ref": "frost-scar"
+          }
+        ],
+        "skills": [
+          {
+            "name": "Performance (Gymnast)",
+            "rank": 1
+          },
+          {
+            "name": "Endurance (Gymnast)",
+            "rank": 1
+          },
+          {
+            "name": "Persuasion (Popular)",
+            "rank": 1
+          },
+          {
+            "name": "Perception (Popular)",
+            "rank": 1
+          },
+          {
+            "name": "Deception (Entertainer)",
+            "rank": 3
+          },
+          {
+            "name": "Good First Impression (Entertainer)",
+            "rank": 3
+          },
+          {
+            "name": "Negotiation (Travel)",
+            "rank": 2
+          },
+          {
+            "name": "Streetwise (Travel)",
+            "rank": 2
+          },
+          {
+            "name": "Unarmed Combat",
+            "rank": 3
+          },
+          {
+            "name": "Heal",
             "rank": 1
           }
         ],
-        "gear": {
-          "torso": "Stage Corset",
-          "feet": "Character Shoes"
+        "spells": [
+          {
+            "ref": "heal",
+            "rank": 1
+          },
+          {
+            "ref": "frost-scar",
+            "rank": 3
+          }
+        ],
+        "gear": {},
+        "art": "/img/crawlers/mimi-art.png"
+      },
+      {
+        "id": "ronald",
+        "name": "Ronald Hudson",
+        "handle": "Madio",
+        "player": "Madio",
+        "level": 1,
+        "hp": {
+          "current": 20,
+          "max": 20
         },
-        "art": "/img/crawlers/actress-art.svg"
+        "portrait": "/img/crawlers/ronald.png",
+        "class": null,
+        "inventory": [
+          "\"Lucky Charm\" - a small ceramic lady bug",
+          "Paracord Bracelet"
+        ],
+        "rank": null,
+        "race": "Human",
+        "pronouns": "He/Him",
+        "stats": {
+          "str": 5,
+          "int": 3,
+          "con": 4,
+          "dex": 6,
+          "cha": 2
+        },
+        "hotlist": [
+          {
+            "ref": "heal"
+          }
+        ],
+        "skills": [
+          {
+            "name": "Escape Artist",
+            "rank": 1
+          },
+          {
+            "name": "Endurance",
+            "rank": 1
+          },
+          {
+            "name": "Repair",
+            "rank": 1
+          },
+          {
+            "name": "Fabricate",
+            "rank": 1
+          },
+          {
+            "name": "Performance",
+            "rank": 1
+          },
+          {
+            "name": "Deception",
+            "rank": 1
+          },
+          {
+            "name": "Negotiation",
+            "rank": 1
+          },
+          {
+            "name": "Streetwise",
+            "rank": 1
+          },
+          {
+            "name": "Unarmed Combat",
+            "rank": 3
+          }
+        ],
+        "gear": {},
+        "art": "/img/crawlers/ronald-art.png",
+        "spells": [
+          {
+            "ref": "heal",
+            "rank": 1
+          }
+        ]
+      },
+      {
+        "id": "xo",
+        "name": "Xavier \"X.O.\" Ortiz",
+        "handle": "XO",
+        "player": "Danny",
+        "level": 1,
+        "hp": {
+          "current": 30,
+          "max": 30
+        },
+        "portrait": "/img/crawlers/xo.svg",
+        "class": null,
+        "inventory": [],
+        "rank": null,
+        "race": "Human",
+        "pronouns": "He/Them",
+        "crawlerNumber": "5,211,046",
+        "stats": {
+          "str": 4,
+          "int": 5,
+          "con": 6,
+          "dex": 3,
+          "cha": 2
+        },
+        "hotlist": [],
+        "skills": [
+          {
+            "name": "Investigation",
+            "rank": 1
+          },
+          {
+            "name": "Negotiation",
+            "rank": 1
+          },
+          {
+            "name": "Good First Impression",
+            "rank": 1
+          },
+          {
+            "name": "Perception",
+            "rank": 1
+          },
+          {
+            "name": "Survival",
+            "rank": 3
+          },
+          {
+            "name": "Tactics",
+            "rank": 3
+          },
+          {
+            "name": "Endurance",
+            "rank": 2
+          },
+          {
+            "name": "Climbing",
+            "rank": 2
+          },
+          {
+            "name": "Unarmed Combat",
+            "rank": 3
+          }
+        ],
+        "gear": {
+          "accessories": [
+            "Wide-brimmed hat",
+            "Water-resistant jacket",
+            "Breathable shirt",
+            "Cargo pants",
+            "Steel-toed shoes",
+            "Fanny pack",
+            "Heavy Maglite Flashlight",
+            "Walkie-Talkie w/ surveillance headset & extra battery",
+            "Gold Folder (scheduling sheets, call sheet, script)",
+            "Director's Viewfinder & Light Meter",
+            "Rolls of Gaffer Tape & Glo-Tape",
+            "iPhone ProMax w/ charger & 3 power banks"
+          ]
+        }
+      },
+      {
+        "id": "veil",
+        "name": "Veil Ravencrest",
+        "handle": "Veil",
+        "player": "Sarah",
+        "level": 1,
+        "hp": {
+          "current": 20,
+          "max": 20
+        },
+        "portrait": "/img/crawlers/veil.svg",
+        "class": null,
+        "inventory": [
+          {
+            "name": "Witchy Traveling Kit",
+            "desc": "(small assortment of spell candles, crystals, herbs"
+          },
+          {
+            "name": "Tarot Card Set w/ Embroidered Bag",
+            "desc": "Well used and cared for, from Grandma"
+          },
+          {
+            "name": "EVP Recorder",
+            "desc": "(electronic voice phenomena)"
+          },
+          "Mini Flashlight",
+          {
+            "name": "Smartphone w/ USB Charger",
+            "desc": "No AC brick/adapter"
+          },
+          "Pocket Knife",
+          {
+            "name": "Matchbook",
+            "desc": "17 sticks remaining"
+          },
+          {
+            "name": "Standard Mana Potion",
+            "qty": 5,
+            "desc": "5 Standard Mana Potions, which fully restore your Mana when you spend an Action to drink one."
+          }
+        ],
+        "rank": null,
+        "race": "Human",
+        "pronouns": "she/they",
+        "crawlerNumber": "13666",
+        "stats": {
+          "str": 2,
+          "int": 6,
+          "con": 3,
+          "dex": 4,
+          "cha": 5
+        },
+        "hotlist": [
+          {
+            "ref": "heal"
+          },
+          {
+            "ref": "soul-collector"
+          },
+          {
+            "name": "Standard Mana Potion",
+            "qty": 5,
+            "desc": "5 Standard Mana Potions, which fully restore your Mana when you spend an Action to drink one."
+          }
+        ],
+        "skills": [
+          {
+            "name": "Good First Impression",
+            "rank": 1
+          },
+          {
+            "name": "Detect Lies",
+            "rank": 1
+          },
+          {
+            "name": "Streetwise",
+            "rank": 1
+          },
+          {
+            "name": "Lockpick",
+            "rank": 1
+          },
+          {
+            "name": "Investigation",
+            "rank": 3
+          },
+          {
+            "name": "Engineering",
+            "rank": 3,
+            "desc": "Ghost Hunting Tech/Equipment (AV Engineering/Photography and Development)"
+          },
+          {
+            "name": "Fabricate",
+            "rank": 2
+          },
+          {
+            "name": "Aiming",
+            "rank": 2
+          },
+          {
+            "name": "Unarmed Combat",
+            "rank": 1
+          }
+        ],
+        "spells": [
+          {
+            "ref": "heal",
+            "rank": 1
+          },
+          {
+            "ref": "soul-collector",
+            "rank": 1
+          }
+        ],
+        "gear": {}
       }
     ],
     "map": {
@@ -220,13 +459,13 @@
     {
       "t": 36,
       "type": "chapter",
-      "label": "Cold Open — The Doorway",
+      "label": "Cold Open - The Doorway",
       "kind": "story"
     },
     {
       "t": 56,
       "type": "note",
-      "text": "Danny maintains the door was not load-bearing. The ceiling disagreed."
+      "text": "Madio maintains the door was not load-bearing. The ceiling disagreed."
     },
     {
       "t": 72,
@@ -245,7 +484,7 @@
     {
       "t": 90,
       "type": "inventory",
-      "actor": "stuntman",
+      "actor": "ronald",
       "add": [
         "Duct Tape"
       ],
@@ -256,7 +495,14 @@
       "type": "hp",
       "actor": "harry",
       "current": 12,
-      "max": 22
+      "max": 20
+    },
+    {
+      "t": 112,
+      "type": "achievement",
+      "actor": "veil",
+      "title": "Cold Spot Confirmed",
+      "desc": "The recorder heard it first."
     },
     {
       "t": 118,
@@ -295,7 +541,7 @@
     {
       "t": 138,
       "type": "status",
-      "actor": "psychic",
+      "actor": "mimi",
       "add": [
         "Poisoned"
       ],
@@ -318,7 +564,7 @@
     {
       "t": 156,
       "type": "achievement",
-      "actor": "stuntman",
+      "actor": "ronald",
       "title": "Unpaid Stunt Double",
       "desc": "Broke the fall. And the arm."
     },
@@ -350,10 +596,26 @@
       "level": 2
     },
     {
+      "t": 191,
+      "type": "spell",
+      "actor": "mimi",
+      "ref": "heal",
+      "rank": 1,
+      "mana": 2
+    },
+    {
       "t": 195,
       "type": "sponsor",
       "text": "This doorway brought to you by Grull Industries. We make the hole.",
       "durationSec": 20
+    },
+    {
+      "t": 198,
+      "type": "spell",
+      "actor": "veil",
+      "ref": "soul-collector",
+      "rank": 1,
+      "mana": 4
     },
     {
       "t": 200,
@@ -435,9 +697,16 @@
     {
       "t": 276,
       "type": "loot",
-      "actor": "actress",
+      "actor": "mimi",
       "item": "Understudy's Dagger",
       "source": "Silver Adventurer Box"
+    },
+    {
+      "t": 282,
+      "type": "loot",
+      "actor": "veil",
+      "item": "Bone-handled Athame",
+      "source": "Bronze Adventurer Box"
     },
     {
       "t": 290,
@@ -453,7 +722,7 @@
       "type": "hp",
       "actor": "harry",
       "current": 4,
-      "max": 22
+      "max": 20
     },
     {
       "t": 300,
@@ -465,14 +734,21 @@
     {
       "t": 305,
       "type": "equip",
-      "actor": "stuntman",
+      "actor": "ronald",
       "slot": "legs",
       "item": "Reinforced Chaps"
     },
     {
+      "t": 312,
+      "type": "hp",
+      "actor": "veil",
+      "current": 11,
+      "max": 20
+    },
+    {
       "t": 317,
       "type": "rank",
-      "actor": "stuntman",
+      "actor": "ronald",
       "rank": 7480
     },
     {
@@ -486,7 +762,7 @@
     {
       "t": 335,
       "type": "status",
-      "actor": "psychic",
+      "actor": "mimi",
       "add": [],
       "remove": [
         "Poisoned"
@@ -524,7 +800,14 @@
       "type": "hp",
       "actor": "harry",
       "current": 18,
-      "max": 22
+      "max": 20
+    },
+    {
+      "t": 402,
+      "type": "hp",
+      "actor": "veil",
+      "current": 20,
+      "max": 20
     },
     {
       "t": 410,
@@ -595,6 +878,14 @@
       "rank": 4188
     },
     {
+      "t": 495,
+      "type": "spell",
+      "actor": "mimi",
+      "ref": "heal",
+      "rank": 2,
+      "mana": 2
+    },
+    {
       "t": 505,
       "type": "skill",
       "actor": "xo",
@@ -624,7 +915,7 @@
     {
       "t": 538,
       "type": "achievement",
-      "actor": "actress",
+      "actor": "mimi",
       "title": "Scene Stealer",
       "desc": "Held the room for a full minute."
     },

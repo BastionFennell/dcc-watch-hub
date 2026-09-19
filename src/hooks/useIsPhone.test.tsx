@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * T601 — `useIsPhone` (contracts/mobile.md "Hooks"): the phone breakpoint, and
+ * T601 - `useIsPhone` (contracts/mobile.md "Hooks"): the phone breakpoint, and
  * the guard that keeps every existing (matchMedia-less) test on the desktop
  * tree (FR-505).
  */

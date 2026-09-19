@@ -13,7 +13,7 @@ import styles from './RailPanel.module.css';
 export type RailPanelPresentation = 'rail' | 'sheet';
 
 export interface RailPanelProps {
-  /** Always the rail slot's one id — triggers point `aria-controls` at it. */
+  /** Always the rail slot's one id - triggers point `aria-controls` at it. */
   id?: string;
   title: string;
   /** Mono caps line above the title ("CRAWLER DOSSIER"). */
@@ -35,7 +35,7 @@ interface SheetDrag {
 
 /**
  * The right rail's panel frame (contracts/panels.md). It replaces the feed in
- * the rail column — on desktop it never covers the stage, and at ≤ 900 px it is
+ * the rail column - on desktop it never covers the stage, and at ≤ 900 px it is
  * a full-viewport overlay with the close control at the top (FR-102).
  *
  * Not a modal dialog: on desktop the page around it stays usable, so a labelled
@@ -44,7 +44,7 @@ interface SheetDrag {
  * `presentation="sheet"` (006, FR-504) portals the same region to `document.body`
  * as a bottom sheet over a dim backdrop: ~70 vh, a grab handle, drag-to-dismiss,
  * backdrop tap to close. Escape, focus return and the `body.panel-open` scroll
- * lock all stay where they already are, in `usePanel` — nothing here duplicates
+ * lock all stay where they already are, in `usePanel` - nothing here duplicates
  * them. The full record still sits above the sheet (its backdrop is
  * `calc(var(--panel-z) + 10)`, the sheet is `var(--panel-z)`).
  */
