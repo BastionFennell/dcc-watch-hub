@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router';
 import { useShow } from '../data/ShowContext';
+import { useRegistry } from '../data/RegistryContext';
 import { fetchEpisode } from '../data/load';
 import { findEpisode, prevNext } from '../data/show';
 import type { EpisodeData } from '../data/types';
@@ -10,10 +11,12 @@ import {
   activeToast,
   crawlerDossier,
   crawlerGlance,
+  encounteredNpcs,
   feedItems,
   logItems,
   mapCells,
   mapLabels,
+  npcRecord,
   partyFrames,
   recentlyRevealed,
   timelineMarkers,
@@ -34,6 +37,9 @@ import { MiniMapBadge } from '../components/MiniMapBadge/MiniMapBadge';
 import { NextEpisodeCard } from '../components/NextEpisodeCard/NextEpisodeCard';
 import { EventTimeline } from '../components/EventTimeline/EventTimeline';
 import { PartyRail } from '../components/PartyRail/PartyRail';
+import { EncounterRail } from '../components/EncounterRail/EncounterRail';
+import { NpcRecord } from '../components/NpcRecord/NpcRecord';
+import { RegistryBrowser } from '../components/RegistryBrowser/RegistryBrowser';
 import { EventFeed } from '../components/EventFeed/EventFeed';
 import { EpisodeLog } from '../components/EpisodeLog/EpisodeLog';
 import { MobileTabs } from '../components/MobileTabs/MobileTabs';
@@ -61,6 +67,13 @@ const EMPTY_CELLS = new Set<string>();
 export function EpisodePage() {
   const { id } = useParams();
   const { show } = useShow();
+  /*
+   * The entity registry (007 R1). `null` for a show that declares no
+   * `registryUrl` — and for one whose registry failed to load — in which case
+   * every piece of NPC chrome below is simply absent and `npc` events still
+   * show in the feed under their raw id (spec Edge Cases).
+   */
+  const { registry } = useRegistry();
 
   const [source, setSource] = useState<TimeSource | null>(null);
   const [episode, setEpisode] = useState<EpisodeData | null>(null);
@@ -83,7 +96,9 @@ export function EpisodePage() {
   const [record, setRecord] = useState<string | null>(null);
   /** The "Open full record" button, so the dialog can hand focus back (FR-210). */
   const recordTrigger = useRef<HTMLElement | null>(null);
-  // DEV only: `?panel=dossier:<id>` or `?panel=map` opens a panel on load (screenshots, manual QA).
+  // DEV only: `?panel=dossier:<id>`, `?panel=npc:<id>`, `?panel=map`,
+  // `?panel=registry` or `?panel=registry:<id>` opens a panel on load
+  // (screenshots, manual QA).
   const [searchParams] = useSearchParams();
   const devPanel = import.meta.env.DEV ? searchParams.get('panel') : null;
   const devRecord = import.meta.env.DEV && searchParams.get('record') === '1';
@@ -93,6 +108,10 @@ export function EpisodePage() {
     if (!devPanel || !partyLoaded) return;
     if (devPanel === 'map') panelApi.open({ kind: 'map' }, null);
     else if (devPanel.startsWith('dossier:')) panelApi.open({ kind: 'dossier', crawlerId: devPanel.slice(8) }, null);
+    else if (devPanel.startsWith('npc:')) panelApi.open({ kind: 'npc', npcId: devPanel.slice(4) }, null);
+    else if (devPanel === 'registry') panelApi.open({ kind: 'registry' }, null);
+    else if (devPanel.startsWith('registry:'))
+      panelApi.open({ kind: 'registry', focusId: devPanel.slice(9) }, null);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- open once per episode load
   }, [devPanel, partyLoaded, meta?.id]);
 
@@ -179,6 +198,24 @@ export function EpisodePage() {
     };
   }, [meta]);
 
+  const party = episode ? episode.initialState.party : EMPTY_PARTY;
+  const state = episode ? reduceTo(episode, t) : null;
+
+  /*
+   * An entity record the playhead has rewound past: the party has not met it at
+   * this `t`, so there is nothing to show and the panel closes rather than
+   * holding a stale record (FR-611, constitution I). Computed above the early
+   * returns because the effect that acts on it is a hook.
+   */
+  const staleRecord =
+    panel.kind === 'npc' && state !== null && episode !== null
+      ? npcRecord(state, episode.events, registry, panel.npcId) === null
+      : false;
+  const closePanel = panelApi.close;
+  useEffect(() => {
+    if (staleRecord) closePanel();
+  }, [staleRecord, closePanel]);
+
   useEffect(() => {
     if (meta) document.title = copy.pageTitle(meta.title);
   }, [meta]);
@@ -190,13 +227,16 @@ export function EpisodePage() {
   if (!show) return null;
   if (!meta) return <NotFoundPage />;
 
-  const party = episode ? episode.initialState.party : EMPTY_PARTY;
-  const state = episode ? reduceTo(episode, t) : null;
+  // The episode being watched, hoisted out of `meta` so the closures below (the
+  // rail panel, the strip, the phone sheet) can carry it into the Registry's
+  // scope without re-narrowing (T720).
+  const currentEpisodeId = meta.id;
+
   const frames = state && episode ? partyFrames(state, episode.events, t) : [];
-  const items = episode ? feedItems(episode.events, t, 8, party) : [];
+  const items = episode ? feedItems(episode.events, t, 8, party, registry) : [];
   // The whole elapsed transcript, oldest first — the feed's eight rows are a
   // window onto this (005 FR-401).
-  const log = episode ? logItems(episode.events, t, party) : [];
+  const log = episode ? logItems(episode.events, t, party, registry) : [];
   const sponsor = episode ? activeSponsor(episode.events, t, party) : null;
   // A pinned sponsor is not repeated in the list; it rejoins the feed when its window closes.
   const listed = sponsor ? items.filter((item) => item.id !== sponsor.id) : items;
@@ -207,12 +247,24 @@ export function EpisodePage() {
   // One derivation for both the rail's map panel and the phone's Map tab.
   const labels = episode ? mapLabels(episode.events, t) : [];
   const { next } = prevNext(show, meta.id);
+  /*
+   * The Encountered strip (FR-610): newest first, and empty — standby line and
+   * all — until the first `npc` event elapses. Without a registry there is
+   * nothing to name, so the strip and the phone's NPCs tab do not exist at all.
+   */
+  const encounters = state ? encounteredNpcs(state, registry) : [];
 
   // The dossier, like everything else, is derived at render time — a seek in
   // either direction is correct with no extra work (constitution I, FR-103).
   const dossier =
     panel.kind === 'dossier' && state && episode
       ? crawlerDossier(state, episode.events, t, panel.crawlerId, party)
+      : null;
+
+  /** The open entity record, derived at render time like everything else. */
+  const entity =
+    panel.kind === 'npc' && state && episode
+      ? npcRecord(state, episode.events, registry, panel.npcId, party, t)
       : null;
 
   /**
@@ -250,6 +302,48 @@ export function EpisodePage() {
     />
   ) : null;
 
+  /**
+   * The open entity record, in the rail on desktop and in the sheet on a phone
+   * — one component, one "Open in the Registry" trigger. That trigger opens the
+   * Registry panel rather than leaving the episode (R3 scenario 3), and hands
+   * focus return to the strip chip that opened this record, which is still on
+   * screen behind the panel.
+   */
+  const entityRecord = entity ? (
+    <NpcRecord
+      record={entity}
+      episodeId={currentEpisodeId}
+      onSeek={(sec) => source?.seek(sec)}
+      onShare={(sec) => void share.share(sec)}
+      onOpenRegistry={(entityId) => {
+        const chip = document.querySelector<HTMLElement>(
+          `[data-panel-trigger="npc:${entityId}"]`,
+        );
+        panelApi.open({ kind: 'registry', focusId: entityId }, chip);
+      }}
+    />
+  ) : null;
+
+  /**
+   * The Registry panel's contents. Its two controls are the only things in it
+   * that touch the broadcast, and both are explicit: a moment in this episode
+   * seeks, and the share icon copies its link (R3-FR-642).
+   *
+   * It is handed this episode and the playhead, so its current-episode half
+   * follows the broadcast the way the strip does (R4-FR-651) while the earlier
+   * episodes it pulls for itself stay whole.
+   */
+  const registryBrowser = (
+    <RegistryBrowser
+      currentEpisodeId={currentEpisodeId}
+      currentEpisode={episode}
+      t={t}
+      focusId={panel.kind === 'registry' ? panel.focusId : undefined}
+      onSeek={(sec) => source?.seek(sec)}
+      onShare={(sec) => void share.share(sec)}
+    />
+  );
+
   /** The rail hosts exactly one of: feed (default), dossier, map (FR-100). */
   function railSlot() {
     switch (panel.kind) {
@@ -264,6 +358,33 @@ export function EpisodePage() {
             onClose={panelApi.close}
           >
             {glanceCard}
+          </RailPanel>
+        );
+      case 'npc':
+        // As with the dossier: nothing to show means no episode data behind it.
+        // An entity the playhead has rewound past closes the panel instead
+        // (the effect above), so this is only ever the loading case.
+        if (!entity) return feed;
+        return (
+          <RailPanel kicker={copy.npcKicker} title={entity.name} onClose={panelApi.close}>
+            {entityRecord}
+          </RailPanel>
+        );
+      case 'registry':
+        /*
+         * The whole Registry beside the stage (007 R3). Unlike every other
+         * panel it needs no episode data to open — it reads the published
+         * archive — so it opens while the episode file is still landing, and
+         * opening it neither seeks nor pauses (R3 scenario 4). What this
+         * episode contributes arrives with the file, clipped to the playhead.
+         */
+        return (
+          <RailPanel
+            kicker={copy.registryPanelKicker}
+            title={copy.registryTitle}
+            onClose={panelApi.close}
+          >
+            {registryBrowser}
           </RailPanel>
         );
       case 'map':
@@ -361,6 +482,25 @@ export function EpisodePage() {
   }
 
   /**
+   * The Encountered strip (FR-610). Chips are panel triggers exactly as crawler
+   * frames are, so the rail's one slot holds either a dossier or a record.
+   */
+  function encounterRail(layout: 'row' | 'grid') {
+    return (
+      <EncounterRail
+        encounters={encounters}
+        activeId={panel.kind === 'npc' ? panel.npcId : null}
+        onActivate={(entityId, element) =>
+          panelApi.toggle({ kind: 'npc', npcId: entityId }, element)
+        }
+        layout={layout}
+        onBrowse={(element) => panelApi.toggle({ kind: 'registry' }, element)}
+        browsing={panel.kind === 'registry'}
+      />
+    );
+  }
+
+  /**
    * The broadcast log (005 US1/US2). Embedded, it is the Log tab's whole pane:
    * always open, no toggle — the tab is the open/closed control (FR-503).
    */
@@ -386,7 +526,7 @@ export function EpisodePage() {
    * no episode behind it, the System's notice instead (spec Edge Cases).
    */
   function phoneTabs(): MobileTab[] {
-    return [
+    const tabs: MobileTab[] = [
       { id: 'feed', label: copy.tabFeed, content: feed },
       { id: 'party', label: copy.tabParty, content: partyRail('grid') },
       {
@@ -403,6 +543,11 @@ export function EpisodePage() {
       },
       { id: 'log', label: copy.tabLog, content: broadcastLog(true) },
     ];
+    // The fifth pane exists only for a show that ships a registry (FR-610).
+    if (registry) {
+      tabs.push({ id: 'npcs', label: copy.tabNpcs, content: encounterRail('grid') });
+    }
+    return tabs;
   }
 
   /**
@@ -411,6 +556,31 @@ export function EpisodePage() {
    * here — nothing opens it once the badge is gone — so it renders nothing.
    */
   function phoneSheet() {
+    if (panel.kind === 'registry') {
+      return (
+        <RailPanel
+          kicker={copy.registryPanelKicker}
+          title={copy.registryTitle}
+          presentation="sheet"
+          onClose={panelApi.close}
+        >
+          {registryBrowser}
+        </RailPanel>
+      );
+    }
+    if (panel.kind === 'npc') {
+      if (!entity) return null;
+      return (
+        <RailPanel
+          kicker={copy.npcKicker}
+          title={entity.name}
+          presentation="sheet"
+          onClose={panelApi.close}
+        >
+          {entityRecord}
+        </RailPanel>
+      );
+    }
     if (panel.kind !== 'dossier' || !dossier) return null;
     return (
       <RailPanel
@@ -486,6 +656,9 @@ export function EpisodePage() {
           {timeline}
 
           {partyRail('row')}
+
+          {/* Under the rail, and only for a show with a registry (FR-610). */}
+          {registry ? <div className={styles.encounters}>{encounterRail('row')}</div> : null}
         </div>
 
         <aside className={styles.rail} data-panel={panel.kind}>

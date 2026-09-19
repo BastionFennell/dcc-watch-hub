@@ -1,0 +1,255 @@
+/*
+ * The Encountered strip (FR-610, research R3). Same vocabulary as the party
+ * rail's frames — panel box, hairline border, hover/focus ring — because a chip
+ * does exactly what a frame does: it opens the one rail panel.
+ *
+ * Kind tints are the timeline/accent tokens: boss --danger, vendor --amber-fg,
+ * ally --marker-levelup. They carry the disc only, with --canvas text on them
+ * (4.68:1, 12.6:1 and 9.2:1) — as a foreground on --panel --danger measures
+ * 4.24:1, so the kind badge is plain --text-3 (4.51:1) and the tint is a border.
+ */
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+/* Title left, the episode's Registry link right — one row, wrapping on a phone. */
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3) var(--space-5);
+  min-width: 0;
+}
+
+/* The panel trigger beside the title (007 R3). It reads as the link it replaced
+   — the underline is the affordance — but it is a button, because it opens the
+   Registry in the rail rather than leaving the broadcast. */
+.browse {
+  margin-left: auto;
+  flex: none;
+  padding: 0 0 1px;
+  border: 0;
+  border-bottom: 1px solid var(--brand-line);
+  background: none;
+  font-family: inherit;
+  font-size: var(--text-xs);
+  color: var(--brand-fg);
+  cursor: pointer;
+}
+
+.browse:hover {
+  color: var(--brand-fg-2);
+}
+
+.browse:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.empty {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+}
+
+.chips {
+  display: flex;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+
+.chipItem {
+  min-width: 0;
+  display: block;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: var(--panel);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  cursor: pointer;
+  transition:
+    border-color 200ms ease,
+    background-color 200ms ease;
+}
+
+.chip:hover {
+  border-color: var(--brand-2);
+}
+
+.chip:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-color: var(--brand-2);
+}
+
+/* The open record's chip, exactly as a frame marks its open dossier (T131). */
+.chip[aria-expanded='true'] {
+  border-color: var(--brand-line);
+  background: var(--brand-deep);
+}
+
+.chip[aria-expanded='true'] .kind {
+  color: var(--text-2);
+}
+
+/* --- the disc: a portrait, or the entity's initial on its kind's tint --- */
+
+.portrait,
+.disc {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.portrait {
+  background: var(--panel-deep);
+  border: 1px solid var(--tint, var(--hairline-2));
+}
+
+.disc {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--tint, var(--brand-deep));
+  color: var(--canvas);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.portrait[data-kind='boss'],
+.disc[data-kind='boss'] {
+  --tint: var(--danger);
+}
+
+.portrait[data-kind='vendor'],
+.disc[data-kind='vendor'] {
+  --tint: var(--amber-fg);
+}
+
+.portrait[data-kind='ally'],
+.disc[data-kind='ally'] {
+  --tint: var(--marker-levelup);
+}
+
+/* --- name, kind badge, defeated tag --- */
+
+.meta {
+  display: block;
+  min-width: 0;
+}
+
+.name {
+  display: block;
+  color: var(--text);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.name[data-defeated] {
+  text-decoration: line-through;
+  color: var(--text-2);
+}
+
+.tags {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.kind {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.defeated {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+  color: var(--canvas);
+  background: var(--danger);
+  border-radius: var(--radius-pill);
+  padding: 0 6px;
+  white-space: nowrap;
+}
+
+/*
+ * The desktop strip: one line that scrolls sideways, never wraps (spec edge
+ * case "very many entities on one floor"). `contain: paint` for the same reason
+ * the party rail's phone strip needs it — without it the overflow reaches the
+ * root box and the whole page scrolls sideways (T330 measurement).
+ */
+.rail[data-layout='row'] .chips {
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  contain: paint;
+  scroll-snap-type: x proximity;
+  padding-bottom: var(--space-2);
+  -webkit-overflow-scrolling: touch;
+}
+
+.rail[data-layout='row'] .chipItem {
+  flex: 0 0 auto;
+  width: 180px;
+  scroll-snap-align: start;
+}
+
+/* The phone NPCs pane: two columns, the odd last chip spanning both (R3). */
+.rail[data-layout='grid'] .chips {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  overflow-x: visible;
+}
+
+.rail[data-layout='grid'] .chipItem:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip {
+    transition: none;
+  }
+}

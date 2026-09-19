@@ -51,5 +51,6 @@
   "links": {
     "youtube": "https://www.youtube.com/@DungeonCrawlCast",
     "discord": "https://discord.gg/REPLACE_ME"
-  }
+  },
+  "registryUrl": "/data/npcs.json"
 }

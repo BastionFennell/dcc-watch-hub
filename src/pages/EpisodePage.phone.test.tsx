@@ -17,17 +17,29 @@ import { App } from '../App';
 import { copy } from '../copy';
 import { resumeKey } from '../playback/resume';
 import { __fakeSources } from '../components/VideoStage/FakeStage';
-import { makeEpisodeRaw, makeShow } from '../test/fixtures';
+import { makeEpisodeRaw, makeRegistry, makeShow } from '../test/fixtures';
 
 /** The one media query the page branches on (`useIsPhone`, `usePanel`). */
 const PHONE_QUERY = '(max-width: 900px)';
 
-function stubFetch() {
+function stubFetch(withRegistry = true) {
   vi.stubGlobal('fetch', (input: RequestInfo | URL) => {
     const url = String(input);
     if (url.includes('show.json')) {
+      // A show with no `registryUrl` is the "registry absent" edge case: no
+      // NPCs tab, and `npc` events still show in the feed under their raw id.
+      const show = makeShow();
+      if (!withRegistry) delete (show as { registryUrl?: string }).registryUrl;
       return Promise.resolve(
-        new Response(JSON.stringify(makeShow()), {
+        new Response(JSON.stringify(show), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
+    }
+    if (url.includes('npcs.json')) {
+      return Promise.resolve(
+        new Response(JSON.stringify(makeRegistry()), {
           status: 200,
           headers: { 'content-type': 'application/json' },
         }),
@@ -396,5 +408,106 @@ describe('EpisodePage on a phone', () => {
 
     expect(screen.getByTestId('stage-slot')).not.toHaveAttribute('data-mini');
     expect(screen.getByRole('link', { name: copy.nextEpisodeCard })).toBeInTheDocument();
+  });
+  /* ------------------------- 007 US1: the NPCs tab and the record sheet (T711) */
+
+  function chips(): HTMLElement[] {
+    return screen.queryAllByTestId('encounter-chip');
+  }
+
+  function chip(npcId: string): HTMLElement {
+    const element = document.querySelector(`[data-npc="${npcId}"]`);
+    if (!element) throw new Error(`No encounter chip for ${npcId}`);
+    return element as HTMLElement;
+  }
+
+  it('adds the NPCs pane as a fifth tab, laid out as a grid', async () => {
+    const { seek } = await mountEpisode();
+
+    const strip = screen.getByTestId('mobile-tabs');
+    expect([...strip.querySelectorAll('[role="tab"]')].map((element) => element.textContent)).toEqual(
+      [copy.tabFeed, copy.tabParty, copy.tabMap, copy.tabLog, copy.tabNpcs],
+    );
+
+    openTab('npcs');
+    const pane = screen.getByTestId('tabpanel-npcs');
+    expect(pane).not.toHaveAttribute('hidden');
+    const rail = within(pane).getByTestId('encounter-rail');
+    expect(rail).toHaveAttribute('data-layout', 'grid');
+    // Nothing tagged yet, so the pane is empty-stated (US1 scenario 1).
+    expect(within(pane).getByTestId('encounter-empty')).toHaveTextContent(copy.encounterEmpty);
+
+    seek(200);
+    expect(chips().map((element) => element.getAttribute('data-npc'))).toEqual([
+      'hoarder',
+      'quartermaster',
+      'grull-rep',
+    ]);
+    expect(chip('hoarder')).toHaveAttribute('data-defeated', 'true');
+  });
+
+  it('browses the Registry as a sheet over the NPCs pane (007 R3)', async () => {
+    const { source } = await mountEpisode();
+    const seekSpy = vi.spyOn(source, 'seek');
+    const pauseSpy = vi.spyOn(source, 'pause');
+
+    openTab('npcs');
+    const pane = screen.getByTestId('tabpanel-npcs');
+    // Revision 2's link is gone: the way out to the page lives in the sheet.
+    expect(within(pane).queryByTestId('encounter-registry-link')).toBeNull();
+    const browse = within(pane).getByTestId('encounter-browse');
+    expect(browse).toHaveTextContent(copy.registryBrowse);
+
+    fireEvent.click(browse);
+
+    const sheet = screen.getByTestId('rail-panel');
+    expect(sheet).toHaveAttribute('data-presentation', 'sheet');
+    expect(within(sheet).getByText(copy.registryPanelKicker)).toBeInTheDocument();
+    await waitFor(() =>
+      expect(within(sheet).getByTestId('registry-browser')).toBeInTheDocument(),
+    );
+    expect(within(sheet).getByTestId('registry-scope')).toHaveValue('through-1');
+    // The stage is still up there, still where it was (R3 scenario 4).
+    expect(screen.getByTestId('video-stage')).toBeInTheDocument();
+    expect(seekSpy).not.toHaveBeenCalled();
+    expect(pauseSpy).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByTestId('panel-close'));
+    expect(screen.queryByTestId('registry-browser')).not.toBeInTheDocument();
+    expect(document.activeElement).toBe(browse);
+  });
+
+  it('opens the entity record as a bottom sheet over the tabs', async () => {
+    const { seek } = await mountEpisode();
+
+    seek(200);
+    openTab('npcs');
+    fireEvent.click(chip('hoarder'));
+
+    const sheet = screen.getByTestId('rail-panel');
+    expect(sheet).toHaveAttribute('data-presentation', 'sheet');
+    expect(within(sheet).getByText(copy.npcKicker)).toBeInTheDocument();
+    expect(within(sheet).getByTestId('npc-record')).toHaveAttribute('data-npc', 'hoarder');
+    expect(
+      within(sheet)
+        .getAllByTestId('npc-fact')
+        .map((fact) => fact.getAttribute('data-fact')),
+    ).toEqual(['lair', 'weakness']);
+    // The stage is still up there: the sheet covers the tabs, not the video.
+    expect(screen.getByTestId('video-stage')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('panel-close'));
+    expect(screen.queryByTestId('npc-record')).not.toBeInTheDocument();
+  });
+
+  it('has no NPCs tab without a registry (spec Edge Cases)', async () => {
+    stubFetch(false);
+    const { seek } = await mountEpisode();
+
+    seek(200);
+    expect(screen.queryByTestId('tab-npcs')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('encounter-rail')).not.toBeInTheDocument();
+    // The events still show, under their raw ids.
+    expect(screen.getAllByText(copy.feedText.npcDefeated('hoarder')).length).toBeGreaterThan(0);
   });
 });

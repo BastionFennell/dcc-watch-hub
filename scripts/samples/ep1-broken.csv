@@ -14,5 +14,7 @@ timecode,type,actor,field1,field2,field3
 01:30:00,note,,A stray line from the edit bay. Nobody was watching this far in.,,
 3:30,rank,xo,crawler,4188,
 3:50,inventory,xo,Signal Flare,,
+3:44,npc,,the-listener-below,met,Nobody has filed this one.
+3:46,npc,,the-hoarder,"update:ledger,lantern",The tally is not the only thing it keeps.
 3:54,unequip,harry,accessory,,
 3:58,note,,Recap ends. Vitals logged. Sponsors paid.,,

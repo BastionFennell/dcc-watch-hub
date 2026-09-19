@@ -10,7 +10,15 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 export type Panel =
   | { kind: 'none' }
   | { kind: 'dossier'; crawlerId: string }
-  | { kind: 'map' };
+  | { kind: 'map' }
+  /** 007: one registry entity's record (FR-611). */
+  | { kind: 'npc'; npcId: string }
+  /**
+   * 007 R3: the whole Registry, beside the broadcast (R3-FR-640). `focusId` is
+   * the entity to open it on — the record's "Open in the Registry" sets it, the
+   * strip's own trigger leaves it off.
+   */
+  | { kind: 'registry'; focusId?: string };
 
 /** Anything that can actually be opened — i.e. every panel but `none`. */
 export type OpenPanel = Exclude<Panel, { kind: 'none' }>;
@@ -23,7 +31,8 @@ export interface PanelApi {
   toggle(next: OpenPanel, trigger: HTMLElement | null): void;
   /** Close and return focus to the trigger that opened the panel. */
   close(): void;
-  isOpen(kind: Panel['kind'], crawlerId?: string): boolean;
+  /** `id` is the crawler id for a dossier, and the entity id for a record or the Registry. */
+  isOpen(kind: Panel['kind'], id?: string): boolean;
 }
 
 /** One frozen object, so a redundant close cannot re-render the page. */
@@ -35,6 +44,12 @@ const OVERLAY_QUERY = '(max-width: 900px)';
 function samePanel(a: Panel, b: Panel): boolean {
   if (a.kind !== b.kind) return false;
   if (a.kind === 'dossier' && b.kind === 'dossier') return a.crawlerId === b.crawlerId;
+  if (a.kind === 'npc' && b.kind === 'npc') return a.npcId === b.npcId;
+  /*
+   * The Registry panel is one panel however it was opened: re-activating the
+   * strip's trigger closes the panel the record opened focused, which is what
+   * its own `aria-expanded` promises (R3-FR-643).
+   */
   return true;
 }
 
@@ -70,9 +85,11 @@ export function usePanel(resetKey: unknown): PanelApi {
     open(next, trigger);
   }
 
-  function isOpen(kind: Panel['kind'], crawlerId?: string): boolean {
+  function isOpen(kind: Panel['kind'], id?: string): boolean {
     if (panel.kind !== kind) return false;
-    if (panel.kind === 'dossier' && crawlerId !== undefined) return panel.crawlerId === crawlerId;
+    if (panel.kind === 'dossier' && id !== undefined) return panel.crawlerId === id;
+    if (panel.kind === 'npc' && id !== undefined) return panel.npcId === id;
+    if (panel.kind === 'registry' && id !== undefined) return panel.focusId === id;
     return true;
   }
 

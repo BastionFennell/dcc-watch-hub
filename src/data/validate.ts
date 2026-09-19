@@ -8,17 +8,22 @@ import type {
   Cell,
   Crawler,
   CrawlerStats,
+  Entity,
+  EntityFact,
+  EntityKind,
   EpisodeData,
   EpisodeMeta,
   Gear,
   GearSlot,
   InitialState,
   MapState,
+  NpcAction,
+  Registry,
   Show,
   SkillEntry,
   UnknownEvent,
 } from './types';
-import { GEAR_SLOTS } from './types';
+import { ENTITY_KINDS, GEAR_SLOTS, NPC_ACTIONS } from './types';
 
 export class DataError extends Error {
   constructor(message: string) {
@@ -66,6 +71,30 @@ function toSkillRank(x: unknown): number | null {
   const n = toNumber(x);
   if (n === null || !Number.isInteger(n) || n < 0) return null;
   return n;
+}
+
+/** Drops anything that is not a non-empty string; never fatal (007, FR-601). */
+function toNonEmptyStringList(x: unknown): string[] {
+  if (!Array.isArray(x)) return [];
+  const out: string[] = [];
+  for (const item of x) {
+    if (typeof item === 'string' && item !== '') out.push(item);
+  }
+  return out;
+}
+
+/** An `npc` action this version understands, or `null` — never guessed. */
+function toNpcAction(x: unknown): NpcAction | null {
+  return typeof x === 'string' && (NPC_ACTIONS as readonly string[]).includes(x)
+    ? (x as NpcAction)
+    : null;
+}
+
+/** An entity kind the schema knows, or `null` (007 assumptions: exactly three). */
+function toEntityKind(x: unknown): EntityKind | null {
+  return typeof x === 'string' && (ENTITY_KINDS as readonly string[]).includes(x)
+    ? (x as EntityKind)
+    : null;
 }
 
 /** A gear slot the schema knows, or `null` — an unknown slot is never guessed. */
@@ -232,6 +261,27 @@ export function normalizeEvent(raw: unknown): AnyEvent {
       return item === null || item === ''
         ? { t, type: 'unequip', actor, slot }
         : { t, type: 'unequip', actor, slot, item };
+    }
+    case 'npc': {
+      /*
+       * The entity id is not checked against the registry here: the registry is
+       * show-level data the episode loader has never seen, and an id it does not
+       * carry still belongs in the feed under its raw id (FR-601, US1 sc. 5).
+       */
+      const npcId = toString_(raw.id);
+      const action = toNpcAction(raw.action);
+      if (npcId === null || npcId === '' || action === null) return unknownEvent(t, raw);
+      const note = toString_(raw.note);
+      const unlock = toNonEmptyStringList(raw.unlock);
+      return {
+        t,
+        type: 'npc',
+        id: npcId,
+        action,
+        ...(note === null || note === '' ? {} : { note }),
+        ...(unlock.length === 0 ? {} : { unlock }),
+        ...(actor === null ? {} : { actor }),
+      };
     }
     default:
       return unknownEvent(t, raw);
@@ -444,5 +494,103 @@ export function normalizeShow(raw: unknown): Show {
   if (!isShow(raw)) {
     throw new DataError('Show data does not match the show schema.');
   }
+  // 007: the registry pointer is optional, so a malformed one costs the registry
+  // and nothing else — the archive still loads (FR-600).
+  if (raw.registryUrl !== undefined && typeof raw.registryUrl !== 'string') {
+    const show: Show = { ...raw };
+    delete show.registryUrl;
+    console.warn('Show: dropping malformed "registryUrl".');
+    return show;
+  }
   return raw;
+}
+
+/* --------------------------------------------------------------- registry */
+
+/** The envelope only: every entity inside is judged one at a time. */
+export function isRegistry(x: unknown): x is Registry {
+  return isRecord(x) && Array.isArray(x.entities);
+}
+
+/** `{ id, text }`, both non-empty. A malformed fact is dropped, never fatal. */
+function toFacts(x: unknown, entityId: string): EntityFact[] {
+  if (!Array.isArray(x)) {
+    if (x !== undefined) console.warn(`Registry entity "${entityId}": dropping malformed "facts".`);
+    return [];
+  }
+  const facts: EntityFact[] = [];
+  const seen = new Set<string>();
+  for (const raw of x) {
+    if (!isRecord(raw)) {
+      console.warn(`Registry entity "${entityId}": dropping a malformed fact.`);
+      continue;
+    }
+    const id = toString_(raw.id);
+    const text = toString_(raw.text);
+    if (id === null || id === '' || text === null || text === '') {
+      console.warn(`Registry entity "${entityId}": dropping a fact with no id or text.`);
+      continue;
+    }
+    if (seen.has(id)) {
+      console.warn(`Registry entity "${entityId}": dropping duplicate fact "${id}".`);
+      continue;
+    }
+    seen.add(id);
+    facts.push({ id, text });
+  }
+  return facts;
+}
+
+/** One entity, or `null` when it is missing something the UI cannot invent. */
+function toEntity(raw: unknown): Entity | null {
+  if (!isRecord(raw)) return null;
+  const id = toString_(raw.id);
+  const name = toString_(raw.name);
+  const intro = toString_(raw.intro);
+  const kind = toEntityKind(raw.kind);
+  if (id === null || id === '') return null;
+  if (name === null || name === '' || intro === null || intro === '' || kind === null) return null;
+
+  const portrait = toString_(raw.portrait);
+  const floor = toNumber(raw.floor);
+  const aliases = toNonEmptyStringList(raw.aliases);
+
+  return {
+    id,
+    name,
+    kind,
+    ...(portrait === null || portrait === '' ? {} : { portrait }),
+    ...(floor === null ? {} : { floor }),
+    ...(aliases.length === 0 ? {} : { aliases }),
+    intro,
+    facts: toFacts(raw.facts, id),
+  };
+}
+
+/**
+ * Validates the envelope and keeps every well-formed entity. A malformed entity
+ * (no id, no name, no intro, or an unknown kind) is dropped with a warning and a
+ * duplicate id keeps the first, so one bad row never costs the whole registry
+ * (constitution IV: schema evolution must not crash a page).
+ */
+export function normalizeRegistry(raw: unknown): Registry {
+  if (!isRegistry(raw)) {
+    throw new DataError('Registry data does not match the registry schema.');
+  }
+  const entities: Entity[] = [];
+  const seen = new Set<string>();
+  for (const item of raw.entities as unknown[]) {
+    const entity = toEntity(item);
+    if (entity === null) {
+      console.warn('Registry: dropping a malformed entity.');
+      continue;
+    }
+    if (seen.has(entity.id)) {
+      console.warn(`Registry: dropping duplicate entity "${entity.id}".`);
+      continue;
+    }
+    seen.add(entity.id);
+    entities.push(entity);
+  }
+  return { entities };
 }

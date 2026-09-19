@@ -55,6 +55,8 @@ export const copy = {
     hotlist: 'Hotlist',
     equip: 'Equip',
     unequip: 'Unequip',
+    /* --- appended by 007 (FR-612): every entity row is filed as an Entity. --- */
+    npc: 'Entity',
   } as const,
 
   // Stage
@@ -119,6 +121,16 @@ export const copy = {
         ? `${actor} clears the ${slot} slot`
         : `${actor} stows ${item} (${slot})`,
     markerLevelUp: (actor: string, level: number) => `${actor} reaches Lv ${level}`,
+    /* --- appended by 007 (research R2): the System narrates an encounter --- */
+    npcMet: (name: string, note?: string) =>
+      note ? `${name} enters the broadcast — ${note}` : `${name} enters the broadcast`,
+    npcSeen: (name: string, note?: string) =>
+      note ? `${name} is sighted — ${note}` : `${name} is sighted`,
+    /** An update carries its note as the amendment itself, so it is never appended. */
+    npcUpdate: (name: string, note?: string) =>
+      note ? `${name}: ${note}` : `The System amends its file on ${name}`,
+    npcDefeated: (name: string, note?: string) =>
+      note ? `${name} is no more — ${note}` : `${name} is no more`,
   },
 
   /* --- appended by T025–T029 (archive navigation) --- */
@@ -408,6 +420,109 @@ export const copy = {
 
   /** How the phone sheet's grab handle is dismissed, announced in its header (FR-504). */
   sheetHandle: 'Drag down to close',
+
+  /* --- appended by 007 (NPC encounters + System Registry: T707) --- */
+
+  /** The three kinds the author fixed; the labels are the System's, not the code's. */
+  kindLabels: {
+    boss: 'Boss',
+    vendor: 'Vendor / Guide',
+    ally: 'Ally / Faction',
+  } as const,
+
+  /** The Encountered strip under the party rail (FR-610). */
+  encounterTitle: 'ENCOUNTERED',
+  encounterEmpty: 'No entities tagged yet.',
+
+  /** The entity record in the rail panel / phone sheet (FR-611). */
+  npcKicker: 'ENTITY RECORD',
+  npcFacts: 'FACTS',
+  npcFactsEmpty: 'The System has released nothing further.',
+  npcMoments: 'MOMENTS',
+  npcDefeated: 'DEFEATED',
+  npcActive: 'ACTIVE',
+  npcOpenRegistry: 'Open in the Codex',
+
+  /** The fifth phone tab, which exists only when the show has a registry. */
+  tabNpcs: 'NPCs',
+
+  /** The glossary at /registry (FR-620): everything published, by episode. */
+  registry: 'Codex',
+  registryTitle: 'Dungeon Codex',
+  registryKicker: 'ENTITY RECORDS',
+  registryLead:
+    'Every entity the System has filed across the broadcast archive, newest episode first.',
+  registrySearch: 'Search the Codex',
+  registryNoMatch: 'The Codex has no such entity.',
+  registryMissing: (n: number) =>
+    `${n} recap episode${n === 1 ? '' : 's'} could not be indexed.`,
+  /**
+   * Titles a registry section. The author's episode titles usually already read
+   * "Episode N — …", so prefixing unconditionally said it twice; the digits must
+   * match exactly, or "Episode 10 — …" would swallow the prefix for episode 1.
+   */
+  registryEpisodeSection: (n: number, title: string) => {
+    const prefix = `episode ${n}`;
+    const lower = title.toLowerCase();
+    const next = lower.charAt(prefix.length);
+    return lower.startsWith(prefix) && !(next >= '0' && next <= '9')
+      ? title
+      : `Episode ${n} — ${title}`;
+  },
+  /** Tags a fact with the episode that released it. */
+  registryFactTag: (n: number) => `Ep ${n}`,
+
+  /* --- appended by 007 (System Registry page: T713) --- */
+
+  /** While the page is pulling the show, the registry and every episode file. */
+  registryLoading: 'The System is indexing the archive.',
+  /** The show declares no registry, or the file could not be read (spec edge case). */
+  registryUnavailable: 'The Codex has not been transmitted.',
+  /** Names the kind chip group for a screen reader. */
+  registryKinds: 'Filter by kind',
+  /** How many entities a section holds. */
+  registryCount: (n: number) => `${n} ${n === 1 ? 'entity' : 'entities'}`,
+  /** The expanded entry's second block; the first reuses `npcFacts` ("FACTS"). */
+  registryAppearances: 'APPEARANCES',
+  /** What an appearance was, in one word, beside its timecode. */
+  registryActions: {
+    met: 'Met',
+    seen: 'Sighted',
+    update: 'Amended',
+    defeated: 'Defeated',
+  } as const,
+  /** Closes an entry that does not survive the archive. */
+  registryDefeatedIn: (n: number) => `Defeated in episode ${n}.`,
+
+  /* --- appended by 007 revision 2 (episode-scoped Registry: T718–T721) --- */
+
+  /** Names the scope select for a screen reader (R2-FR-633). */
+  registryScope: 'Scope',
+  /** The default: the whole published archive. */
+  registryScopeAll: 'All episodes',
+  /** Everything the System had released by the end of this episode. */
+  registryScopeThrough: (title: string) => `Through ${title}`,
+  /** Only the entities this one episode carries. */
+  registryScopeOnly: (title: string) => `Only ${title}`,
+  /** The select's two option groups. */
+  registryScopeGroupThrough: 'Seen through…',
+  registryScopeGroupOnly: 'Only in…',
+  /**
+   * From the Encountered strip to this episode's slice of the Registry.
+   * Retired by revision 3: the strip's control is now `registryBrowse`, which
+   * opens the Registry panel instead of leaving the broadcast. Kept because the
+   * revision 2 contract names it and nothing else claims the phrase.
+   */
+  encounterRegistryLink: 'Codex for this episode',
+
+  /* --- appended by 007 revision 3 (the Registry panel: T722-T725) --- */
+
+  /** The strip's panel trigger: the Registry beside the broadcast (R3-FR-643). */
+  registryBrowse: 'Browse the Codex',
+  /** The panel's footer, out to the whole page at the same scope. */
+  registryOpenFull: 'Open the full Codex',
+  /** Mono caps above the panel's title, as every rail panel carries. */
+  registryPanelKicker: 'DUNGEON CODEX',
 } as const;
 
 export type Copy = typeof copy;

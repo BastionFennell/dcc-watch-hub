@@ -5,7 +5,7 @@
  * Unknown event types and unknown actors leave state untouched (FR-006, edge cases).
  */
 import type { AnyEvent, Cell, EpisodeData, GearSlot, SkillEntry } from '../data/types';
-import type { CrawlerState, GearState, OverlayState } from './state';
+import type { CrawlerState, GearState, NpcState, OverlayState } from './state';
 import { ACCESSORY_CAP, cellKey, fromInitialState } from './state';
 
 function clamp(value: number, min: number, max: number): number {
@@ -137,6 +137,28 @@ export function applyEvent(state: OverlayState, event: AnyEvent): OverlayState {
     case 'rank':
       // Individual rank only — DCC has no party rank (T334).
       return withCrawler(state, event.actor, (crawler) => ({ ...crawler, rank: event.rank }));
+
+    case 'npc': {
+      /*
+       * Every action creates or updates the entry (research R2): a `seen` before
+       * a `met` still means the party has met it, so `firstMet` is the first
+       * event of any action. There is no registry here — an id the registry does
+       * not carry gets state like any other, and the strip omits it later.
+       */
+      const prior = state.npcs[event.id] as NpcState | undefined;
+      const unlocked = prior === undefined ? [] : prior.unlocked.slice();
+      for (const fact of event.unlock ?? []) {
+        if (!unlocked.includes(fact)) unlocked.push(fact);
+      }
+      const npc: NpcState = {
+        firstMet: prior === undefined ? event.t : prior.firstMet,
+        encounters: (prior?.encounters ?? 0) + 1,
+        unlocked,
+        defeated: (prior?.defeated ?? false) || event.action === 'defeated',
+        lastT: event.t,
+      };
+      return { ...state, npcs: { ...state.npcs, [event.id]: npc } };
+    }
 
     case 'map_reveal': {
       const seen = new Set(state.map.revealed.map((cell) => cellKey(cell[0], cell[1])));

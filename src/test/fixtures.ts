@@ -16,8 +16,13 @@
  * logs nine skills by 200 (so the record's eight-tile grid overflows); Harry's
  * hotlist reaches eleven entries at 210 (so the ten-slot hotbar overflows);
  * Harry and The Actress carry `art`, the other three fall back to the bust.
+ *
+ * 007 adds the registry `makeRegistry()` and the `npc` events data-model "Fixture
+ * facts" pins down (112 met grull-rep, 118 met hoarder, 122 update unlock lair,
+ * 135 seen quartermaster, 140 met unknown-id, 185 update unlock weakness, 195
+ * defeated hoarder) — all past t = 100, so every earlier feed count still holds.
  */
-import type { Crawler, EpisodeData, Show } from '../data/types';
+import type { Crawler, EpisodeData, Registry, Show } from '../data/types';
 import { normalizeEpisode } from '../data/validate';
 
 export function makeShow(): Show {
@@ -62,6 +67,7 @@ export function makeShow(): Show {
       youtube: 'https://www.youtube.com/@DungeonCrawlCast',
       discord: 'https://discord.gg/REPLACE_ME',
     },
+    registryUrl: '/data/npcs.json',
   };
 }
 
@@ -143,12 +149,23 @@ export function makeEpisodeRaw(episodeId = 1): unknown {
       { t: 100, type: 'rank', actor: 'harry', rank: 4188 },
       { t: 105, type: 'hotlist', actor: 'harry', add: ['Door'], remove: [] },
       { t: 110, type: 'sponsor', text: 'This death brought to you by Grull Industries.', durationSec: 20 },
+      { t: 112, type: 'npc', id: 'grull-rep', action: 'met' },
       { t: 115, type: 'skill', actor: 'xo', name: 'Quartermaster Eye', rank: 5 },
+      {
+        t: 118,
+        type: 'npc',
+        id: 'hoarder',
+        action: 'met',
+        note: 'Something is stacking crates in Quadrant C.',
+      },
       { t: 120, type: 'chapter', label: 'The Hoarder Fight', kind: 'boss' },
+      { t: 122, type: 'npc', id: 'hoarder', action: 'update', unlock: ['lair'] },
       { t: 125, type: 'skill', actor: 'xo', name: 'Scale Guard', rank: 6 },
       { t: 130, type: 'status', actor: 'psychic', add: ['Poisoned'], remove: [] },
+      { t: 135, type: 'npc', id: 'quartermaster', action: 'seen' },
       { t: 135, type: 'skill', actor: 'xo', name: 'Deep Breath', rank: 7 },
       { t: 140, type: 'status', actor: 'psychic', add: [], remove: ['Poisoned'] },
+      { t: 140, type: 'npc', id: 'unknown-id', action: 'met' },
       { t: 140, type: 'skill', actor: 'xo', name: 'Death Roll', rank: 8 },
       { t: 145, type: 'skill', actor: 'xo', name: 'Ledger Sense', rank: 9 },
       { t: 148, type: 'skill', actor: 'xo', name: 'Swamp Step' },
@@ -163,6 +180,8 @@ export function makeEpisodeRaw(episodeId = 1): unknown {
       { t: 169, type: 'equip', actor: 'harry', slot: 'hands', item: 'Torch' },
       { t: 170, type: 'hp', actor: 'harry', current: 20, max: 22 },
       { t: 175, type: 'map_reveal', cells: [[6, 5], [6, 6], [7, 5]], label: 'The Rot Market' },
+      { t: 185, type: 'npc', id: 'hoarder', action: 'update', unlock: ['weakness'], note: 'It cannot see red.' },
+      { t: 195, type: 'npc', id: 'hoarder', action: 'defeated' },
       { t: 200, type: 'rank', actor: 'harry', rank: 3550 },
       {
         t: 210,
@@ -188,4 +207,47 @@ export function makeEpisodeRaw(episodeId = 1): unknown {
 
 export function makeEpisode(episodeId = 1): EpisodeData {
   return normalizeEpisode(makeEpisodeRaw(episodeId));
+}
+
+/**
+ * The show-level entity registry the fixture episode's `npc` events point at
+ * (007 data-model "Fixture facts"): a boss with two facts, a vendor with none
+ * (so the record's empty-facts line has something to say), and an ally with one.
+ * `unknown-id` at t = 140 is deliberately absent — it is the missing-entity case.
+ */
+export function makeRegistry(): Registry {
+  return {
+    entities: [
+      {
+        id: 'hoarder',
+        name: 'The Hoarder',
+        kind: 'boss',
+        floor: 1,
+        portrait: '/img/npcs/hoarder.svg',
+        aliases: ['The Crate King'],
+        intro: 'Something in Quadrant C has been stacking crates into walls.',
+        facts: [
+          { id: 'lair', text: 'It nests behind the crate wall it builds.' },
+          { id: 'weakness', text: 'It cannot see red.' },
+        ],
+      },
+      {
+        id: 'grull-rep',
+        name: 'Grull Industries Representative',
+        kind: 'vendor',
+        floor: 1,
+        aliases: ['Grull'],
+        intro: 'A licensed window in the wall. It sells, and it watches.',
+        facts: [],
+      },
+      {
+        id: 'quartermaster',
+        name: 'The Quartermaster',
+        kind: 'ally',
+        floor: 1,
+        intro: 'Keeps the ledger of everything the floor still owes.',
+        facts: [{ id: 'debt', text: 'It never forgives a debt; it only defers one.' }],
+      },
+    ],
+  };
 }

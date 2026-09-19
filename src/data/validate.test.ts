@@ -2,15 +2,18 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   DataError,
   isEpisodeData,
+  isRegistry,
   isShow,
   normalizeCrawler,
   normalizeEpisode,
   normalizeEvent,
+  normalizeRegistry,
+  normalizeShow,
   sortEvents,
   toNumber,
 } from './validate';
 import type { AnyEvent } from './types';
-import { makeShow, makeEpisode, makeEpisodeRaw } from '../test/fixtures';
+import { makeEpisode, makeEpisodeRaw, makeRegistry, makeShow } from '../test/fixtures';
 
 describe('normalizeEvent', () => {
   it('keeps a well-formed known event', () => {
@@ -388,5 +391,186 @@ describe('normalizeCrawler — gear and art (R2-FR-220/224)', () => {
     const crawler = normalizeCrawler({ ...base });
     expect(crawler.gear).toBeUndefined();
     expect(crawler.art).toBeUndefined();
+  });
+});
+
+/* ---------------------------------------------------- 007: npc + registry */
+
+describe('normalizeEvent (npc)', () => {
+  it('keeps a well-formed npc event with every optional field', () => {
+    expect(
+      normalizeEvent({
+        t: 118,
+        type: 'npc',
+        id: 'hoarder',
+        action: 'update',
+        note: 'It cannot see red.',
+        unlock: ['lair', 'weakness'],
+        actor: 'harry',
+      }),
+    ).toEqual({
+      t: 118,
+      type: 'npc',
+      id: 'hoarder',
+      action: 'update',
+      note: 'It cannot see red.',
+      unlock: ['lair', 'weakness'],
+      actor: 'harry',
+    });
+  });
+
+  it('keeps the bare form and omits the optional keys entirely', () => {
+    const event = normalizeEvent({ t: 10, type: 'npc', id: 'grull-rep', action: 'met' });
+    expect(event).toEqual({ t: 10, type: 'npc', id: 'grull-rep', action: 'met' });
+    expect(event).not.toHaveProperty('note');
+    expect(event).not.toHaveProperty('unlock');
+    expect(event).not.toHaveProperty('actor');
+  });
+
+  it('keeps an id the registry has never heard of (US1 scenario 5)', () => {
+    expect(normalizeEvent({ t: 140, type: 'npc', id: 'unknown-id', action: 'met' })).toMatchObject({
+      type: 'npc',
+      id: 'unknown-id',
+    });
+  });
+
+  it.each([
+    [{ t: 1, type: 'npc', action: 'met' }],
+    [{ t: 1, type: 'npc', id: '', action: 'met' }],
+    [{ t: 1, type: 'npc', id: 'hoarder' }],
+    [{ t: 1, type: 'npc', id: 'hoarder', action: 'befriended' }],
+    [{ t: 1, type: 'npc', id: ['hoarder'], action: 'met' }],
+  ])('demotes %j to `unknown`', (raw) => {
+    expect(normalizeEvent(raw).type).toBe('unknown');
+  });
+
+  it('filters `unlock` down to non-empty strings', () => {
+    expect(
+      normalizeEvent({ t: 1, type: 'npc', id: 'hoarder', action: 'update', unlock: ['lair', '', 7, null] }),
+    ).toEqual({ t: 1, type: 'npc', id: 'hoarder', action: 'update', unlock: ['lair'] });
+    expect(
+      normalizeEvent({ t: 1, type: 'npc', id: 'hoarder', action: 'update', unlock: 'lair' }),
+    ).toEqual({ t: 1, type: 'npc', id: 'hoarder', action: 'update' });
+  });
+});
+
+describe('isRegistry', () => {
+  it('accepts anything with an entities array', () => {
+    expect(isRegistry({ entities: [] })).toBe(true);
+    expect(isRegistry(makeRegistry())).toBe(true);
+  });
+
+  it.each([[null], [undefined], [[]], ['entities'], [{}], [{ entities: {} }]])(
+    'rejects %j',
+    (raw) => {
+      expect(isRegistry(raw)).toBe(false);
+    },
+  );
+});
+
+describe('normalizeRegistry', () => {
+  it('keeps every well-formed entity, with its optional fields', () => {
+    const registry = normalizeRegistry(makeRegistry());
+    expect(registry.entities.map((entity) => entity.id)).toEqual([
+      'hoarder',
+      'grull-rep',
+      'quartermaster',
+    ]);
+    expect(registry.entities[0].facts.map((fact) => fact.id)).toEqual(['lair', 'weakness']);
+    expect(registry.entities[1].aliases).toEqual(['Grull']);
+  });
+
+  it('throws only when the envelope itself is unusable', () => {
+    expect(() => normalizeRegistry({ nope: true })).toThrow(DataError);
+    expect(() => normalizeRegistry(null)).toThrow(DataError);
+    expect(normalizeRegistry({ entities: [] })).toEqual({ entities: [] });
+  });
+
+  it('drops malformed entities with a warning and keeps the rest', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const registry = normalizeRegistry({
+      entities: [
+        { id: '', name: 'Nameless', kind: 'boss', intro: 'x', facts: [] },
+        { id: 'a', name: '', kind: 'boss', intro: 'x', facts: [] },
+        { id: 'b', name: 'B', kind: 'mob', intro: 'x', facts: [] },
+        { id: 'c', name: 'C', kind: 'ally', intro: '', facts: [] },
+        'not an entity',
+        { id: 'd', name: 'D', kind: 'vendor', intro: 'Sells things.', facts: [] },
+      ],
+    });
+    expect(registry.entities.map((entity) => entity.id)).toEqual(['d']);
+    expect(warn).toHaveBeenCalledTimes(5);
+    warn.mockRestore();
+  });
+
+  it('drops malformed facts but keeps the entity', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const registry = normalizeRegistry({
+      entities: [
+        {
+          id: 'a',
+          name: 'A',
+          kind: 'boss',
+          intro: 'Large.',
+          facts: [
+            { id: 'one', text: 'Good.' },
+            { id: '', text: 'No id.' },
+            { id: 'two' },
+            { id: 'one', text: 'Duplicate.' },
+            'nope',
+          ],
+        },
+        { id: 'b', name: 'B', kind: 'ally', intro: 'Helpful.', facts: 'many' },
+      ],
+    });
+    expect(registry.entities[0].facts).toEqual([{ id: 'one', text: 'Good.' }]);
+    expect(registry.entities[1].facts).toEqual([]);
+    expect(warn).toHaveBeenCalledTimes(5);
+    warn.mockRestore();
+  });
+
+  it('keeps the first of two entities sharing an id', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const registry = normalizeRegistry({
+      entities: [
+        { id: 'a', name: 'First', kind: 'boss', intro: 'One.', facts: [] },
+        { id: 'a', name: 'Second', kind: 'ally', intro: 'Two.', facts: [] },
+      ],
+    });
+    expect(registry.entities).toHaveLength(1);
+    expect(registry.entities[0].name).toBe('First');
+    warn.mockRestore();
+  });
+
+  it('drops an alias list that is not a list of strings', () => {
+    const registry = normalizeRegistry({
+      entities: [
+        { id: 'a', name: 'A', kind: 'boss', intro: 'Large.', facts: [], aliases: ['Al', '', 3] },
+        { id: 'b', name: 'B', kind: 'ally', intro: 'Small.', facts: [], aliases: 'Bee' },
+      ],
+    });
+    expect(registry.entities[0].aliases).toEqual(['Al']);
+    expect(registry.entities[1].aliases).toBeUndefined();
+  });
+});
+
+describe('normalizeShow (registryUrl)', () => {
+  it('preserves a string registryUrl', () => {
+    expect(normalizeShow({ ...makeShow(), registryUrl: '/data/npcs.json' }).registryUrl).toBe(
+      '/data/npcs.json',
+    );
+  });
+
+  it('drops a registryUrl that is not a string, with a warning', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const show = normalizeShow({ ...makeShow(), registryUrl: 7 });
+    expect(show.registryUrl).toBeUndefined();
+    expect(warn).toHaveBeenCalledTimes(1);
+    warn.mockRestore();
+  });
+
+  it('leaves a show with no registry alone', () => {
+    const { registryUrl: _registryUrl, ...noRegistry } = makeShow();
+    expect(normalizeShow(noRegistry).registryUrl).toBeUndefined();
   });
 });

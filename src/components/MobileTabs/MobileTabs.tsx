@@ -3,8 +3,11 @@ import type { KeyboardEvent, PointerEvent, ReactNode } from 'react';
 import { copy } from '../../copy';
 import styles from './MobileTabs.module.css';
 
-/** The four phone panes, in strip order (FR-502). */
-export type TabId = 'feed' | 'party' | 'map' | 'log';
+/**
+ * The phone panes, in strip order (FR-502). `npcs` is the fifth, and exists
+ * only for a show that ships a registry (007 FR-610).
+ */
+export type TabId = 'feed' | 'party' | 'map' | 'log' | 'npcs';
 
 export interface MobileTab {
   id: TabId;

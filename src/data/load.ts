@@ -3,8 +3,8 @@
  * (constitution IV). `dataUrl` values keep the leading slash the handoff schema
  * shows and are resolved against the deploy base at fetch time (research R3).
  */
-import type { EpisodeData, EpisodeMeta, Show } from './types';
-import { DataError, normalizeEpisode, normalizeShow } from './validate';
+import type { EpisodeData, EpisodeMeta, Registry, Show } from './types';
+import { DataError, normalizeEpisode, normalizeRegistry, normalizeShow } from './validate';
 
 const SHOW_URL = '/data/show.json';
 
@@ -40,6 +40,18 @@ async function fetchJson(url: string): Promise<unknown> {
 
 export async function fetchShow(): Promise<Show> {
   return normalizeShow(await fetchJson(joinBase(baseUrl(), SHOW_URL)));
+}
+
+/**
+ * The show's entity registry (007, FR-600), or `null` when the show declares no
+ * `registryUrl` — that is not a failure, it is a show without a registry, and
+ * every piece of NPC chrome stays hidden. A declared file that cannot be read or
+ * parsed *is* a failure and throws `DataError`.
+ */
+export async function fetchRegistry(show: Show): Promise<Registry | null> {
+  const url = show.registryUrl;
+  if (url === undefined || url === '') return null;
+  return normalizeRegistry(await fetchJson(joinBase(baseUrl(), url)));
 }
 
 export async function fetchEpisode(meta: EpisodeMeta): Promise<EpisodeData> {

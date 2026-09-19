@@ -141,7 +141,8 @@
  */
 @media (min-width: 901px) {
   .rail[data-panel='dossier'],
-  .rail[data-panel='map'] {
+  .rail[data-panel='map'],
+  .rail[data-panel='npc'] {
     position: sticky;
     top: calc(var(--header-h) + var(--space-6));
   }
@@ -193,5 +194,17 @@
 .mapPane {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+}
+
+/* ------------------------------------------ 007: the Encountered strip */
+
+/*
+ * The strip under the party rail (FR-610). Its own block rather than another
+ * row in the stage column, so it keeps the column's rhythm without the rail's
+ * gap growing on every page that has no registry.
+ */
+.encounters {
+  margin-top: var(--space-2);
   min-width: 0;
 }

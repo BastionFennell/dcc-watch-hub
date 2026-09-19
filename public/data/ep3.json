@@ -245,6 +245,13 @@
       "source": "Sealed Landing Cache"
     },
     {
+      "t": 90,
+      "type": "npc",
+      "id": "the-tollkeeper",
+      "action": "met",
+      "note": "It is sitting on the only stair down."
+    },
+    {
       "t": 107,
       "type": "inventory",
       "actor": "xo",
@@ -343,6 +350,12 @@
       "durationSec": 20
     },
     {
+      "t": 230,
+      "type": "npc",
+      "id": "the-lamplighter",
+      "action": "seen"
+    },
+    {
       "t": 250,
       "type": "rank",
       "actor": "stuntman",
@@ -379,6 +392,13 @@
       "type": "rank",
       "actor": "actress",
       "rank": 3120
+    },
+    {
+      "t": 310,
+      "type": "npc",
+      "id": "ghaza-provisioner",
+      "action": "met",
+      "note": "The cart arrives before the casualties do."
     },
     {
       "t": 324,
@@ -432,6 +452,16 @@
       "type": "chapter",
       "label": "The Warden of Floor Two",
       "kind": "boss"
+    },
+    {
+      "t": 450,
+      "type": "npc",
+      "id": "the-tollkeeper",
+      "action": "update",
+      "unlock": [
+        "toll"
+      ],
+      "note": "The toll is measured in names."
     },
     {
       "t": 463,
@@ -513,6 +543,16 @@
       "durationSec": 20
     },
     {
+      "t": 600,
+      "type": "npc",
+      "id": "the-lamplighter",
+      "action": "update",
+      "unlock": [
+        "lamps"
+      ],
+      "note": "A lit lamp means the sector has been walked."
+    },
+    {
       "t": 610,
       "type": "skill",
       "actor": "actress",
@@ -566,6 +606,13 @@
         ]
       ],
       "label": "The Sump"
+    },
+    {
+      "t": 690,
+      "type": "npc",
+      "id": "the-tollkeeper",
+      "action": "defeated",
+      "note": "The stair is free. The bridge is not."
     },
     {
       "t": 692,

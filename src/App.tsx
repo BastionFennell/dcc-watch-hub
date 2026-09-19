@@ -1,10 +1,13 @@
-import { Route, Routes, useMatch } from 'react-router';
+import { Navigate, Route, Routes, useMatch } from 'react-router';
 import { ShowProvider, useShow } from './data/ShowContext';
+import { RegistryProvider } from './data/RegistryContext';
+import { RegistryIndexProvider } from './data/RegistryIndexContext';
 import { findEpisode } from './data/show';
 import { SiteHeader } from './components/SiteHeader/SiteHeader';
 import { SystemNotice } from './components/SystemNotice/SystemNotice';
 import { HubPage } from './pages/HubPage';
 import { EpisodePage } from './pages/EpisodePage';
+import { RegistryPage } from './pages/RegistryPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { copy } from './copy';
 import styles from './App.module.css';
@@ -39,6 +42,8 @@ function AppShell() {
           <Routes>
             <Route path="/" element={<HubPage />} />
             <Route path="/ep/:id" element={<EpisodePage />} />
+            <Route path="/codex" element={<RegistryPage />} />
+            <Route path="/registry" element={<Navigate to="/codex" replace />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         )}
@@ -50,7 +55,14 @@ function AppShell() {
 export function App() {
   return (
     <ShowProvider>
-      <AppShell />
+      {/* The registry needs the show's `registryUrl`, so it nests inside (007 R1). */}
+      <RegistryProvider>
+        {/* The index is lazy: nothing is fetched until the page or the panel
+            asks for it (007 R3, R3-FR-644). */}
+        <RegistryIndexProvider>
+          <AppShell />
+        </RegistryIndexProvider>
+      </RegistryProvider>
     </ShowProvider>
   );
 }
