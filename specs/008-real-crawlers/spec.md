@@ -79,3 +79,58 @@ heal spell. Adjust the size of the image for Mimi so it fits better."
 - Player credits from the author: Harry - Bobby, Mimi - Lulu, Ronald - Madio, X.O. - Danny.
   A fifth crawler, **Lauren (played by Sarah)**, joins when her sheet arrives; not yet in data.
 - Pronouns use the slash form ("she/her"), not the sheet's "she + her".
+
+## Revision 4 (2026-09-18) - shared spell registry from the Crawlers book
+
+Author: "Take all of the spells in the Crawlers book and model them out to make sure our spell
+model works for all cases, then have Ronald and Mimi's heal spells point to that model instead of
+each one being modeled independently."
+
+Source: `Crawlers_Digital_Hi-Res_081226.pdf` (gitignored, copyrighted; pp. 36-41, "Spell Skills"
+and the SPELLS CHART on p. 2). Every spell entry carries: Name (with parenthesised aliases), a
+flavour quote, a type line (`Attack` or `Passive`, optionally `Interrupt`, a damage type, `Area of
+Effect`), Mana Cost, optional Range / Duration / AI Favor / Limitations / Cooldown, a description,
+optional Base Damage, and an UPGRADES block (`Rank N: text`, or `None`). The chart adds a d100 roll
+range and page number.
+
+### Model
+- New registry `public/data/spells.json` (`show.json` gains `spellsUrl`, loaded like `registryUrl`):
+  `{ spells: SpellDef[] }` with `SpellDef = { id (kebab), name, aliases?: string[], quote?, kind:
+  'attack' | 'passive', interrupt?: boolean, damageType?: string, areaOfEffect?: boolean,
+  manaCost: number, range?: string, duration?: string, aiFavor?: number, limitations?: string,
+  cooldown?: string, description: string, baseDamage?: string, upgrades: { rank: number; text:
+  string }[], roll?: [number, number], page?: number }`. Validated by `validateSpells` (same shape
+  of failure handling as `validateRegistry`); JSON schema in `specs/008-real-crawlers/contracts/spells.schema.json`.
+- Crawler spell entries and the `spell` event gain `ref?: string` (a `SpellDef.id`). A referenced
+  entry inherits name, mana, and the full description from the registry; `rank` stays per crawler;
+  `mana`/`desc` on the entry are explicit overrides (kept for homebrew or scroll-only spells with
+  no registry row). An entry with neither `ref` nor `name` is invalid; an unknown `ref` is a
+  validation warning that falls back to the entry's own fields (or the ref as the name).
+- `HotlistEntry` gains the same `ref?`, so a hotlist key can point at a spell and get its name and
+  tooltip from the registry.
+- Resolution lives in `src/engine/spells.ts` (React-free): `resolveSpell(entry, registry) ->
+  SpellView { id?, name, rank?, mana?, kind?, tags: string[], range?, duration?, aiFavor?,
+  limitations?, cooldown?, description, baseDamage?, upgrades, quote? }`. Selectors take the
+  registry the way they take the NPC registry today; `Dossier.spells` and `hotbarSlots` return
+  resolved views.
+- Tooltip body for a resolved spell: name, tag line ("Interrupt · Passive" / "Attack · Fire ·
+  Area of Effect"), then "Mana N · Range … · Duration …" as present, Limitations / Cooldown lines,
+  description, Base Damage, and Upgrades ("Rank 5: …"). Unresolved entries keep today's plain body.
+  The spells list view shows the same fields under the name.
+
+### Data
+- `spells.json` carries every spell on the chart (Astral Paw through the end of the chapter),
+  transcribed verbatim from the book. This is the "all cases" check: a samples test asserts the
+  chart's names all resolve, every entry validates, and at least one spell exercises each optional
+  field (aliases, interrupt, AoE, duration, aiFavor, limitations, cooldown, baseDamage, `upgrades:
+  []`).
+- Mimi: `spells: [{ ref: 'heal', rank: 1 }]`, hotlist `[{ ref: 'heal' }, { name: 'Standard Mana
+  Potion', qty: 5, desc }]`; her inline Heal `desc` strings are removed. Ronald: his hotlist string
+  "Heal Spell (Interrupt) Rank 1 (Max): Mana Cost 2, heal 2 slots" becomes `{ ref: 'heal' }` and he
+  gains `spells: [{ ref: 'heal', rank: 1 }]`; the sample `spell` events use `ref: 'heal'`.
+- Converter: `spell` rows accept a registry id in field1 (`ref` when it matches `^[a-z0-9-]+$` and
+  `--spells` is given, else `name`); `--spells <path>` validates refs like `--registry` does.
+
+### Non-goals
+Spells are not listed in the Dungeon Codex; no random-roll UI; the book text stays in the data
+file only (private repo - flag before any public release).
