@@ -177,13 +177,13 @@ describe('FullRecordDialog', () => {
     expect(delta).toHaveAttribute('data-direction', 'down');
   });
 
-  it('credits the player with a real separator in the accessible name (T338)', () => {
+  it('credits the player on its own line, without repeating the handle (008 r3)', () => {
     open(dossierAt(200));
 
     const band = screen.getByTestId('dossier-name').parentElement as HTMLElement;
     expect(band).toHaveTextContent(copy.playedBy('Marcus'));
-    // The dot is decorative; the comma beside it is what a reader hears.
-    expect(band.textContent).toContain(copy.srSeparator);
+    expect(band.textContent).not.toContain(copy.srSeparator);
+    expect(band.textContent).not.toContain('Harry·');
   });
 
   it('caps the tile grids at eight and offers the rest behind "View all"', () => {

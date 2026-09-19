@@ -161,26 +161,11 @@ export function DossierHeader({ dossier, meta }: DossierHeaderProps) {
           <h3 className={styles.name} data-testid="dossier-name">
             {dossier.name}
           </h3>
-          {/*
-            A real separator, not a CSS-only one (UX review 0.7): the dot is
-            decorative and hidden, and the comma beside it is what an accessible
-            name reads, so this is "Harry, played by Marcus" and never
-            "Harryplayed by Marcus" (T338).
-          */}
-          <p className={styles.handle}>
-            {dossier.handle}
-            {/* 008: the real sheets name no player, so the credit only appears
-                when the data actually carries one. */}
-            {dossier.player.trim() !== '' && (
-              <>
-                <span className={styles.dot} aria-hidden="true">
-                  {'·'}
-                </span>
-                <span className="sr-only">{copy.srSeparator}</span>
-                {copy.playedBy(dossier.player)}
-              </>
-            )}
-          </p>
+          {/* The handle repeats the name, so only the credit remains, when
+              there is one. */}
+          {dossier.player.trim() !== '' && (
+            <p className={styles.handle}>{copy.playedBy(dossier.player)}</p>
+          )}
         </div>
       </header>
 

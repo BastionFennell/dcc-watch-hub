@@ -32,24 +32,24 @@ const equippedRows = () => screen.queryAllByTestId('glance-equipped-row');
 const historyRows = () => screen.queryAllByTestId('glance-history-row');
 
 describe('CrawlerGlance', () => {
-  it('shows the identity header with separators a screen reader can hear', () => {
+  it('shows the identity header with the credit and separators a screen reader can hear', () => {
     const { container } = renderGlance(glanceAt(200));
     expect(screen.getByTestId('crawler-glance')).toHaveAttribute('data-crawler', 'harry');
     expect(screen.getByTestId('glance-name')).toHaveTextContent('Harry');
 
-    // The player is credited, not repeated as a bare name (UX review 0.8), and
-    // each half of the line is its own element with a real separator between
-    // them (0.7) - so the accessible text reads "Harry, played by Marcus".
+    // The player is credited on its own line; the handle is gone because it
+    // only repeated the name (008 r3).
     expect(screen.getByText(copy.playedBy('Marcus'))).toBeInTheDocument();
+    expect(screen.getByTestId('glance-header').textContent).not.toContain('Harry·');
     const header = screen.getByTestId('glance-header');
     expect(header).toHaveTextContent('Compensated Anarchist');
     expect(header).toHaveTextContent(copy.levelShort(2));
     // The "·" carries no literal spaces any more - the rows around it are flex
     // containers, which trimmed them, so the spacing is a margin now (T330).
-    expect(header.textContent).toContain(`Harry·${copy.srSeparator}played by Marcus`);
+    expect(header.textContent).toContain(`Compensated Anarchist·${copy.srSeparator}`);
     const dots = container.querySelectorAll('[aria-hidden="true"]');
-    expect(dots.length).toBeGreaterThanOrEqual(2);
-    expect(header.querySelectorAll('.sr-only')).toHaveLength(2);
+    expect(dots.length).toBeGreaterThanOrEqual(1);
+    expect(header.querySelectorAll('.sr-only')).toHaveLength(1);
   });
 
   it('labels the HP strip and keeps the sheet’s ten segments (T344)', () => {

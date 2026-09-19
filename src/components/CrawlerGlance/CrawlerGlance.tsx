@@ -93,17 +93,11 @@ export function CrawlerGlance({ glance, onOpenRecord }: CrawlerGlanceProps) {
           <h3 className={styles.name} data-testid="glance-name">
             {glance.name}
           </h3>
-          <p className={styles.handle}>
-            <span>{glance.handle}</span>
-            {/* 008: the real sheets name no player, so the credit only appears
-                when the data actually carries one. */}
-            {glance.player.trim() !== '' && (
-              <>
-                <Separator />
-                <span>{copy.playedBy(glance.player)}</span>
-              </>
-            )}
-          </p>
+          {/* The handle repeats the name (the sheets already carry the
+              preferred name), so only the credit remains, when there is one. */}
+          {glance.player.trim() !== '' && (
+            <p className={styles.handle}>{copy.playedBy(glance.player)}</p>
+          )}
           <p className={styles.classLine}>
             <span>{glance.class ?? copy.unclassed}</span>
             <Separator />
