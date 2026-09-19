@@ -219,6 +219,7 @@ describe('public/data/npcs.json', () => {
       expect(existsSync(resolve(root, `public${entity.portrait}`)), entity.id).toBe(true);
     }
   });
+
 });
 
 describe('npc events across the sample episodes', () => {
@@ -416,7 +417,7 @@ describe('spell refs across the sample episodes', () => {
     const episode = normalizeEpisode(readJson(resolve(root, 'public/data/ep1.json')));
     for (const id of ['mimi', 'ronald']) {
       const crawler = episode.initialState.party.find((entry) => entry.id === id);
-      expect(crawler?.spells, id).toEqual([{ ref: 'heal', rank: 1 }]);
+      expect((crawler?.spells ?? [])[0], id).toEqual({ ref: 'heal', rank: 1 });
       expect(crawler?.hotlist?.[0], id).toEqual({ ref: 'heal' });
 
       const view = resolveSpell((crawler?.spells ?? [])[0], index);
@@ -428,5 +429,16 @@ describe('spell refs across the sample episodes', () => {
       // The sheets no longer restate the book's text on the crawler.
       expect((crawler?.spells ?? [])[0].desc).toBeUndefined();
     }
+  });
+
+  it('gives Mimi Frost Scar as a spell and a hotlist key, not a skill', () => {
+    const episode = normalizeEpisode(readJson(resolve(root, 'public/data/ep1.json')));
+    const mimi = episode.initialState.party.find((entry) => entry.id === 'mimi');
+    expect(mimi?.spells).toContainEqual({ ref: 'frost-scar', rank: 3 });
+    expect(mimi?.hotlist).toContainEqual({ ref: 'frost-scar' });
+    expect(mimi?.skills.some((skill) => skill.name === 'Frost Scar')).toBe(false);
+    const view = resolveSpell({ ref: 'frost-scar', rank: 3 }, index);
+    expect(view.mana).toBe(2);
+    expect(view.tags).toEqual(['Attack', 'Ice']);
   });
 });
