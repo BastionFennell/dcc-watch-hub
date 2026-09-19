@@ -651,3 +651,45 @@
   height: 100%;
   max-width: none;
 }
+
+/* --- mana (009): one segment per point, System blue, directly under HP --- */
+
+.manaRow {
+  flex: 1 1 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+  min-width: 0;
+}
+
+.manaStrip {
+  display: flex;
+  gap: 2px;
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+/*
+ * Fixed-width keys rather than the HP strip's fractional ones. HP always draws
+ * ten segments so a fraction is the right unit; a pool draws as many as the
+ * crawler has, so a fraction would make a five-point pool's keys wider than a
+ * six-point pool's and the two would stop reading at the same scale.
+ */
+.manaSegment {
+  flex: 0 0 24px;
+  height: 12px;
+  background: var(--hairline);
+  border-radius: 2px;
+}
+
+.manaSegment[data-filled='true'] {
+  background: var(--system-fg);
+}
+
+.manaValue {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}

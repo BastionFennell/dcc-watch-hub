@@ -815,3 +815,101 @@ describe('validateSpells', () => {
     warn.mockRestore();
   });
 });
+
+/* ------------------------------------------------------------ 009: mana */
+
+describe('normalizeEvent - the mana event (009)', () => {
+  it('keeps a well-formed reading, with and without a max', () => {
+    expect(normalizeEvent({ t: 192, type: 'mana', actor: 'mimi', current: 3, max: 5 })).toEqual({
+      t: 192,
+      type: 'mana',
+      actor: 'mimi',
+      current: 3,
+      max: 5,
+    });
+    expect(normalizeEvent({ t: 192, type: 'mana', actor: 'mimi', current: 3 })).toEqual({
+      t: 192,
+      type: 'mana',
+      actor: 'mimi',
+      current: 3,
+    });
+  });
+
+  it('reads a missing max the same as an absent one, and coerces numeric strings', () => {
+    expect(normalizeEvent({ t: 1, type: 'mana', actor: 'mimi', current: '3', max: null })).toEqual({
+      t: 1,
+      type: 'mana',
+      actor: 'mimi',
+      current: 3,
+    });
+  });
+
+  it('demotes a reading with no actor or no current', () => {
+    expect(normalizeEvent({ t: 1, type: 'mana', current: 3, max: 5 }).type).toBe('unknown');
+    expect(normalizeEvent({ t: 1, type: 'mana', actor: 'mimi', max: 5 }).type).toBe('unknown');
+    expect(normalizeEvent({ t: 1, type: 'mana', actor: 'mimi', current: 'lots' }).type).toBe(
+      'unknown',
+    );
+  });
+
+  it('rejects a negative reading and a max that is not a pool', () => {
+    expect(normalizeEvent({ t: 1, type: 'mana', actor: 'mimi', current: -1 }).type).toBe('unknown');
+    expect(normalizeEvent({ t: 1, type: 'mana', actor: 'mimi', current: 1, max: 0 }).type).toBe(
+      'unknown',
+    );
+    expect(normalizeEvent({ t: 1, type: 'mana', actor: 'mimi', current: 1, max: -3 }).type).toBe(
+      'unknown',
+    );
+  });
+
+  // The clamp is the reducer's job, exactly as it is for `hp`: a sheet that
+  // over-reads the pool is still a reading, not a malformed row.
+  it('keeps a current above max and leaves the clamp to the reducer', () => {
+    expect(normalizeEvent({ t: 1, type: 'mana', actor: 'mimi', current: 9, max: 5 })).toEqual({
+      t: 1,
+      type: 'mana',
+      actor: 'mimi',
+      current: 9,
+      max: 5,
+    });
+  });
+});
+
+describe('normalizeCrawler - the mana box (009)', () => {
+  const base = {
+    id: 'mimi',
+    name: 'Mimi Rivers',
+    handle: 'Mimi',
+    player: 'Lulu',
+    level: 1,
+    hp: { current: 18, max: 18 },
+    portrait: '/img/crawlers/mimi.svg',
+    class: null,
+    inventory: [],
+    rank: null,
+  };
+
+  it('keeps a well-formed box', () => {
+    expect(normalizeCrawler({ ...base, mana: { current: 3, max: 5 } } as never).mana).toEqual({
+      current: 3,
+      max: 5,
+    });
+  });
+
+  it('drops a malformed or negative box so the derivation rule applies', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    expect(normalizeCrawler({ ...base, mana: { current: -1, max: 5 } } as never).mana).toBeUndefined();
+    expect(normalizeCrawler({ ...base, mana: { current: 1, max: -5 } } as never).mana).toBeUndefined();
+    expect(normalizeCrawler({ ...base, mana: 5 } as never).mana).toBeUndefined();
+    expect(normalizeCrawler({ ...base, mana: { current: 1 } } as never).mana).toBeUndefined();
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('allows an empty pool, which is not the same as a missing box', () => {
+    expect(normalizeCrawler({ ...base, mana: { current: 0, max: 0 } } as never).mana).toEqual({
+      current: 0,
+      max: 0,
+    });
+  });
+});

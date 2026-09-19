@@ -249,6 +249,12 @@ export interface Crawler {
   pronouns?: string;
   crawlerNumber?: string | number;
   stats?: CrawlerStats;
+  /**
+   * Mana (009). Absent means the rule applies: max = `stats.int`, current = max
+   * (see `fromInitialState`), so a sheet that never wrote a mana box still gets
+   * one. Present, it wins verbatim - a sheet is allowed to disagree with the rule.
+   */
+  mana?: Hp;
   hotlist?: (string | HotlistEntry)[];
   skills?: SkillEntry[];
   /** The sheet's spell list (008 revision 2); absent means none inscribed. */
@@ -314,6 +320,17 @@ export interface HpEvent extends EventBase {
   actor: string;
   current: number;
   max: number;
+}
+
+/**
+ * A mana reading (009), the `hp` event's shape with an optional `max`: a dip
+ * that leaves the pool alone omits it and the reducer keeps the standing max.
+ */
+export interface ManaEvent extends EventBase {
+  type: 'mana';
+  actor: string;
+  current: number;
+  max?: number;
 }
 
 export interface LevelUpEvent extends EventBase {
@@ -462,6 +479,7 @@ export type Event =
   | AchievementEvent
   | LootEvent
   | HpEvent
+  | ManaEvent
   | LevelUpEvent
   | RankEvent
   | MapRevealEvent
@@ -496,6 +514,7 @@ export const KNOWN_EVENT_TYPES = [
   'achievement',
   'loot',
   'hp',
+  'mana',
   'level_up',
   'rank',
   'map_reveal',

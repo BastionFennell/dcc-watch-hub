@@ -217,3 +217,48 @@ describe('CrawlerGlance', () => {
     expect(onOpenRecord).toHaveBeenCalledWith(button);
   });
 });
+
+/* ------------------------------------------------------------ 009: mana */
+
+describe('CrawlerGlance - the MANA row', () => {
+  it('draws one segment per point of the pool, filled to the current value', () => {
+    // The Psychic's sheet writes 5/5.
+    renderGlance(glanceAt(0, 'psychic'));
+    expect(screen.getByText(copy.vitalsMana)).toBeInTheDocument();
+    expect(screen.getByTestId('mana-segments')).toHaveAttribute(
+      'aria-label',
+      copy.manaAria(5, 5),
+    );
+    expect(screen.getByTestId('mana-segments')).toHaveAttribute('role', 'img');
+    expect(screen.getAllByTestId('mana-segment')).toHaveLength(5);
+    expect(screen.getByTestId('glance-mana')).toHaveTextContent(copy.hpValue(5, 5));
+  });
+
+  it('empties segments as the pool is spent, and refills them on a rewind', () => {
+    // The fixture spends The Psychic's pool at t = 171 and restores it at 172.
+    const { rerender } = renderGlance(glanceAt(171, 'psychic'));
+    const filled = () =>
+      screen.getAllByTestId('mana-segment').filter((seg) => seg.dataset.filled === 'true');
+    expect(filled()).toHaveLength(2);
+    expect(screen.getByTestId('glance-mana')).toHaveTextContent(copy.hpValue(2, 5));
+
+    // Scrubbing back is not an undo: the card is rebuilt from the elapsed log.
+    rerender(<CrawlerGlance glance={glanceAt(0, 'psychic')} onOpenRecord={vi.fn()} />);
+    expect(filled()).toHaveLength(5);
+    expect(screen.getByTestId('glance-mana')).toHaveTextContent(copy.hpValue(5, 5));
+  });
+
+  it('shows no row at all for a crawler with no pool', () => {
+    // X.O. has neither a mana box nor an INT to derive one from.
+    renderGlance(glanceAt(0, 'xo'));
+    expect(screen.queryByTestId('mana-segments')).toBeNull();
+    expect(screen.queryByTestId('glance-mana')).toBeNull();
+    expect(screen.queryByText(copy.vitalsMana)).toBeNull();
+  });
+
+  it('leaves the HP strip exactly as it was', () => {
+    renderGlance(glanceAt(0, 'psychic'));
+    expect(screen.getAllByTestId('hp-segment')).toHaveLength(10);
+    expect(screen.getByTestId('glance-hp')).toHaveTextContent(copy.hpValue(20, 20));
+  });
+});

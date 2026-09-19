@@ -115,6 +115,14 @@ export function makeEpisodeRaw(episodeId = 1): unknown {
         crawler('psychic', 'The Psychic', 3, 20, 'Signal', 'Rae', {
           race: 'Human',
           pronouns: 'she/her',
+          /*
+           * 009: the one fixture crawler whose sheet writes the mana box. She has
+           * no stats at all, so the rule would give her no pool - the explicit box
+           * winning over that is the precedence the model promises. Harry has INT
+           * and no box, so he exercises the derivation; everyone else has neither
+           * and reads 0/0, which is how the strip learns to hide.
+           */
+          mana: { current: 5, max: 5 },
           hotlist: [
             {
               name: 'Mana Draught',
@@ -200,6 +208,9 @@ export function makeEpisodeRaw(episodeId = 1): unknown {
       { t: 168, type: 'unequip', actor: 'harry', slot: 'hands' },
       { t: 169, type: 'equip', actor: 'harry', slot: 'hands', item: 'Torch' },
       { t: 170, type: 'hp', actor: 'harry', current: 20, max: 22 },
+      // 009: a dip that leaves the pool alone (no `max`), then a full restore.
+      { t: 171, type: 'mana', actor: 'psychic', current: 2 },
+      { t: 172, type: 'mana', actor: 'psychic', current: 5, max: 5 },
       { t: 175, type: 'map_reveal', cells: [[6, 5], [6, 6], [7, 5]], label: 'The Rot Market' },
       { t: 185, type: 'npc', id: 'hoarder', action: 'update', unlock: ['weakness'], note: 'It cannot see red.' },
       { t: 195, type: 'npc', id: 'hoarder', action: 'defeated' },

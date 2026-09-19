@@ -24,7 +24,7 @@ import { normalizeRegistry, validateSpells } from '../src/data/validate';
 
 const root = resolve(__dirname, '..');
 const samples = resolve(root, 'scripts/samples');
-const schemaPath = resolve(root, 'specs/008-real-crawlers/contracts/episode.schema.json');
+const schemaPath = resolve(root, 'specs/009-mana/contracts/episode.schema.json');
 
 const ajv = new Ajv({ strict: false, allErrors: true });
 addFormats(ajv);
@@ -155,6 +155,7 @@ describe('convert(scripts/samples/ep1.csv)', () => {
       'achievement',
       'loot',
       'hp',
+      'mana',
       'level_up',
       'rank',
       'map_reveal',
@@ -904,5 +905,51 @@ describe('parseArgs --spells (008 revision 4)', () => {
 
   it('rejects an empty path', () => {
     expect(parseArgs([...base, '--spells='])).toEqual({ error: '--spells <path> must name a file' });
+  });
+});
+
+/* ------------------------------------------------------------ 009: mana */
+
+describe('the mana row (009)', () => {
+  it('reads field1 as the current pool and field2 as the max', () => {
+    const result = rowToEvent(
+      sheetRow({ type: 'mana', actor: 'mimi', field1: '3', field2: '5' }),
+      rowCtx(),
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.warnings).toEqual([]);
+    expect(result.event).toEqual({ t: 10, type: 'mana', actor: 'mimi', current: 3, max: 5 });
+  });
+
+  it('leaves the max out when field2 is empty', () => {
+    const result = rowToEvent(sheetRow({ type: 'mana', actor: 'mimi', field1: '3' }), rowCtx());
+    expect(result.errors).toEqual([]);
+    expect(result.event).toEqual({ t: 10, type: 'mana', actor: 'mimi', current: 3 });
+  });
+
+  it('errors on a missing or non-numeric reading', () => {
+    expect(rowToEvent(sheetRow({ type: 'mana', actor: 'mimi' }), rowCtx()).errors).toEqual([
+      'empty required field: current (field1)',
+    ]);
+    const bad = rowToEvent(
+      sheetRow({ type: 'mana', actor: 'mimi', field1: 'lots' }),
+      rowCtx(),
+    );
+    expect(bad.errors).toEqual(['current (field1) is not numeric: "lots"']);
+    expect(bad.event).toBeNull();
+  });
+
+  it('errors on a non-numeric max', () => {
+    const result = rowToEvent(
+      sheetRow({ type: 'mana', actor: 'mimi', field1: '3', field2: 'plenty' }),
+      rowCtx(),
+    );
+    expect(result.errors).toEqual(['max (field2) is not numeric: "plenty"']);
+    expect(result.event).toBeNull();
+  });
+
+  it('warns when the row names nobody', () => {
+    const result = rowToEvent(sheetRow({ type: 'mana', field1: '3' }), rowCtx());
+    expect(result.warnings).toContain('mana row has no actor');
   });
 });

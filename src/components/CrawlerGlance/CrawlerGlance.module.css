@@ -82,6 +82,23 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* --- mana: the same row shape one line under HP (009) --- */
+
+.manaRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.manaValue {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
 /* --- rank --- */
 
 .rankBlock {

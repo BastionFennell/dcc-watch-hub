@@ -8,6 +8,7 @@ import type {
   Crawler,
   Gear,
   HotlistEntry,
+  Hp,
   InitialState,
   InventoryEntry,
   MapState,
@@ -57,9 +58,24 @@ export function entriesFrom<T extends { name?: string }>(
   );
 }
 
+/**
+ * A crawler's mana at t = 0 (009). The sheet's own box wins verbatim; with no
+ * box the rule applies - max is the crawler's INT and the pool starts full -
+ * and a crawler with no stats at all has no pool, which reads as 0/0 and hides
+ * the strip rather than inventing one.
+ */
+export function manaFrom(crawler: Crawler): Hp {
+  if (crawler.mana !== undefined) return { ...crawler.mana };
+  const int = crawler.stats?.int;
+  if (typeof int !== 'number') return { current: 0, max: 0 };
+  return { current: int, max: int };
+}
+
 /** `gear` is replaced by the normalized `GearState`, so it is omitted here. */
 export interface CrawlerState
-  extends Omit<Crawler, 'gear' | 'hotlist' | 'inventory' | 'skills' | 'spells'> {
+  extends Omit<Crawler, 'gear' | 'hotlist' | 'inventory' | 'mana' | 'skills' | 'spells'> {
+  /** Always present, unlike `Crawler.mana`: derived from INT when absent (009). */
+  mana: Hp;
   /** Derived; empty at t = 0 (the initial-state schema has no status field). */
   statuses: string[];
   /** Achievement titles earned so far, in order. */
@@ -106,6 +122,7 @@ export function fromInitialState(init: InitialState): OverlayState {
     party: init.party.map((crawler) => ({
       ...crawler,
       hp: { ...crawler.hp },
+      mana: manaFrom(crawler),
       inventory: entriesFrom<InventoryEntry>(crawler.inventory),
       statuses: [],
       achievements: [],

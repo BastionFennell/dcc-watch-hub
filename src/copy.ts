@@ -59,6 +59,8 @@ export const copy = {
     unequip: 'Unequip',
     /* --- appended by 007 (FR-612): every entity row is filed as an Entity. --- */
     npc: 'Entity',
+    /* --- appended by 009: a mana reading is filed under its own name. --- */
+    mana: 'Mana',
   } as const,
 
   // Stage
@@ -138,6 +140,15 @@ export const copy = {
       note ? `${name}: ${note}` : `The System amends its file on ${name}`,
     npcDefeated: (name: string, note?: string) =>
       note ? `${name} is no more - ${note}` : `${name} is no more`,
+    /*
+     * Appended by 009: the hp line's shape, reading the pool instead. A row
+     * that omits its max has no denominator to state - the feed carries no
+     * crawler state to read one from - so the line simply says what it read.
+     */
+    mana: (actor: string, current: number, max?: number) =>
+      max === undefined
+        ? `${actor} holding at ${current} mana`
+        : `${actor} holding at ${current}/${max} mana`,
   },
 
   /* --- appended by T025–T029 (archive navigation) --- */
@@ -586,6 +597,16 @@ export const copy = {
   /** The UPGRADES block: its heading, then one line per rank. */
   spellUpgrades: 'Upgrades',
   spellUpgrade: (rank: number, text: string) => `Rank ${rank}: ${text}`,
+
+  /* --- appended by 009 (mana) --- */
+
+  /** Mono caps label before the mana strip, under HP in VITALS. */
+  vitalsMana: 'MANA',
+  /**
+   * The mana strip's accessible name: "Mana 5 of 5". The strip is the only thing
+   * that carries it, so it opens with the word the label repeats visually.
+   */
+  manaAria: (current: number, max: number) => `Mana ${current} of ${max}`,
 } as const;
 
 export type Copy = typeof copy;

@@ -10,6 +10,7 @@ import addFormats from 'ajv-formats';
 import type { EpisodeData, NpcEvent, Registry, Show, SpellRegistry } from './types';
 import { isRegistry, isShow, isSpellRegistry, normalizeEpisode, normalizeRegistry, validateSpells } from './validate';
 import { resolveSpell, spellIndex } from '../engine/spells';
+import { fromInitialState } from '../engine/state';
 import { orderedEpisodeIds } from './show';
 
 const root = resolve(__dirname, '../..');
@@ -20,7 +21,9 @@ const contracts = resolve(root, 'specs/007-npc-registry/contracts');
 // inventory entries, a spell list, a `spell` event), and revision 4 extends the
 // show ("spellsUrl") and adds the spell registry's own schema. Only the entity
 // registry's schema is unchanged, so that one stays where 007 left it.
-const episodeSchemaPath = resolve(root, 'specs/008-real-crawlers/contracts/episode.schema.json');
+// 009 extends the episode contract once more (the crawler's `mana` box and the
+// `mana` event); the show and spell schemas are untouched and stay with 008.
+const episodeSchemaPath = resolve(root, 'specs/009-mana/contracts/episode.schema.json');
 const showSchemaPath = resolve(root, 'specs/008-real-crawlers/contracts/show.schema.json');
 const spellsSchemaPath = resolve(root, 'specs/008-real-crawlers/contracts/spells.schema.json');
 const dataDir = resolve(root, 'public/data');
@@ -97,6 +100,7 @@ describe.each(show.episodes.map((meta) => [meta.id, meta] as const))(
         'achievement',
         'loot',
         'hp',
+        'mana',
         'level_up',
         'rank',
         'map_reveal',
@@ -155,6 +159,24 @@ describe.each(show.episodes.map((meta) => [meta.id, meta] as const))(
       const episode = normalizeEpisode(raw);
       for (const crawler of episode.initialState.party) {
         expect(existsSync(resolve(root, `public${crawler.portrait}`))).toBe(true);
+      }
+    });
+
+    // 009: every sheet now writes the mana box explicitly, and every one of them
+    // agrees with the rule the state would have applied anyway - a full pool the
+    // size of the crawler's INT.
+    it('gives every crawler a full mana pool the size of their INT at t = 0', () => {
+      const episode = normalizeEpisode(raw);
+      const state = fromInitialState(episode.initialState);
+      for (const crawler of episode.initialState.party) {
+        const int = crawler.stats?.int;
+        expect(int, `${crawler.id} has an INT to derive mana from`).toBeGreaterThan(0);
+        expect(crawler.mana, `${crawler.id} writes mana explicitly`).toEqual({
+          current: int,
+          max: int,
+        });
+        const derived = state.party.find((entry) => entry.id === crawler.id);
+        expect(derived?.mana, `${crawler.id} at t = 0`).toEqual({ current: int, max: int });
       }
     });
 

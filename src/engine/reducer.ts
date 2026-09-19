@@ -149,6 +149,17 @@ export function applyEvent(state: OverlayState, event: AnyEvent): OverlayState {
         hp: { current: clamp(event.current, 0, event.max), max: event.max },
       }));
 
+    /*
+     * Mana (009) clamps like hp. The only difference is the optional `max`: a
+     * row that only reads the pool keeps the standing max, so a dip event never
+     * has to restate a number the sheet already settled.
+     */
+    case 'mana':
+      return withCrawler(state, event.actor, (crawler) => {
+        const max = event.max ?? crawler.mana.max;
+        return { ...crawler, mana: { current: clamp(event.current, 0, max), max } };
+      });
+
     case 'level_up':
       return withCrawler(state, event.actor, (crawler) => ({
         ...crawler,

@@ -133,7 +133,9 @@ feed for that crawler's glance card - how they are doing *right now*, in a coupl
 
 1. **Header** - portrait, name, handle · played by {player}, class (or "Unclassed") · level. The
    "·" is decorative and hidden; a comma beside it is what a screen reader hears.
-2. **Vitals** - an `HP` label, the sheet's ten-segment strip and current/max.
+2. **Vitals** - an `HP` label, the sheet's ten-segment strip and current/max, then a `MANA`
+   row directly beneath it: one System-blue segment per point of the pool, filled to the current
+   value, and current/max. A crawler with no pool (`max` 0) has no mana row at all.
 3. **Rank** - a `RANK` label, the current rank, a ↑/↓ delta against the previous elapsed `rank`
    event (↑ means the number fell, which is a climb), then `BEST`; a full-width sparkline of
    every elapsed rank point sits on its own row under them, with a text summary for assistive
@@ -169,7 +171,8 @@ overlay allowed to cover the stage. Revision 2 lays it out as a character sheet 
   instead. At ≤ 900 px the art becomes a banner above the identity.
 - **Top band** - identity (portrait, name, handle, played by, race, pronouns, crawler number,
   level, class, floor) and vitals side by side, with the **STATS** strip (STR / INT / CON / DEX
-  / CHA, when the data carries them) full width beneath them.
+  / CHA, when the data carries them) full width beneath them. **VITALS** is the HP strip, then
+  the **MANA** row under it (one segment per point, System blue, current/max), then rank.
 - **Hotbar** - the Hotlist as ten numbered square keys filled in order, empty keys dashed and
   unlit, and a `+N` marker after key ten when the crawler is tracking more than ten. A key shows
   the entry's short name; when the entry carries a quantity above one, an `x5` box sits in the
@@ -705,6 +708,7 @@ required; columns are `timecode,type,actor,field1,field2,field3`
 | `achievement` | title | desc | – |
 | `loot` | item | source | – |
 | `hp` | current | max | – |
+| `mana` | current | max (number, optional) | – |
 | `level_up` | level | – | – |
 | `rank` | rank | – | – |
 | `map_reveal` | cells `r,c;r,c` | label | – |
@@ -744,11 +748,18 @@ checked too.
 
 `--initial-state` is a JSON file holding the episode's `initialState` (`party` and `map`).
 Each crawler there may carry the optional sheet fields the dossier renders - `race`, `pronouns`,
-`crawlerNumber`, `stats` (`{ str, int, con, dex, cha }`), `hotlist[]`, `skills[]`
+`crawlerNumber`, `stats` (`{ str, int, con, dex, cha }`), `mana` (`{ current, max }`), `hotlist[]`, `skills[]`
 (`{ name, rank?, desc? }`), `spells[]` (`{ name?, ref?, rank?, mana?, desc? }`), `gear`
 (`{ head?, torso?, arms?, hands?, legs?, feet?, accessories[]? }`)
 and `art` (a full-figure image path; the record falls back to the bust without it). They need no new CSV columns, and v1 files without them keep working: the
 dossier simply omits what it does not know.
+
+**Mana** (009) is the one optional field with a rule behind it. Write `mana` and it is taken
+verbatim - a sheet is allowed to disagree. Leave it out and the state derives it: `max` is the
+crawler's `stats.int` and the pool starts full, so a file that never heard of mana still shows a
+strip. A crawler with no `stats` either has no pool at all, which reads as 0/0 and hides the
+strip rather than inventing one. Every shipped crawler writes the box explicitly, and every one
+of them agrees with the rule.
 
 `hotlist[]` and `inventory[]` take either a plain string or an object
 (`{ name, qty?, desc? }`, plus `ref` on a hotlist mark) - a string is the shorthand for

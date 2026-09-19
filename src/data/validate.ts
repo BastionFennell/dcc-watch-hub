@@ -16,6 +16,7 @@ import type {
   Gear,
   GearSlot,
   HotlistEntry,
+  Hp,
   InitialState,
   InventoryEntry,
   MapState,
@@ -193,6 +194,22 @@ export function normalizeEvent(raw: unknown): AnyEvent {
         return unknownEvent(t, raw);
       }
       return { t, type: 'hp', actor, current, max };
+    }
+    /*
+     * Mana (009): the `hp` row's shape, with two deliberate differences. `max`
+     * is optional - a dip that does not move the pool omits it and the reducer
+     * keeps the standing max - and a negative `current` is rejected outright
+     * rather than clamped, because a mana pool has no wound to read (spec 009,
+     * Acceptance). A `current` above `max` still passes here and is clamped by
+     * the reducer, exactly as `hp` does.
+     */
+    case 'mana': {
+      const current = toNumber(raw.current);
+      if (actor === null || current === null || current < 0) return unknownEvent(t, raw);
+      if (raw.max === undefined || raw.max === null) return { t, type: 'mana', actor, current };
+      const max = toNumber(raw.max);
+      if (max === null || max <= 0) return unknownEvent(t, raw);
+      return { t, type: 'mana', actor, current, max };
     }
     case 'level_up': {
       const level = toNumber(raw.level);
@@ -457,6 +474,19 @@ function toCrawlerNumber(x: unknown): string | number | null {
  * formed. A malformed optional field is dropped with a warning - never fatal,
  * so a v1 file (which has none of them) and a half-edited v2 file both load.
  */
+/**
+ * The crawler's mana box (009). Negative numbers are not a pool, so a malformed
+ * box is dropped and the derivation rule applies instead - a sheet typo costs
+ * the crawler nothing.
+ */
+function toMana(raw: unknown): Hp | null {
+  if (!isRecord(raw)) return null;
+  const current = toNumber(raw.current);
+  const max = toNumber(raw.max);
+  if (current === null || max === null || current < 0 || max < 0) return null;
+  return { current, max };
+}
+
 export function normalizeCrawler(raw: Crawler): Crawler {
   const crawler: Crawler = { ...raw };
   const drop = (field: string): void => {
@@ -476,6 +506,11 @@ export function normalizeCrawler(raw: Crawler): Crawler {
     const stats = toStats(crawler.stats);
     if (stats === null) drop('stats');
     else crawler.stats = stats;
+  }
+  if (crawler.mana !== undefined) {
+    const mana = toMana(crawler.mana);
+    if (mana === null) drop('mana');
+    else crawler.mana = mana;
   }
   if (crawler.hotlist !== undefined) {
     const hotlist = toNamedEntries<HotlistEntry>(crawler.hotlist, true);

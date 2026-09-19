@@ -31,6 +31,10 @@
           "dex": 2,
           "cha": 4
         },
+        "mana": {
+          "current": 6,
+          "max": 6
+        },
         "hotlist": [],
         "skills": [
           {
@@ -97,6 +101,10 @@
           "con": 4,
           "dex": 3,
           "cha": 6
+        },
+        "mana": {
+          "current": 5,
+          "max": 5
         },
         "hotlist": [
           {
@@ -192,6 +200,10 @@
           "dex": 6,
           "cha": 2
         },
+        "mana": {
+          "current": 3,
+          "max": 3
+        },
         "hotlist": [
           {
             "ref": "heal"
@@ -268,6 +280,10 @@
           "dex": 3,
           "cha": 2
         },
+        "mana": {
+          "current": 5,
+          "max": 5
+        },
         "hotlist": [],
         "skills": [
           {
@@ -339,7 +355,7 @@
         "inventory": [
           {
             "name": "Witchy Traveling Kit",
-            "desc": "(small assortment of spell candles, crystals, herbs"
+            "desc": "(small assortment of spell candles, crystals, herbs)"
           },
           {
             "name": "Tarot Card Set w/ Embroidered Bag",
@@ -375,6 +391,10 @@
           "con": 3,
           "dex": 4,
           "cha": 5
+        },
+        "mana": {
+          "current": 6,
+          "max": 6
         },
         "hotlist": [
           {
@@ -604,6 +624,12 @@
       "mana": 2
     },
     {
+      "t": 192,
+      "type": "mana",
+      "actor": "mimi",
+      "current": 3
+    },
+    {
       "t": 195,
       "type": "sponsor",
       "text": "This doorway brought to you by Grull Industries. We make the hole.",
@@ -616,6 +642,12 @@
       "ref": "soul-collector",
       "rank": 1,
       "mana": 4
+    },
+    {
+      "t": 199,
+      "type": "mana",
+      "actor": "veil",
+      "current": 2
     },
     {
       "t": 200,
@@ -870,6 +902,13 @@
       "type": "class",
       "actor": "xo",
       "class": "Quartermaster"
+    },
+    {
+      "t": 470,
+      "type": "mana",
+      "actor": "mimi",
+      "current": 5,
+      "max": 5
     },
     {
       "t": 486,

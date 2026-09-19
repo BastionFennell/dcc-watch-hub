@@ -3,6 +3,7 @@ import { GLANCE_HISTORY_ROWS } from '../../engine/selectors';
 import { formatTime } from '../../engine/time';
 import { copy } from '../../copy';
 import { HpSegments } from '../CrawlerDossier/HpSegments';
+import { ManaSegments } from '../CrawlerDossier/ManaSegments';
 import { RankSparkline } from '../CrawlerDossier/RankSparkline';
 import styles from './CrawlerGlance.module.css';
 
@@ -113,6 +114,16 @@ export function CrawlerGlance({ glance, onOpenRecord }: CrawlerGlanceProps) {
           {copy.hpValue(glance.hp.current, glance.hp.max)}
         </p>
       </div>
+
+      {/* Mana: the same row one line down (009), hidden for a crawler with no pool. */}
+      {glance.mana.max > 0 ? (
+        <div className={styles.manaRow}>
+          <ManaSegments current={glance.mana.current} max={glance.mana.max} />
+          <p className={styles.manaValue} data-testid="glance-mana">
+            {copy.hpValue(glance.mana.current, glance.mana.max)}
+          </p>
+        </div>
+      ) : null}
 
       {/*
         Two stacked rows: the numbers, then the chart on a row of its own.
