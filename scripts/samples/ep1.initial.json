@@ -4,7 +4,7 @@
       "id": "harry",
       "name": "Harold \"Harry\" Wallace",
       "handle": "Harry",
-      "player": "",
+      "player": "Bobby",
       "level": 1,
       "hp": {
         "current": 20,
@@ -77,7 +77,7 @@
       "id": "mimi",
       "name": "Mimi Rivers",
       "handle": "Crawler Mimi",
-      "player": "",
+      "player": "Lulu",
       "level": 1,
       "hp": {
         "current": 20,
@@ -87,7 +87,7 @@
       "class": null,
       "inventory": [],
       "rank": null,
-      "pronouns": "she + her",
+      "pronouns": "she/her",
       "stats": {
         "str": 2,
         "int": 5,
@@ -166,7 +166,7 @@
       "id": "ronald",
       "name": "Ronald Hudson",
       "handle": "Madio",
-      "player": "",
+      "player": "Madio",
       "level": 1,
       "hp": {
         "current": 20,
@@ -234,7 +234,7 @@
       "id": "xo",
       "name": "Xavier \"X.O.\" Ortiz",
       "handle": "XO",
-      "player": "",
+      "player": "Danny",
       "level": 1,
       "hp": {
         "current": 30,

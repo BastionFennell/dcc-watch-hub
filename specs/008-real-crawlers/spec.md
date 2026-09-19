@@ -74,3 +74,8 @@ heal spell. Adjust the size of the image for Mimi so it fits better."
   for hotlist/inventory (`field1 = name, field2 = qty, field3 = desc` for `inventory add`? see
   contract) without breaking existing CSVs.
 - The art column height matches the image; tests and Lighthouse a11y stay green.
+
+## Revision 3 (2026-09-18) - cast credits and pronoun format
+- Player credits from the author: Harry - Bobby, Mimi - Lulu, Ronald - Madio, X.O. - Danny.
+  A fifth crawler, **Lauren (played by Sarah)**, joins when her sheet arrives; not yet in data.
+- Pronouns use the slash form ("she/her"), not the sheet's "she + her".
