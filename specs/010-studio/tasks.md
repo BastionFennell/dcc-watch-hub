@@ -1,18 +1,18 @@
 # Tasks - 010 Studio
 
 ## Wave A - foundations
-- [ ] T1001 `Transport` + `hasTransport` in `TimeSource.ts`; contract note in `specs/010-studio/plan.md` is authoritative
-- [ ] T1002 `FakeTimeSource` implements Transport (+tests: play/pause/rate/duration)
-- [ ] T1003 `YouTubeTimeSource` implements Transport (playVideo/pauseVideo/getDuration/setPlaybackRate) (+tests with the existing player mock)
-- [ ] T1004 `src/playback/youtubeId.ts` parse watch/short/embed/live URLs and bare ids (+tests)
-- [ ] T1005 `draft.ts`, `timecode.ts` (+tests)
-- [ ] T1006 `history.ts` reducer with undo/redo, sorted insert, stable ties (+tests)
-- [ ] T1007 `eventForms.ts` table for all KNOWN_EVENT_TYPES (+coverage test)
-- [ ] T1008 `options.ts`, `defaults.ts` using `reduceTo` (+tests)
-- [ ] T1009 `buildEvent.ts` values<->event; every type round-trips through `normalizeEvent` (+tests)
-- [ ] T1010 `validateDraft.ts` issues incl. unknown refs, actor, t > duration, duplicates (+tests)
-- [ ] T1011 `exporter.ts`, `importer.ts`, `partySource.ts`; export validates against the schema; published ep1-3 import -> export is semantically identical (+tests)
-- [ ] T1012 `storage.ts`, `files.ts` (guards, quota error, feature detection) (+tests)
+- [X] T1001 `Transport` + `hasTransport` in `TimeSource.ts`; contract note in `specs/010-studio/plan.md` is authoritative
+- [X] T1002 `FakeTimeSource` implements Transport (+tests: play/pause/rate/duration)
+- [X] T1003 `YouTubeTimeSource` implements Transport (playVideo/pauseVideo/getDuration/setPlaybackRate) (+tests with the existing player mock)
+- [X] T1004 `src/playback/youtubeId.ts` parse watch/short/embed/live URLs and bare ids (+tests)
+- [X] T1005 `draft.ts`, `timecode.ts` (+tests)
+- [X] T1006 `history.ts` reducer with undo/redo, sorted insert, stable ties (+tests)
+- [X] T1007 `eventForms.ts` table for all KNOWN_EVENT_TYPES (+coverage test)
+- [X] T1008 `options.ts`, `defaults.ts` using `reduceTo` (+tests)
+- [X] T1009 `buildEvent.ts` values<->event; every type round-trips through `normalizeEvent` (+tests)
+- [X] T1010 `validateDraft.ts` issues incl. unknown refs, actor, t > duration, duplicates (+tests)
+- [X] T1011 `exporter.ts`, `importer.ts`, `partySource.ts`; export validates against the schema; published ep1-3 import -> export is semantically identical (+tests)
+- [X] T1012 `storage.ts`, `files.ts` (guards, quota error, feature detection) (+tests)
 
 ## Wave B - forms, preview, issues
 - [ ] T1013 `src/studio/copy.ts` (form/preview/issues strings)

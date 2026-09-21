@@ -67,6 +67,22 @@ The event field lists come from `src/data/types.ts` and `validate.ts`; the table
 field those accept. A table-driven test builds each type from its required fields and asserts
 `normalizeEvent` returns the same type (not `unknown`) and the export validates against the schema.
 
+**Wave A amendments to the table contract** (two field kinds no listed kind could express, plus
+two additive `FieldSpec` / `EventFormSpec` keys; nothing above was removed):
+- `FieldKind` gains `'cells'` - `map_reveal.cells` is a list of `[row, col]` pairs, which no scalar
+  or string-list kind can hold. Its `FieldValue` is `[number, number][]`.
+- `FieldKind` gains `'factRefs'` - `npc.unlock` is a pick list of *the selected entity's* fact ids,
+  so it is neither free text (`entryAdd`) nor a fixed `select`. Its `FieldValue` is `string[]`.
+- `FieldSpec.entryKind` widens to `'inventory' | 'hotlist' | 'status' | 'gear'` and now means "where
+  this field's suggestions come from" generally: the pick list on an `entryRemove`, and a datalist
+  on a plain `text` field (`unequip.item` offers the gear the actor is wearing).
+- `EventFormSpec.requireOneOf?: readonly string[]` - `spell` is valid with a `name`, a `ref`, or
+  both, which `required` on a single field cannot say.
+
+Also fixed in Wave A: `buildEvent(type, t, values)` / `eventToValues(event)` exclude `t` and `type`
+from `FieldValues` (the form owns both), and `eventToValues` hands an unknown type's own keys back
+verbatim so a later schema's row survives an edit.
+
 ## Screen (>= 1000 px)
 Header: Studio / episode title / save state / Undo Redo / Import / Export menu.
 Left column (flex 3): VideoStage (reused, `?fake=1` in dev) -> Transport bar with the big timecode

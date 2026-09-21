@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { FakeTimeSource } from './FakeTimeSource';
-import { createEmitter } from './TimeSource';
+import { FakeTimeSource, MAX_RATE, MIN_RATE } from './FakeTimeSource';
+import { createEmitter, hasTransport } from './TimeSource';
 
 describe('FakeTimeSource', () => {
   beforeEach(() => vi.useFakeTimers());
@@ -91,5 +91,60 @@ describe('createEmitter', () => {
     emitter.emit(2);
     expect(seen).toEqual([1]);
     expect(emitter.size).toBe(0);
+  });
+});
+
+describe('FakeTimeSource transport (010)', () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it('satisfies the Transport type guard', () => {
+    const source = new FakeTimeSource();
+    expect(hasTransport(source)).toBe(true);
+    expect(hasTransport(null)).toBe(false);
+    expect(hasTransport({ getTime: () => 0 } as unknown as FakeTimeSource)).toBe(false);
+  });
+
+  it('reports pause state consistently with its ticking', () => {
+    const source = new FakeTimeSource(0, 240);
+    expect(source.isPaused()).toBe(true);
+    source.play();
+    expect(source.isPaused()).toBe(false);
+    source.pause();
+    expect(source.isPaused()).toBe(true);
+    source.play();
+    source.end();
+    expect(source.isPaused()).toBe(true);
+  });
+
+  it('reports the duration it was given, and null when unbounded', () => {
+    expect(new FakeTimeSource(0, 240).getDuration()).toBe(240);
+    expect(new FakeTimeSource().getDuration()).toBeNull();
+  });
+
+  it('advances by the rate while playing', () => {
+    const source = new FakeTimeSource(0, 240);
+    expect(source.getRate()).toBe(1);
+    source.setRate(2);
+    expect(source.getRate()).toBe(2);
+    source.play();
+    vi.advanceTimersByTime(1000);
+    expect(source.getTime()).toBeCloseTo(2, 5);
+
+    source.setRate(0.5);
+    vi.advanceTimersByTime(1000);
+    expect(source.getTime()).toBeCloseTo(2.5, 5);
+  });
+
+  it('ignores a rate that is not a positive number and clamps the extremes', () => {
+    const source = new FakeTimeSource();
+    source.setRate(0);
+    source.setRate(-2);
+    source.setRate(Number.NaN);
+    expect(source.getRate()).toBe(1);
+    source.setRate(1000);
+    expect(source.getRate()).toBe(MAX_RATE);
+    source.setRate(0.001);
+    expect(source.getRate()).toBe(MIN_RATE);
   });
 });

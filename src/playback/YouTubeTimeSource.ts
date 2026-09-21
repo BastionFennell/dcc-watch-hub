@@ -10,7 +10,7 @@
  * This file and `loadYouTubeApi.ts` are the ONLY modules allowed to reference the
  * `YT` global (constitution II). Nothing here knows about React or the overlay.
  */
-import type { TimeSource } from './TimeSource';
+import type { ControllableTimeSource } from './TimeSource';
 import { createEmitter } from './TimeSource';
 import { loadYouTubeApi } from './loadYouTubeApi';
 
@@ -26,8 +26,10 @@ export interface YouTubeTimeSourceOptions {
   onError?: (error: Error) => void;
 }
 
-export class YouTubeTimeSource implements TimeSource {
+export class YouTubeTimeSource implements ControllableTimeSource {
   private t = 0;
+  /** The rate the caller asked for; applied in `onReady` when it came early (010). */
+  private rate = 1;
   private player: YT.Player | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
   private timerMs = 0;
@@ -70,6 +72,7 @@ export class YouTubeTimeSource implements TimeSource {
               if (this.destroyed) return;
               this.ready = true;
               this.startPolling(IDLE_POLL_MS);
+              this.applyRate();
               this.applyPendingSeek();
               this.opts.onReady?.();
             },
@@ -119,6 +122,55 @@ export class YouTubeTimeSource implements TimeSource {
     }
     // Contract: a seek MUST produce a tick, even while paused or not yet ready.
     this.emitTime(target);
+  }
+
+  /* -------------------------------------------------------- Transport (010) */
+
+  /**
+   * Every command below is a no-op before `onReady`: the IFrame API queues
+   * nothing itself and calling a half-built player throws. The Studio's
+   * transport bar simply stays inert for the second the iframe takes to load.
+   */
+  play(): void {
+    if (this.destroyed || !this.ready) return;
+    this.player?.playVideo?.();
+  }
+
+  pause(): void {
+    if (this.destroyed || !this.ready) return;
+    this.player?.pauseVideo?.();
+  }
+
+  /** Only PLAYING and BUFFERING are "running"; unready reads as paused. */
+  isPaused(): boolean {
+    if (this.destroyed || !this.ready) return true;
+    const state = this.player?.getPlayerState?.();
+    return !(state === 1 /* PLAYING */ || state === 3 /* BUFFERING */);
+  }
+
+  /** The host reports 0 until metadata arrives, which is "not known yet". */
+  getDuration(): number | null {
+    if (this.destroyed) return null;
+    const raw = this.player?.getDuration?.();
+    if (typeof raw !== 'number' || !Number.isFinite(raw) || raw <= 0) return null;
+    return raw;
+  }
+
+  setRate(rate: number): void {
+    if (this.destroyed || !Number.isFinite(rate) || rate <= 0) return;
+    this.rate = rate;
+    if (this.ready) this.applyRate();
+  }
+
+  getRate(): number {
+    if (this.destroyed || !this.ready) return this.rate;
+    const raw = this.player?.getPlaybackRate?.();
+    return typeof raw === 'number' && Number.isFinite(raw) && raw > 0 ? raw : this.rate;
+  }
+
+  private applyRate(): void {
+    if (this.rate === 1) return;
+    this.player?.setPlaybackRate?.(this.rate);
   }
 
   destroy(): void {
