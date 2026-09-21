@@ -1,5 +1,5 @@
 <!-- SPECKIT START -->
-Active feature: `specs/009-mana/` (branch `009-mana`); features 001-008 are merged on
+Active feature: `specs/010-studio/` (branch `010-studio`, stacked on `009-mana`); features 001-008 are merged on
 `main` and documented under `specs/00[1-8]-*/` (008 = real crawlers, spell registry, tooltips).
 Read, in order: `.specify/memory/constitution.md`, then `spec.md`, `plan.md`, `research.md`,
 `data-model.md`, `contracts/`, `quickstart.md`, `tasks.md` under the newest `specs/NNN-*/` when a feature is active; otherwise read `specs/008-real-crawlers/spec.md` for the current data model.
@@ -15,4 +15,7 @@ the active feature scope (tooltips landed in 008; still parked: stingers, roster
 no audio; panels never cover the stage on desktop except the modal full record; storage holds the
 playhead only;
 no UI frameworks or webfonts; System-voice copy lives in `src/copy.ts`.
+Studio exception (constitution VII): `src/studio/**` is a lazy authoring chunk the viewer never
+imports; it may store drafts under `dcc.studio.*`, uses `src/studio/copy.ts`, and controls playback
+only through the `Transport` extension of `TimeSource`.
 <!-- SPECKIT END -->
