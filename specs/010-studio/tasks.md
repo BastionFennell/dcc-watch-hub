@@ -15,13 +15,13 @@
 - [X] T1012 `storage.ts`, `files.ts` (guards, quota error, feature detection) (+tests)
 
 ## Wave B - forms, preview, issues
-- [ ] T1013 `src/studio/copy.ts` (form/preview/issues strings)
-- [ ] T1014 `fields/*` one component per FieldKind, labelled, keyboard friendly
-- [ ] T1015 `TypePicker` grouped grid with type-to-filter and remembered last type
-- [ ] T1016 `EventForm` (add + edit, time field with nudge and "set to playhead", defaults, sticky actor, Cmd+Enter / Shift+Cmd+Enter, Escape, focus management)
-- [ ] T1017 `PreviewPane` reusing PartyRail + EventFeed from the draft at t
-- [ ] T1018 `IssuesPanel`
-- [ ] T1019 Component tests: every type can be authored through the form; defaults; validation messages
+- [X] T1013 `src/studio/copy.ts` (form/preview/issues strings)
+- [X] T1014 `fields/*` one component per FieldKind, labelled, keyboard friendly
+- [X] T1015 `TypePicker` grouped grid with type-to-filter and remembered last type
+- [X] T1016 `EventForm` (add + edit, time field with nudge and "set to playhead", defaults, sticky actor, Cmd+Enter / Shift+Cmd+Enter, Escape, focus management)
+- [X] T1017 `PreviewPane` reusing PartyRail + EventFeed from the draft at t
+- [X] T1018 `IssuesPanel`
+- [X] T1019 Component tests: every type can be authored through the form; defaults; validation messages
 
 ## Wave C - shell and integration
 - [ ] T1020 Routes `/studio`, `/studio/ep/:id` via `React.lazy` in `App.tsx`; viewer imports nothing from `src/studio`

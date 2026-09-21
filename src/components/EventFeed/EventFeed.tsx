@@ -13,10 +13,15 @@ export interface EventFeedProps {
   sponsor: FeedItem | null;
   /** The playhead, for the synced header (FR-023). */
   t: number;
-  /** Seeks playback to a row's moment (T342). The page hands it the source. */
-  onSeek: (t: number) => void;
+  /**
+   * Seeks playback to a row's moment (T342). The page hands it the source.
+   * Omitted where the feed is a record rather than a control - the Studio's
+   * read-only preview (010) - which leaves every row an inert box, exactly as
+   * `FeedItemView` and `SponsorSlot` already handle.
+   */
+  onSeek?: (t: number) => void;
   /** Shares a link to a row's moment (004 FR-303). Never seeks (FR-306). */
-  onShare: (t: number) => void;
+  onShare?: (t: number) => void;
   /** Loading / failure copy from the page, shown above the list. */
   notice?: ReactNode;
 }

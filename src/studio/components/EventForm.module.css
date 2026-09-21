@@ -1,0 +1,228 @@
+/*
+ * The event form (010, T1016). It lives in the right column's tab body, so it
+ * owns no width of its own: it fills whatever the container gives it and stays
+ * readable down to the 380 px the plan reserves for that column.
+ */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-6);
+  background: var(--panel);
+  border: var(--border-hairline);
+  border-radius: var(--radius-md);
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.title {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.type {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin: 0;
+  color: var(--text);
+  font-size: var(--text-sm);
+}
+
+.typeLabel {
+  color: var(--text-3);
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.timeRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
+  border-bottom: var(--border-hairline);
+}
+
+.timeLabel {
+  color: var(--text-3);
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.time {
+  width: 9ch;
+  min-height: 30px;
+  padding: var(--space-2) var(--space-4);
+  background: var(--panel-deep);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--text-md);
+}
+
+.time[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.nudge {
+  min-height: 28px;
+  padding: 0 var(--space-4);
+  background: var(--panel-deep);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.ghost {
+  min-height: 28px;
+  padding: 0 var(--space-5);
+  background: none;
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  font-family: inherit;
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.nudge:hover,
+.ghost:hover {
+  color: var(--text);
+  border-color: var(--brand-line);
+}
+
+.time:focus-visible,
+.nudge:focus-visible,
+.ghost:focus-visible,
+.primary:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-color: var(--brand-line);
+}
+
+/* The time row's help takes the whole second line rather than squeezing in. */
+.timeRow .help {
+  flex: 1 0 100%;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.label {
+  padding: 0;
+  color: var(--text-2);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.required {
+  color: var(--amber-fg);
+}
+
+.help,
+.notice {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--text-xs);
+}
+
+.preview {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  margin: 0;
+  padding: var(--space-4);
+  background: var(--panel-deep);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+
+.previewLabel {
+  flex: 0 0 auto;
+  color: var(--text-3);
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.previewEmpty {
+  color: var(--text-3);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.primary {
+  min-height: 30px;
+  padding: 0 var(--space-6);
+  background: var(--brand);
+  border: 1px solid var(--brand-2);
+  border-radius: var(--radius-sm);
+  color: var(--brand-fg-2);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--brand-2);
+}
+
+.primary:disabled {
+  background: var(--panel-deep);
+  border-color: var(--hairline);
+  color: var(--text-3);
+  cursor: not-allowed;
+}
+
+.actions .help,
+.actions .error {
+  flex: 1 1 100%;
+}
