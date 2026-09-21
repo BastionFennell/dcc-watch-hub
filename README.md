@@ -869,12 +869,16 @@ Two rules about the keyboard:
 - **While the event form is open the page keys are off.** Only undo, redo and save still fire; the
   form itself owns Escape and Cmd/Ctrl + Enter. The form says so under its buttons.
 
-**YouTube steals the keyboard.** Once you click the video itself, the keypresses go to YouTube's
-iframe and the page never sees them - `E` will do nothing and Space will play/pause through
-YouTube's own handler rather than ours. The fix is to drive playback from the Studio's transport bar
-(play/pause, the four nudges, the speed) rather than from the player, or to click anywhere outside
-the video - the timeline strip is a good target - to give the page the keyboard back. Everything in
-the transport bar works whether or not the iframe has focus.
+**YouTube would steal the keyboard, so the Studio does not let it.** A clicked iframe owns every
+keypress after it, and the page hotkeys die with them - `E` does nothing and Space plays through
+YouTube's handler rather than ours. The editor therefore lays a transparent shield over the embedded
+player: **the video is click-to-pause; unlock to reach YouTube's own controls.** Clicking the stage
+toggles playback through the transport and the keyboard stays on the page. The transport bar's
+*Video controls: locked* button (locked by default) drops the shield when you need the host's own
+controls - captions, quality - and says plainly that the hotkeys stop working once you click the
+video; press it again to lock it. If Tab ever lands inside the iframe while it is locked, focus
+comes straight back to the Add button. The dev stage (`?fake=1`) is never shielded: its play button
+and scrubber are inside the box.
 
 ### Where drafts live
 

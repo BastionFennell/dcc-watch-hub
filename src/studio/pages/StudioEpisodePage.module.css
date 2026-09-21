@@ -37,6 +37,23 @@
   overflow: auto;
 }
 
+/*
+ * The stage and its focus shield. The shield is a transparent layer over the
+ * embedded player: the pointer stops here, so the iframe is never clicked and
+ * never takes the keyboard, and the click pauses through the transport instead.
+ */
+.stage {
+  position: relative;
+}
+
+.shield {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: transparent;
+  cursor: pointer;
+}
+
 .tabs {
   display: flex;
   gap: var(--space-2);
@@ -175,9 +192,9 @@
 }
 
 /*
- * Below the plan's 1100 px the preview stacks (Wave B's own rule) and the two
- * columns get tighter; below 1000 px the page shows the notice instead of this
- * layout at all (FR-1012), so there is no phone case to style.
+ * Below 1180 px the two columns get tighter; below 1000 px the page shows the
+ * notice instead of this layout at all (FR-1012), so there is no phone case to
+ * style. (The preview stacks the party rail over the feed at every width.)
  */
 @media (max-width: 1180px) {
   .grid {

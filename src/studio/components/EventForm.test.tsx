@@ -186,7 +186,6 @@ describe('EventForm - why Save is off', () => {
     pick('loot');
     expect(screen.getByTestId('save-event')).toBeDisabled();
     expect(screen.getByTestId('save-reason')).toHaveTextContent('Item');
-    expect(screen.getByTestId('error-item')).toHaveTextContent(studioCopy.fields.required);
     fireEvent.change(field('item'), { target: { value: 'Crowbar' } });
     expect(screen.getByTestId('save-event')).not.toBeDisabled();
   });
@@ -198,6 +197,58 @@ describe('EventForm - why Save is off', () => {
     expect(screen.getByTestId('save-reason')).toHaveTextContent('Name or Registry spell');
     fireEvent.change(field('name'), { target: { value: 'Torch Spark' } });
     expect(screen.getByTestId('save-event')).not.toBeDisabled();
+  });
+
+  it('keeps quiet until a field has been left, or a save has been tried', () => {
+    open({ lastActor: 'harry' });
+    pick('loot');
+    // Picking a type is not a mistake: nothing is red yet, and the reason line
+    // under the buttons is an instruction rather than a complaint.
+    expect(screen.queryByTestId('error-item')).toBeNull();
+    expect(field('item')).not.toHaveAttribute('aria-invalid');
+    expect(screen.getByTestId('save-reason')).toHaveAttribute('data-tone', 'help');
+
+    // Leaving the field empty is: now it may say so, and only it.
+    fireEvent.blur(field('item'));
+    expect(screen.getByTestId('error-item')).toHaveTextContent(studioCopy.fields.required);
+    expect(field('item')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.queryByTestId('error-actor')).toBeNull();
+
+    // Filling it in takes the error back.
+    fireEvent.change(field('item'), { target: { value: 'Crowbar' } });
+    expect(screen.queryByTestId('error-item')).toBeNull();
+  });
+
+  it('reveals every missing field when a save is attempted', () => {
+    const { onSave } = open();
+    pick('loot');
+    expect(screen.queryByTestId('error-item')).toBeNull();
+
+    fireEvent.keyDown(screen.getByTestId('event-form'), { key: 'Enter', metaKey: true });
+    expect(onSave).not.toHaveBeenCalled();
+    expect(screen.getByTestId('error-actor')).toHaveTextContent(studioCopy.fields.required);
+    expect(screen.getByTestId('error-item')).toHaveTextContent(studioCopy.fields.required);
+    expect(screen.getByTestId('save-reason')).toHaveAttribute('data-tone', 'error');
+  });
+
+  it('starts over when the type changes', () => {
+    open({ lastActor: 'harry' });
+    pick('loot');
+    fireEvent.keyDown(screen.getByTestId('event-form'), { key: 'Enter', metaKey: true });
+    expect(screen.getByTestId('error-item')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('change-type'));
+    fireEvent.click(screen.getByTestId('type-picker').querySelector('[data-type="achievement"]')!);
+    expect(screen.queryByTestId('error-title')).toBeNull();
+  });
+
+  it('holds the pair error back until both boxes have been left empty', () => {
+    open({ lastActor: 'harry' });
+    pick('spell');
+    fireEvent.blur(field('name'));
+    expect(screen.queryByTestId('error-name')).toBeNull();
+    fireEvent.blur(field('ref'));
+    expect(screen.getByTestId('error-name')).toHaveTextContent('Name or Registry spell');
   });
 
   it('offers the custom-name escape beside the registry picker', () => {

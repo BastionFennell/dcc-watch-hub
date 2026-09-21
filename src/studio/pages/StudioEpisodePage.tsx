@@ -103,6 +103,13 @@ export function StudioEpisodePage() {
   const [lastType, setLastType] = useState<EventType | undefined>(undefined);
   const [createOpen, setCreateOpen] = useState(false);
   const [importNote, setImportNote] = useState<string | null>(null);
+  /**
+   * The focus shield over an embedded player. An iframe that has been clicked
+   * owns the keyboard, and every page hotkey dies with it - so by default the
+   * Studio covers the stage with a transparent layer that pauses instead, and
+   * the author unlocks it only when they want the host's own controls.
+   */
+  const [videoLocked, setVideoLocked] = useState(true);
 
   const addButton = useRef<HTMLDivElement>(null);
   /** Whatever had focus when the form opened; focus goes back there on close. */
@@ -133,6 +140,33 @@ export function StudioEpisodePage() {
   // The stage destroys its own source on unmount; this covers a source swap.
   useEffect(() => () => source?.destroy(), [source]);
 
+  const focusAddButton = useCallback(() => {
+    addButton.current?.querySelector<HTMLElement>('[data-testid="add-event"]')?.focus();
+  }, []);
+
+  /*
+   * The shield is only over an *embedded* player: the dev stage (`?fake=1`) has
+   * its own play button and scrubber inside the box, and covering those would
+   * take the dev host's controls away for nothing.
+   */
+  const shielded =
+    videoLocked && !fake && wide && draft !== null && draft.meta.youtubeId !== '';
+
+  /*
+   * The shield stops the pointer, not the Tab key: focus can still land inside
+   * the iframe, and once it has, every hotkey belongs to the host. The window's
+   * own blur is the only notice we get, so that is where the keyboard is taken
+   * back - to the button the author's next keystroke probably wants anyway.
+   */
+  useEffect(() => {
+    if (!shielded) return;
+    function onBlur(): void {
+      if (document.activeElement instanceof HTMLIFrameElement) focusAddButton();
+    }
+    window.addEventListener('blur', onBlur);
+    return () => window.removeEventListener('blur', onBlur);
+  }, [shielded, focusAddButton]);
+
   /* --------------------------------------------------------- the form */
 
   const openForm = useCallback((what: string) => {
@@ -152,9 +186,9 @@ export function StudioEpisodePage() {
     trigger.current = null;
     window.setTimeout(() => {
       if (back !== null && back.isConnected) back.focus();
-      else addButton.current?.querySelector<HTMLElement>('[data-testid="add-event"]')?.focus();
+      else focusAddButton();
     }, 0);
-  }, []);
+  }, [focusAddButton]);
 
   const addAtPlayhead = useCallback(() => {
     if (draft === null) return;
@@ -385,8 +419,27 @@ export function StudioEpisodePage() {
         <div className={styles.grid}>
           <div className={styles.left}>
             {showStage ? (
-              /* Remounted on a change of video id: the host has to reload. */
-              <VideoStage key={draft.meta.youtubeId} meta={entry} t={t} onSource={setSource} />
+              <div className={styles.stage}>
+                {/* Remounted on a change of video id: the host has to reload. */}
+                <VideoStage key={draft.meta.youtubeId} meta={entry} t={t} onSource={setSource} />
+                {shielded ? (
+                  /*
+                   * Not a button: a focusable control here would answer Space
+                   * itself and toggle playback twice, and it would duplicate the
+                   * transport's own play/pause in the tab order. It is a layer,
+                   * so it is hidden from assistive tech and the bar keeps the
+                   * keyboard's version of the same action.
+                   */
+                  <div
+                    className={styles.shield}
+                    data-testid="video-shield"
+                    aria-hidden="true"
+                    title={studioCopy.transport.shieldLabel}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => transport.toggle()}
+                  />
+                ) : null}
+              </div>
             ) : (
               <p className={styles.noVideo} data-testid="no-video">
                 {studioCopy.episode.youtube}
@@ -399,6 +452,11 @@ export function StudioEpisodePage() {
                 t={t}
                 durationSec={draft.meta.durationSec}
                 onAdd={addAtPlayhead}
+                videoLock={
+                  fake || !showStage
+                    ? undefined
+                    : { locked: videoLocked, toggle: () => setVideoLocked((was) => !was) }
+                }
               />
             </div>
 

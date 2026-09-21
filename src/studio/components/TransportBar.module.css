@@ -124,8 +124,39 @@
   font-size: var(--text-2xs);
 }
 
+/* The shield's switch: quiet when locked (the normal state), lit when not. */
+.lock {
+  min-height: 28px;
+  padding: 0 var(--space-4);
+  background: var(--panel-deep);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-sm);
+  color: var(--text-3);
+  font-family: inherit;
+  font-size: var(--text-2xs);
+  cursor: pointer;
+}
+
+.lock:hover {
+  color: var(--text);
+  border-color: var(--brand-line);
+}
+
+.lock[aria-pressed='false'] {
+  color: var(--amber-fg);
+  border-color: var(--amber-fg);
+}
+
+.lockHint {
+  flex: 1 1 100%;
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+}
+
 .button:focus-visible,
 .select:focus-visible,
+.lock:focus-visible,
 .add:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);

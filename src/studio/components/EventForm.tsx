@@ -133,7 +133,19 @@ export function EventForm({
   );
   /* Everything the author has typed, so a default never lands on top of it. */
   const touched = useRef(new Set<string>(editing === undefined ? [] : Object.keys(values)));
+  /*
+   * Which fields may show their error yet. A form that opens shouting "Required."
+   * under every empty box is telling the author off for not having typed yet, so
+   * a field stays quiet until they have been in it (changed it, or left it) - and
+   * a save attempt reveals all of them at once, which is the moment the complaint
+   * is actually useful.
+   */
+  const [revealed, setRevealed] = useState<ReadonlySet<string>>(() => new Set<string>());
   const [attempted, setAttempted] = useState(false);
+
+  function reveal(key: string): void {
+    setRevealed((was) => (was.has(key) ? was : new Set(was).add(key)));
+  }
 
   const duration = draft.meta.durationSec;
   const parsed = parseTimecode(timeText);
@@ -179,17 +191,20 @@ export function EventForm({
 
   function edit(key: string, value: FieldValue): void {
     touched.current.add(key);
+    reveal(key);
     setValues((prev) => ({ ...prev, [key]: value }));
   }
 
   function pickType(next: EventType): void {
-    setValues((prev) => {
-      const kept = keepCompatible(type, next, prev);
-      for (const key of Array.from(touched.current)) {
-        if (!(key in kept)) touched.current.delete(key);
-      }
-      return kept;
-    });
+    const kept = keepCompatible(type, next, values);
+    for (const key of Array.from(touched.current)) {
+      if (!(key in kept)) touched.current.delete(key);
+    }
+    setValues(kept);
+    // A new type is a new set of fields: what the last one had revealed (or
+    // attempted) says nothing about this one, so the complaints reset with it.
+    setRevealed(new Set<string>());
+    setAttempted(false);
     setType(next);
     setPicking(false);
   }
@@ -363,8 +378,16 @@ export function EventForm({
             const fieldId = `${domId}-${field.key}`;
             const helpId = `${fieldId}-help`;
             const errorId = `${fieldId}-error`;
-            const requiredMissing = missing.includes(field);
-            const oneOfHere = oneOfMissing && oneOf?.includes(field.key) === true;
+            const requiredMissing = missing.includes(field) && (attempted || revealed.has(field.key));
+            /*
+             * The pair is one complaint, not two: it only lands once the author
+             * has been in *both* boxes and left both empty (or has tried to save),
+             * so tabbing from one to the other does not flash an error at them.
+             */
+            const oneOfHere =
+              oneOfMissing &&
+              oneOf?.includes(field.key) === true &&
+              (attempted || oneOf.every((key) => revealed.has(key)));
             const error = requiredMissing
               ? studioCopy.fields.required
               : oneOfHere
@@ -402,7 +425,14 @@ export function EventForm({
               </>
             );
             return (
-              <div className={styles.field} key={field.key} data-field={field.key}>
+              <div
+                className={styles.field}
+                key={field.key}
+                data-field={field.key}
+                /* Focus leaving the field (bubbled `focusout`) is the author
+                   saying they are done with it, so now its error may speak. */
+                onBlur={() => reveal(field.key)}
+              >
                 {isGroupKind(field.kind) ? (
                   <fieldset className={styles.fieldset}>
                     <legend className={styles.label}>{label}</legend>
@@ -463,9 +493,12 @@ export function EventForm({
           {studioCopy.form.cancel}
         </button>
         <p
-          className={reason === null ? styles.help : styles.error}
+          /* The reason is a standing instruction until the author tries to save;
+             only then is it a complaint, and only then is it red. */
+          className={reason !== null && attempted ? styles.error : styles.help}
           id={reasonId}
           data-testid="save-reason"
+          data-tone={reason !== null && attempted ? 'error' : 'help'}
           role={attempted && reason !== null ? 'alert' : undefined}
         >
           {reason ?? studioCopy.form.keysHelp}

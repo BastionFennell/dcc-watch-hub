@@ -182,6 +182,15 @@ export const studioCopy = {
     addLabel: (time: string) => `Add an event at ${time} (E)`,
     noTransport:
       "This player cannot be driven from here. Use the video's own controls; times still follow it.",
+
+    /* The focus shield over an embedded player (010 polish). */
+    videoLocked: 'Video controls: locked',
+    videoUnlocked: 'Video controls: unlocked',
+    videoLockLabel:
+      "Lock the video's own controls so the page keeps the keyboard",
+    videoUnlockHint:
+      "Unlocked: once you click the video, the hotkeys go to YouTube until you click the page again.",
+    shieldLabel: 'Play or pause. The video is click-to-pause while its controls are locked.',
   },
 
   /** The draft's own marker strip. */

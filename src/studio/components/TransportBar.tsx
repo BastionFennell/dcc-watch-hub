@@ -22,9 +22,16 @@ export interface TransportBarProps {
   /** The draft's duration; the player's own wins when it knows one. */
   durationSec: number;
   onAdd(): void;
+  /**
+   * The stage's focus shield, when there is one to talk about: an embedded
+   * player takes the keyboard the moment it is clicked, so the Studio covers it
+   * and offers this way out for the author who needs the host's own controls.
+   * Absent (the dev stage, no stage at all) and the button is not rendered.
+   */
+  videoLock?: { locked: boolean; toggle(): void };
 }
 
-export function TransportBar({ transport, t, durationSec, onAdd }: TransportBarProps) {
+export function TransportBar({ transport, t, durationSec, onAdd, videoLock }: TransportBarProps) {
   const duration = transport.duration ?? (durationSec > 0 ? durationSec : null);
   const now = formatTimecode(t);
 
@@ -110,6 +117,21 @@ export function TransportBar({ transport, t, durationSec, onAdd }: TransportBarP
         </span>
       </p>
 
+      {videoLock === undefined ? null : (
+        <button
+          type="button"
+          className={styles.lock}
+          data-testid="video-lock"
+          aria-pressed={videoLock.locked}
+          aria-label={studioCopy.transport.videoLockLabel}
+          onClick={videoLock.toggle}
+        >
+          {videoLock.locked
+            ? studioCopy.transport.videoLocked
+            : studioCopy.transport.videoUnlocked}
+        </button>
+      )}
+
       <button
         type="button"
         className={styles.add}
@@ -120,6 +142,12 @@ export function TransportBar({ transport, t, durationSec, onAdd }: TransportBarP
         {studioCopy.transport.add(now)}
         <kbd className={styles.kbd}>{studioCopy.transport.addHint}</kbd>
       </button>
+
+      {videoLock !== undefined && !videoLock.locked ? (
+        <p className={styles.lockHint} data-testid="video-lock-hint">
+          {studioCopy.transport.videoUnlockHint}
+        </p>
+      ) : null}
     </div>
   );
 }

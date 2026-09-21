@@ -77,8 +77,10 @@ export function PreviewPane({ draft, registries, t }: PreviewPaneProps) {
           </p>
         ) : (
           <>
-            <PartyRail frames={frames} activeId={null} onActivate={noop} />
-            <div className={styles.feed}>
+            <div className={styles.rail} data-testid="preview-rail">
+              <PartyRail frames={frames} activeId={null} onActivate={noop} />
+            </div>
+            <div className={styles.feed} data-testid="preview-feed">
               <EventFeed items={items} sponsor={sponsor} t={t} />
             </div>
           </>
