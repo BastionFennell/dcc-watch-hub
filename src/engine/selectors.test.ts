@@ -144,6 +144,19 @@ describe('partyFrames', () => {
     expect(pip(139.999)).toEqual(['Poisoned']);
     expect(pip(140)).toEqual([]);
   });
+
+  it('carries the pool at the playhead, clamped, for every crawler (009)', () => {
+    const mana = (t: number, id: string) =>
+      partyFrames(reduceTo(episode, t), episode.events, t).find((f) => f.id === id)?.mana;
+    // The sheet's box wins; the pool is spent at 171 and restored at 172.
+    expect(mana(0, 'psychic')).toEqual({ current: 5, max: 5 });
+    expect(mana(171, 'psychic')).toEqual({ current: 2, max: 5 });
+    expect(mana(172, 'psychic')).toEqual({ current: 5, max: 5 });
+    // Harry has INT and no box, so the pool is derived; X.O. has neither and
+    // reads 0/0 rather than being left off the frame (revision 1).
+    expect(mana(0, 'harry')?.max).toBeGreaterThan(0);
+    expect(mana(0, 'xo')).toEqual({ current: 0, max: 0 });
+  });
 });
 
 describe('activeToast', () => {
@@ -1220,5 +1233,68 @@ describe('008 revision 4 - spell refs reach the dossier, the hotbar and the feed
     // Without the book it still reads, under the raw id.
     const bare = feedItems(rowed.events, 10, 8, rowed.initialState.party)[0];
     expect(bare.text).toBe(copy.feedText.spell('The Psychic', 'mending-light', 3));
+  });
+});
+
+/* ------------------------------------------------------------ 009: mana */
+
+describe('mana on the dossier and the glance card (009)', () => {
+  const dossierAt = (t: number, id: string, data: EpisodeData = episode) =>
+    crawlerDossier(reduceTo(data, t), data.events, t, id, data.initialState.party);
+
+  it('derives the pool from INT when the sheet writes no box', () => {
+    // Harry has INT 6 and no mana box: the rule fills a six-point pool.
+    expect(dossierAt(0, 'harry')?.mana).toEqual({ current: 6, max: 6 });
+  });
+
+  it('lets an explicit box win over the rule', () => {
+    // The Psychic writes 5/5 and has no stats at all, so the rule would have
+    // given her nothing. The box wins verbatim.
+    expect(dossierAt(0, 'psychic')?.mana).toEqual({ current: 5, max: 5 });
+  });
+
+  it('reads 0/0 for a crawler with neither a box nor an INT', () => {
+    expect(dossierAt(0, 'xo')?.mana).toEqual({ current: 0, max: 0 });
+  });
+
+  it('moves with the playhead and restores on a rewind', () => {
+    const data = withEvents([
+      { t: 10, type: 'mana', actor: 'psychic', current: 1 },
+      { t: 40, type: 'mana', actor: 'psychic', current: 5 },
+    ]);
+    expect(dossierAt(0, 'psychic', data)?.mana).toEqual({ current: 5, max: 5 });
+    expect(dossierAt(10, 'psychic', data)?.mana).toEqual({ current: 1, max: 5 });
+    expect(dossierAt(40, 'psychic', data)?.mana).toEqual({ current: 5, max: 5 });
+    expect(dossierAt(9, 'psychic', data)?.mana).toEqual({ current: 5, max: 5 });
+  });
+
+  it('clamps a pool the data over-reads', () => {
+    const raw = makeEpisodeRaw() as { initialState: { party: Record<string, unknown>[] } };
+    const psychic = raw.initialState.party.find((crawler) => crawler.id === 'psychic');
+    if (psychic === undefined) throw new Error('no psychic in the fixture');
+    psychic.mana = { current: 99, max: 5 };
+    const data = normalizeEpisode(raw);
+    expect(dossierAt(0, 'psychic', data)?.mana).toEqual({ current: 5, max: 5 });
+  });
+
+  it('hands the glance card the same pool the record shows', () => {
+    const dossier = dossierAt(0, 'psychic');
+    if (dossier === null) throw new Error('no dossier');
+    expect(crawlerGlance(dossier).mana).toEqual({ current: 5, max: 5 });
+  });
+
+  it('files a mana reading in the feed under its own label', () => {
+    const data = withEvents([{ t: 5, type: 'mana', actor: 'psychic', current: 2, max: 5 }]);
+    const item = feedItems(data.events, 10, 8, data.initialState.party)[0];
+    expect(item.kind).toBe('mana');
+    expect(item.label).toBe(copy.labels.mana);
+    expect(item.text).toBe(copy.feedText.mana('The Psychic', 2, 5));
+  });
+
+  it('drops the denominator for a max-less row, having no pool to hand', () => {
+    const data = withEvents([{ t: 5, type: 'mana', actor: 'psychic', current: 2 }]);
+    const item = feedItems(data.events, 10, 8, data.initialState.party)[0];
+    expect(item.text).toBe(copy.feedText.mana('The Psychic', 2));
+    expect(item.text).toBe('The Psychic holding at 2 mana');
   });
 });

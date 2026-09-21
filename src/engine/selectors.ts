@@ -36,6 +36,8 @@ export interface PartyFrame {
   handle: string;
   level: number;
   hp: { current: number; max: number };
+  /** Clamped the same way the glance and the record clamp it (009). */
+  mana: Hp;
   /** 0–100, clamped; drives the HP bar width. */
   pct: number;
   danger: boolean;
@@ -140,6 +142,8 @@ export interface Dossier {
   class: string | null;
   floor: number;
   hp: Hp & HpSegments;
+  /** The pool as of the playhead, clamped (009). `max: 0` means no pool to show. */
+  mana: Hp;
   rank: RankSeries;
   debuffs: string[];
   stats?: CrawlerStats;
@@ -224,6 +228,7 @@ export function partyFrames(
       handle: crawler.handle,
       level: crawler.level,
       hp: { current, max: crawler.hp.max },
+      mana: manaView(crawler.mana),
       pct: Math.round((current / max) * 100),
       danger: current / max < 0.25,
       levelUpPulse,
@@ -288,6 +293,13 @@ function toFeedItem(
       return { ...base, actorName, text: copy.feedText.loot(who, event.item, event.source) };
     case 'hp':
       return { ...base, actorName, text: copy.feedText.hp(who, event.current, event.max) };
+    /*
+     * A `mana` row with no `max` reads against the crawler's standing pool, which
+     * the feed does not carry, so the line drops the denominator rather than
+     * inventing a maximum it cannot know.
+     */
+    case 'mana':
+      return { ...base, actorName, text: copy.feedText.mana(who, event.current, event.max) };
     case 'level_up':
       return { ...base, actorName, text: copy.feedText.levelUp(who, event.level) };
     case 'rank':
@@ -536,6 +548,16 @@ export function hpSegments(hp: Hp): HpSegments {
   };
 }
 
+/**
+ * The pool as the strip must read it (009): `max` segments, `current` of them
+ * filled. Unlike HP there is no fixed segment count to scale into, so the only
+ * work here is the clamp - a `max` of 0 stays 0/0 and hides the strip.
+ */
+export function manaView(mana: Hp): Hp {
+  const max = Math.max(mana.max, 0);
+  return { current: Math.min(Math.max(mana.current, 0), max), max };
+}
+
 /** Everything the dossier renders as of `t`; `null` for an actor nobody knows. */
 export function crawlerDossier(
   state: OverlayState,
@@ -574,6 +596,7 @@ export function crawlerDossier(
     class: crawler.class,
     floor: state.map.floor,
     hp: { current, max: crawler.hp.max, ...hpSegments(crawler.hp) },
+    mana: manaView(crawler.mana),
     rank: rankSeries(events, t, actorId),
     debuffs: crawler.statuses,
     ...(crawler.stats === undefined ? {} : { stats: crawler.stats }),
@@ -639,6 +662,8 @@ export interface Glance {
   class: string | null;
   level: number;
   hp: Hp & HpSegments;
+  /** Same pool the record shows, straight off the dossier (009). */
+  mana: Hp;
   rank: RankSeries;
   debuffs: string[];
   /** Worn gear in sheet order, accessories expanded one row each (R2-FR-201). */
@@ -726,6 +751,7 @@ export function crawlerGlance(dossier: Dossier): Glance {
     class: dossier.class,
     level: dossier.level,
     hp: dossier.hp,
+    mana: dossier.mana,
     rank: dossier.rank,
     debuffs: dossier.debuffs,
     equipped: equippedItems(dossier.gear),

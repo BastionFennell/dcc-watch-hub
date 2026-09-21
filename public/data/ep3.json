@@ -31,6 +31,10 @@
           "dex": 2,
           "cha": 4
         },
+        "mana": {
+          "current": 6,
+          "max": 6
+        },
         "hotlist": [],
         "skills": [
           {
@@ -97,6 +101,10 @@
           "con": 4,
           "dex": 3,
           "cha": 6
+        },
+        "mana": {
+          "current": 5,
+          "max": 5
         },
         "hotlist": [
           {
@@ -192,6 +200,10 @@
           "dex": 6,
           "cha": 2
         },
+        "mana": {
+          "current": 3,
+          "max": 3
+        },
         "hotlist": [
           {
             "ref": "heal"
@@ -268,6 +280,10 @@
           "dex": 3,
           "cha": 2
         },
+        "mana": {
+          "current": 5,
+          "max": 5
+        },
         "hotlist": [],
         "skills": [
           {
@@ -339,7 +355,7 @@
         "inventory": [
           {
             "name": "Witchy Traveling Kit",
-            "desc": "(small assortment of spell candles, crystals, herbs"
+            "desc": "(small assortment of spell candles, crystals, herbs)"
           },
           {
             "name": "Tarot Card Set w/ Embroidered Bag",
@@ -375,6 +391,10 @@
           "con": 3,
           "dex": 4,
           "cha": 5
+        },
+        "mana": {
+          "current": 6,
+          "max": 6
         },
         "hotlist": [
           {
@@ -589,6 +609,12 @@
       "mana": 2
     },
     {
+      "t": 221,
+      "type": "mana",
+      "actor": "mimi",
+      "current": 3
+    },
+    {
       "t": 229,
       "type": "sponsor",
       "text": "Descending? Grull Industries rappelling line. Rated for one of you.",
@@ -666,6 +692,12 @@
       "ref": "heal",
       "rank": 1,
       "mana": 2
+    },
+    {
+      "t": 366,
+      "type": "mana",
+      "actor": "veil",
+      "current": 4
     },
     {
       "t": 371,
@@ -782,6 +814,13 @@
       "actor": "harry",
       "slot": "hands",
       "item": "Warden Key"
+    },
+    {
+      "t": 550,
+      "type": "mana",
+      "actor": "mimi",
+      "current": 5,
+      "max": 5
     },
     {
       "t": 567,

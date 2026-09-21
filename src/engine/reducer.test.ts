@@ -606,3 +606,56 @@ describe('structured entries and the spell event (008 revision 2)', () => {
     expect(applyEvent(before, { t: 1, type: 'spell', actor: 'ghost', name: 'Haunt' })).toBe(before);
   });
 });
+
+/* ------------------------------------------------------------ 009: mana */
+
+describe('the mana event (009)', () => {
+  it('sets current and max', () => {
+    const after = applyEvent(init(), { t: 1, type: 'mana', actor: 'psychic', current: 2, max: 4 });
+    expect(findCrawler(after, 'psychic')?.mana).toEqual({ current: 2, max: 4 });
+  });
+
+  it('keeps the standing max when the row omits one', () => {
+    const after = applyEvent(init(), { t: 1, type: 'mana', actor: 'psychic', current: 2 });
+    expect(findCrawler(after, 'psychic')?.mana).toEqual({ current: 2, max: 5 });
+  });
+
+  it('clamps current into [0, max], against the standing max too', () => {
+    const over = applyEvent(init(), { t: 1, type: 'mana', actor: 'psychic', current: 99, max: 4 });
+    expect(findCrawler(over, 'psychic')?.mana).toEqual({ current: 4, max: 4 });
+
+    const overStanding = applyEvent(init(), { t: 1, type: 'mana', actor: 'psychic', current: 99 });
+    expect(findCrawler(overStanding, 'psychic')?.mana).toEqual({ current: 5, max: 5 });
+
+    const under = applyEvent(init(), { t: 1, type: 'mana', actor: 'psychic', current: -5, max: 4 });
+    expect(findCrawler(under, 'psychic')?.mana).toEqual({ current: 0, max: 4 });
+  });
+
+  it('ignores an unknown actor and never mutates the input', () => {
+    const before = init();
+    const snapshot = JSON.parse(JSON.stringify(before));
+    expect(applyEvent(before, { t: 1, type: 'mana', actor: 'ghost', current: 1 })).toBe(before);
+    applyEvent(before, { t: 1, type: 'mana', actor: 'psychic', current: 1 });
+    expect(before).toEqual(snapshot);
+  });
+
+  // Time-truth (constitution I): the pool is whatever the elapsed log says, so
+  // scrubbing back past a dip restores it without any undo.
+  it('is a pure function of the playhead, in both directions', () => {
+    const data = withEvents([
+      { t: 10, type: 'mana', actor: 'psychic', current: 2 },
+      { t: 20, type: 'mana', actor: 'psychic', current: 4, max: 8 },
+      { t: 30, type: 'mana', actor: 'psychic', current: 1 },
+    ] as AnyEvent[]);
+
+    const at = (t: number) => findCrawler(reduceTo(data, t), 'psychic')?.mana;
+    expect(at(0)).toEqual({ current: 5, max: 5 });
+    expect(at(9)).toEqual({ current: 5, max: 5 });
+    expect(at(10)).toEqual({ current: 2, max: 5 });
+    expect(at(20)).toEqual({ current: 4, max: 8 });
+    expect(at(30)).toEqual({ current: 1, max: 8 });
+    // Rewind: the same playhead gives the same pool, whichever way it arrived.
+    expect(at(10)).toEqual({ current: 2, max: 5 });
+    expect(at(0)).toEqual({ current: 5, max: 5 });
+  });
+});

@@ -61,7 +61,8 @@
 /* The wash costs --text-3 its 4.5:1 (4.00 on --brand-deep), so the open frame's
    metadata steps up to --text-2 (6.79:1) rather than the tint being watered down. */
 .frame[aria-expanded='true'] .stats,
-.frame[aria-expanded='true'] .hpValue {
+.frame[aria-expanded='true'] .hpValue,
+.frame[aria-expanded='true'] .manaValue {
   color: var(--text-2);
 }
 
@@ -150,6 +151,51 @@
 }
 
 /*
+ * The mana meter (009 revision 1). One flex line under the HP bar: the track
+ * takes the slack, the mono count is pushed to the right edge where it lines up
+ * with nothing else on the frame and so cannot be mistaken for the HP figure.
+ * The count rather than the meta line because "Lv 1 · 20/20 · 5/5" wrapped the
+ * narrowest frame; the row's height is the count's single line, which is the
+ * only height this adds to a frame.
+ */
+.manaRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  min-width: 0;
+}
+
+/* One step thinner than the HP bar at every breakpoint, so the hierarchy holds
+   when --hp-bar grows on the larger scales. */
+.manaTrack {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: calc(var(--hp-bar) - 1px);
+  background: var(--hairline);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.manaFill {
+  display: block;
+  height: 100%;
+  background: var(--system-fg);
+  border-radius: 2px;
+  transition: width 400ms ease;
+}
+
+.manaValue {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  line-height: 1.4;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/*
  * Reserved on every frame whether or not the crawler carries a debuff (review
  * 0.10, T339): the pip row is a function of the playhead, and a row that
  * appears and disappears made the whole rail jump on every seek.
@@ -185,7 +231,8 @@
     animation: none;
   }
 
-  .hpFill {
+  .hpFill,
+  .manaFill {
     transition: none;
   }
 }

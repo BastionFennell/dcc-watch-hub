@@ -1,6 +1,7 @@
 import type { PartyFrame } from '../../engine/selectors';
 import { copy } from '../../copy';
 import { HpBar } from './HpBar';
+import { ManaBar } from './ManaBar';
 import { StatusPips } from './StatusPips';
 import styles from './PartyRail.module.css';
 
@@ -67,6 +68,8 @@ export function CrawlerFrame({ frame, expanded, onActivate }: CrawlerFrameProps)
           pct={frame.pct}
           danger={frame.danger}
         />
+        {/* The pool under the HP bar (009 revision 1), its count beside it. */}
+        <ManaBar current={frame.mana.current} max={frame.mana.max} />
         <StatusPips statuses={frame.statuses} />
       </button>
     </li>

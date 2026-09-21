@@ -10,6 +10,7 @@ import { FeedItemView } from '../EventFeed/FeedItem';
 import { Tooltip } from '../Tooltip/Tooltip';
 import tip from '../Tooltip/Tooltip.module.css';
 import { HpSegments } from './HpSegments';
+import { ManaSegments } from './ManaSegments';
 import { RankSparkline } from './RankSparkline';
 import styles from './CrawlerDossier.module.css';
 
@@ -313,6 +314,15 @@ export function DossierVitals({ dossier }: DossierVitalsProps) {
           <p className={styles.hpValue} data-testid="dossier-hp">
             {copy.hpValue(dossier.hp.current, dossier.hp.max)}
           </p>
+          {/* Mana sits on its own row directly under HP (009). Every crawler has
+              a pool, so the row is never dropped - an empty one reads 0/0
+              (revision 1). */}
+          <div className={styles.manaRow}>
+            <ManaSegments current={dossier.mana.current} max={dossier.mana.max} />
+            <p className={styles.manaValue} data-testid="dossier-mana">
+              {copy.hpValue(dossier.mana.current, dossier.mana.max)}
+            </p>
+          </div>
           <div className={styles.rankBlock} data-testid="dossier-rank">
             {rank.current === null || rank.best === null ? (
               <p className={styles.unranked}>{copy.unranked}</p>

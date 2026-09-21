@@ -114,6 +114,7 @@ const ACTOR_EVENT_TYPES = new Set([
   'achievement',
   'loot',
   'hp',
+  'mana',
   'level_up',
   'rank',
   'status',
@@ -355,6 +356,23 @@ export function rowToEvent(row: SheetRow, ctx: RowContext): RowResult {
         ctx.hpState.set(actor, { current, max });
         event = { t, type, actor, current, max };
       }
+      break;
+    }
+    /*
+     * Mana (009): field1 is the reading, field2 the pool and it is optional -
+     * a row that only spends mana leaves the max to the crawler's sheet. There
+     * are no cross-row warnings to make: unlike hp there is no "impossible
+     * drop" to detect, because a full pool can be emptied in one action.
+     */
+    case 'mana': {
+      const current = numericField(field1, 'current', 'field1', errors);
+      if (current === null) break;
+      if (field2 === '') {
+        event = { t, type, actor, current };
+        break;
+      }
+      const max = numericField(field2, 'max', 'field2', errors);
+      if (max !== null) event = { t, type, actor, current, max };
       break;
     }
     case 'level_up': {

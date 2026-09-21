@@ -1,5 +1,5 @@
 <!-- SPECKIT START -->
-Active feature: none in progress; features 001-008 are merged on
+Active feature: `specs/009-mana/` (branch `009-mana`); features 001-008 are merged on
 `main` and documented under `specs/00[1-8]-*/` (008 = real crawlers, spell registry, tooltips).
 Read, in order: `.specify/memory/constitution.md`, then `spec.md`, `plan.md`, `research.md`,
 `data-model.md`, `contracts/`, `quickstart.md`, `tasks.md` under the newest `specs/NNN-*/` when a feature is active; otherwise read `specs/008-real-crawlers/spec.md` for the current data model.

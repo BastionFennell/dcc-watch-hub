@@ -616,3 +616,58 @@ describe('FullRecordDialog - registry-backed spells (008 revision 4)', () => {
     expect(row).toHaveTextContent(copy.spellUpgrade(5, 'Heal 3 HB slots instead.'));
   });
 });
+
+/* ------------------------------------------------------------ 009: mana */
+
+describe('the record’s MANA row', () => {
+  it('sits inside VITALS with one segment per point and a mono current/max', () => {
+    open(dossierAt(0, 'psychic'));
+    const vitals = within(section('vitals'));
+    expect(vitals.getByText(copy.vitalsMana)).toBeInTheDocument();
+    const strip = vitals.getByTestId('mana-segments');
+    expect(strip).toHaveAttribute('role', 'img');
+    expect(strip).toHaveAttribute('aria-label', copy.manaAria(5, 5));
+    expect(vitals.getAllByTestId('mana-segment')).toHaveLength(5);
+    expect(screen.getByTestId('dossier-mana')).toHaveTextContent(copy.hpValue(5, 5));
+  });
+
+  it('follows the playhead in both directions', () => {
+    const { rerender } = open(dossierAt(171, 'psychic'));
+    expect(screen.getByTestId('dossier-mana')).toHaveTextContent(copy.hpValue(2, 5));
+    expect(
+      screen.getAllByTestId('mana-segment').filter((seg) => seg.dataset.filled === 'true'),
+    ).toHaveLength(2);
+
+    // The page recomputes and re-renders; the record has nothing to undo.
+    rerender(
+      <FullRecordDialog
+        dossier={dossierAt(0, 'psychic')}
+        meta={meta}
+        open
+        onClose={vi.fn()}
+        returnFocusTo={null}
+      />,
+    );
+    expect(screen.getByTestId('dossier-mana')).toHaveTextContent(copy.hpValue(5, 5));
+  });
+
+  it('shows the derived pool for a crawler whose sheet writes no box', () => {
+    // Harry has INT 6 and no mana box.
+    open(dossierAt(0));
+    expect(within(section('vitals')).getAllByTestId('mana-segment')).toHaveLength(6);
+    expect(screen.getByTestId('dossier-mana')).toHaveTextContent(copy.hpValue(6, 6));
+  });
+
+  it('keeps the row for a crawler with an empty pool, HP untouched', () => {
+    // 009 revision 1: the pool is always there, so the row reads 0/0 rather
+    // than disappearing and resizing VITALS between crawlers.
+    open(dossierAt(0, 'xo'));
+    const vitals = within(section('vitals'));
+    expect(vitals.getByTestId('mana-segments')).toHaveAttribute('aria-label', copy.manaAria(0, 0));
+    expect(vitals.queryAllByTestId('mana-segment')).toHaveLength(0);
+    expect(screen.getByTestId('dossier-mana')).toHaveTextContent(copy.hpValue(0, 0));
+    expect(vitals.getByText(copy.vitalsMana)).toBeInTheDocument();
+    expect(vitals.getAllByTestId('hp-segment')).toHaveLength(10);
+    expect(screen.getByTestId('dossier-hp')).toHaveTextContent(copy.hpValue(18, 18));
+  });
+});

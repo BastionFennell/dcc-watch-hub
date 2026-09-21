@@ -38,6 +38,7 @@ timecode,type,actor,field1,field2,field3
 3:14,skill,xo,Signal Discipline,2,Held the flare. Held the line.
 3:24,class,xo,Quartermaster,,
 3:26,spell,mimi,heal,2,2
+3:27,mana,mimi,3,,
 3:36,hotlist,harry,Bronze Box Runner,The Hoarder,
 3:19,sponsor,,Crawler life insurance from Ghaza Provisioners. Terms apply posthumously.,20,
 3:30,achievement,mimi,Scene Stealer,Held the room for a full minute.,
