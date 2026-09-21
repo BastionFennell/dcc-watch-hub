@@ -163,7 +163,7 @@
 
 .error {
   margin: 0;
-  color: var(--danger);
+  color: var(--danger-fg);
   font-size: var(--text-xs);
 }
 

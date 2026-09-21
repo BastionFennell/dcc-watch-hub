@@ -1,0 +1,133 @@
+/*
+ * The transport bar (010, T1022): one dense row under the stage. Dark panel,
+ * hairline border, mono everywhere - the same language as the viewer's chrome,
+ * with none of its air.
+ */
+
+.bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-6);
+  padding: var(--space-4) var(--space-5);
+  background: var(--panel);
+  border: var(--border-hairline);
+  border-radius: var(--radius-md);
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.button {
+  min-height: 28px;
+  min-width: 34px;
+  padding: 0 var(--space-4);
+  background: var(--panel-deep);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.button:hover {
+  color: var(--text);
+  border-color: var(--brand-line);
+}
+
+.rate {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-left: var(--space-3);
+}
+
+.rateLabel {
+  color: var(--text-3);
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.select {
+  min-height: 28px;
+  padding: 0 var(--space-3);
+  background: var(--panel-deep);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.noTransport {
+  flex: 1 1 260px;
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+}
+
+/* The number the author reads off the screen while marking a beat. */
+.clock {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin: 0 auto 0 0;
+  font-family: var(--font-mono);
+}
+
+.now {
+  color: var(--text);
+  font-size: var(--text-xl);
+  letter-spacing: 0.02em;
+}
+
+.total {
+  color: var(--text-3);
+  font-size: var(--text-sm);
+}
+
+.total::before {
+  content: '/ ';
+}
+
+.add {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 32px;
+  padding: 0 var(--space-6);
+  background: var(--brand);
+  border: 1px solid var(--brand-2);
+  border-radius: var(--radius-sm);
+  color: var(--brand-fg-2);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.add:hover {
+  background: var(--brand-2);
+}
+
+.kbd {
+  padding: 1px var(--space-3);
+  background: var(--brand-deep);
+  border: 1px solid var(--brand-2);
+  border-radius: var(--radius-sm);
+  color: var(--brand-fg);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+}
+
+.button:focus-visible,
+.select:focus-visible,
+.add:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-color: var(--brand-line);
+}

@@ -70,7 +70,7 @@
 }
 
 .row[data-severity='error'] .icon {
-  color: var(--danger);
+  color: var(--danger-fg);
 }
 
 .row[data-severity='warning'] .icon {

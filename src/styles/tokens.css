@@ -35,6 +35,14 @@
   --amber-bg: #633806;
   --amber-fg: #fac775;
   --danger: #e24b4a;
+  /*
+   * Red for *text* (010, T1030). Spec §6's --danger is a fill/border colour: as
+   * 13 px type on --panel it measures 4.24:1, just under the 4.5:1 WCAG 1.4.3
+   * bar that axe flags on the Studio's field errors. Same hue lifted toward the
+   * light: 5.12:1 on --panel, 5.65:1 on --canvas, 5.94:1 on --panel-deep. Spec
+   * §6 values unchanged, and no viewer surface reads this.
+   */
+  --danger-fg: #eb6260;
   --hp: #639922;
 
   /* Timeline markers */

@@ -24,14 +24,14 @@
 - [X] T1019 Component tests: every type can be authored through the form; defaults; validation messages
 
 ## Wave C - shell and integration
-- [ ] T1020 Routes `/studio`, `/studio/ep/:id` via `React.lazy` in `App.tsx`; viewer imports nothing from `src/studio`
-- [ ] T1021 `useStudioDraft` (reducer + autosave + save state), `useTransport`, `useStudioHotkeys`
-- [ ] T1022 `Transport` bar, `StudioTimeline`
-- [ ] T1023 `EventList` with filters, selection, seek, scroll-into-view
-- [ ] T1024 `StudioHeader` (save state, undo/redo, import, export menu: download, save to folder, copy show entry)
-- [ ] T1025 `StudioHomePage` (drafts, new, open file, edit published)
-- [ ] T1026 `NewEpisodeDialog` + `PartyEditor` (FR-1011), duration from transport
-- [ ] T1027 `StudioEpisodePage` layout + narrow-screen notice
-- [ ] T1028 End-to-end test on the fake source: keyboard-author events, undo, reload, export, load the export through the viewer's loader and compare `reduceTo`
-- [ ] T1029 README "The Studio" section (workflow, hotkeys, how to publish a file)
-- [ ] T1030 Gates: typecheck, lint, test, build (chunk split + main chunk delta), axe on the editor, Lighthouse a11y on `/ep/1` unchanged
+- [X] T1020 Routes `/studio`, `/studio/ep/:id` via `React.lazy` in `App.tsx`; viewer imports nothing from `src/studio`
+- [X] T1021 `useStudioDraft` (reducer + autosave + save state), `useTransport`, `useStudioHotkeys`
+- [X] T1022 `Transport` bar, `StudioTimeline`
+- [X] T1023 `EventList` with filters, selection, seek, scroll-into-view
+- [X] T1024 `StudioHeader` (save state, undo/redo, import, export menu: download, save to folder, copy show entry)
+- [X] T1025 `StudioHomePage` (drafts, new, open file, edit published)
+- [X] T1026 `NewEpisodeDialog` + `PartyEditor` (FR-1011), duration from transport
+- [X] T1027 `StudioEpisodePage` layout + narrow-screen notice
+- [X] T1028 End-to-end test on the fake source: keyboard-author events, undo, reload, export, load the export through the viewer's loader and compare `reduceTo`
+- [X] T1029 README "The Studio" section (workflow, hotkeys, how to publish a file)
+- [X] T1030 Gates: typecheck, lint, test, build (chunk split + main chunk delta), axe on the editor, Lighthouse a11y on `/ep/1` unchanged
