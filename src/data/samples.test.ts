@@ -2,21 +2,30 @@
  * The shipped sample data is the contract's only executable proof. If an editor
  * (or a later wave) breaks public/data/*.json, this fails before the app does.
  */
-import { readFileSync, existsSync } from 'node:fs';
+import {
+  readFileSync,
+  existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe,
+  expect,
+  it } from 'vitest';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
-import type { CrawlerRoster, EpisodeData, NpcEvent, Registry, Show, SpellRegistry } from './types';
+import type { CrawlerRoster,
+  EpisodeData,
+  NpcEvent,
+  Registry,
+  Show,
+  SpellRegistry } from './types';
 import {
   isRegistry,
   isShow,
   isSpellRegistry,
   normalizeEpisode,
   normalizeRegistry,
-  validateCrawlers,
   validateSpells,
 } from './validate';
+import { validateCrawlers } from './roster';
 import { resolveSpell, spellIndex } from '../engine/spells';
 import { fromInitialState } from '../engine/state';
 import { orderedEpisodeIds } from './show';
@@ -75,7 +84,7 @@ describe('public/data/show.json', () => {
 
   it('carries the marketing copy the home page renders', () => {
     const show = showRaw as Show;
-    expect(show.tagline).toBe('Heart and chaos in the World Dungeon.');
+    expect(show.tagline).toBe('Earth got cancelled. They got renewed.');
     expect(show.pitch).toBeTruthy();
     expect(show.cadence).toBeTruthy();
     // No trailer has been cut yet, so `trailerYoutubeId` is deliberately absent
