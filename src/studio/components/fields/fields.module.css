@@ -1,0 +1,186 @@
+/*
+ * The Studio's form controls (010, T1014). The viewer's tokens, arranged dense:
+ * this is a tool, so the controls are close together and every one of them is
+ * a native element wearing the panel's colours.
+ */
+
+.input,
+.number,
+.select,
+.textarea {
+  width: 100%;
+  min-height: 30px;
+  padding: var(--space-2) var(--space-4);
+  background: var(--panel-deep);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: inherit;
+  font-size: var(--text-sm);
+}
+
+.number {
+  width: 8ch;
+  min-width: 8ch;
+  font-family: var(--font-mono);
+}
+
+.textarea {
+  min-height: 56px;
+  resize: vertical;
+  line-height: 1.4;
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--text-3);
+}
+
+.input:focus-visible,
+.number:focus-visible,
+.select:focus-visible,
+.textarea:focus-visible,
+.checkbox:focus-visible,
+.smallButton:focus-visible,
+.escape:focus-visible,
+.chipRemove:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-color: var(--brand-line);
+}
+
+.input[aria-invalid='true'],
+.number[aria-invalid='true'],
+.select[aria-invalid='true'],
+.textarea[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.checkbox {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--brand-2);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.listRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.smallButton,
+.escape {
+  flex: 0 0 auto;
+  min-height: 28px;
+  padding: 0 var(--space-5);
+  background: var(--panel);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  font-family: inherit;
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.smallButton:hover,
+.escape:hover {
+  color: var(--text);
+  border-color: var(--brand-line);
+}
+
+.withEscape {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2) var(--space-1) var(--space-4);
+  background: var(--brand-deep);
+  border: 1px solid var(--brand);
+  border-radius: var(--radius-pill);
+  color: var(--brand-fg);
+  font-size: var(--text-xs);
+}
+
+.chipRemove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: var(--radius-pill);
+  color: var(--brand-fg);
+  font-size: var(--text-sm);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.chipRemove:hover {
+  background: var(--brand);
+  color: var(--brand-fg-2);
+}
+
+.checkList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  max-height: 168px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.checkLabel {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  color: var(--text);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.hint {
+  color: var(--text-3);
+  font-size: var(--text-xs);
+}
+
+.notice {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+}
+
+.error {
+  margin: 0;
+  color: var(--danger-fg);
+  font-size: var(--text-xs);
+}

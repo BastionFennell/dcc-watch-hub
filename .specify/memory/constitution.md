@@ -1,4 +1,8 @@
 <!--
+Sync Impact 1.3.0 (2026-09-19): MINOR - added Principle VII (Studio authoring tool: isolated lazy
+chunk, same reduceTo truth, local-only storage under dcc.studio.*, TimeSource transport extension).
+CLAUDE.md updated in the same change.
+
 Sync Impact Report
 - Version change: 1.2.0 → 1.2.1 (2026-09-15): PATCH - active-feature pointer moved to 004; no principle changes
 
@@ -117,6 +121,22 @@ Rationale: the handoff spec is deliberately scoped; leakage from parked items is
 
 Rationale: acceptance item 9 and the reality that the editor, not the developer, owns the data.
 
+### VII. The Studio Is an Authoring Tool, Not a Viewer Surface
+
+The Studio (routes under `/studio`) exists so the author can place events against the video. It
+is governed by Principles I, II, IV, and VI, and by these rules of its own:
+
+- **Isolated**: Studio code lives under `src/studio/**` and loads as a lazy chunk. Viewer routes
+  MUST NOT import it, and the viewer bundle MUST NOT grow because of it. The Studio MAY import
+  viewer code (engine, data, components) to preview the real overlay.
+- **Same truth**: the Studio previews drafts with the same `reduceTo(episode, t)` the viewer uses,
+  and exports exactly the episode JSON the viewer loads. No second format.
+- **Local only**: the Studio writes to browser storage under the `dcc.studio.` prefix and to files
+  the author explicitly picks. It never sends data anywhere. Principle III (ambient panels) and the
+  "storage holds the playhead only" constraint apply to viewer routes, not to the Studio.
+- **Host-agnostic**: transport control (play, pause, rate, duration) goes through an extension of
+  `TimeSource`; only files under `src/playback/` named for the host may reference YouTube.
+
 ## Technical Constraints
 
 - Runtime: Node 20.9 (pinned in `.tool-versions`); the toolchain MUST install and build on it.
@@ -156,4 +176,4 @@ Compliance is reviewed at every plan (Constitution Check gate) and at implementa
 (acceptance checklist). Use `CLAUDE.md` for runtime development guidance and pointers to the
 active plan.
 
-**Version**: 1.2.1 | **Ratified**: 2026-09-14 | **Last Amended**: 2026-09-15
+**Version**: 1.3.0 | **Ratified**: 2026-09-14 | **Last Amended**: 2026-09-19

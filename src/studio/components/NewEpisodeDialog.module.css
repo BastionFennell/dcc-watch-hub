@@ -1,0 +1,156 @@
+/*
+ * The new-episode dialog (010, T1026). A small modal panel over the drafts
+ * list: two columns of fields, then the one real decision - where the party
+ * comes from.
+ */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-7);
+  background: rgb(0 0 0 / 62%);
+  overflow: auto;
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: min(560px, 100%);
+  padding: var(--space-7);
+  background: var(--panel);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-lg);
+}
+
+.title {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--text-xl);
+  font-weight: 600;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+.label {
+  color: var(--text-3);
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.input {
+  min-height: 30px;
+  padding: 0 var(--space-4);
+  background: var(--panel-deep);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: inherit;
+  font-size: var(--text-sm);
+}
+
+.help {
+  color: var(--text-3);
+  font-size: var(--text-xs);
+}
+
+.error {
+  color: var(--danger-fg);
+  font-size: var(--text-xs);
+}
+
+.party {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-5);
+  border: var(--border-hairline);
+  border-radius: var(--radius-md);
+}
+
+.radio {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+.partyState {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.primary {
+  min-height: 30px;
+  padding: 0 var(--space-6);
+  background: var(--brand);
+  border: 1px solid var(--brand-2);
+  border-radius: var(--radius-sm);
+  color: var(--brand-fg-2);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.primary:disabled {
+  background: var(--panel-deep);
+  border-color: var(--hairline);
+  color: var(--text-3);
+  cursor: not-allowed;
+}
+
+.ghost {
+  min-height: 30px;
+  padding: 0 var(--space-5);
+  background: none;
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.input:focus-visible,
+.primary:focus-visible,
+.ghost:focus-visible,
+.radio input:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-color: var(--brand-line);
+}
+
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

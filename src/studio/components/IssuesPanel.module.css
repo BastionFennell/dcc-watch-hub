@@ -1,0 +1,89 @@
+/*
+ * The issues list (010, T1018). Dense rows, the severity carried by a colour
+ * *and* a glyph *and* the screen-reader word, so none of the three is the only
+ * thing saying it.
+ */
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  min-width: 0;
+}
+
+.plain,
+.button {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  width: 100%;
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  background: none;
+  border: none;
+  border-left: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  text-align: left;
+}
+
+.button {
+  cursor: pointer;
+}
+
+.button:hover {
+  background: var(--panel-deep);
+  color: var(--text);
+}
+
+.button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.row[data-severity='error'] .plain,
+.row[data-severity='error'] .button {
+  border-left-color: var(--danger);
+}
+
+.row[data-severity='warning'] .plain,
+.row[data-severity='warning'] .button {
+  border-left-color: var(--amber-fg);
+}
+
+.icon {
+  flex: 0 0 auto;
+  width: 14px;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  text-align: center;
+}
+
+.row[data-severity='error'] .icon {
+  color: var(--danger-fg);
+}
+
+.row[data-severity='warning'] .icon {
+  color: var(--amber-fg);
+}
+
+.text {
+  min-width: 0;
+}
+
+.empty {
+  margin: 0;
+  padding: var(--space-4);
+  color: var(--text-3);
+  font-size: var(--text-sm);
+}

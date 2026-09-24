@@ -803,6 +803,132 @@ After adding an episode, add its entry to `public/data/show.json` (`id`, `title`
 
 ---
 
+## The Studio
+
+The Studio is the author's event editor: watch the episode, pause, drop an event at the playhead,
+pick a type, fill in only what that type needs, and export the exact `ep{N}.json` the viewer loads.
+It is a tool, not a viewer surface - it is not linked from the site's navigation and it loads as its
+own lazy chunk, so a viewer who never opens it never downloads it.
+
+**Where it is**
+
+| URL | What it is |
+| --- | --- |
+| `/studio` | Drafts in this browser, New episode, Open file..., Edit a published episode |
+| `/studio/ep/{N}` | The editor for draft `N` |
+| `/studio/ep/{N}?fake=1` | The editor driven by the dev scrubber instead of YouTube (dev server only) |
+
+It needs a screen at least 1000 px wide; below that it shows a notice instead of the editor.
+Authoring on a phone is a non-goal.
+
+### The workflow
+
+1. **Start an episode.** `/studio` -> *New episode*. Give it a number, a title, the YouTube URL (any
+   share, watch, embed or shorts link - only the id is kept) and a floor. Choose where the party
+   comes from: the **initial party** of another episode (restarting a run), the **final state** of
+   another episode (episode N + 1 begins where N ended - the viewer's own reducer runs the whole log
+   to work it out), or **empty**. Duration is optional here; fill it from the player later.
+2. **Mark events.** Play the video. When something happens, press **E** (or the big *Add event at
+   m:ss* button). Playback pauses, the form opens with the time already set. Filter the type grid,
+   press Enter, fill the fields, **Cmd/Ctrl + Enter** to save - or **Shift + Cmd/Ctrl + Enter** to
+   save and resume playback in one keystroke.
+3. **Fix events.** Click a row in the Events list: the video seeks there and the form opens. Row
+   actions *Retime to playhead*, *Duplicate at playhead* and *Delete* are one click, or **T**, **D**
+   and **Delete** once a row is selected. Undo and redo cover everything, a hundred steps deep.
+4. **Preview.** The pane under the timeline is not a mock-up: it runs the draft through the viewer's
+   own `reduceTo` and renders the viewer's own party rail and event feed at the playhead. If the
+   preview is wrong, the episode is wrong.
+5. **Check.** The **Issues** tab runs the viewer's validation over the draft plus the cross-checks
+   the loader deliberately skips: an actor who is not in the party, a spell or entity ref no registry
+   carries, an event past the end of the video, a row the reducer would ignore. Clicking an issue
+   selects and seeks to the offending event.
+6. **Export.** See *Publishing an episode* below.
+
+### Hotkeys
+
+| Key | What it does |
+| --- | --- |
+| `Space` | Play / pause |
+| `J` / `L` | Back / forward 5 seconds |
+| `Left` / `Right` | Back / forward 1 second |
+| `E` | Add an event at the playhead (pauses playback) |
+| `T` | Retime the selected event to the playhead |
+| `D` | Duplicate the selected event at the playhead |
+| `Delete` / `Backspace` | Delete the selected event (no confirmation - undo is one keystroke away) |
+| `Cmd/Ctrl + Z` | Undo |
+| `Shift + Cmd/Ctrl + Z` | Redo |
+| `Cmd/Ctrl + S` | Save: into the picked data folder if there is one, otherwise a download |
+| `Escape` | Close the form (in the form) |
+| `Cmd/Ctrl + Enter` | Save the event (in the form) |
+| `Shift + Cmd/Ctrl + Enter` | Save the event and resume playback (in the form) |
+
+Two rules about the keyboard:
+
+- **A key pressed in a text box belongs to the text box.** Space types a space in the search field,
+  `d` types a `d`. Only combinations with Cmd, Ctrl or Alt fire from inside an input.
+- **While the event form is open the page keys are off.** Only undo, redo and save still fire; the
+  form itself owns Escape and Cmd/Ctrl + Enter. The form says so under its buttons.
+
+**YouTube would steal the keyboard, so the Studio does not let it.** A clicked iframe owns every
+keypress after it, and the page hotkeys die with them - `E` does nothing and Space plays through
+YouTube's handler rather than ours. The editor therefore lays a transparent shield over the embedded
+player: **the video is click-to-pause; unlock to reach YouTube's own controls.** Clicking the stage
+toggles playback through the transport and the keyboard stays on the page. The transport bar's
+*Video controls: locked* button (locked by default) drops the shield when you need the host's own
+controls - captions, quality - and says plainly that the hotkeys stop working once you click the
+video; press it again to lock it. If Tab ever lands inside the iframe while it is locked, focus
+comes straight back to the Add button. The dev stage (`?fake=1`) is never shielded: its play button
+and scrubber are inside the box.
+
+### Where drafts live
+
+In `localStorage`, under the `dcc.studio.v1.` prefix: one key per draft plus a small index for the
+list. Nothing is ever sent anywhere. That means:
+
+- drafts are **per browser and per profile** - they do not follow you to another machine;
+- a private window, or a browser with site data blocked, cannot hold them. The Studio says so in the
+  header and on the drafts list; export early if you see that;
+- clearing site data for the host clears the drafts. The export file is the durable copy.
+
+The draft autosaves within half a second of every change, and flushes when you leave the page or
+navigate back to the drafts list. The header says `Saved`, `Saving...`, or why not.
+
+### Publishing an episode
+
+1. **Export -> Download ep{N}.json** (or Cmd/Ctrl + S). The file is exactly what the viewer loads:
+   two-space indentation, stable key order, one trailing newline, and it validates against
+   `specs/009-mana/contracts/episode.schema.json`.
+2. Put it in `public/data/` as `ep{N}.json`.
+3. **Export -> Copy show.json entry** and paste the row into the `episodes` array in
+   `public/data/show.json`, then list the episode's id under the right floor in `seasons`.
+4. Commit both files. There are no code changes.
+
+**Save to data folder** (Chromium only) skips steps 1 and 2: pick `public/data/` once per session
+through the File System Access API and every later save - including Cmd/Ctrl + S - writes
+`ep{N}.json` straight into the repo. Firefox and Safari have no such API, so the menu item is not
+shown there at all and the download is the path.
+
+To edit something that is already live, use **Edit a published episode** on `/studio`: it fetches the
+file the site serves today and turns it into a draft, keeping the `show.json` row's title, video id
+and duration. **Open file...** does the same for a `.json` you exported earlier. **Import**, in the
+editor's header, replaces the current draft with a file while keeping the episode's own meta.
+
+### The Episode tab
+
+Title, video id, floor and duration, plus the starting party. The duration field has a *Use player
+duration* button once the player knows one. The party is a validated raw-JSON box per crawler - the
+deliberate escape hatch, because the crawler sheet is large and the Studio's job is events. Applying
+a crawler goes through the same history as everything else, so undo covers it.
+
+### Non-goals
+
+No editor for `npcs.json`, `spells.json`, floors or maps; no full crawler-sheet form; no publishing
+from the browser (no GitHub commit button); no collaboration; no thumbnails or waveforms; no CSV
+import - the CSV pipeline above is unchanged and still the way an editor working in a spreadsheet
+gets data in.
+
+---
+
 ## Placeholders to replace before launch
 
 Everything below is sample data so the site is runnable today, with one exception: as of
@@ -1005,12 +1131,17 @@ Read in this order:
 9. `specs/007-npc-registry/` - the active feature: `npc` events, the Encountered strip and the
    entity record on the episode page, and the Dungeon Codex at `/codex`. Same layout, plus
    `contracts/npc.md` and `contracts/npcs.schema.json`.
+10. `specs/010-studio/` - the Studio, the author's event editor at `/studio` (see "The Studio"
+    above). Constitution 1.3.0 adds Principle VII for it: isolated lazy chunk, the same
+    `reduceTo` the viewer uses, local-only storage under `dcc.studio.`, and transport control
+    through an extension of `TimeSource`.
 
 Three rules bite most often while editing:
 
 - **Every user-facing string lives in `src/copy.ts`**, in the System's voice. "Dashboard",
   "Home", "Ads" and friends are defects - the archive is a *broadcast archive*, ads are
-  *sponsors*, episodes are *recap episodes*.
+  *sponsors*, episodes are *recap episodes*. The one exception is the Studio: it is a tool, not a
+  broadcast, so its strings live in `src/studio/copy.ts` in plain functional English.
 - **Nothing may reference the YouTube API outside `src/playback/YouTubeTimeSource.ts` and
   `src/playback/loadYouTubeApi.ts`.** Lint fails the build if it does.
 - **No new runtime dependencies, no webfonts, no audio.**

@@ -1,0 +1,94 @@
+/*
+ * The type grid (010, T1015). Three columns, because `COLUMNS` in the component
+ * is what the arrow keys step by: the two numbers must stay equal.
+ */
+
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.filterLabel {
+  color: var(--text-2);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.filter {
+  width: 100%;
+  min-height: 30px;
+  padding: var(--space-2) var(--space-4);
+  background: var(--panel-deep);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: inherit;
+  font-size: var(--text-sm);
+}
+
+.filter:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-color: var(--brand-line);
+}
+
+.help,
+.empty {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.groupLabel {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.type {
+  min-height: 30px;
+  padding: var(--space-2) var(--space-4);
+  background: var(--panel);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.type:hover {
+  border-color: var(--brand-line);
+}
+
+.type:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-color: var(--brand-line);
+}
+
+/* The type the author used last: where the eye and the first Tab both land. */
+.type[data-last-used='true'] {
+  background: var(--brand-deep);
+  border-color: var(--brand);
+  color: var(--brand-fg);
+}

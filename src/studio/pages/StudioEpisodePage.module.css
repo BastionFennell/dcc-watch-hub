@@ -1,0 +1,208 @@
+/*
+ * The editor (010, T1027). The plan's screen: a flex-3 left column with the
+ * stage and everything that reads off it, and a flex-2 right column (min
+ * 380 px) holding the tabs. Dense and functional - this is a tool.
+ */
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.grid {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-7);
+  padding: var(--space-6) var(--space-7);
+  min-width: 0;
+}
+
+.left {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  flex: 3 1 0;
+  min-width: 0;
+}
+
+.right {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  flex: 2 1 0;
+  min-width: 380px;
+  /* The column scrolls on its own so the stage never leaves the screen. */
+  max-height: calc(100vh - var(--header-h) - var(--space-9));
+  overflow: auto;
+}
+
+/*
+ * The stage and its focus shield. The shield is a transparent layer over the
+ * embedded player: the pointer stops here, so the iframe is never clicked and
+ * never takes the keyboard, and the click pauses through the transport instead.
+ */
+.stage {
+  position: relative;
+}
+
+.shield {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: transparent;
+  cursor: pointer;
+}
+
+.tabs {
+  display: flex;
+  gap: var(--space-2);
+  border-bottom: var(--border-hairline);
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 30px;
+  padding: 0 var(--space-5);
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--text-3);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.tab[data-on='true'] {
+  color: var(--text);
+  border-bottom-color: var(--brand-line);
+}
+
+.badge {
+  min-width: 18px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--amber-bg);
+  color: var(--amber-fg);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  text-align: center;
+}
+
+.badge[data-tone='error'] {
+  background: var(--danger);
+  color: var(--text);
+}
+
+.panel {
+  min-width: 0;
+}
+
+.panel:focus-visible,
+.tab:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
+.formNote {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+
+.note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin: var(--space-4) var(--space-7) 0;
+  padding: var(--space-3) var(--space-5);
+  background: var(--panel);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+
+.noVideo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 16 / 9;
+  margin: 0;
+  background: var(--panel-deep);
+  border: var(--border-hairline);
+  border-radius: var(--radius-md);
+  color: var(--text-3);
+  font-size: var(--text-sm);
+}
+
+/* The narrow notice, the unknown-draft offer and the loading line share this. */
+.plain {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: min(560px, 100%);
+  margin: 0 auto;
+  padding: var(--space-9) var(--space-7);
+  color: var(--text-2);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.narrowTitle {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.plainActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  margin: 0;
+}
+
+.primary {
+  min-height: 30px;
+  padding: 0 var(--space-6);
+  background: var(--brand);
+  border: 1px solid var(--brand-2);
+  border-radius: var(--radius-sm);
+  color: var(--brand-fg-2);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.link {
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--brand-fg);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/*
+ * Below 1180 px the two columns get tighter; below 1000 px the page shows the
+ * notice instead of this layout at all (FR-1012), so there is no phone case to
+ * style. (The preview stacks the party rail over the feed at every width.)
+ */
+@media (max-width: 1180px) {
+  .grid {
+    gap: var(--space-5);
+    padding: var(--space-5);
+  }
+
+  .right {
+    min-width: 340px;
+  }
+}

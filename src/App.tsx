@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes, useMatch } from 'react-router';
 import { ShowProvider, useShow } from './data/ShowContext';
 import { RegistryProvider } from './data/RegistryContext';
@@ -11,6 +12,18 @@ import { RegistryPage } from './pages/RegistryPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { copy } from './copy';
 import styles from './App.module.css';
+
+/*
+ * The Studio (010, constitution VII): the author's event editor, behind
+ * `React.lazy` so not one byte of it reaches a viewer who never opens it. These
+ * two imports are the ONLY place outside `src/studio/**` that names it, and
+ * nothing inside it is imported statically from anywhere else.
+ *
+ * The routes sit inside the providers below, so the Studio reads the same
+ * `show.json`, entity registry and spell registry the viewer does.
+ */
+const StudioHomePage = lazy(() => import('./studio/pages/StudioHomePage'));
+const StudioEpisodePage = lazy(() => import('./studio/pages/StudioEpisodePage'));
 
 function AppShell() {
   const { show, error, reload } = useShow();
@@ -43,6 +56,26 @@ function AppShell() {
             <Route path="/" element={<HubPage />} />
             <Route path="/ep/:id" element={<EpisodePage />} />
             <Route path="/codex" element={<RegistryPage />} />
+            {/*
+              The Studio is not in the site navigation and never will be: it is
+              a tool the author reaches by typing the URL (FR-1000).
+            */}
+            <Route
+              path="/studio"
+              element={
+                <Suspense fallback={null}>
+                  <StudioHomePage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/studio/ep/:id"
+              element={
+                <Suspense fallback={null}>
+                  <StudioEpisodePage />
+                </Suspense>
+              }
+            />
             <Route path="/registry" element={<Navigate to="/codex" replace />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>

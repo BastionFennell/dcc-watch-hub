@@ -1,0 +1,83 @@
+/*
+ * The preview (010, T1017). A frame around the viewer's own components: it sets
+ * the width and the background they expect under the stage and gets out of the
+ * way, so what the author sees is what the episode will look like.
+ */
+
+.pane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: var(--canvas);
+  border: var(--border-hairline);
+  border-radius: var(--radius-md);
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.toggle {
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--text-2);
+  font-family: inherit;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.toggle:hover {
+  color: var(--text);
+}
+
+.toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
+.at {
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+/*
+ * Stacked, not side by side: sharing the row with the feed left the five cards
+ * about 160 px narrower than the viewer gives them, which truncated the names to
+ * an initial and broke "Lv 1 · 20/20" over three lines. The rail takes the whole
+ * left column - the width it has in the viewer - and the feed scrolls under it.
+ */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.rail {
+  min-width: 0;
+}
+
+/* The feed keeps the panel it has in the viewer's rail. */
+.feed {
+  min-width: 0;
+  padding: var(--space-4);
+  background: var(--panel);
+  border-radius: var(--radius-md);
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.notice {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+}
