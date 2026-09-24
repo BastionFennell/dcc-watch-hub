@@ -1,19 +1,17 @@
 {
   "todo": [
-    "Archetype names for harry, xo and veil (they currently repeat the character name; only \"The Stuntman\" (ronald) and \"The Actress\" (mimi) are known).",
     "Confirm the handles: they are all \"Dungeon Crawler {first name}\" placeholders today.",
     "concept: one or two lines per crawler from the character docs (only ronald's is real).",
     "pockets: what was in their pockets when the world ended, one line per item, from the character docs.",
     "entryAchievement: the System text verbatim, plus the box and the item it paid out (only ronald's title/box/item are real).",
     "player.pronouns, player.bio (two sentences) and player.links for all five.",
     "player.bust: a photo of the real person, if they want one on the page.",
-    "art.full: full-figure art for harry, xo and veil (mimi and ronald have theirs).",
     "show.json: trailerYoutubeId, the real premiereAt / hubLiveAt dates, and links.tiktok / links.bluesky / links.instagram."
   ],
   "crawlers": [
     {
       "id": "harry",
-      "name": "Harold \"Harry\" Wallace",
+      "name": "The Writer",
       "characterName": "Harold \"Harry\" Wallace",
       "handle": "Dungeon Crawler Harry",
       "player": {
@@ -28,7 +26,8 @@
         "text": "The System has not released this record yet."
       },
       "art": {
-        "bust": "/img/crawlers/harry.svg"
+        "bust": "/img/crawlers/harry.png",
+        "full": "/img/crawlers/harry-art.png"
       },
       "status": "alive"
     },
@@ -80,7 +79,7 @@
     },
     {
       "id": "xo",
-      "name": "Xavier \"X.O.\" Ortiz",
+      "name": "The 1st AD",
       "characterName": "Xavier \"X.O.\" Ortiz",
       "handle": "Dungeon Crawler X.O.",
       "player": {
@@ -95,13 +94,14 @@
         "text": "The System has not released this record yet."
       },
       "art": {
-        "bust": "/img/crawlers/xo.svg"
+        "bust": "/img/crawlers/xo.png",
+        "full": "/img/crawlers/xo-art.png"
       },
       "status": "alive"
     },
     {
       "id": "veil",
-      "name": "Veil Ravencrest",
+      "name": "The Psychic",
       "characterName": "Veil Ravencrest",
       "handle": "Dungeon Crawler Veil",
       "player": {
@@ -116,7 +116,8 @@
         "text": "The System has not released this record yet."
       },
       "art": {
-        "bust": "/img/crawlers/veil.svg"
+        "bust": "/img/crawlers/veil.png",
+        "full": "/img/crawlers/veil-art.png"
       },
       "status": "alive"
     }

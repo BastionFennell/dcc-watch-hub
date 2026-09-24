@@ -569,7 +569,7 @@ describe('public/data/crawlers.json', () => {
   it('points every piece of art at a file that exists', () => {
     const roster = validateCrawlers(crawlersRaw);
     const withFull = roster.crawlers.filter((crawler) => crawler.art.full !== undefined);
-    expect(withFull.map((crawler) => crawler.id)).toEqual(['mimi', 'ronald']);
+    expect(withFull.map((crawler) => crawler.id)).toEqual(['harry', 'mimi', 'ronald', 'xo', 'veil']);
     for (const crawler of roster.crawlers) {
       expect(existsSync(resolve(root, `public${crawler.art.bust}`)), crawler.id).toBe(true);
       if (crawler.art.full !== undefined) {
@@ -607,7 +607,10 @@ describe('public/data/crawlers.json', () => {
       expect(crawler.handle).toMatch(/^Dungeon Crawler /);
       expect(crawler.status).toBe('alive');
     }
-    expect(byId.get('harry')?.name).toBe(byId.get('harry')?.characterName);
+    // Archetype names from the author (2026-09-23): Harry is The Writer.
+    expect(byId.get('harry')?.name).toBe('The Writer');
+    expect(byId.get('xo')?.name).toBe('The 1st AD');
+    expect(byId.get('veil')?.name).toBe('The Psychic');
     expect(byId.get('harry')?.concept).toBe('Concept coming soon.');
     expect(roster.todo?.length ?? 0).toBeGreaterThanOrEqual(5);
   });

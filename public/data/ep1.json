@@ -12,7 +12,7 @@
           "current": 20,
           "max": 20
         },
-        "portrait": "/img/crawlers/harry.svg",
+        "portrait": "/img/crawlers/harry.png",
         "class": null,
         "inventory": [
           "Netbook w satchel case",
@@ -78,7 +78,8 @@
             "rank": 3
           }
         ],
-        "gear": {}
+        "gear": {},
+        "art": "/img/crawlers/harry-art.png"
       },
       {
         "id": "mimi",
@@ -266,7 +267,7 @@
           "current": 30,
           "max": 30
         },
-        "portrait": "/img/crawlers/xo.svg",
+        "portrait": "/img/crawlers/xo.png",
         "class": null,
         "inventory": [],
         "rank": null,
@@ -338,7 +339,8 @@
             "Rolls of Gaffer Tape & Glo-Tape",
             "iPhone ProMax w/ charger & 3 power banks"
           ]
-        }
+        },
+        "art": "/img/crawlers/xo-art.png"
       },
       {
         "id": "veil",
@@ -350,7 +352,7 @@
           "current": 20,
           "max": 20
         },
-        "portrait": "/img/crawlers/veil.svg",
+        "portrait": "/img/crawlers/veil.png",
         "class": null,
         "inventory": [
           {
@@ -458,7 +460,8 @@
             "rank": 1
           }
         ],
-        "gear": {}
+        "gear": {},
+        "art": "/img/crawlers/veil-art.png"
       }
     ],
     "map": {
