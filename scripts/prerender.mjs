@@ -45,11 +45,15 @@ export function embedScript(data) {
 export function injectPage(template, { head, html, data }) {
   let page = template;
 
-  // The template's own description is replaced by the route's; dropping it
-  // first keeps two descriptions from ending up on the page.
-  page = page.replace(/[ \t]*<meta\s+name="description"[\s\S]*?>\n?/i, '');
+  /*
+   * The template's own title and description are the shell's placeholders (they
+   * carry `data-dcc-shell`); a prerendered route replaces them with its own
+   * head outright, so the page never carries two of either. Both patterns
+   * tolerate attributes, because that is exactly what the markers are.
+   */
+  page = page.replace(/[ \t]*<meta\b[^>]*name="description"[^>]*>\n?/i, '');
   if (head !== '') {
-    page = page.replace(/<title>[\s\S]*?<\/title>/i, () => head);
+    page = page.replace(/<title\b[^>]*>[\s\S]*?<\/title>/i, () => head);
   }
 
   page = page.replace('<div id="root"></div>', () => `<div id="root">${html}</div>`);
@@ -74,7 +78,10 @@ async function readJson(path, fallback) {
 async function main() {
   const dist = resolve(root, 'dist');
   const entry = resolve(dist, 'server/entry-server.js');
-  const { render } = await import(pathToFileURL(entry).href);
+  const { render, ready } = await import(pathToFileURL(entry).href);
+  // The marketing pages are lazy chunks; `ready` is the bundle having them all
+  // in hand, without which `render` would emit Suspense fallbacks.
+  await ready;
 
   const template = await readFile(resolve(dist, 'index.html'), 'utf8');
   const show = await readJson(resolve(root, 'public/data/show.json'));

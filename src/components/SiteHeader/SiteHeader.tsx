@@ -6,7 +6,6 @@ import { useEpisodePath } from '../../hooks/useEpisodePath';
 import { IconBroadcast, IconChevronLeft, IconChevronRight } from '../icons';
 import { EpisodesMenu } from './EpisodesMenu';
 import { copy } from '../../copy';
-import { siteCopy } from '../../site/copy';
 import { isHubRoute } from './hubRoutes';
 import styles from './SiteHeader.module.css';
 
@@ -86,15 +85,15 @@ export function SiteHeader({ show, current }: SiteHeaderProps) {
 
       <div className={styles.right}>
         {/* The front door's nav, on every route including the hub's (011 §1). */}
-        <nav className={styles.site} aria-label={siteCopy.siteNavLabel}>
+        <nav className={styles.site} aria-label={copy.siteNavLabel}>
           <NavLink to="/watch" className={styles.siteLink}>
-            {siteCopy.navWatch}
+            {copy.navWatch}
           </NavLink>
           <NavLink to="/crawlers" className={styles.siteLink}>
-            {siteCopy.navCrawlers}
+            {copy.navCrawlers}
           </NavLink>
           <NavLink to="/community" className={styles.siteLink}>
-            {siteCopy.navCommunity}
+            {copy.navCommunity}
           </NavLink>
         </nav>
 

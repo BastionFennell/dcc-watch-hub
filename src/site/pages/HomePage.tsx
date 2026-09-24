@@ -13,6 +13,8 @@ import { ctaFor, newestEpisode } from '../gate';
 import { useNow } from '../useNow';
 import { Seo } from '../seo';
 import { siteCopy } from '../copy';
+import { trackCta, trackOutbound } from '../analytics';
+import { youtubeThumb } from '../media';
 import { EpisodeRow } from '../components/EpisodeRow';
 import { GatedCta } from '../components/GatedCta';
 import { RosterCard } from '../components/RosterCard';
@@ -42,6 +44,8 @@ export function HomePage() {
         description={show?.pitch ?? siteCopy.defaultDescription}
         canonicalPath="/"
         ogImage={siteCopy.ogSiteImage}
+        /* The hero poster is this page's LCP element on a phone (011 §7). */
+        preloadImage={embedId === '' ? undefined : youtubeThumb(embedId)}
       />
 
       <section className={styles.hero}>
@@ -51,7 +55,13 @@ export function HomePage() {
           <p className={page.lead}>{show?.pitch ?? siteCopy.defaultDescription}</p>
           {show !== null && newest !== null ? (
             <div className={styles.ctas}>
-              <GatedCta episode={newest} now={now} links={show.links} primary />
+              <GatedCta
+                episode={newest}
+                now={now}
+                links={show.links}
+                primary
+                onTrack={(cta) => trackCta(cta, newest.id)}
+              />
               {/*
                * The secondary is the other half of the same choice. Once the
                * feed is open that is YouTube; before it opens the feed is shut,
@@ -68,6 +78,7 @@ export function HomePage() {
                   }
                   target="_blank"
                   rel="noopener"
+                  onClick={() => trackOutbound('youtube')}
                 >
                   {siteCopy.watchOnYouTube}
                 </a>
@@ -124,7 +135,12 @@ export function HomePage() {
           <p>{siteCopy.newcomerBody}</p>
           {show === null ? null : (
             <p>
-              <a href={show.links.youtube} target="_blank" rel="noopener">
+              <a
+                href={show.links.youtube}
+                target="_blank"
+                rel="noopener"
+                onClick={() => trackOutbound('youtube')}
+              >
                 {siteCopy.newcomerLink}
               </a>
             </p>

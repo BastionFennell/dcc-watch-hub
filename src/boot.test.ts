@@ -1,8 +1,10 @@
+// @vitest-environment jsdom
 /**
- * Hydrate only when the markup on the page is the markup for this route.
+ * Hydrate only when the markup on the page is the markup for this route, and
+ * clear the head the prerenderer wrote before React writes it again.
  */
 import { describe, expect, it } from 'vitest';
-import { normalizePath, shouldHydrate, stripBase } from './boot';
+import { clearPrerenderedHead, normalizePath, shouldHydrate, stripBase } from './boot';
 import type { Embedded } from './data/types';
 
 function payload(route: string): Embedded {
@@ -60,5 +62,29 @@ describe('shouldHydrate', () => {
   it('renders fresh when the payload belongs to another route', () => {
     expect(shouldHydrate(payload('/'), '/ep/3', '/')).toBe(false);
     expect(shouldHydrate(payload('/crawlers/harry'), '/crawlers/mimi', '/')).toBe(false);
+  });
+});
+
+describe('clearPrerenderedHead', () => {
+  it('removes only what the prerenderer marked', () => {
+    document.head.innerHTML = [
+      '<title>Shell</title>',
+      '<meta name="description" content="shell" />',
+      '<title data-dcc-head>Route</title>',
+      '<meta data-dcc-head name="description" content="route" />',
+      '<link data-dcc-head rel="canonical" href="https://x/y" />',
+    ].join('');
+
+    expect(clearPrerenderedHead(document)).toBe(3);
+    expect(document.head.querySelectorAll('title')).toHaveLength(1);
+    expect(document.title).toBe('Shell');
+    expect(document.head.querySelectorAll('meta[name="description"]')).toHaveLength(1);
+    expect(document.head.querySelector('link[rel="canonical"]')).toBeNull();
+  });
+
+  it('does nothing on a page the prerenderer never touched', () => {
+    document.head.innerHTML = '<title>Shell</title>';
+    expect(clearPrerenderedHead(document)).toBe(0);
+    expect(document.title).toBe('Shell');
   });
 });

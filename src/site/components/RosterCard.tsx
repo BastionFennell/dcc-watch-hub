@@ -95,8 +95,13 @@ export function RosterCard({ profile, status, variant, hook, href }: RosterCardP
         className={styles.cardArt}
         src={bust}
         alt=""
-        /* Roster cards sit below the fold on every page that uses them. */
+        /* Roster cards sit below the fold on every page that uses them, and a
+           browser that fetches them anyway must not take bandwidth from the
+           hero, which is the page's Largest Contentful Paint. */
         loading="lazy"
+        fetchPriority="low"
+        width={192}
+        height={192}
       />
       <span className={styles.cardText}>
         <span className={styles.cardName}>{profile.name}</span>

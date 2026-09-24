@@ -11,7 +11,7 @@ import styles from './SiteFooter.module.css';
 export function SiteFooter() {
   return (
     <footer className={styles.footer}>
-      <nav className={styles.nav} aria-label={siteCopy.siteNavLabel}>
+      <nav className={styles.nav} aria-label={siteCopy.footerNavLabel}>
         <Link className={styles.link} to="/watch">
           {siteCopy.navWatch}
         </Link>

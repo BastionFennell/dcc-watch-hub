@@ -8,6 +8,7 @@
  */
 import type { ShowLinks } from '../../data/types';
 import { siteCopy } from '../copy';
+import { trackOutbound } from '../analytics';
 import styles from './SocialRow.module.css';
 
 export interface SocialRowProps {
@@ -29,7 +30,13 @@ export function SocialRow({ links }: SocialRowProps) {
     <ul className={styles.row} data-testid="social-row">
       {present.map(({ key, href }) => (
         <li key={key}>
-          <a className={styles.link} href={href} target="_blank" rel="me noopener">
+          <a
+            className={styles.link}
+            href={href}
+            target="_blank"
+            rel="me noopener"
+            onClick={() => trackOutbound(key)}
+          >
             {siteCopy.platform[key]}
           </a>
         </li>

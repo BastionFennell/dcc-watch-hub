@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router';
 import { useShow } from '../data/ShowContext';
 import { useRegistry } from '../data/RegistryContext';
@@ -54,6 +54,7 @@ import { ShareButton } from '../components/ShareButton/ShareButton';
 import { ShareNotice } from '../components/ShareNotice/ShareNotice';
 import { SystemNotice } from '../components/SystemNotice/SystemNotice';
 import { NotFoundPage } from './NotFoundPage';
+import { HubHead } from '../site/pages/lazy';
 import { copy } from '../copy';
 import styles from './EpisodePage.module.css';
 
@@ -223,10 +224,6 @@ export function EpisodePage() {
     if (staleRecord) closePanel();
   }, [staleRecord, closePanel]);
 
-  useEffect(() => {
-    if (meta) document.title = copy.pageTitle(meta.title);
-  }, [meta]);
-
   // The stage destroys its own source on unmount; this covers a source swap.
   useEffect(() => () => source?.destroy(), [source]);
 
@@ -238,6 +235,19 @@ export function EpisodePage() {
   // rail panel, the strip, the phone sheet) can carry it into the Registry's
   // scope without re-narrowing (T720).
   const currentEpisodeId = meta.id;
+
+  /*
+   * The episode's head (011 §7). The hub is client-rendered, so this is what a
+   * link to `/ep/3` previews as once the page has booted - and the same tags
+   * the prerendered marketing pages carry, built by the same component. It is a
+   * lazy chunk (see `site/HubHead.tsx`), which is also why the `<title>` lands
+   * a tick after mount, exactly as the effect it replaced did.
+   */
+  const head = (
+    <Suspense fallback={null}>
+      <HubHead kind="episode" episode={meta} />
+    </Suspense>
+  );
 
   const frames = state && episode ? partyFrames(state, episode.events, t) : [];
   const items = episode ? feedItems(episode.events, t, 8, party, registry, spellsById) : [];
@@ -604,6 +614,7 @@ export function EpisodePage() {
   if (phone) {
     return (
       <div className={styles.page} data-ended={ended ? 'true' : undefined}>
+        {head}
         <div className={styles.phone}>
           {/*
             The 1 px mark the mini-player watches: a sibling immediately above
@@ -652,6 +663,7 @@ export function EpisodePage() {
 
   return (
     <div className={styles.page} data-ended={ended ? 'true' : undefined}>
+      {head}
       <div className={styles.grid}>
         <div className={styles.main}>
           <VideoStage key={meta.id} meta={meta} t={t} onSource={setSource}>

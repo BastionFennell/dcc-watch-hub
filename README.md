@@ -4,9 +4,9 @@
 > party vitals, event ticker, achievements and sponsors - synced to the playhead, and never a
 > frame ahead of it.
 
-A static watch-along site for the Dungeon Crawl Cast actual play show. One page per recap
-episode, one archive page, one Dungeon Codex of everyone the party has met, no backend, no
-accounts, no database.
+A static watch-along site for the Dungeon Crawl Cast actual play show. A prerendered marketing
+front door (home, archive, roster, crawler pages, links), one page per recap episode, one Dungeon
+Codex of everyone the party has met, no backend, no accounts, no database.
 
 - **Stack**: Vite 6 + React 19 + TypeScript (strict) + react-router 7 + CSS Modules + Vitest 3.
 - **Runtime deps**: `react`, `react-dom`, `react-router`. Nothing else ships to the browser.
@@ -22,7 +22,10 @@ npm run dev            # http://localhost:5180/
 npm run dev -- --open  # opens the archive
 ```
 
-- Archive: <http://localhost:5180/>
+- The front door: <http://localhost:5180/> (see **The front door** below)
+- Archive: <http://localhost:5180/watch>
+- Roster: <http://localhost:5180/crawlers>, one crawler: <http://localhost:5180/crawlers/mimi>
+- Links page: <http://localhost:5180/community>
 - Episode with the real embed: <http://localhost:5180/ep/1>
 - A shared moment (the real embed, seeks to 2:36): <http://localhost:5180/ep/1?t=156>
 - Episode with the dev scrubber, no network: <http://localhost:5180/ep/1?fake=1>
@@ -57,7 +60,7 @@ npm run dev -- --open  # opens the archive
 ```sh
 npm run typecheck      # tsc --noEmit
 npm run lint           # eslint .
-npm test               # vitest run  (1440 tests)
+npm test               # vitest run  (1556 tests)
 npm run build          # client build + SSR build + scripts/postbuild.mjs (see "Build pipeline")
 npm run preview        # serves dist/ at http://localhost:4173/
 ```
@@ -109,11 +112,167 @@ with a populated feed and no network.
 | `src/hooks/` | `usePanel` - the right rail's one-panel state machine; `useModalDialog` - the full record's focus trap; `useThrottledValue` - the log count's once-a-second cadence; `useIsPhone` + `useMiniPlayer` - the ≤ 900 px layout and the docked stage |
 | `src/prefs/` | viewer preferences that are not playback: `logOpen` (the broadcast log's open state) |
 | `src/components/` | stage, party rail, event feed, timeline, toast, minimap, header, rail panel, glance card, full record, dossier sections, floor map, resume card, share button + notice, broadcast log, phone tab strip, Encountered strip, entity record, registry entry |
-| `src/pages/` | `EpisodePage`, `HubPage`, `RegistryPage`, `NotFoundPage` |
+| `src/pages/` | `EpisodePage`, `RegistryPage`, `NotFoundPage` (the hub's own routes) |
+| `src/site/` | the front door (011): the five marketing pages, `RosterCard` / `GatedCta` / `SystemBox` / `EpisodeRow`, `gate.ts` (the `hubLiveAt` rule), `seo.tsx`, `jsonLd.ts`, `analytics.ts`, `meta.ts`, and the `/_og/**` frames - every page a lazy chunk |
+| `src/entry-server.tsx` | the prerenderer's half of the app; built separately and deleted from `dist/` at the end of the build |
 | `src/copy.ts` | **every** user-facing string, in the System's voice |
 | `src/styles/tokens.css` | the colour/spacing/type tokens from spec §6 |
 | `public/data/` | `show.json` + `ep{N}.json` + `npcs.json` + `spells.json` (static, fetched at load) |
 | `scripts/sheet-to-json.ts` | editor CSV → `ep{N}.json` converter |
+
+---
+
+## The front door
+
+`/` is no longer the episode list. Since feature 011 the site opens with a marketing front door -
+five static, prerendered routes whose job is to convert a stranger in ten seconds - and the hub
+(`/ep/:id`, `/codex`, `/studio/**`) is what they lead into. Same header, same tokens, same
+`show.json`: a visitor should not be able to tell where "site" ends and "viewer" begins
+(constitution VIII).
+
+| Route | What it shows |
+|---|---|
+| `/` | Hero (tagline, pitch, the gated CTA pair, a click-to-play trailer), the five roster cards, a "New to Dungeon Crawler Carl?" System box, the Discord strip with the cadence, the footer |
+| `/watch` | Every episode grouped by floor, deepest floor first and newest episode first inside it, each row with its still, runtime, spoiler-safe summary and gated CTA. **This is the old `/` archive.** |
+| `/crawlers` | The roster grid (2 columns at 375 px, 5 across on a laptop). Status filter chips appear only when more than one status exists |
+| `/crawlers/:id` | One crawler: hero art, live status line, concept, pockets, the entry achievement as the page's single System box, the player behind them, "Appears in", prev/next |
+| `/community` | The single link every social bio points at: Discord first, the platform row, the cadence, and one paragraph on how to help |
+
+All five are prerendered to real HTML at build time (`dist/watch/index.html`, and so on), so a
+scraper that runs no JavaScript still gets the page, its `<title>`, its description and its
+OpenGraph card. Hub routes stay client-rendered and are not in the sitemap.
+
+The marketing pages live in `src/site/` and every one of them is a lazy chunk: open `/ep/3` from a
+shared link and not a byte of the front door is downloaded. The prerenderer resolves those chunks
+before it renders (`src/site/pages/lazy.tsx` explains the two-state wrapper), because
+`renderToString` writes a Suspense fallback and never comes back.
+
+### The data behind it
+
+**`public/data/show.json`** - the hub's file, with the front door's fields added:
+
+| Field | Used by | What it is |
+|---|---|---|
+| `tagline` | `/` H1 | One line. The promise. |
+| `pitch` | `/` lead, every default description | Two or three sentences. |
+| `cadence` | `/`, `/community` | "New crawls every other week." |
+| `trailerYoutubeId` | `/` hero embed | Optional. Without it the hero embeds the newest episode instead, and the "Latest episode" card is hidden so the same video is not on the page twice |
+| `links.{youtube,discord,tiktok,bluesky,instagram}` | social row, footer, `/community` | Only the ones present are rendered - no greyed-out icons |
+| `episodes[].premiereAt` | JSON-LD `uploadDate` | ISO. When the video went up |
+| `episodes[].hubLiveAt` | the gate (below) | ISO. When the System feed opens |
+| `episodes[].summary` | `/watch` rows, episode `<meta description>` | One spoiler-safe sentence |
+| `episodes[].ogImage` | share card, row thumbnail | Optional. Defaults to the generated `/og/ep{N}.png` |
+
+**`public/data/crawlers.json`** (new) - the roster. One entry per crawler, `id` equal to the hub's
+crawler id (`harry`, `mimi`, `ronald`, `xo`, `veil`) so the live status line can join on it:
+
+| Field | What it is |
+|---|---|
+| `id` | The hub id. This is the join key; changing it silently unlinks the live status |
+| `name` | The archetype ("The Stuntman") |
+| `characterName` | The character ("Ronald Hudson") |
+| `handle` | "Dungeon Crawler Ronald" |
+| `player` | `{ name, pronouns?, bio?, bust?, links? }` - the real person, kept short |
+| `concept` | One or two lines from the character doc |
+| `pockets` | A list: what was in their pockets when the world ended |
+| `entryAchievement` | `{ title, text, box?, item? }` - the System's words, verbatim. This is the page's centrepiece |
+| `art` | `{ bust, full? }` - `bust` is the 192 px roster square, `full` the crawler page hero |
+| `og` | Optional. Defaults to the generated `/og/crawler-{id}.png` |
+| `status` | `alive \| dead \| fused \| unknown`, **authored by hand**. Death is never inferred from an event log |
+
+**`dist/data/status.json`** (generated, never committed) - `{ generatedAt, episodeId, crawlers, appearances }`.
+`scripts/build-status.ts` runs the hub reducer to the end of the newest episode past its
+`hubLiveAt` and emits each crawler's `{ level, hp, floor, lastEpisodeId }`, plus an `appearances`
+map (crawler id to the ids of every published episode whose data names them) so a crawler page
+renders "Appears in" from its own HTML instead of fetching every episode file.
+
+### How `hubLiveAt` gates the CTA
+
+One rule, in `src/site/gate.ts`, and every episode surface obeys it:
+
+- **Before `hubLiveAt`** the button reads **Watch on YouTube** and links out, and the row carries a
+  "System feed unlocks in 2d 4h" chip. The hub page still exists - nothing links to it.
+- **At or after `hubLiveAt`** the button becomes **Open the System feed** and links to `/ep/:id`.
+- **No `hubLiveAt`** means live now, which is what keeps every pre-011 `show.json` working.
+
+The comparison is a plain `Date.now()` in the browser; there is no server. A prerendered page is
+built with the build's clock and re-evaluates against the real one a moment after it mounts
+(`useNow`), so the HTML and the first client render always agree and the chip never flickers.
+
+The same timestamp is the spoiler rule for the live status line: `status.json` only ever reflects
+episodes a visitor was allowed to have seen.
+
+### Checking a share preview
+
+The share images are generated at build time by screenshotting the app's own `/_og/**` routes, so
+a card and the page it links to are the same object:
+
+```sh
+npm run build          # writes dist/og/site.png, crawler-{id}.png x5, ep{N}.png
+npm run preview        # http://localhost:4173/
+open http://localhost:4173/_og/crawler/mimi   # the frame the screenshot is taken of
+```
+
+To check what a link will actually preview as, read the tags out of the built HTML - these are what
+Discord, Bluesky, Slack and Twitter fetch, and none of them runs JavaScript:
+
+```sh
+grep -E 'og:(title|description|image|type|url)|<title>' dist/crawlers/mimi/index.html
+```
+
+Every route sets `og:title`, `og:description`, `og:image`, `og:type`, `og:url`, `og:site_name` and
+`twitter:card`, plus a canonical link. The images are 1200x630 PNG. A real preview in Discord or
+Bluesky needs a public URL, so it can only be confirmed once the site is deployed; locally the tag
+inspection above is the check.
+
+`VITE_SITE_URL` is what those absolute URLs are built from, so set it (or the `SITE_URL` repository
+variable) before a deploy anyone is meant to share.
+
+### Analytics
+
+Plausible, cookieless, and absent unless asked for. Set `VITE_PLAUSIBLE_DOMAIN` (the deploy
+workflow reads the `PLAUSIBLE_DOMAIN` repository variable); with it unset no script is loaded, no
+global is defined and no request is made, which is what `npm run dev` and every test get. There is
+no cookie banner because there is nothing to consent to.
+
+Three custom events, all from `src/site/analytics.ts`:
+
+| Event | Props | Fired when |
+|---|---|---|
+| `hub_open` | `{ episode }` | A gated CTA pointing at `/ep/:id` is clicked |
+| `outbound` | `{ to, episode? }` | A link leaves the site: YouTube, Discord, TikTok, Bluesky, Instagram |
+| `crawler_view` | `{ crawler }` | A crawler page mounts |
+
+### Author to fill
+
+`public/data/crawlers.json` carries its own list in a top-level `"todo"` array, reproduced here:
+
+1. Confirm the handles - they are all "Dungeon Crawler {first name}" placeholders today.
+2. `concept`: one or two lines per crawler from the character docs (only Ronald's is real).
+3. `pockets`: what was in their pockets when the world ended, one line per item.
+4. `entryAchievement`: the System text verbatim, plus the box and the item it paid out (only
+   Ronald's title / box / item are real).
+5. `player.pronouns`, `player.bio` (two sentences) and `player.links` for all five.
+6. `player.bust`: a photo of the real person, if they want one on the page.
+7. `show.json`: `trailerYoutubeId`, the real `premiereAt` / `hubLiveAt` dates, and
+   `links.tiktok` / `links.bluesky` / `links.instagram`.
+
+And outside the data files:
+
+8. The domain. `VITE_SITE_URL` defaults to `https://dungeoncrawlcast.com`; registering it is not
+   something this repo can do.
+9. The Plausible site, if analytics is wanted (`VITE_PLAUSIBLE_DOMAIN`).
+10. Point every social bio at `/community`, which is the URL that page exists for.
+
+Nothing in `crawlers.json` renders the word "TODO": every placeholder reads as prose ("Concept
+coming soon."), so a screenshot taken today is not embarrassing.
+
+### Parked (v2 - deliberately not built)
+
+From the addendum's own list, so the next person does not have to guess what was left out on
+purpose: `/world` (neighbourhood pages, NPC pages, a newcomer glossary), `/press` (a one-pager with
+a logo pack, cast, audience stats and contact), newsletter signup, guest / Table B roster UI, merch,
+and comments.
 
 ---
 
@@ -958,24 +1117,22 @@ The episodes those crawlers appear in (events, ticker copy, NPCs, map) are still
 | `episodes[*].premiereAt` / `hubLiveAt` | sample dates in August and September 2026, two days apart | the real premiere, and the premiere + 48 h hub unlock |
 | `episodes[*].summary` | one invented spoiler-safe line each | the real one-sentence summary |
 
-**`public/data/crawlers.json`** ships its own fill-in list in a top-level `"todo"` array: archetype
-names for Harry, X.O. and Veil, the handles, `concept`, `pockets`, `entryAchievement`, the player
-bios / pronouns / links, and full-figure art for the three crawlers who have none. Nothing in that
-file renders the word "TODO": every placeholder reads as prose ("Concept coming soon.").
+**`public/data/crawlers.json`** ships its own fill-in list in a top-level `"todo"` array, and
+**The front door → Author to fill** above reproduces it in order, together with the three things
+that live outside the data files (the domain, the Plausible site, and pointing every social bio at
+`/community`). Nothing in that file renders the word "TODO": every placeholder reads as prose
+("Concept coming soon.").
 
 The three sample videos are the Blender Foundation's open movies: public, embeddable, and each a
 different video so switching episodes is visibly a fresh broadcast. Each `durationSec` is that
 video's real length and the sample events are spread across it. Change ids and durations together.
 
-**Crawler portraits** - two are real, three are still placeholders:
+**Crawler portraits** - all five are real, cut from the author's renders:
 
-- `public/img/crawlers/mimi.png` (Mimi Rivers - **real**, 192×192, cropped head-and-shoulders
-  from the render)
-- `public/img/crawlers/ronald.png` (Ronald "Madio" Hudson - **real**, 192×192, same crop)
-- `public/img/crawlers/harry.svg` (Harry - *placeholder*, generated monochrome SVG bust)
-- `public/img/crawlers/xo.svg` (Xavier "XO" Ortiz - *placeholder*, generated monochrome SVG bust)
-- `public/img/crawlers/veil.svg` (Veil Ravencrest - *placeholder*, generated monochrome SVG bust;
-  no render has been delivered for her yet)
+- `public/img/crawlers/{harry,mimi,ronald,xo,veil}.png` - 192×192 head-and-shoulders busts, cropped
+  from the full render at a matching scale (the raised hands of Ronald and Veil stay in frame).
+- `public/img/crawlers/{id}-art.png` - the full-figure transparent render, 820-900 px tall, under
+  350 kB each; shown in the full record and on the crawler pages.
 
 Keep the filenames, or update each crawler's `portrait` path in every `ep{N}.json`. The rail
 renders them at 40 px (32 px on a phone), so square art crops best; keep a bust under 40 kB.
@@ -985,7 +1142,6 @@ renders them at 40 px (32 px on a phone), so square art crops best; keep a bust 
 - `public/img/crawlers/mimi-art.png` (Mimi Rivers - **real**, 830×1200)
 - `public/img/crawlers/ronald-art.png` (Ronald "Madio" Hudson - **real**, 830×1200)
 
-Harry, XO and Veil carry no `art` field at all until their renders exist, so the record falls back to
 their bust - which is the intended default, and keeps the fallback path exercised. A crawler's
 `art` field names one of these files. Real art may be any aspect ratio - the column contains it
 rather than cropping it. Keep art under 250 kB so the Lighthouse budget holds.
@@ -1040,11 +1196,16 @@ events, written to exercise every event type. Regenerate them from real sheets w
       a hub deep link (`/ep/3`, `/codex`) served by a static host boots into an empty app rather
       than into some other page's markup;
    2. `scripts/build-status.ts` (via `tsx`) - runs the hub reducer to the end of the newest
-      episode whose `hubLiveAt` is past, and writes `dist/data/status.json`;
+      episode whose `hubLiveAt` is past, and writes `dist/data/status.json`, together with the
+      `appearances` map (which crawler is named by which published episode) so a crawler page
+      never fetches an episode file to list its own appearances;
    3. `scripts/prerender.mjs` - renders `/`, `/watch`, `/crawlers`, `/community` and
       `/crawlers/{id}` with the SSR bundle, and writes `dist/<route>/index.html` with the route's
       head tags in `<head>` and the data it was rendered from in a
-      `<script id="__DCC__" type="application/json">`, so the browser hydrates without a fetch;
+      `<script id="__DCC__" type="application/json">`, so the browser hydrates without a fetch.
+      Each injected head tag carries `data-dcc-head`, and the browser strips those at boot
+      (`clearPrerenderedHead`) a moment before React renders the same values - React appends its
+      hoistables rather than adopting the server's, and two `<title>`s is one too many;
    4. `scripts/og.mjs` - screenshots the `/_og/**` routes to `dist/og/*.png` (see below);
    5. `scripts/sitemap.mjs` - `sitemap.xml` and `robots.txt` from the prerenderer's own route list;
    6. deletes `dist/server`: it is a build tool, not a page.
@@ -1088,8 +1249,10 @@ Then every push to `main` runs `.github/workflows/deploy.yml`, which builds with
 ### Netlify / Cloudflare Pages
 
 Build command `npm run build`, publish directory `dist`, and **no** `VITE_BASE` (the base
-defaults to `/`). `public/_redirects` (`/* /index.html 200`) handles deep links; `dist/404.html`
-(written by `scripts/postbuild.mjs`) does the same job on Pages.
+defaults to `/`). `public/_redirects` sends anything with no file of its own to `/404.html` - the
+empty shell, not the prerendered home page - which is how a hub deep link (`/ep/3`, `/codex`)
+boots into an empty app; the prerendered marketing routes have real files and are served before
+the rule applies. On GitHub Pages `dist/404.html` does the same job without a redirect file.
 
 Any static host works - the build is HTML, one JS bundle, one CSS file, JSON and SVG.
 
@@ -1101,9 +1264,17 @@ Measured on the production build (`npm run build`, Node 20.9.0):
 
 | Asset | Raw | Gzipped |
 |-------|-----|---------|
-| `dist/assets/index-*.js` | 391.02 kB | **122.42 kB** |
-| `dist/assets/index-*.css` | 73.93 kB | 12.59 kB |
-| `dist/index.html` | 0.72 kB | 0.42 kB |
+| `dist/assets/index-*.js` (the viewer's entry chunk) | 421.00 kB | **131.79 kB** |
+| `dist/assets/index-*.css` | 79.04 kB | 13.11 kB |
+| `dist/index.html` (prerendered `/`, markup and data included) | 13.29 kB | 4.02 kB |
+| the front door's own chunks (`HomePage`, `WatchPage`, `CrawlersPage`, `CrawlerPage`, `CommunityPage`, `SiteLayout`, `HubHead`, `RosterCard`, `EpisodeRow`, …) | 0.5-4.6 kB each | lazy |
+
+011 held the viewer's entry chunk to +1.3 kB over the pre-feature build (419.70 kB) while adding
+five pages, a prerenderer and a head. That is the whole point of the split: `src/site/**` is lazy,
+`src/data/roster.ts` carries the roster validators away from `validate.ts`, `src/site/meta.ts`
+holds the dozen head strings the header needs so the other 2.9 kB of marketing prose stays in the
+marketing chunk, and even the hub's own `<Seo>` (`src/site/HubHead.tsx`) is a lazy chunk, because
+a hub page writes its head after boot anyway.
 
 That is React 19 + react-router 7 + the whole app - v1 plus the v2 panels, dossier, floor map
 and resume, plus the glance card, full record, deep links, share, the broadcast log and the
@@ -1159,6 +1330,38 @@ The budget holds because of three rules: no webfonts (`system-ui` stack only, no
 first render), no render-blocking scripts (the bundle is a `type="module"` script, deferred by
 default), and the YouTube IFrame API is injected at runtime by `YouTubeTimeSource` - so the
 archive page requests zero third-party bytes.
+
+---
+
+### The front door (011)
+
+Lighthouse 11.7.1 **mobile** preset on `/` against `npm run preview`, and axe-core 4.13 on all
+five marketing routes at 375 x 667 and 1440 x 900:
+
+| | Performance | Accessibility | Best practices | SEO |
+|---|---|---|---|---|
+| default (simulated throttling) | 87 | 100 | 100 | 100 |
+| `--throttling-method=devtools` | **98** | 100 | 100 | 100 |
+
+The two rows differ on one metric. Lighthouse's default mode loads the page unthrottled and then
+*simulates* a slow 4G phone from the trace; that simulation puts LCP at 4.1 s. Every direct
+measurement of the same page disagrees: 1.5 s under real DevTools throttling, 0.34 s observed in
+Lighthouse's own run, and 0.67 s from a `PerformanceObserver` on an emulated slow-4G + 4x-CPU
+phone. The gap is bandwidth contention in the model - the LCP element is the hero's YouTube still,
+and it shares a simulated 1.6 Mbps with the 132 kB entry bundle and 283 kB of roster art. Two
+things would close it for real: re-encoding the five 192 x 192 crawler busts (55 kB of PNG each,
+where a JPEG is under 10 kB), and a marketing-only JS entry so the front door does not download the
+hub. Both are follow-ups, not v1 work.
+
+What the front door did fix, measured: `<link rel="preconnect">` to `i.ytimg.com` and a
+`<link rel="preload" as="image" fetchpriority="high">` for the hero still in the prerendered head
+(FCP 3.0 s → 1.5 s), `width`/`height` and `fetchpriority="low"` on the roster art (CLS 0.68 → 0),
+and a unique `aria-label` on the footer nav (axe's `landmark-unique`, the one violation found).
+
+axe-core 4.13 with every rule enabled: **0 violations** on `/`, `/watch`, `/crawlers`,
+`/crawlers/ronald` and `/community`, at both widths. No horizontal scroll at 375 px on any of
+them, the hero CTAs sit 254 px down on `/` (well inside the first 667 px), and the roster is
+2 columns at 375 px and 5 across at 1440 px.
 
 ---
 

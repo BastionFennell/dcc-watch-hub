@@ -7,6 +7,7 @@ import type { EpisodeMeta, ShowLinks } from '../../data/types';
 import { countdown, hubLive, msUntilHubLive } from '../gate';
 import { asset, episodeThumb, formatDuration } from '../media';
 import { siteCopy } from '../copy';
+import { trackCta } from '../analytics';
 import { GatedCta } from './GatedCta';
 import styles from './EpisodeRow.module.css';
 
@@ -42,7 +43,13 @@ export function EpisodeRow({ episode, now, links }: EpisodeRowProps) {
           <p className={styles.summary}>{episode.summary}</p>
         )}
         <div className={styles.actions}>
-          <GatedCta episode={episode} now={now} links={links} />
+          <GatedCta
+            episode={episode}
+            now={now}
+            links={links}
+            /* hub_open or outbound, depending which way the gate is pointing. */
+            onTrack={(cta) => trackCta(cta, episode.id)}
+          />
           {locked ? (
             <p className={styles.chip} data-testid={`countdown-${episode.id}`}>
               {siteCopy.countdownChip(countdown(msUntilHubLive(episode, now)))}

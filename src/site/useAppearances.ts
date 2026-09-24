@@ -2,16 +2,19 @@
  * "Appears in" (011 §3.4): the episodes whose data actually names this crawler,
  * either in the party they started with or as the actor of an event.
  *
- * Derived on the client, lazily. Nothing here runs on the server, so the first
- * render - the prerendered HTML and the hydrating render that must match it -
- * is always an empty list, and the section fills in after mount. The episode
- * files are the same ones the hub fetches, so a visitor who goes on to open an
- * episode has them warm.
+ * The build already knows the answer. `scripts/build-status.ts` walks every
+ * published episode once and writes the map into `status.json`, so a prerendered
+ * crawler page renders the list in its HTML and the browser fetches nothing
+ * (T1125). The fallback - dev, where no build has run, or a deploy whose status
+ * file predates the map - is the original client derivation: fetch each episode
+ * and look. That path still renders `[]` first, which is what keeps hydration
+ * honest when it is the one in use.
  */
 import { useEffect, useState } from 'react';
 import { useShow } from '../data/ShowContext';
+import { useCrawlers } from '../data/CrawlersContext';
 import { fetchEpisode } from '../data/load';
-import { orderedEpisodes } from '../data/show';
+import { findEpisode, orderedEpisodes } from '../data/show';
 import type { EpisodeData, EpisodeMeta } from '../data/types';
 
 /** Does this episode's data name the crawler at all? */
@@ -23,11 +26,13 @@ export function referencesCrawler(episode: EpisodeData, crawlerId: string): bool
 
 export function useAppearances(crawlerId: string): EpisodeMeta[] {
   const { show } = useShow();
+  const { status } = useCrawlers();
+  const precomputed = status?.appearances;
   const [found, setFound] = useState<EpisodeMeta[]>([]);
 
   useEffect(() => {
     setFound([]);
-    if (show === null || crawlerId === '') return;
+    if (show === null || crawlerId === '' || precomputed !== undefined) return;
     let live = true;
 
     const episodes = orderedEpisodes(show);
@@ -48,7 +53,15 @@ export function useAppearances(crawlerId: string): EpisodeMeta[] {
     return () => {
       live = false;
     };
-  }, [show, crawlerId]);
+  }, [show, crawlerId, precomputed]);
 
-  return found;
+  if (precomputed === undefined) return found;
+  if (show === null) return [];
+  /*
+   * A crawler the build never saw has no entry, which means no appearances -
+   * not "go and look". An id the show has since dropped is skipped.
+   */
+  return (precomputed[crawlerId] ?? [])
+    .map((id) => findEpisode(show, id))
+    .filter((meta): meta is EpisodeMeta => meta !== undefined);
 }

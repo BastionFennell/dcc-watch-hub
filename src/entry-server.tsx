@@ -12,10 +12,23 @@
 import { renderToString } from 'react-dom/server';
 import { StaticRouter } from 'react-router';
 import { App } from './App';
-import { CrawlersProvider } from './data/CrawlersContext';
 import type { Embedded } from './data/types';
+import { joinBase } from './data/load';
 import { HeadCollector, HeadCollectorProvider } from './site/seo';
+import { preloadSitePages } from './site/pages/preload';
 import { siteCopy } from './site/copy';
+
+/**
+ * `renderToString` never retries a component that suspends: it writes the
+ * Suspense fallback and moves on. The marketing pages are lazy chunks, so
+ * without this the prerenderer would emit an empty `<div id="root">` for every
+ * one of them.
+ *
+ * A top-level await would be tidier, but the SSR bundle is transpiled to the
+ * same target the client is. So the promise is started at import and exported:
+ * every caller of `render()` awaits this first (see `scripts/prerender.mjs`).
+ */
+export const ready: Promise<void> = preloadSitePages();
 
 /**
  * The head every route starts with, read off the show itself. A page that
@@ -57,16 +70,18 @@ export function render(url: string, data: Embedded): RenderResult {
   const collector = new HeadCollector();
   seedHead(collector, url, data);
   /*
-   * The roster provider sits outside `<App>` because the app does not mount one
-   * yet (Wave B lands the pages that need it). Once it does, the inner provider
-   * simply wins and this wrapper becomes a no-op.
+   * The deploy base, on both sides of hydration. The browser's router is
+   * created with `basename={import.meta.env.BASE_URL}`, so every `<Link>` it
+   * renders carries the prefix; without the same basename here a Pages build
+   * would prerender `/watch` where the browser expects `/dcc-watch-hub/watch`,
+   * and every link in the page would be a hydration mismatch.
    */
+  const base = import.meta.env.BASE_URL;
+  // `<App>` mounts the roster provider itself now (T1125), seeded from `data`.
   const markup = renderToString(
     <HeadCollectorProvider collector={collector}>
-      <StaticRouter location={url}>
-        <CrawlersProvider embedded={data}>
-          <App embedded={data} />
-        </CrawlersProvider>
+      <StaticRouter basename={base} location={joinBase(base, url)}>
+        <App embedded={data} />
       </StaticRouter>
     </HeadCollectorProvider>,
   );

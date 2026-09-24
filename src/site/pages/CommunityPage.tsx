@@ -8,6 +8,7 @@
 import { useShow } from '../../data/ShowContext';
 import { Seo } from '../seo';
 import { siteCopy } from '../copy';
+import { trackOutbound } from '../analytics';
 import { SiteFooter } from '../components/SiteFooter';
 import { SocialRow } from '../components/SocialRow';
 import page from './page.module.css';
@@ -38,7 +39,13 @@ export function CommunityPage() {
               {siteCopy.discordTitle}
             </h2>
             <p className={page.lead}>{siteCopy.discordBody}</p>
-            <a className={styles.big} href={show.links.discord} target="_blank" rel="noopener">
+            <a
+              className={styles.big}
+              href={show.links.discord}
+              target="_blank"
+              rel="noopener"
+              onClick={() => trackOutbound('discord')}
+            >
               {siteCopy.discordCta}
             </a>
           </section>

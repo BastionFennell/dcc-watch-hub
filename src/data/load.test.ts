@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fetchCrawlers, fetchRegistry, fetchSpells, fetchStatus, joinBase, readEmbedded } from './load';
+import { fetchRegistry, fetchSpells, joinBase, readEmbedded } from './load';
+import { fetchCrawlers, fetchStatus } from './roster';
 import { DataError } from './validate';
 import { makeCrawlers, makeRegistry, makeShow, makeSpells, makeStatus } from '../test/fixtures';
 

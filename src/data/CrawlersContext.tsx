@@ -14,8 +14,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { CrawlerProfile, Embedded, StatusFile } from './types';
-import { fetchCrawlers, fetchStatus, readEmbedded } from './load';
-import { validateCrawlers, validateStatus } from './validate';
+import { readEmbedded } from './load';
+import { fetchCrawlers, fetchStatus, validateCrawlers, validateStatus } from './roster';
 
 export interface CrawlersContextValue {
   /** Empty until the roster lands, and for a deploy that ships none. */

@@ -2,13 +2,22 @@
  * The server entry, tested the way the prerenderer uses it: give it a URL and
  * the payload, get markup for `#root` and a head for `<head>`.
  *
- * The marketing pages land in Wave B, so today every route renders the app
- * shell - which is exactly what makes this a useful smoke test of the wiring.
+ * Since T1125 the marketing routes are real pages, each one a lazy chunk the
+ * module preloads before it renders: an empty body here would mean the
+ * prerenderer is writing Suspense fallbacks into the HTML.
  */
-import { describe, expect, it } from 'vitest';
-import { render, stripHoistedHead } from './entry-server';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { ready, render, stripHoistedHead } from './entry-server';
 import type { Embedded } from './data/types';
 import { makeCrawlers, makeShow, makeStatus } from './test/fixtures';
+
+/** Every collected tag carries the marker the browser strips at boot. */
+const M = ' data-dcc-head';
+
+// What `scripts/prerender.mjs` does before its first render.
+beforeAll(async () => {
+  await ready;
+});
 
 function data(route: string): Embedded {
   return { route, show: makeShow(), crawlers: makeCrawlers(), status: makeStatus() };
@@ -35,32 +44,61 @@ describe('render', () => {
     expect(html).not.toContain('<link rel="canonical"');
   });
 
-  it('returns a head with a title, a description and a canonical for the route', () => {
+  it("returns the page's own head, seeded from the show and overwritten by <Seo>", () => {
     const { head } = render('/crawlers/harry', data('/crawlers/harry'));
+    expect(head).toContain(`<title${M}>Harold Wallace · Dungeon Crawl Cast</title>`);
+    expect(head).toContain(`<meta${M} name="description" content="Harold Wallace. Concept coming soon.`);
     expect(head).toContain(
-      '<title>Dungeon Crawl Cast - Heart and chaos in the World Dungeon.</title>',
+      `<link${M} rel="canonical" href="https://dungeoncrawlcast.com/crawlers/harry" />`,
     );
-    expect(head).toContain('<meta name="description" content="Five people from a film crew.');
+    expect(head).toContain(`<meta${M} property="og:type" content="profile" />`);
     expect(head).toContain(
-      '<link rel="canonical" href="https://dungeoncrawlcast.com/crawlers/harry" />',
+      `<meta${M} property="og:image" content="https://dungeoncrawlcast.com/og/crawler-harry.png" />`,
     );
-    expect(head).toContain('<meta property="og:type" content="website" />');
+  });
+
+  it('gives a hub episode its own head, so a shared /ep link previews', () => {
+    const { head } = render('/ep/1', data('/ep/1'));
+    expect(head).toContain(`<title${M}>Episode 1 - The World Dungeon · System feed</title>`);
+    expect(head).toContain(`<meta${M} property="og:type" content="video.other" />`);
+    expect(head).toContain(
+      `<meta${M} property="og:image" content="https://dungeoncrawlcast.com/og/ep1.png" />`,
+    );
   });
 
   it('falls back to the default head when the payload carries no show', () => {
     const { head } = render('/', { route: '/', show: null, crawlers: null, status: null });
-    expect(head).toContain('<title>Dungeon Crawl Cast</title>');
+    expect(head).toContain(`<title${M}>Dungeon Crawl Cast</title>`);
     expect(head).toContain(
-      '<meta name="description" content="A Dungeon Crawler Carl actual play." />',
+      `<meta${M} name="description" content="A Dungeon Crawler Carl actual play." />`,
     );
   });
 
-  it('renders the hub archive at the root, from the seeded show', () => {
+  it('renders the front door at the root, from the seeded show and roster', () => {
     const { html } = render('/', data('/'));
-    expect(html).toContain('Episode 1 - The World Dungeon');
     // Seeded, not fetched: no effects run on the server, so a fetch would have
-    // left the page empty.
+    // left the page empty - and the marketing pages are lazy chunks, so a
+    // missing preload would have left it empty too.
+    expect(html).toContain('Heart and chaos in the World Dungeon.');
+    expect(html).toContain('Ronald Hudson');
+  });
+
+  it('renders the archive at /watch', () => {
+    const { html } = render('/watch', data('/watch'));
+    expect(html).toContain('Episode 1 - The World Dungeon');
     expect(html).toContain('Episode 3 - Descent');
+  });
+
+  it('renders in-page links under the deploy base, as the browser will', () => {
+    vi.stubEnv('BASE_URL', '/dcc-watch-hub/');
+    try {
+      const { html, head } = render('/watch', data('/watch'));
+      expect(html).toContain('href="/dcc-watch-hub/crawlers"');
+      expect(html).toContain('href="/dcc-watch-hub/ep/1"');
+      expect(head).toContain('https://dungeoncrawlcast.com/dcc-watch-hub/watch');
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 
   it('does not throw for a hub episode route', () => {

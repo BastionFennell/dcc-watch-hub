@@ -10,7 +10,7 @@ import { CrawlerPage } from './CrawlerPage';
 import { siteCopy } from '../copy';
 import { copy } from '../../copy';
 import { renderSite } from '../../test/renderSite';
-import { makeCrawlers, makeEpisodeRaw, makeShow } from '../../test/fixtures';
+import { makeCrawlers, makeEpisodeRaw, makeShow, makeStatus } from '../../test/fixtures';
 
 const [stuntman] = makeCrawlers().crawlers;
 
@@ -109,6 +109,36 @@ describe('CrawlerPage', () => {
     expect(within(section as HTMLElement).getAllByRole('heading', { level: 3 })).toHaveLength(
       makeShow().episodes.length,
     );
+  });
+
+  it('prefers the appearances the build precomputed, and fetches nothing', () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
+    renderSite(<CrawlerPage />, {
+      path: '/crawlers/stuntman',
+      routePath: '/crawlers/:id',
+      status: { ...makeStatus(), appearances: { stuntman: [1, 3] } },
+    });
+
+    // First render, no waiting: that is what makes the list survive hydration.
+    const section = screen
+      .getByRole('heading', { name: siteCopy.appearsInTitle })
+      .closest('section');
+    expect(
+      within(section as HTMLElement)
+        .getAllByRole('heading', { level: 3 })
+        .map((heading) => heading.textContent),
+    ).toEqual(['Episode 1 - The World Dungeon', 'Episode 3 - Descent']);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('shows no appearances section for a crawler the build never saw', () => {
+    renderSite(<CrawlerPage />, {
+      path: '/crawlers/stuntman',
+      routePath: '/crawlers/:id',
+      status: { ...makeStatus(), appearances: { harry: [1] } },
+    });
+    expect(screen.queryByRole('heading', { name: siteCopy.appearsInTitle })).toBeNull();
   });
 
   it('walks the roster with prev/next links', () => {

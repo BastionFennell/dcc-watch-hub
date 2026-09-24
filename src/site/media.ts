@@ -5,9 +5,10 @@
  * the same episode. The YouTube URLs here are plain image and watch addresses,
  * not the IFrame API: constitution II reserves the *player API* for
  * `src/playback/`, and `gate.ts` already builds a watch link the same way.
+
  */
 import type { CrawlerProfile, EpisodeMeta } from '../data/types';
-import { siteCopy } from './copy';
+import { metaCopy } from './meta';
 
 /** The host's own still, which exists for every video without a build step. */
 export function youtubeThumb(youtubeId: string): string {
@@ -19,20 +20,6 @@ export function episodeThumb(episode: EpisodeMeta): string {
   return episode.ogImage !== undefined && episode.ogImage !== ''
     ? episode.ogImage
     : youtubeThumb(episode.youtubeId);
-}
-
-/** The share image `scripts/og.mjs` writes for this episode, unless authored. */
-export function episodeOgImage(episode: EpisodeMeta): string {
-  return episode.ogImage !== undefined && episode.ogImage !== ''
-    ? episode.ogImage
-    : siteCopy.ogEpisodeImage(episode.id);
-}
-
-/** The same, for a crawler. */
-export function crawlerOgImage(profile: CrawlerProfile): string {
-  return profile.og !== undefined && profile.og !== ''
-    ? profile.og
-    : siteCopy.ogCrawlerImage(profile.id);
 }
 
 /** Root-relative art resolved against the deploy base; absolute URLs pass through. */
@@ -51,4 +38,23 @@ export function formatDuration(seconds: number): string {
   const h = Math.floor(total / 3600);
   const ss = String(s).padStart(2, '0');
   return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`;
+}
+
+/** The share image `scripts/og.mjs` writes for this episode, unless authored. */
+export function episodeOgImage(episode: EpisodeMeta): string {
+  return episode.ogImage !== undefined && episode.ogImage !== ''
+    ? episode.ogImage
+    : metaCopy.ogEpisodeImage(episode.id);
+}
+
+/** The same, for a crawler. */
+export function crawlerOgImage(profile: CrawlerProfile): string {
+  return profile.og !== undefined && profile.og !== ''
+    ? profile.og
+    : metaCopy.ogCrawlerImage(profile.id);
+}
+
+/** The player's own address, for `VideoObject.embedUrl` (011 §7). */
+export function youtubeEmbed(youtubeId: string): string {
+  return `https://www.youtube.com/embed/${youtubeId}`;
 }

@@ -9,7 +9,7 @@ import { cleanup, screen } from '@testing-library/react';
 import { OgCrawlerPage } from './OgCrawlerPage';
 import { OgEpisodePage } from './OgEpisodePage';
 import { OgSitePage } from './OgSitePage';
-import { ogRoutes } from './ogRoutes';
+import { OgRoutes } from './OgRoutes';
 import { siteCopy } from '../../copy';
 import { renderSite } from '../../../test/renderSite';
 import { makeCrawlers } from '../../../test/fixtures';
@@ -21,14 +21,16 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe('ogRoutes', () => {
-  it('is the list Wave C spreads into the router', () => {
-    expect(ogRoutes.map((route) => route.path)).toEqual([
-      '/_og/site',
-      '/_og/crawler/:id',
-      '/_og/episode/:id',
-    ]);
-    for (const route of ogRoutes) expect(typeof route.Component).toBe('function');
+describe('OgRoutes', () => {
+  it.each([
+    ['/_og/site', 'Heart and chaos in the World Dungeon.'],
+    ['/_og/crawler/stuntman', stuntman.characterName],
+    ['/_og/episode/1', 'Episode 1 - The World Dungeon'],
+  ])('mounts %s', async (path, text) => {
+    // Every frame is its own lazy chunk, so the render has to be awaited.
+    const { container } = renderSite(<OgRoutes />, { path, routePath: '/_og/*' });
+    expect(await screen.findByText(text)).toBeInTheDocument();
+    expect(container.querySelector('[data-og-frame]')).not.toBeNull();
   });
 });
 

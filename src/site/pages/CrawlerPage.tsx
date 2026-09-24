@@ -5,6 +5,7 @@
  * it is the one thing here the System itself announced. Everything else is the
  * show talking about its own cast.
  */
+import { useEffect } from 'react';
 import { Link, useParams } from 'react-router';
 import { useShow } from '../../data/ShowContext';
 import { useCrawlers } from '../../data/CrawlersContext';
@@ -13,6 +14,7 @@ import { useNow } from '../useNow';
 import { useAppearances } from '../useAppearances';
 import { Seo } from '../seo';
 import { siteCopy } from '../copy';
+import { trackCrawlerView } from '../analytics';
 import { asset, crawlerOgImage } from '../media';
 import { EpisodeRow } from '../components/EpisodeRow';
 import { RosterCard } from '../components/RosterCard';
@@ -34,6 +36,16 @@ export function CrawlerPage() {
 
   const index = profiles.findIndex((profile) => profile.id === id);
   const profile = index === -1 ? undefined : profiles[index];
+
+  /*
+   * `crawler_view` (011 §7). After the roster has landed, so a page that
+   * mounts before the fetch finishes counts once rather than never, and keyed
+   * on the id so prev/next counts as a new view.
+   */
+  const found = profile !== undefined;
+  useEffect(() => {
+    if (found) trackCrawlerView(id);
+  }, [found, id]);
 
   // While the roster is still in flight there is nothing to say yet; only a
   // loaded roster that has no such crawler is a 404.

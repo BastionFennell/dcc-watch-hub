@@ -9,7 +9,15 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { App } from './App';
 import { copy } from './copy';
-import { makeEpisodeRaw, makeRegistry, makeShow, makeSpells } from './test/fixtures';
+import { siteCopy } from './site/copy';
+import {
+  makeCrawlers,
+  makeEpisodeRaw,
+  makeRegistry,
+  makeShow,
+  makeSpells,
+  makeStatus,
+} from './test/fixtures';
 
 function showFixture(withoutRegistry: boolean) {
   const show = makeShow();
@@ -22,11 +30,15 @@ function stubFetch({ withoutRegistry = false }: { withoutRegistry?: boolean } = 
     const url = String(input);
     const body = url.includes('show.json')
       ? showFixture(withoutRegistry)
-      : url.includes('npcs.json')
-        ? makeRegistry()
-        : url.includes('spells.json')
-          ? makeSpells()
-          : makeEpisodeRaw(1);
+      : url.includes('crawlers.json')
+        ? makeCrawlers()
+        : url.includes('status.json')
+          ? makeStatus()
+          : url.includes('npcs.json')
+            ? makeRegistry()
+            : url.includes('spells.json')
+              ? makeSpells()
+              : makeEpisodeRaw(1);
     return Promise.resolve(
       new Response(JSON.stringify(body), {
         status: 200,
@@ -47,8 +59,18 @@ function renderAt(path: string) {
 describe('broadcast archive', () => {
   beforeEach(() => stubFetch());
 
-  it('groups the hub episodes by floor, in show order', async () => {
+  it('puts the front door at / (011 §1)', async () => {
     renderAt('/');
+    const main = screen.getByRole('main');
+    await waitFor(() =>
+      expect(
+        within(main).getByRole('heading', { level: 1, name: makeShow().tagline }),
+      ).toBeInTheDocument(),
+    );
+  });
+
+  it('moves the broadcast archive to /watch, still grouped by floor', async () => {
+    renderAt('/watch');
     const main = screen.getByRole('main');
     await waitFor(() =>
       expect(within(main).getByRole('heading', { name: 'Floor 1' })).toBeInTheDocument(),
@@ -59,24 +81,41 @@ describe('broadcast archive', () => {
     expect(floorOne).not.toBeNull();
     expect(floorTwo).not.toBeNull();
 
+    // Newest first inside a floor, and every row is a feed link: the sample
+    // show has no hubLiveAt, so the gate is open everywhere.
     expect(
       within(floorOne as HTMLElement)
         .getAllByRole('link')
         .map((link) => link.getAttribute('href')),
-    ).toEqual(['/ep/1', '/ep/2']);
+    ).toEqual(['/ep/2', '/ep/1']);
     expect(
       within(floorTwo as HTMLElement)
         .getAllByRole('link')
         .map((link) => link.getAttribute('href')),
     ).toEqual(['/ep/3']);
-    expect(
-      within(main).getByRole('link', { name: /Episode 2 - The Meat District/ }),
-    ).toHaveAttribute('href', '/ep/2');
   });
 
-  it('titles the hub document in the System voice', async () => {
-    renderAt('/');
-    await waitFor(() => expect(document.title).toBe(copy.pageTitle(copy.archiveTitle)));
+  it('titles each route from its own data', async () => {
+    const { unmount } = renderAt('/');
+    await waitFor(() => expect(document.title).toBe(siteCopy.defaultTitle));
+    unmount();
+
+    renderAt('/ep/1?fake=1');
+    await waitFor(() =>
+      expect(document.title).toBe(copy.hubPageTitle(makeShow().episodes[0].title)),
+    );
+  });
+
+  it('serves the crawler pages and the share-image frames', async () => {
+    const { unmount } = renderAt('/crawlers/harry');
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: siteCopy.conceptTitle })).toBeInTheDocument(),
+    );
+    unmount();
+
+    // Not linked from anywhere: scripts/og.mjs is the only visitor (011 §4).
+    const { container } = renderAt('/_og/site');
+    await waitFor(() => expect(container.querySelector('[data-og-frame]')).not.toBeNull());
   });
 
   it('offers a skip link to the broadcast', () => {
@@ -170,7 +209,10 @@ describe('broadcast archive', () => {
   it('shows the System not-found copy for an unknown episode id', async () => {
     renderAt('/ep/999');
     await waitFor(() => expect(screen.getByText(copy.notFoundTitle)).toBeInTheDocument());
-    expect(screen.getByRole('link', { name: copy.returnToArchive })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: copy.returnToArchive })).toHaveAttribute(
+      'href',
+      '/watch',
+    );
   });
 
   it('redirects the old /codex path to the Codex', async () => {

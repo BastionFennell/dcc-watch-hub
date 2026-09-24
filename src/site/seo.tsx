@@ -12,9 +12,10 @@
  *   the props by a pure function, in a fixed order, so it is identical no
  *   matter what `renderToString` decides to do with the elements themselves.
  */
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { joinBase } from '../data/load';
+import { PRERENDERED_HEAD_ATTR, SHELL_HEAD_ATTR } from '../boot';
 
 export interface SeoProps {
   title: string;
@@ -25,6 +26,19 @@ export interface SeoProps {
   ogImage?: string;
   /** `website` (default), `article`, `video.episode`, ... */
   ogType?: string;
+  /**
+   * Keep this page out of the index. The 404 is the only user: a static host
+   * answers every unknown path with it, and a self-canonical would invite a
+   * search engine to keep one copy of it per bad link.
+   */
+  noindex?: boolean;
+  /**
+   * The page's Largest Contentful Paint image, preloaded. Only the home page
+   * has one worth naming: its hero poster is a third-party still, and a
+   * `<link rel=preload>` in the prerendered head is what lets a phone start
+   * fetching it before the bundle and the roster art take the bandwidth.
+   */
+  preloadImage?: string;
   /** Emitted verbatim as `application/ld+json`. */
   jsonLd?: unknown;
 }
@@ -46,6 +60,16 @@ export function absoluteUrl(path: string): string {
 }
 
 /* ------------------------------------------------------ the collector */
+
+/**
+ * Every tag the collector writes is marked, because React does not adopt head
+ * tags it did not render: on a prerendered page it appends its own copy of each
+ * one, leaving the document with two titles and two descriptions. The browser
+ * takes the marked ones out at boot (`clearPrerenderedHead`) a moment before
+ * React puts the same values back. A scraper, which runs no JavaScript, sees
+ * only the prerendered set; a browser ends with exactly one of each.
+ */
+const MARK = ` ${PRERENDERED_HEAD_ATTR}`;
 
 function escapeAttribute(value: string): string {
   return value
@@ -69,31 +93,42 @@ function escapeJsonLd(value: unknown): string {
 
 /** `[key, html]` pairs, in the order the head should read. */
 function headPairs(props: SeoProps): [string, string][] {
-  const { title, description, canonicalPath, ogImage, ogType } = props;
+  const { title, description, canonicalPath, ogImage, ogType, noindex, preloadImage } = props;
   const url = absoluteUrl(canonicalPath);
   const image = ogImage === undefined ? undefined : absoluteUrl(ogImage);
   const pairs: [string, string][] = [
-    ['title', `<title>${escapeText(title)}</title>`],
-    ['meta:description', `<meta name="description" content="${escapeAttribute(description)}" />`],
-    ['link:canonical', `<link rel="canonical" href="${escapeAttribute(url)}" />`],
-    ['og:title', `<meta property="og:title" content="${escapeAttribute(title)}" />`],
+    ...(preloadImage === undefined
+      ? []
+      : ([
+          [
+            'link:preload',
+            `<link${MARK} rel="preload" as="image" fetchpriority="high" href="${escapeAttribute(preloadImage)}" />`,
+          ],
+        ] as [string, string][])),
+    ['title', `<title${MARK}>${escapeText(title)}</title>`],
+    ['meta:description', `<meta${MARK} name="description" content="${escapeAttribute(description)}" />`],
+    ...(noindex === true
+      ? ([['meta:robots', `<meta${MARK} name="robots" content="noindex" />`]] as [string, string][])
+      : []),
+    ['link:canonical', `<link${MARK} rel="canonical" href="${escapeAttribute(url)}" />`],
+    ['og:title', `<meta${MARK} property="og:title" content="${escapeAttribute(title)}" />`],
     [
       'og:description',
-      `<meta property="og:description" content="${escapeAttribute(description)}" />`,
+      `<meta${MARK} property="og:description" content="${escapeAttribute(description)}" />`,
     ],
-    ['og:url', `<meta property="og:url" content="${escapeAttribute(url)}" />`],
-    ['og:type', `<meta property="og:type" content="${escapeAttribute(ogType ?? 'website')}" />`],
-    ['og:site_name', `<meta property="og:site_name" content="Dungeon Crawl Cast" />`],
+    ['og:url', `<meta${MARK} property="og:url" content="${escapeAttribute(url)}" />`],
+    ['og:type', `<meta${MARK} property="og:type" content="${escapeAttribute(ogType ?? 'website')}" />`],
+    ['og:site_name', `<meta${MARK} property="og:site_name" content="Dungeon Crawl Cast" />`],
     [
       'twitter:card',
-      `<meta name="twitter:card" content="${image === undefined ? 'summary' : 'summary_large_image'}" />`,
+      `<meta${MARK} name="twitter:card" content="${image === undefined ? 'summary' : 'summary_large_image'}" />`,
     ],
   ];
   if (image !== undefined) {
-    pairs.push(['og:image', `<meta property="og:image" content="${escapeAttribute(image)}" />`]);
+    pairs.push(['og:image', `<meta${MARK} property="og:image" content="${escapeAttribute(image)}" />`]);
     pairs.push([
       'twitter:image',
-      `<meta name="twitter:image" content="${escapeAttribute(image)}" />`,
+      `<meta${MARK} name="twitter:image" content="${escapeAttribute(image)}" />`,
     ]);
   }
   /*
@@ -139,18 +174,34 @@ export function HeadCollectorProvider({
 
 export function Seo(props: SeoProps) {
   const collector = useContext(HeadCollectorContext);
+
+  /*
+   * A page booted from the static shell (a hub route, served `404.html`) shows
+   * the shell's placeholder title until this renders. Once it has, that
+   * placeholder is a second `<title>` and a stale description, so it goes.
+   * On a prerendered page there is nothing to remove: the prerenderer replaced
+   * the shell's head with the route's.
+   */
+  useEffect(() => {
+    for (const node of document.head.querySelectorAll(`[${SHELL_HEAD_ATTR}]`)) node.remove();
+  }, []);
   // Server-only, and the server renders each element once: collecting during
   // render is what makes `head` available the moment `renderToString` returns.
   if (collector !== null) collector.collect(props);
 
-  const { title, description, canonicalPath, ogImage, ogType, jsonLd } = props;
+  const { title, description, canonicalPath, ogImage, ogType, jsonLd, noindex, preloadImage } =
+    props;
   const url = absoluteUrl(canonicalPath);
   const image = ogImage === undefined ? undefined : absoluteUrl(ogImage);
 
   return (
     <>
+      {preloadImage === undefined ? null : (
+        <link rel="preload" as="image" fetchPriority="high" href={preloadImage} />
+      )}
       <title>{title}</title>
       <meta name="description" content={description} />
+      {noindex === true ? <meta name="robots" content="noindex" /> : null}
       <link rel="canonical" href={url} />
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />

@@ -9,7 +9,15 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { App } from './App';
 import { copy } from './copy';
-import { makeEpisodeRaw, makeRegistry, makeShow, makeSpells } from './test/fixtures';
+import { siteCopy } from './site/copy';
+import {
+  makeCrawlers,
+  makeEpisodeRaw,
+  makeRegistry,
+  makeShow,
+  makeSpells,
+  makeStatus,
+} from './test/fixtures';
 
 function stubFetch(ok = true) {
   vi.stubGlobal('fetch', (input: RequestInfo | URL) => {
@@ -17,11 +25,15 @@ function stubFetch(ok = true) {
     const url = String(input);
     const body = url.includes('show.json')
       ? makeShow()
-      : url.includes('npcs.json')
-        ? makeRegistry()
-        : url.includes('spells.json')
-          ? makeSpells()
-          : makeEpisodeRaw(1);
+      : url.includes('crawlers.json')
+        ? makeCrawlers()
+        : url.includes('status.json')
+          ? makeStatus()
+          : url.includes('npcs.json')
+            ? makeRegistry()
+            : url.includes('spells.json')
+              ? makeSpells()
+              : makeEpisodeRaw(1);
     return Promise.resolve(
       new Response(JSON.stringify(body), {
         status: 200,
@@ -44,13 +56,24 @@ describe('app shell', () => {
     expect(screen.getByRole('main')).toBeInTheDocument();
   });
 
-  it('mounts the broadcast archive at /', async () => {
-    render(
+  it('mounts the front door at / and the archive at /watch (011 §1)', async () => {
+    const { unmount } = render(
       <MemoryRouter initialEntries={['/']}>
         <App />
       </MemoryRouter>,
     );
-    await waitFor(() => expect(screen.getByText(copy.archiveTitle)).toBeInTheDocument());
+    // Lazy chunks, so every marketing assertion waits for the import.
+    await waitFor(() => expect(screen.getByText(makeShow().tagline as string)).toBeInTheDocument());
+    unmount();
+
+    render(
+      <MemoryRouter initialEntries={['/watch']}>
+        <App />
+      </MemoryRouter>,
+    );
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: siteCopy.watchTitle })).toBeInTheDocument(),
+    );
   });
 
   it('shows the System not-found copy for an unknown episode id', async () => {

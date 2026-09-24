@@ -1,9 +1,22 @@
 /** Running times and the pictures a row falls back to (011 §3.2). */
 import { describe, expect, it } from 'vitest';
-import { crawlerOgImage, episodeOgImage, episodeThumb, formatDuration, youtubeThumb } from './media';
+import {
+  crawlerOgImage,
+  episodeOgImage,
+  episodeThumb,
+  formatDuration,
+  youtubeEmbed,
+  youtubeThumb,
+} from './media';
 import { makeCrawlers, makeShow } from '../test/fixtures';
 
 const episode = makeShow().episodes[0];
+
+describe('youtubeEmbed', () => {
+  it('is the player URL for a video id', () => {
+    expect(youtubeEmbed('abc123')).toBe('https://www.youtube.com/embed/abc123');
+  });
+});
 
 describe('formatDuration', () => {
   it('is m:ss under the hour and h:mm:ss over it', () => {

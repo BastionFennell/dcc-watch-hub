@@ -3,20 +3,24 @@
  * bundle returns has to land in the template where the browser expects it.
  * The script itself (disk, the built bundle) is exercised by the build in Wave C.
  */
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { STATIC_ROUTES, embedScript, injectPage, outputPath, routesFor } from './prerender.mjs';
-import { render } from '../src/entry-server';
+import { ready, render } from '../src/entry-server';
 import { makeCrawlers, makeShow, makeStatus } from '../src/test/fixtures';
+
+/** Every collected tag carries the marker the browser strips at boot. */
+const M = ' data-dcc-head';
 
 const TEMPLATE = `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta
+      data-dcc-shell
       name="description"
       content="The System's broadcast feed."
     />
-    <title>Dungeon Crawl Cast · System Feed</title>
+    <title data-dcc-shell>Dungeon Crawl Cast · System Feed</title>
   </head>
   <body>
     <div id="root"></div>
@@ -24,6 +28,10 @@ const TEMPLATE = `<!doctype html>
   </body>
 </html>
 `;
+
+beforeAll(async () => {
+  await ready;
+});
 
 describe('routesFor', () => {
   it('is the four static routes plus one page per crawler', () => {
@@ -92,7 +100,7 @@ describe('injectPage', () => {
 
   it('keeps the template title when the route produced no head', () => {
     const page = injectPage(TEMPLATE, { head: '', html: '<p>hi</p>', data });
-    expect(page).toContain('<title>Dungeon Crawl Cast · System Feed</title>');
+    expect(page).toContain('<title data-dcc-shell>Dungeon Crawl Cast · System Feed</title>');
   });
 
   it('never lets a "$&" in the markup corrupt the page', () => {
@@ -106,13 +114,13 @@ describe('injectPage', () => {
 
 describe('a prerendered page', () => {
   it('carries the rendered route, its head and its payload', () => {
-    const route = '/nope';
+    const route = '/community';
     const data = { route, show: makeShow(), crawlers: makeCrawlers(), status: makeStatus() };
     const { html, head } = render(route, data);
     const page = injectPage(TEMPLATE, { head, html, data });
 
-    expect(page).toContain('<title>Dungeon Crawl Cast - Heart and chaos in the World Dungeon.</title>');
-    expect(page).toContain('No such recap episode exists in the archive.');
+    expect(page).toContain(`<title${M}>Community · Dungeon Crawl Cast</title>`);
+    expect(page).toContain('Find the show');
     expect(page).toContain('<div id="root"><div class=');
     const payload = page
       .split('<script id="__DCC__" type="application/json">')[1]
@@ -120,7 +128,7 @@ describe('a prerendered page', () => {
     expect(JSON.parse(payload).route).toBe(route);
     // The head tags live in <head>, not inside #root.
     const rootAt = page.indexOf('<div id="root">');
-    expect(page.indexOf('<link rel="canonical"')).toBeLessThan(rootAt);
+    expect(page.indexOf(`<link${M} rel="canonical"`)).toBeLessThan(rootAt);
     expect(page.slice(rootAt).includes('<title>')).toBe(false);
   });
 });

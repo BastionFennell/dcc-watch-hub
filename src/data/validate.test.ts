@@ -1,4 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
+import {
+  describe,
+  expect,
+  it,
+  vi } from 'vitest';
 import {
   DataError,
   isEpisodeData,
@@ -12,10 +16,9 @@ import {
   sortEvents,
   toNumber,
   isSpellRegistry,
-  validateCrawlers,
   validateSpells,
-  validateStatus,
 } from './validate';
+import { validateCrawlers, validateStatus } from './roster';
 import type { AnyEvent } from './types';
 import {
   makeCrawlers,
@@ -1022,6 +1025,22 @@ describe('validateStatus', () => {
       episodeId: null,
       crawlers: {},
     });
+  });
+
+  it('keeps the precomputed appearances, dropping anything that is not a list of ids', () => {
+    const status = validateStatus({
+      generatedAt: 'x',
+      episodeId: 3,
+      crawlers: {},
+      appearances: { harry: [1, 2, 3], mimi: [1, 'two', 3], veil: 'nope' },
+    });
+    expect(status?.appearances).toEqual({ harry: [1, 2, 3], mimi: [1, 3] });
+  });
+
+  it('leaves appearances undefined for a file that carries none', () => {
+    const status = validateStatus({ generatedAt: 'x', episodeId: null, crawlers: {} });
+    // Undefined, not empty: it is what tells the crawler page to derive them.
+    expect(status).not.toHaveProperty('appearances');
   });
 
   it('never throws: null for a file that is not a status file', () => {

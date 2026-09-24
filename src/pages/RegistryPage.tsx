@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router';
 import type { EntityKind } from '../data/types';
 import { useShow } from '../data/ShowContext';
@@ -16,6 +16,7 @@ import {
 import { RegistryEntry } from '../components/RegistryEntry/RegistryEntry';
 import { RegistryToolbar } from '../components/RegistryToolbar/RegistryToolbar';
 import { SystemNotice } from '../components/SystemNotice/SystemNotice';
+import { HubHead } from '../site/pages/lazy';
 import { copy } from '../copy';
 import styles from './RegistryPage.module.css';
 
@@ -45,10 +46,6 @@ export function RegistryPage() {
   const [query, setQuery] = useState('');
   const [kinds, setKinds] = useState<ReadonlySet<EntityKind>>(() => new Set());
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
-
-  useEffect(() => {
-    document.title = copy.pageTitle(copy.registryTitle);
-  }, []);
 
   // The whole point of the page: ask for the index the moment it opens.
   useEffect(() => {
@@ -122,12 +119,22 @@ export function RegistryPage() {
     });
   }, []);
 
+  /*
+   * The Codex is client-rendered like the rest of the hub, so its head is
+   * written after boot rather than prerendered (011 T1126). <Seo> replaces the
+   * effect that used to set document.title: React 19 hoists the <title>.
+   */
   const head = (
+    <>
+      <Suspense fallback={null}>
+        <HubHead kind="codex" />
+      </Suspense>
     <div className={styles.head}>
       <p className={styles.kicker}>{copy.registryKicker}</p>
       <h1 className={styles.title}>{copy.registryTitle}</h1>
       <p className={styles.lead}>{copy.registryLead}</p>
     </div>
+    </>
   );
 
   if (show === null || registryLoading) {

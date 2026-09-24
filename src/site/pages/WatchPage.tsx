@@ -12,6 +12,7 @@ import { episodesByFloor } from '../../data/show';
 import { useNow } from '../useNow';
 import { Seo } from '../seo';
 import { siteCopy } from '../copy';
+import { episodeListJsonLd } from '../jsonLd';
 import { EpisodeRow } from '../components/EpisodeRow';
 import { SiteFooter } from '../components/SiteFooter';
 import page from './page.module.css';
@@ -24,6 +25,12 @@ export function WatchPage() {
 
   // `episodesByFloor` reads in show order; the archive reads the other way.
   const groups = show === null ? [] : [...episodesByFloor(show)].reverse();
+  /*
+   * The archive, said once more for a machine (011 §7). Built from the same
+   * groups the page renders, so the order a reader sees is the order a search
+   * engine is given.
+   */
+  const listed = groups.flatMap((group) => [...group.episodes].reverse());
 
   return (
     <div className={page.page}>
@@ -32,6 +39,7 @@ export function WatchPage() {
         description={siteCopy.watchDescription}
         canonicalPath="/watch"
         ogImage={siteCopy.ogSiteImage}
+        jsonLd={listed.length === 0 ? undefined : episodeListJsonLd(listed)}
       />
 
       <div className={page.head}>

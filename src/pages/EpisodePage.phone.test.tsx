@@ -17,7 +17,14 @@ import { App } from '../App';
 import { copy } from '../copy';
 import { resumeKey } from '../playback/resume';
 import { __fakeSources } from '../components/VideoStage/FakeStage';
-import { makeEpisodeRaw, makeRegistry, makeShow, makeSpells } from '../test/fixtures';
+import {
+  makeCrawlers,
+  makeEpisodeRaw,
+  makeRegistry,
+  makeShow,
+  makeSpells,
+  makeStatus,
+} from '../test/fixtures';
 
 /** The one media query the page branches on (`useIsPhone`, `usePanel`). */
 const PHONE_QUERY = '(max-width: 900px)';
@@ -32,6 +39,24 @@ function stubFetch(withRegistry = true) {
       if (!withRegistry) delete (show as { registryUrl?: string }).registryUrl;
       return Promise.resolve(
         new Response(JSON.stringify(show), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
+    }
+    // 011: <App> mounts the roster provider, so these two are fetched on every
+    // route. Answered properly here so the hub tests stay free of validator noise.
+    if (url.includes('crawlers.json')) {
+      return Promise.resolve(
+        new Response(JSON.stringify(makeCrawlers()), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
+    }
+    if (url.includes('status.json')) {
+      return Promise.resolve(
+        new Response(JSON.stringify(makeStatus()), {
           status: 200,
           headers: { 'content-type': 'application/json' },
         }),

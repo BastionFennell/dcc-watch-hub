@@ -24,9 +24,21 @@ jobs:
           node-version: 20.9.0
           cache: npm
       - run: npm ci
+      # ubuntu-latest ships Chrome here; scripts/og.mjs screenshots the /_og
+      # routes with it. Logged rather than asserted - a missing browser costs
+      # the share images, not the deploy.
+      - run: google-chrome --version || true
       - run: npm run build
         env:
+          CHROME_PATH: /usr/bin/google-chrome
+          # Pages serves the site under a sub-path; every prerendered asset and
+          # absolute URL is resolved against it.
           VITE_BASE: /dcc-watch-hub/
+          # Repository variables, both optional: without SITE_URL the canonical
+          # origin falls back to the registered domain, and without
+          # PLAUSIBLE_DOMAIN no analytics is loaded at all.
+          VITE_SITE_URL: ${{ vars.SITE_URL || 'https://dungeoncrawlcast.com' }}
+          VITE_PLAUSIBLE_DOMAIN: ${{ vars.PLAUSIBLE_DOMAIN }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

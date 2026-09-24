@@ -6,31 +6,28 @@
  * change to one never disturbs the other. Wave B appends to the end of this
  * object, exactly as the hub's copy file is extended.
  */
+import { metaCopy } from './meta';
+import { copy } from '../copy';
+
 export const siteCopy = {
+  /*
+   * The head's vocabulary, kept in its own module so the hub's entry chunk can
+   * import those dozen strings without the rest of this file (see meta.ts).
+   */
+  ...metaCopy,
+
+  // The header's nav labels, which live in the hub's copy file (see there).
+  siteNavLabel: copy.siteNavLabel,
+  navWatch: copy.navWatch,
+  navCrawlers: copy.navCrawlers,
+  navCommunity: copy.navCommunity,
+
   // The gated call to action (011 §2.1). Before `hubLiveAt` the only place to
   // watch is YouTube; after it, the System feed opens.
   watchOnYouTube: 'Watch on YouTube',
   openSystemFeed: 'Open the System feed',
 
-  // The head every prerendered route starts from, before its own <Seo> (if it
-  // has one) overwrites it. The show's own `title` / `pitch` win when present.
-  defaultTitle: 'Dungeon Crawl Cast',
-  defaultDescription: 'A Dungeon Crawler Carl actual play.',
-
   /* ------------------------------------------------ Wave B (011 §3, §4, §6) */
-
-  /** The brand, spelled once. */
-  siteName: 'Dungeon Crawl Cast',
-
-  /*
-   * Header and footer navigation. Plain words on purpose: a stranger arriving
-   * from a short has not met the System yet, so "Watch" is not the defect here
-   * that "Dashboard" would be inside the hub (constitution VIII vs III).
-   */
-  siteNavLabel: 'Site',
-  navWatch: 'Watch',
-  navCrawlers: 'Crawlers',
-  navCommunity: 'Community',
 
   // --- home hero
   heroEyebrow: 'A Dungeon Crawler Carl actual play',
@@ -51,6 +48,13 @@ export const siteCopy = {
   discordCta: 'Open the Discord',
 
   // --- footer
+  /*
+   * The footer repeats the header's three links, so it needs a name of its own:
+   * two landmarks with the same role and the same accessible name are one axe
+   * violation (`landmark-unique`) and, worse, two identical stops in a screen
+   * reader's landmark list.
+   */
+  footerNavLabel: 'Footer',
   footerDisclaimer: 'Not affiliated with Matt Dinniman or Renegade Game Studios.',
   footerRights: '© Dungeon Crawl Cast',
 
@@ -111,10 +115,6 @@ export const siteCopy = {
   playLabel: (title: string) => `Play ${title}`,
 
   // --- share images and per-page heads
-  ogSiteImage: '/og/site.png',
-  ogCrawlerImage: (id: string) => `/og/crawler-${id}.png`,
-  ogEpisodeImage: (id: number) => `/og/ep${id}.png`,
-  pageTitle: (page: string) => `${page} · Dungeon Crawl Cast`,
   watchDescription: 'Every episode of Dungeon Crawl Cast, filed by floor.',
   crawlersDescription: 'The five crawlers of Dungeon Crawl Cast, and the players behind them.',
   crawlerDescription: (name: string, concept: string) => `${name}. ${concept}`,

@@ -4,7 +4,14 @@
  * no global, no network.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { analyticsDomain, installAnalytics, track } from './analytics';
+import {
+  analyticsDomain,
+  installAnalytics,
+  track,
+  trackCrawlerView,
+  trackCta,
+  trackOutbound,
+} from './analytics';
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -64,5 +71,37 @@ describe('track', () => {
     track('crawler_view', { id: 'harry' });
     track('hub_open');
     expect(calls).toEqual([['crawler_view', { props: { id: 'harry' } }], ['hub_open']]);
+  });
+});
+
+/* --------------------------------------------- the three events (T1127) */
+
+describe('the named events', () => {
+  function spy(): unknown[][] {
+    const calls: unknown[][] = [];
+    window.plausible = ((...args: unknown[]) => calls.push(args)) as typeof window.plausible;
+    return calls;
+  }
+
+  it('calls a hub CTA hub_open and a YouTube CTA outbound', () => {
+    const calls = spy();
+    trackCta({ kind: 'hub', href: '/ep/3', label: 'Open the System feed' }, 3);
+    trackCta({ kind: 'youtube', href: 'https://youtu.be/x', label: 'Watch on YouTube' }, 3);
+    expect(calls).toEqual([
+      ['hub_open', { props: { episode: 3 } }],
+      ['outbound', { props: { to: 'youtube', episode: 3 } }],
+    ]);
+  });
+
+  it('names the platform on an outbound link', () => {
+    const calls = spy();
+    trackOutbound('discord');
+    expect(calls).toEqual([['outbound', { props: { to: 'discord' } }]]);
+  });
+
+  it('names the crawler on a crawler view', () => {
+    const calls = spy();
+    trackCrawlerView('harry');
+    expect(calls).toEqual([['crawler_view', { props: { crawler: 'harry' } }]]);
   });
 });

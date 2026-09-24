@@ -61,6 +61,18 @@ describe('WatchPage', () => {
     expect(within(floorThree as HTMLElement).queryByRole('link')).toBeNull();
   });
 
+  it('says the archive once more as an ItemList of VideoObjects', () => {
+    const { container } = renderSite(<WatchPage />, { path: '/watch', now: gate });
+    const script = container.querySelector('script[type="application/ld+json"]');
+    const ld = JSON.parse(script?.innerHTML ?? '{}');
+    expect(ld['@type']).toBe('ItemList');
+    expect(ld.itemListElement.map((entry: { item: { name: string } }) => entry.item.name)).toEqual([
+      'Episode 3 - Descent',
+      'Episode 2 - The Meat District',
+      'Episode 1 - The World Dungeon',
+    ]);
+  });
+
   it('carries its own head', () => {
     renderSite(<WatchPage />, { path: '/watch', now: gate });
     expect(document.title).toBe(siteCopy.pageTitle(siteCopy.watchTitle));

@@ -51,7 +51,9 @@ export function TrailerEmbed({ youtubeId, title }: TrailerEmbedProps) {
           className={styles.posterImage}
           src={youtubeThumb(youtubeId)}
           alt=""
-          /* The hero's own image: it is the first thing on the page. */
+          /* The hero's own image: it is the first thing on the page, and on a
+             phone it is the Largest Contentful Paint, so it is fetched eagerly
+             and ahead of everything else the parser finds. */
           loading="eager"
         />
         <span className={styles.play} aria-hidden="true">

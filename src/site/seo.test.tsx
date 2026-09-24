@@ -8,6 +8,9 @@ import { render, waitFor } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { HeadCollector, HeadCollectorProvider, Seo, absoluteUrl, siteOrigin } from './seo';
 
+/** Every collected tag carries the marker the browser strips at boot. */
+const M = ' data-dcc-head';
+
 const props = {
   title: 'Harry - Dungeon Crawl Cast',
   description: 'The crawler, and the person behind him.',
@@ -79,31 +82,33 @@ describe('Seo on the server', () => {
   it('collects the head as a string, in a fixed order', () => {
     const { head } = serverRender();
     expect(head.split('\n')).toEqual([
-      '<title>Harry - Dungeon Crawl Cast</title>',
-      '<meta name="description" content="The crawler, and the person behind him." />',
-      '<link rel="canonical" href="https://dungeoncrawlcast.com/crawlers/harry" />',
-      '<meta property="og:title" content="Harry - Dungeon Crawl Cast" />',
-      '<meta property="og:description" content="The crawler, and the person behind him." />',
-      '<meta property="og:url" content="https://dungeoncrawlcast.com/crawlers/harry" />',
-      '<meta property="og:type" content="website" />',
-      '<meta property="og:site_name" content="Dungeon Crawl Cast" />',
-      '<meta name="twitter:card" content="summary" />',
+      `<title${M}>Harry - Dungeon Crawl Cast</title>`,
+      `<meta${M} name="description" content="The crawler, and the person behind him." />`,
+      `<link${M} rel="canonical" href="https://dungeoncrawlcast.com/crawlers/harry" />`,
+      `<meta${M} property="og:title" content="Harry - Dungeon Crawl Cast" />`,
+      `<meta${M} property="og:description" content="The crawler, and the person behind him." />`,
+      `<meta${M} property="og:url" content="https://dungeoncrawlcast.com/crawlers/harry" />`,
+      `<meta${M} property="og:type" content="website" />`,
+      `<meta${M} property="og:site_name" content="Dungeon Crawl Cast" />`,
+      `<meta${M} name="twitter:card" content="summary" />`,
     ]);
   });
 
   it('adds the image pair and the large card when there is an OG image', () => {
     const { head } = serverRender({ ogImage: '/og/crawler-harry.png', ogType: 'profile' });
-    expect(head).toContain('<meta name="twitter:card" content="summary_large_image" />');
+    expect(head).toContain(`<meta${M} name="twitter:card" content="summary_large_image" />`);
     expect(head).toContain(
-      '<meta property="og:image" content="https://dungeoncrawlcast.com/og/crawler-harry.png" />',
+      `<meta${M} property="og:image" content="https://dungeoncrawlcast.com/og/crawler-harry.png" />`,
     );
-    expect(head).toContain('<meta property="og:type" content="profile" />');
+    expect(head).toContain(`<meta${M} property="og:type" content="profile" />`);
   });
 
   it('escapes what goes into an attribute', () => {
     const { head } = serverRender({ title: 'A & B "quoted" <x>' });
-    expect(head).toContain('<title>A &amp; B "quoted" &lt;x&gt;</title>');
-    expect(head).toContain('<meta property="og:title" content="A &amp; B &quot;quoted&quot; &lt;x&gt;" />');
+    expect(head).toContain(`<title${M}>A &amp; B "quoted" &lt;x&gt;</title>`);
+    expect(head).toContain(
+      `<meta${M} property="og:title" content="A &amp; B &quot;quoted&quot; &lt;x&gt;" />`,
+    );
   });
 
   /*
@@ -135,9 +140,34 @@ describe('Seo on the server', () => {
       </HeadCollectorProvider>,
     );
     const head = collector.toString();
-    expect(head).toContain('<title>Second</title>');
-    expect(head.match(/<title>/g)).toHaveLength(1);
+    expect(head).toContain(`<title${M}>Second</title>`);
+    expect(head.match(/<title/g)).toHaveLength(1);
     // The order does not drift when a value is overwritten.
-    expect(head.split('\n')[0]).toBe('<title>Second</title>');
+    expect(head.split('\n')[0]).toBe(`<title${M}>Second</title>`);
+  });
+});
+
+describe('noindex', () => {
+  it('is absent by default, on both sides', () => {
+    const collector = new HeadCollector();
+    collector.collect(props);
+    expect(collector.toString()).not.toContain('robots');
+
+    const { container } = render(<Seo {...props} />);
+    expect(container.querySelector('meta[name="robots"]')).toBeNull();
+    expect(document.head.querySelector('meta[name="robots"]')).toBeNull();
+  });
+
+  it('keeps the 404 out of the index, on both sides', async () => {
+    const collector = new HeadCollector();
+    collector.collect({ ...props, noindex: true });
+    expect(collector.toString()).toContain(`<meta${M} name="robots" content="noindex" />`);
+
+    render(<Seo {...props} noindex />);
+    await waitFor(() =>
+      expect(document.head.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe(
+        'noindex',
+      ),
+    );
   });
 });

@@ -4,31 +4,22 @@
  * shows and are resolved against the deploy base at fetch time (research R3).
  */
 import type {
-  CrawlerRoster,
   Embedded,
   EpisodeData,
   EpisodeMeta,
   Registry,
   Show,
   SpellRegistry,
-  StatusFile,
 } from './types';
 import {
   DataError,
   normalizeEpisode,
   normalizeRegistry,
   normalizeShow,
-  validateCrawlers,
   validateSpells,
-  validateStatus,
 } from './validate';
 
-
 const SHOW_URL = '/data/show.json';
-/** 011: the authored roster, beside show.json so one deploy carries both. */
-const CRAWLERS_URL = '/data/crawlers.json';
-/** 011: generated at build time into dist/, so it is absent in dev. */
-const STATUS_URL = '/data/status.json';
 /** 011: the prerenderer's payload, parsed once at boot. */
 export const EMBEDDED_ID = '__DCC__';
 
@@ -41,11 +32,12 @@ export function joinBase(base: string, url: string): string {
   return `${normalizedBase}${url}`;
 }
 
-function baseUrl(): string {
+export function siteBaseUrl(): string {
   return import.meta.env?.BASE_URL ?? '/';
 }
 
-async function fetchJson(url: string): Promise<unknown> {
+/** Shared with `roster.ts`, the front door's half of this module. */
+export async function fetchJson(url: string): Promise<unknown> {
   let response: Response;
   try {
     response = await fetch(url);
@@ -63,7 +55,7 @@ async function fetchJson(url: string): Promise<unknown> {
 }
 
 export async function fetchShow(): Promise<Show> {
-  return normalizeShow(await fetchJson(joinBase(baseUrl(), SHOW_URL)));
+  return normalizeShow(await fetchJson(joinBase(siteBaseUrl(), SHOW_URL)));
 }
 
 /**
@@ -75,7 +67,7 @@ export async function fetchShow(): Promise<Show> {
 export async function fetchRegistry(show: Show): Promise<Registry | null> {
   const url = show.registryUrl;
   if (url === undefined || url === '') return null;
-  return normalizeRegistry(await fetchJson(joinBase(baseUrl(), url)));
+  return normalizeRegistry(await fetchJson(joinBase(siteBaseUrl(), url)));
 }
 
 /**
@@ -86,11 +78,11 @@ export async function fetchRegistry(show: Show): Promise<Registry | null> {
 export async function fetchSpells(show: Show): Promise<SpellRegistry | null> {
   const url = show.spellsUrl;
   if (url === undefined || url === '') return null;
-  return validateSpells(await fetchJson(joinBase(baseUrl(), url)));
+  return validateSpells(await fetchJson(joinBase(siteBaseUrl(), url)));
 }
 
 export async function fetchEpisode(meta: EpisodeMeta): Promise<EpisodeData> {
-  const episode = normalizeEpisode(await fetchJson(joinBase(baseUrl(), meta.dataUrl)));
+  const episode = normalizeEpisode(await fetchJson(joinBase(siteBaseUrl(), meta.dataUrl)));
   if (episode.episodeId !== meta.id) {
     throw new DataError(
       `Episode data at ${meta.dataUrl} reports episodeId ${episode.episodeId}, expected ${meta.id}.`,
@@ -100,35 +92,6 @@ export async function fetchEpisode(meta: EpisodeMeta): Promise<EpisodeData> {
 }
 
 /* ------------------------------------------------- front door (011) */
-
-/**
- * The authored crawler roster. Lenient: a file that is not a roster costs the
- * roster and nothing else, so `/crawlers` renders empty rather than failing.
- */
-export async function fetchCrawlers(): Promise<CrawlerRoster> {
-  return validateCrawlers(await fetchJson(joinBase(baseUrl(), CRAWLERS_URL)));
-}
-
-/**
- * The build-time live status, or `null` when there is none. A 404 is the normal
- * case in `npm run dev` (the file only exists in `dist/`), so it is not an
- * error: the crawler pages simply show no live line (011 §5).
- */
-export async function fetchStatus(): Promise<StatusFile | null> {
-  const url = joinBase(baseUrl(), STATUS_URL);
-  let response: Response;
-  try {
-    response = await fetch(url);
-  } catch {
-    return null;
-  }
-  if (!response.ok) return null;
-  try {
-    return validateStatus((await response.json()) as unknown);
-  } catch {
-    return null;
-  }
-}
 
 /**
  * The `<script id="__DCC__" type="application/json">` a prerendered page

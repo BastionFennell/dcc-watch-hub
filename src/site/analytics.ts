@@ -4,6 +4,7 @@
  * provider - if `VITE_PLAUSIBLE_DOMAIN` is unset, not a byte is loaded and
  * `track` is a no-op, which is exactly what `npm run dev` and every test get.
  */
+import type { Cta } from './gate';
 
 /** The outbound-links build counts YouTube and Discord clicks on its own. */
 const SCRIPT_SRC = 'https://plausible.io/js/script.outbound-links.js';
@@ -35,6 +36,27 @@ export function track(name: string, props?: Record<string, unknown>): void {
   if (typeof plausible !== 'function') return;
   if (props === undefined) plausible(name);
   else plausible(name, { props });
+}
+
+/* ------------------------------------------------ the three events (011 §7) */
+
+/**
+ * A gated CTA was clicked. The two kinds are two different stories: one is a
+ * visitor going *into* the hub, the other is a visitor leaving for YouTube.
+ */
+export function trackCta(cta: Cta, episodeId: number): void {
+  if (cta.kind === 'hub') track('hub_open', { episode: episodeId });
+  else track('outbound', { to: 'youtube', episode: episodeId });
+}
+
+/** A link off the site: `youtube`, `discord`, `tiktok`, `bluesky`, ... */
+export function trackOutbound(to: string): void {
+  track('outbound', { to });
+}
+
+/** A crawler page was opened (by URL or by a click from the roster). */
+export function trackCrawlerView(crawlerId: string): void {
+  track('crawler_view', { crawler: crawlerId });
 }
 
 /**

@@ -26,6 +26,28 @@ export function publishedEpisode(show: Show, now: number): EpisodeMeta | null {
   return newest;
 }
 
+/** Every episode a visitor may already have seen, oldest first. */
+export function publishedEpisodes(show: Show, now: number): EpisodeMeta[] {
+  return show.episodes.filter((episode) => hubLive(episode, now)).sort((a, b) => a.id - b.id);
+}
+
+/**
+ * Who this episode's data names: the party it opened with, plus the actor of
+ * every event. The same question `useAppearances` asks on the client - answered
+ * here instead, so a crawler page does not fetch every episode to render a list
+ * of links (011 §3.4).
+ */
+export function crawlerIdsIn(episode: EpisodeData): Set<string> {
+  const ids = new Set<string>();
+  for (const crawler of episode.initialState.party) ids.add(crawler.id);
+  // Events are a union; only some carry an actor, and an unknown type is fine.
+  for (const event of episode.events) {
+    const actor = (event as { actor?: string }).actor;
+    if (typeof actor === 'string' && actor !== '') ids.add(actor);
+  }
+  return ids;
+}
+
 /**
  * @param loadEpisode reads and normalizes one episode file. Injected so the
  *   caller decides where the bytes come from (disk, a fixture, a test).
@@ -36,12 +58,31 @@ export function buildStatus(
   now: number,
 ): StatusFile {
   const generatedAt = new Date(now).toISOString();
-  const meta = publishedEpisode(show, now);
-  if (meta === null) return { generatedAt, episodeId: null, crawlers: {} };
+  const published = publishedEpisodes(show, now);
+  if (published.length === 0) {
+    return { generatedAt, episodeId: null, crawlers: {}, appearances: {} };
+  }
+  /*
+   * One read per file, two answers out of it: "appears in" spans every
+   * published episode, while the live numbers come only from the newest - a
+   * crawler's level is where they are now, not where they have been.
+   */
+  const loaded = published.map((episodeMeta) => ({
+    meta: episodeMeta,
+    data: loadEpisode(episodeMeta),
+  }));
 
-  const episode = loadEpisode(meta);
+  const appearances: Record<string, number[]> = {};
+  for (const episode of loaded) {
+    for (const id of crawlerIdsIn(episode.data)) {
+      (appearances[id] ??= []).push(episode.meta.id);
+    }
+  }
+
+  const newest = loaded[loaded.length - 1];
+  const meta = newest.meta;
   // The end of the episode: the same reducer the viewer runs, at t = Infinity.
-  const state = reduceTo(episode, Number.POSITIVE_INFINITY);
+  const state = reduceTo(newest.data, Number.POSITIVE_INFINITY);
 
   const crawlers: StatusFile['crawlers'] = {};
   for (const crawler of state.party) {
@@ -52,5 +93,5 @@ export function buildStatus(
       lastEpisodeId: meta.id,
     };
   }
-  return { generatedAt, episodeId: meta.id, crawlers };
+  return { generatedAt, episodeId: meta.id, crawlers, appearances };
 }

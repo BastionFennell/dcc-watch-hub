@@ -81,6 +81,7 @@ describe('buildStatus', () => {
       generatedAt: new Date(gate(1) - 1).toISOString(),
       episodeId: null,
       crawlers: {},
+      appearances: {},
     });
     // Nothing was read: there was nothing to read.
     expect(loader).not.toHaveBeenCalled();
@@ -106,6 +107,25 @@ describe('buildStatus', () => {
     );
     expect(Object.keys(status.crawlers)).not.toContain('veil');
     expect(Object.keys(status.crawlers)).toHaveLength(4);
+  });
+
+  it('lists every published episode a crawler appears in, ascending', () => {
+    const status = buildStatus(show, loadEpisode, gate(3));
+    expect(status.appearances?.harry).toEqual([1, 2, 3]);
+    // The map spans every published episode, not just the newest one.
+    for (const ids of Object.values(status.appearances ?? {})) {
+      expect([...ids].sort((a, b) => a - b)).toEqual(ids);
+    }
+  });
+
+  it('stops the appearances at the spoiler gate', () => {
+    const status = buildStatus(show, loadEpisode, gate(3) - 1);
+    expect(status.appearances?.harry).toEqual([1, 2]);
+  });
+
+  it('leaves out a crawler no published episode names', () => {
+    const status = buildStatus(show, loadEpisode, gate(3));
+    expect(status.appearances?.nobody).toBeUndefined();
   });
 
   it('stamps the file with the time it was built', () => {

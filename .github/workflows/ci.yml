@@ -4,6 +4,16 @@ on:
   push:
   pull_request:
 
+env:
+  # The OG renderer (scripts/og.mjs) uses puppeteer-core, which never downloads
+  # a browser: ubuntu-latest ships Chrome at this path. Without it the step
+  # warns and skips, so CI would still pass - but then it would not be testing
+  # the images the deploy publishes.
+  CHROME_PATH: /usr/bin/google-chrome
+  # The canonical origin baked into <link rel=canonical>, og:url and sitemap.xml.
+  # Set the SITE_URL repository variable once the domain is registered.
+  VITE_SITE_URL: ${{ vars.SITE_URL || 'https://dungeoncrawlcast.com' }}
+
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -14,6 +24,8 @@ jobs:
           node-version: 20.9.0
           cache: npm
       - run: npm ci
+      # Logged, not asserted: the build must survive a runner with no browser.
+      - run: google-chrome --version || true
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test
