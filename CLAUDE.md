@@ -1,6 +1,6 @@
 <!-- SPECKIT START -->
-Active feature: `specs/010-studio/` (branch `010-studio`, stacked on `009-mana`); features 001-008 are merged on
-`main` and documented under `specs/00[1-8]-*/` (008 = real crawlers, spell registry, tooltips).
+Active feature: none in progress; features 001-010 are on
+`main` (010 via PR #12) and documented under `specs/0*/`; `specs/010-studio/spec.md` "Status" lists what is left.
 Read, in order: `.specify/memory/constitution.md`, then `spec.md`, `plan.md`, `research.md`,
 `data-model.md`, `contracts/`, `quickstart.md`, `tasks.md` under the newest `specs/NNN-*/` when a feature is active; otherwise read `specs/008-real-crawlers/spec.md` for the current data model.
 Earlier contracts still apply where later features do not amend them.

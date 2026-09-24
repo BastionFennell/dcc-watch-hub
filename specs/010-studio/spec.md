@@ -74,3 +74,18 @@ the browser (a GitHub commit button); collaboration; thumbnails or waveforms; CS
 - Every event type round-trips: form -> draft -> export -> `normalizeEpisode` -> same event.
 - Reload mid-edit loses nothing. Undo returns to the exact prior draft.
 - `npm run build` shows the Studio in its own chunk and the main chunk within 2 kB of before.
+
+## Status (2026-09-23)
+Shipped on PR #12 (author: "good enough for now"). Left for later milestones, in rough value order:
+1. **Publish from the browser**: a GitHub commit button (needs a token flow and a decision on Pages
+   / repo visibility, since `spells.json` carries book text).
+2. **Crawler sheet form**: a proper per-crawler editor (identity, stats, HP/mana, hotlist, spells,
+   skills, inventory, gear) replacing the raw-JSON escape hatch in the Episode tab.
+3. **Registry editors**: NPCs (`npcs.json`) and spells (`spells.json`) with the same validate /
+   export pipeline; floors and maps (`show.json` floors, rooms, reveal cells with a visual picker).
+4. **Editor ergonomics**: waveform or thumbnail strip under the timeline; drag markers to retime;
+   multi-select; delete confirmation option; CSV import through `sheet-to-json` in the browser.
+5. **Persistence**: keep the data-folder handle across sessions (IndexedDB), draft export/import
+   bundles, and a conflict check against the published file before overwriting.
+6. **Small known gaps**: episode number is read-only once a draft exists; duration must be set
+   before event times clamp; the preview rail's cards are narrower than the viewer's (835 px column).
