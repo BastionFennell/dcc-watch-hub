@@ -1,4 +1,7 @@
 <!--
+Sync Impact 1.4.0 (2026-09-23): MINOR - added Principle VIII (Front Door: marketing routes share
+tokens/data, are prerendered with OG tags, may use build-time devDependencies, mobile-first, no
+autoplay, spoiler-safe gating). CLAUDE.md updated in the same change.
 Sync Impact 1.3.0 (2026-09-19): MINOR - added Principle VII (Studio authoring tool: isolated lazy
 chunk, same reduceTo truth, local-only storage under dcc.studio.*, TimeSource transport extension).
 CLAUDE.md updated in the same change.
@@ -137,6 +140,23 @@ is governed by Principles I, II, IV, and VI, and by these rules of its own:
 - **Host-agnostic**: transport control (play, pause, rate, duration) goes through an extension of
   `TimeSource`; only files under `src/playback/` named for the host may reference YouTube.
 
+### VIII. The Front Door Is the Same Product
+
+Marketing routes (`/`, `/watch`, `/crawlers`, `/crawlers/:id`, `/community`) are the hub's
+front door, not a second site:
+
+- **Same tokens, header, and data.** They read `show.json` and `crawlers.json`; they never fork
+  the design system. The System-box callout is reserved for things the System "announces".
+- **Static and prerendered.** Each marketing route ships real HTML with per-route title, description,
+  canonical, and OpenGraph tags, and a generated `/og/*.png`. Hub routes stay client-rendered.
+- **Build-time tooling may use devDependencies** (a renderer, a headless browser) as long as nothing
+  new ships to the browser and `npm run build` degrades gracefully when the tool is absent.
+- **Mobile-first here, desktop-first there.** Marketing pages are designed at 375 px first; hub
+  pages keep Principle III. Neither compromises the other.
+- **No autoplay, no cookie banner.** Video is click-to-play; analytics, if any, is cookieless.
+- **Spoiler-safe by data.** The hub CTA for an episode unlocks at `hubLiveAt`; live crawler status
+  comes only from episodes past that gate; death is authored, never inferred.
+
 ## Technical Constraints
 
 - Runtime: Node 20.9 (pinned in `.tool-versions`); the toolchain MUST install and build on it.
@@ -176,4 +196,4 @@ Compliance is reviewed at every plan (Constitution Check gate) and at implementa
 (acceptance checklist). Use `CLAUDE.md` for runtime development guidance and pointers to the
 active plan.
 
-**Version**: 1.3.0 | **Ratified**: 2026-09-14 | **Last Amended**: 2026-09-19
+**Version**: 1.4.0 | **Ratified**: 2026-09-14 | **Last Amended**: 2026-09-23
