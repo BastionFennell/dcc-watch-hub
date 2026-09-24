@@ -1,18 +1,18 @@
 # Tasks - 011 Front Door
 
 ## Wave A - data + build plumbing
-- [ ] T1101 Types + `contracts/show.schema.json` (copy 008's, add fields) + `crawlers.schema.json` + `status.schema.json`
-- [ ] T1102 `public/data/show.json` additions (tagline/pitch/cadence from the addendum; sample dates; summaries; trailer TODO); `public/data/crawlers.json` for the five crawlers with TODO placeholders; samples test covers both
-- [ ] T1103 `validateCrawlers`, `validateStatus` (+tests); `fetchCrawlers`, `fetchStatus`, `readEmbedded()` in load.ts (+tests)
-- [ ] T1104 `ShowContext` seeds from embedded data; new `CrawlersContext` (profiles + status) (+tests)
-- [ ] T1105 `src/site/gate.ts` (+tests both sides of `hubLiveAt`, countdown formatting, newest episode)
-- [ ] T1106 `src/site/seo.tsx` `<Seo>` + `HeadCollector` (+tests: client hoisting, server collection)
-- [ ] T1107 `src/site/analytics.ts` (+tests: no-op when unset)
-- [ ] T1108 `src/entry-server.tsx` + `vite.config.ts` ssr entry; `main.tsx` hydrate-or-create (+test)
-- [ ] T1109 `scripts/build-status.ts` (+test against ep1-3: newest past-gate episode, omitted crawlers)
-- [ ] T1110 `scripts/prerender.mjs` (route list from data; template injection) (+smoke test via entry-server)
-- [ ] T1111 `scripts/sitemap.mjs` (+test), `scripts/og.mjs` (puppeteer-core, Chrome discovery, skip-with-warning), `scripts/postbuild.mjs` orchestrator; `npm i -D puppeteer-core`
-- [ ] T1112 Gates + README "Build pipeline" note
+- [x] T1101 Types + `contracts/show.schema.json` (copy 008's, add fields) + `crawlers.schema.json` + `status.schema.json`
+- [x] T1102 `public/data/show.json` additions (tagline/pitch/cadence from the addendum; sample dates; summaries; trailer TODO); `public/data/crawlers.json` for the five crawlers with TODO placeholders; samples test covers both
+- [x] T1103 `validateCrawlers`, `validateStatus` (+tests); `fetchCrawlers`, `fetchStatus`, `readEmbedded()` in load.ts (+tests)
+- [x] T1104 `ShowContext` seeds from embedded data; new `CrawlersContext` (profiles + status) (+tests)
+- [x] T1105 `src/site/gate.ts` (+tests both sides of `hubLiveAt`, countdown formatting, newest episode)
+- [x] T1106 `src/site/seo.tsx` `<Seo>` + `HeadCollector` (+tests: client hoisting, server collection)
+- [x] T1107 `src/site/analytics.ts` (+tests: no-op when unset)
+- [x] T1108 `src/entry-server.tsx` + `vite.config.ts` ssr entry; `main.tsx` hydrate-or-create (+test)
+- [x] T1109 `scripts/build-status.ts` (+test against ep1-3: newest past-gate episode, omitted crawlers)
+- [x] T1110 `scripts/prerender.mjs` (route list from data; template injection) (+smoke test via entry-server)
+- [x] T1111 `scripts/sitemap.mjs` (+test), `scripts/og.mjs` (puppeteer-core, Chrome discovery, skip-with-warning), `scripts/postbuild.mjs` orchestrator; `npm i -D puppeteer-core`
+- [x] T1112 Gates + README "Build pipeline" note
 
 ## Wave B - components + pages
 - [ ] T1113 `src/site/copy.ts`

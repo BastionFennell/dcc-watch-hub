@@ -9,13 +9,14 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node scripts/postbuild.mjs",
+    "build": "vite build && vite build --ssr src/entry-server.tsx --outDir dist/server && node scripts/postbuild.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "sheet-to-json": "tsx scripts/sheet-to-json.ts"
+    "sheet-to-json": "tsx scripts/sheet-to-json.ts",
+    "build:status": "tsx scripts/build-status.ts"
   },
   "dependencies": {
     "react": "^19.0.0",
@@ -40,6 +41,7 @@
     "eslint-plugin-react-refresh": "^0.4.16",
     "globals": "^15.14.0",
     "jsdom": "^25.0.1",
+    "puppeteer-core": "^23.11.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.18.0",

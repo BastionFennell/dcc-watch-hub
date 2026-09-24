@@ -3,16 +3,34 @@
  * (constitution IV). `dataUrl` values keep the leading slash the handoff schema
  * shows and are resolved against the deploy base at fetch time (research R3).
  */
-import type { EpisodeData, EpisodeMeta, Registry, Show, SpellRegistry } from './types';
+import type {
+  CrawlerRoster,
+  Embedded,
+  EpisodeData,
+  EpisodeMeta,
+  Registry,
+  Show,
+  SpellRegistry,
+  StatusFile,
+} from './types';
 import {
   DataError,
   normalizeEpisode,
   normalizeRegistry,
   normalizeShow,
+  validateCrawlers,
   validateSpells,
+  validateStatus,
 } from './validate';
 
+
 const SHOW_URL = '/data/show.json';
+/** 011: the authored roster, beside show.json so one deploy carries both. */
+const CRAWLERS_URL = '/data/crawlers.json';
+/** 011: generated at build time into dist/, so it is absent in dev. */
+const STATUS_URL = '/data/status.json';
+/** 011: the prerenderer's payload, parsed once at boot. */
+export const EMBEDDED_ID = '__DCC__';
 
 /** `joinBase('/dcc-watch-hub/', '/data/ep1.json') === '/dcc-watch-hub/data/ep1.json'`. */
 export function joinBase(base: string, url: string): string {
@@ -79,4 +97,69 @@ export async function fetchEpisode(meta: EpisodeMeta): Promise<EpisodeData> {
     );
   }
   return episode;
+}
+
+/* ------------------------------------------------- front door (011) */
+
+/**
+ * The authored crawler roster. Lenient: a file that is not a roster costs the
+ * roster and nothing else, so `/crawlers` renders empty rather than failing.
+ */
+export async function fetchCrawlers(): Promise<CrawlerRoster> {
+  return validateCrawlers(await fetchJson(joinBase(baseUrl(), CRAWLERS_URL)));
+}
+
+/**
+ * The build-time live status, or `null` when there is none. A 404 is the normal
+ * case in `npm run dev` (the file only exists in `dist/`), so it is not an
+ * error: the crawler pages simply show no live line (011 §5).
+ */
+export async function fetchStatus(): Promise<StatusFile | null> {
+  const url = joinBase(baseUrl(), STATUS_URL);
+  let response: Response;
+  try {
+    response = await fetch(url);
+  } catch {
+    return null;
+  }
+  if (!response.ok) return null;
+  try {
+    return validateStatus((await response.json()) as unknown);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The `<script id="__DCC__" type="application/json">` a prerendered page
+ * carries, or `null` on a page that has none (the hub, `npm run dev`, the
+ * 404 shell). Never throws: a malformed blob is the same as no blob.
+ */
+export function readEmbedded(): Embedded | null {
+  if (typeof document === 'undefined') return null;
+  const text = document.getElementById(EMBEDDED_ID)?.textContent;
+  if (text === null || text === undefined || text.trim() === '') return null;
+  let record: Record<string, unknown>;
+  try {
+    // Anything that is not an object with a route is not ours - an array and a
+    // string both fail the route test - so the providers fetch instead. Silently:
+    // the page still works, and this runs before anything can listen.
+    record = JSON.parse(text) as Record<string, unknown>;
+    if (record === null || typeof record.route !== 'string') return null;
+  } catch {
+    return null;
+  }
+  /*
+   * `show`, `crawlers` and `status` are handed on unread. Every consumer runs
+   * them through the same validator a fetched file gets - `normalizeShow` in
+   * `ShowContext`, `validateCrawlers` and `validateStatus` in
+   * `CrawlersContext` - so validating here as well would only put the roster
+   * validators in the viewer's entry chunk, which no hub page ever needs.
+   */
+  return {
+    route: record.route,
+    show: record.show,
+    crawlers: record.crawlers,
+    status: (record.status ?? null) as Embedded['status'],
+  };
 }

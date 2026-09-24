@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes, useMatch } from 'react-router';
 import { ShowProvider, useShow } from './data/ShowContext';
+import type { Embedded } from './data/types';
 import { RegistryProvider } from './data/RegistryContext';
 import { RegistryIndexProvider } from './data/RegistryIndexContext';
 import { findEpisode } from './data/show';
@@ -85,9 +86,18 @@ function AppShell() {
   );
 }
 
-export function App() {
+export interface AppProps {
+  /**
+   * The prerenderer's payload (011). The browser leaves it undefined and the
+   * providers read the page themselves; `entry-server` passes it in, because
+   * there is no page to read on the server.
+   */
+  embedded?: Embedded | null;
+}
+
+export function App({ embedded }: AppProps = {}) {
   return (
-    <ShowProvider>
+    <ShowProvider embedded={embedded}>
       {/* The registry needs the show's `registryUrl`, so it nests inside (007 R1). */}
       <RegistryProvider>
         {/* The index is lazy: nothing is fetched until the page or the panel

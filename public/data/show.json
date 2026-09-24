@@ -1,5 +1,8 @@
 {
   "title": "Dungeon Crawl Cast",
+  "tagline": "Heart and chaos in the World Dungeon.",
+  "pitch": "Five people from a film crew. One apocalypse. A game show that wants them dead and watchable.",
+  "cadence": "New crawls every other week.",
   "seasons": [
     {
       "season": 1,
@@ -29,7 +32,10 @@
       "youtubeId": "aqz-KE-bpKQ",
       "floor": 1,
       "durationSec": 635,
-      "dataUrl": "/data/ep1.json"
+      "dataUrl": "/data/ep1.json",
+      "premiereAt": "2026-08-13T17:00:00Z",
+      "hubLiveAt": "2026-08-15T17:00:00Z",
+      "summary": "The crew wakes up under a demolished world and finds out what the show expects of them."
     },
     {
       "id": 2,
@@ -37,7 +43,10 @@
       "youtubeId": "eRsGyueVLvQ",
       "floor": 1,
       "durationSec": 888,
-      "dataUrl": "/data/ep2.json"
+      "dataUrl": "/data/ep2.json",
+      "premiereAt": "2026-08-27T17:00:00Z",
+      "hubLiveAt": "2026-08-29T17:00:00Z",
+      "summary": "Business on Floor 1 means dealing with the neighbors, and the neighbors here sell meat."
     },
     {
       "id": 3,
@@ -45,7 +54,10 @@
       "youtubeId": "R6MlUcmOul8",
       "floor": 2,
       "durationSec": 734,
-      "dataUrl": "/data/ep3.json"
+      "dataUrl": "/data/ep3.json",
+      "premiereAt": "2026-09-10T17:00:00Z",
+      "hubLiveAt": "2026-09-12T17:00:00Z",
+      "summary": "The stairs down are open, and Floor 2 is colder, stranger and much less patient."
     }
   ],
   "links": {

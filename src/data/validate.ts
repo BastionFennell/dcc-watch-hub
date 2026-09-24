@@ -7,7 +7,13 @@ import type {
   AnyEvent,
   Cell,
   Crawler,
+  CrawlerEntryAchievement,
+  CrawlerLiveStatus,
+  CrawlerPlayer,
+  CrawlerProfile,
+  CrawlerRoster,
   CrawlerStats,
+  CrawlerStatus,
   Entity,
   EntityFact,
   EntityKind,
@@ -28,9 +34,16 @@ import type {
   SpellEntry,
   SpellRegistry,
   SpellUpgrade,
+  StatusFile,
   UnknownEvent,
 } from './types';
-import { ENTITY_KINDS, GEAR_SLOTS, NPC_ACTIONS, SPELL_KINDS } from './types';
+import {
+  CRAWLER_LIVE_STATUSES,
+  ENTITY_KINDS,
+  GEAR_SLOTS,
+  NPC_ACTIONS,
+  SPELL_KINDS,
+} from './types';
 
 export class DataError extends Error {
   constructor(message: string) {
@@ -886,4 +899,185 @@ export function validateSpells(raw: unknown): SpellRegistry {
     spells.push(spell);
   }
   return { spells };
+}
+
+/* ------------------------------------------------- front door (011) */
+
+function toLiveStatus(x: unknown): CrawlerLiveStatus | null {
+  const s = toString_(x);
+  return s !== null && (CRAWLER_LIVE_STATUSES as readonly string[]).includes(s)
+    ? (s as CrawlerLiveStatus)
+    : null;
+}
+
+/** `{ name, ... }`. A player with no name is not a player, so the crawler falls. */
+function toPlayer(x: unknown, crawlerId: string): CrawlerPlayer | null {
+  if (!isRecord(x)) return null;
+  const name = toString_(x.name);
+  if (name === null || name === '') return null;
+
+  const pronouns = toString_(x.pronouns);
+  const bio = toString_(x.bio);
+  const bust = toString_(x.bust);
+
+  let links: Record<string, string> | undefined;
+  if (isRecord(x.links)) {
+    const pairs: Record<string, string> = {};
+    for (const [key, value] of Object.entries(x.links)) {
+      const href = toString_(value);
+      if (href === null || href === '') {
+        console.warn(`Crawler "${crawlerId}": dropping malformed player link "${key}".`);
+        continue;
+      }
+      pairs[key] = href;
+    }
+    if (Object.keys(pairs).length > 0) links = pairs;
+  } else if (x.links !== undefined) {
+    console.warn(`Crawler "${crawlerId}": dropping malformed player "links".`);
+  }
+
+  return {
+    name,
+    ...(pronouns === null || pronouns === '' ? {} : { pronouns }),
+    ...(bio === null || bio === '' ? {} : { bio }),
+    ...(bust === null || bust === '' ? {} : { bust }),
+    ...(links === undefined ? {} : { links }),
+  };
+}
+
+/** The whole block is dropped when the title or the text is missing. */
+function toEntryAchievement(x: unknown, crawlerId: string): CrawlerEntryAchievement | undefined {
+  if (x === undefined) return undefined;
+  if (!isRecord(x)) {
+    console.warn(`Crawler "${crawlerId}": dropping malformed "entryAchievement".`);
+    return undefined;
+  }
+  const title = toString_(x.title);
+  const text = toString_(x.text);
+  if (title === null || title === '' || text === null || text === '') {
+    console.warn(`Crawler "${crawlerId}": dropping an "entryAchievement" with no title or text.`);
+    return undefined;
+  }
+  const box = toString_(x.box);
+  const item = toString_(x.item);
+  return {
+    title,
+    text,
+    ...(box === null || box === '' ? {} : { box }),
+    ...(item === null || item === '' ? {} : { item }),
+  };
+}
+
+/** One profile, or `null` when it is missing something no page can invent. */
+function toCrawlerProfile(raw: unknown): CrawlerProfile | null {
+  if (!isRecord(raw)) return null;
+  const id = toString_(raw.id);
+  if (id === null || id === '') return null;
+
+  const name = toString_(raw.name);
+  const characterName = toString_(raw.characterName);
+  const handle = toString_(raw.handle);
+  const concept = toString_(raw.concept);
+  const status = toLiveStatus(raw.status);
+  const player = toPlayer(raw.player, id);
+  const bust = isRecord(raw.art) ? toString_(raw.art.bust) : null;
+
+  if (name === null || name === '') return null;
+  if (characterName === null || characterName === '') return null;
+  if (handle === null || handle === '') return null;
+  if (concept === null || concept === '') return null;
+  if (status === null || player === null) return null;
+  if (bust === null || bust === '') return null;
+
+  const full = isRecord(raw.art) ? toString_(raw.art.full) : null;
+  const og = toString_(raw.og);
+  const entryAchievement = toEntryAchievement(raw.entryAchievement, id);
+
+  return {
+    id,
+    name,
+    characterName,
+    handle,
+    player,
+    concept,
+    pockets: toNonEmptyStringList(raw.pockets),
+    ...(entryAchievement === undefined ? {} : { entryAchievement }),
+    art: { bust, ...(full === null || full === '' ? {} : { full }) },
+    ...(og === null || og === '' ? {} : { og }),
+    status,
+  };
+}
+
+/**
+ * `crawlers.json` (011). Lenient like every other loader here: a malformed
+ * profile costs that crawler and nothing else, and an unusable file costs the
+ * roster rather than the page. This function never throws.
+ */
+export function validateCrawlers(raw: unknown): CrawlerRoster {
+  if (!isRecord(raw) || !Array.isArray(raw.crawlers)) {
+    console.warn('Crawlers: the roster file does not match the schema; using an empty roster.');
+    return { crawlers: [] };
+  }
+  const crawlers: CrawlerProfile[] = [];
+  const seen = new Set<string>();
+  for (const item of raw.crawlers as unknown[]) {
+    const profile = toCrawlerProfile(item);
+    if (profile === null) {
+      console.warn('Crawlers: dropping a malformed crawler.');
+      continue;
+    }
+    if (seen.has(profile.id)) {
+      console.warn(`Crawlers: dropping duplicate crawler "${profile.id}".`);
+      continue;
+    }
+    seen.add(profile.id);
+    crawlers.push(profile);
+  }
+  const todo = toNonEmptyStringList(raw.todo);
+  return { crawlers, ...(todo.length === 0 ? {} : { todo }) };
+}
+
+function toHp(x: unknown): Hp | null {
+  if (!isRecord(x)) return null;
+  const current = toNumber(x.current);
+  const max = toNumber(x.max);
+  return current === null || max === null ? null : { current, max };
+}
+
+function toCrawlerStatus(x: unknown): CrawlerStatus | null {
+  if (!isRecord(x)) return null;
+  const level = toNumber(x.level);
+  const floor = toNumber(x.floor);
+  const lastEpisodeId = toNumber(x.lastEpisodeId);
+  const hp = toHp(x.hp);
+  if (level === null || floor === null || lastEpisodeId === null || hp === null) return null;
+  return { level, hp, floor, lastEpisodeId };
+}
+
+/**
+ * The generated `status.json` (011). `null` for a file that is not one - the
+ * live line simply does not render, which is the same as no file at all.
+ * This function never throws.
+ */
+export function validateStatus(raw: unknown): StatusFile | null {
+  if (!isRecord(raw) || !isRecord(raw.crawlers)) {
+    console.warn('Status: the status file does not match the schema; ignoring it.');
+    return null;
+  }
+  const crawlers: Record<string, CrawlerStatus> = {};
+  for (const [id, value] of Object.entries(raw.crawlers)) {
+    const status = toCrawlerStatus(value);
+    if (status === null) {
+      console.warn(`Status: dropping a malformed entry for "${id}".`);
+      continue;
+    }
+    crawlers[id] = status;
+  }
+  const episodeId = toNumber(raw.episodeId);
+  const generatedAt = toString_(raw.generatedAt);
+  return {
+    generatedAt: generatedAt ?? '',
+    episodeId,
+    crawlers,
+  };
 }

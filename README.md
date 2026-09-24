@@ -57,8 +57,8 @@ npm run dev -- --open  # opens the archive
 ```sh
 npm run typecheck      # tsc --noEmit
 npm run lint           # eslint .
-npm test               # vitest run  (862 tests)
-npm run build          # vite build + copies dist/index.html → dist/404.html
+npm test               # vitest run  (1440 tests)
+npm run build          # client build + SSR build + scripts/postbuild.mjs (see "Build pipeline")
 npm run preview        # serves dist/ at http://localhost:4173/
 ```
 
@@ -953,6 +953,15 @@ The episodes those crawlers appear in (events, ticker copy, NPCs, map) are still
 | `episodes[2].title` | `"Episode 3 - Descent"` | the real episode title |
 | `links.discord` | `"https://discord.gg/REPLACE_ME"` | the real invite |
 | `links.youtube` | `"https://www.youtube.com/@DungeonCrawlCast"` | confirm this is the real channel URL |
+| `links.tiktok` / `links.bluesky` / `links.instagram` | **absent** - the schema asks for a real URI, so there is no placeholder to leave in | add each one as a full URL when the account exists |
+| `trailerYoutubeId` | **absent** - the home page falls back to the newest episode's embed | the trailer's video id, once a trailer is cut |
+| `episodes[*].premiereAt` / `hubLiveAt` | sample dates in August and September 2026, two days apart | the real premiere, and the premiere + 48 h hub unlock |
+| `episodes[*].summary` | one invented spoiler-safe line each | the real one-sentence summary |
+
+**`public/data/crawlers.json`** ships its own fill-in list in a top-level `"todo"` array: archetype
+names for Harry, X.O. and Veil, the handles, `concept`, `pockets`, `entryAchievement`, the player
+bios / pronouns / links, and full-figure art for the three crawlers who have none. Nothing in that
+file renders the word "TODO": every placeholder reads as prose ("Concept coming soon.").
 
 The three sample videos are the Blender Foundation's open movies: public, embeddable, and each a
 different video so switching episodes is visibly a fresh broadcast. Each `durationSec` is that
@@ -1016,6 +1025,53 @@ for it. Keep a case like it if you replace the samples.
 **Also placeholder**: `public/img/dcc-mark.svg` and `public/favicon.svg` (the circular "DC" mark),
 and the event logs in `public/data/ep1.json`, `ep2.json`, `ep3.json` - 63 / 53 / 53 invented
 events, written to exercise every event type. Regenerate them from real sheets with `sheet-to-json`.
+
+---
+
+## Build pipeline
+
+`npm run build` is three commands (see `package.json`):
+
+1. **`vite build`** - the client bundle into `dist/`.
+2. **`vite build --ssr src/entry-server.tsx --outDir dist/server`** - the same app, built for
+   Node, used only at build time.
+3. **`node scripts/postbuild.mjs`** - the orchestrator, in this order:
+   1. copies `dist/index.html` to `dist/404.html` **first**, while it is still the empty shell, so
+      a hub deep link (`/ep/3`, `/codex`) served by a static host boots into an empty app rather
+      than into some other page's markup;
+   2. `scripts/build-status.ts` (via `tsx`) - runs the hub reducer to the end of the newest
+      episode whose `hubLiveAt` is past, and writes `dist/data/status.json`;
+   3. `scripts/prerender.mjs` - renders `/`, `/watch`, `/crawlers`, `/community` and
+      `/crawlers/{id}` with the SSR bundle, and writes `dist/<route>/index.html` with the route's
+      head tags in `<head>` and the data it was rendered from in a
+      `<script id="__DCC__" type="application/json">`, so the browser hydrates without a fetch;
+   4. `scripts/og.mjs` - screenshots the `/_og/**` routes to `dist/og/*.png` (see below);
+   5. `scripts/sitemap.mjs` - `sitemap.xml` and `robots.txt` from the prerenderer's own route list;
+   6. deletes `dist/server`: it is a build tool, not a page.
+
+Individual steps can be run by hand: `npm run build:status`, `node scripts/prerender.mjs`,
+`node scripts/og.mjs`, `node scripts/sitemap.mjs` (each expects `dist/` to exist).
+
+### Environment variables
+
+| Variable | Default | What it does |
+|---|---|---|
+| `VITE_BASE` | `/` | deploy sub-path; the Pages workflow sets `/dcc-watch-hub/` |
+| `VITE_SITE_URL` | `https://dungeoncrawlcast.com` | canonical origin for `<link rel=canonical>`, `og:url` and the sitemap |
+| `VITE_PLAUSIBLE_DOMAIN` | unset | analytics site domain. **Unset means no analytics at all**: no script, no globals, no requests |
+| `CHROME_PATH` | unset | where to find a Chrome for the OG renderer |
+
+### OG images, and what happens without Chrome
+
+`scripts/og.mjs` uses `puppeteer-core`, which deliberately **never downloads a browser**. It looks
+for one at `CHROME_PATH`, then
+`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`, then `/usr/bin/google-chrome`,
+then `/usr/bin/chromium-browser`. It starts `vite preview` on a free port, loads
+`/_og/crawler/{id}` and `/_og/episode/{id}`, and screenshots each at 1200x630 (device scale 1).
+
+If no Chrome is found it prints a warning and exits 0 - the build still succeeds, just without
+`dist/og/`. It also skips, with a warning, any route that does not render an element marked
+`data-og-frame`, which is what the OG pages are identified by.
 
 ---
 

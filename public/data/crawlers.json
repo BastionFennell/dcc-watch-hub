@@ -1,0 +1,124 @@
+{
+  "todo": [
+    "Archetype names for harry, xo and veil (they currently repeat the character name; only \"The Stuntman\" (ronald) and \"The Actress\" (mimi) are known).",
+    "Confirm the handles: they are all \"Dungeon Crawler {first name}\" placeholders today.",
+    "concept: one or two lines per crawler from the character docs (only ronald's is real).",
+    "pockets: what was in their pockets when the world ended, one line per item, from the character docs.",
+    "entryAchievement: the System text verbatim, plus the box and the item it paid out (only ronald's title/box/item are real).",
+    "player.pronouns, player.bio (two sentences) and player.links for all five.",
+    "player.bust: a photo of the real person, if they want one on the page.",
+    "art.full: full-figure art for harry, xo and veil (mimi and ronald have theirs).",
+    "show.json: trailerYoutubeId, the real premiereAt / hubLiveAt dates, and links.tiktok / links.bluesky / links.instagram."
+  ],
+  "crawlers": [
+    {
+      "id": "harry",
+      "name": "Harold \"Harry\" Wallace",
+      "characterName": "Harold \"Harry\" Wallace",
+      "handle": "Dungeon Crawler Harry",
+      "player": {
+        "name": "Bobby"
+      },
+      "concept": "Concept coming soon.",
+      "pockets": [
+        "Pocket contents coming soon."
+      ],
+      "entryAchievement": {
+        "title": "Entry achievement coming soon.",
+        "text": "The System has not released this record yet."
+      },
+      "art": {
+        "bust": "/img/crawlers/harry.svg"
+      },
+      "status": "alive"
+    },
+    {
+      "id": "mimi",
+      "name": "The Actress",
+      "characterName": "Mimi Rivers",
+      "handle": "Dungeon Crawler Mimi",
+      "player": {
+        "name": "Lulu"
+      },
+      "concept": "Concept coming soon.",
+      "pockets": [
+        "Pocket contents coming soon."
+      ],
+      "entryAchievement": {
+        "title": "Entry achievement coming soon.",
+        "text": "The System has not released this record yet."
+      },
+      "art": {
+        "bust": "/img/crawlers/mimi.png",
+        "full": "/img/crawlers/mimi-art.png"
+      },
+      "status": "alive"
+    },
+    {
+      "id": "ronald",
+      "name": "The Stuntman",
+      "characterName": "Ronald Hudson",
+      "handle": "Dungeon Crawler Ronald",
+      "player": {
+        "name": "Madio"
+      },
+      "concept": "Thrill-seeking stunt performer - bombastic, flashy, does everything the showy way.",
+      "pockets": [
+        "Pocket contents coming soon."
+      ],
+      "entryAchievement": {
+        "title": "Method Acting",
+        "text": "The System text has not been transcribed yet.",
+        "box": "Golden Monster Box",
+        "item": "Liquid Latex"
+      },
+      "art": {
+        "bust": "/img/crawlers/ronald.png",
+        "full": "/img/crawlers/ronald-art.png"
+      },
+      "status": "alive"
+    },
+    {
+      "id": "xo",
+      "name": "Xavier \"X.O.\" Ortiz",
+      "characterName": "Xavier \"X.O.\" Ortiz",
+      "handle": "Dungeon Crawler X.O.",
+      "player": {
+        "name": "Danny"
+      },
+      "concept": "Concept coming soon.",
+      "pockets": [
+        "Pocket contents coming soon."
+      ],
+      "entryAchievement": {
+        "title": "Entry achievement coming soon.",
+        "text": "The System has not released this record yet."
+      },
+      "art": {
+        "bust": "/img/crawlers/xo.svg"
+      },
+      "status": "alive"
+    },
+    {
+      "id": "veil",
+      "name": "Veil Ravencrest",
+      "characterName": "Veil Ravencrest",
+      "handle": "Dungeon Crawler Veil",
+      "player": {
+        "name": "Sarah"
+      },
+      "concept": "Concept coming soon.",
+      "pockets": [
+        "Pocket contents coming soon."
+      ],
+      "entryAchievement": {
+        "title": "Entry achievement coming soon.",
+        "text": "The System has not released this record yet."
+      },
+      "art": {
+        "bust": "/img/crawlers/veil.svg"
+      },
+      "status": "alive"
+    }
+  ]
+}
