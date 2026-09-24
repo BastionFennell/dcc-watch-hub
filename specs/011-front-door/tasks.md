@@ -15,18 +15,18 @@
 - [x] T1112 Gates + README "Build pipeline" note
 
 ## Wave B - components + pages
-- [ ] T1113 `src/site/copy.ts`
-- [ ] T1114 `RosterCard` (card/hero/og variants, one layout module) (+tests)
-- [ ] T1115 `GatedCta`, `StatusLine`, `SystemBox`, `SocialRow`, `SiteFooter`, `TrailerEmbed` (+tests)
-- [ ] T1116 `EpisodeRow` with countdown chip (+tests)
-- [ ] T1117 `HomePage` (+tests: CTA gate both sides, latest card hidden without trailer)
-- [ ] T1118 `WatchPage` (floors, newest first, empty floor copy) (+tests)
-- [ ] T1119 `CrawlersPage` (chips only with >1 status) (+tests)
-- [ ] T1120 `CrawlerPage` (hero, concept, pockets, entry achievement SystemBox, player, appears-in, prev/next) (+tests)
-- [ ] T1121 `CommunityPage` (+tests)
-- [ ] T1122 `OgCrawlerPage`, `OgEpisodePage` at `/_og/**` (fixed 1200x630 frame)
-- [ ] T1123 `SiteHeader` nav (Watch / Crawlers / Community; hub extras only on hub pages) (+tests updated)
-- [ ] T1124 Mobile CSS pass at 375 px; reduced motion; lazy art
+- [x] T1113 `src/site/copy.ts`
+- [x] T1114 `RosterCard` (card/hero/og variants, one layout module) (+tests)
+- [x] T1115 `GatedCta`, `StatusLine`, `SystemBox`, `SocialRow`, `SiteFooter`, `TrailerEmbed` (+tests)
+- [x] T1116 `EpisodeRow` with countdown chip (+tests)
+- [x] T1117 `HomePage` (+tests: CTA gate both sides, latest card hidden without trailer)
+- [x] T1118 `WatchPage` (floors, newest first, empty floor copy) (+tests)
+- [x] T1119 `CrawlersPage` (chips only with >1 status) (+tests)
+- [x] T1120 `CrawlerPage` (hero, concept, pockets, entry achievement SystemBox, player, appears-in, prev/next) (+tests)
+- [x] T1121 `CommunityPage` (+tests)
+- [x] T1122 `OgCrawlerPage`, `OgEpisodePage` at `/_og/**` (fixed 1200x630 frame)
+- [x] T1123 `SiteHeader` nav (Watch / Crawlers / Community; hub extras only on hub pages) (+tests updated)
+- [x] T1124 Mobile CSS pass at 375 px; reduced motion; lazy art
 
 ## Wave C - integration, OG, gates
 - [ ] T1125 Routes in `App.tsx` (lazy marketing pages; `/` -> HomePage; `/watch` = old hub list reworked; old `HubPage` removed or redirected)

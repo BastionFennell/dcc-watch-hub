@@ -7,8 +7,9 @@ import { CHROME_CANDIDATES, findChrome, shotList } from './og.mjs';
 import { makeCrawlers, makeShow } from '../src/test/fixtures';
 
 describe('shotList', () => {
-  it('is one shot per crawler, then one per episode', () => {
+  it('is the site card, then one shot per crawler, then one per episode', () => {
     expect(shotList(makeShow(), makeCrawlers())).toEqual([
+      { route: '/_og/site', file: 'site.png' },
       { route: '/_og/crawler/stuntman', file: 'crawler-stuntman.png' },
       { route: '/_og/crawler/harry', file: 'crawler-harry.png' },
       { route: '/_og/episode/1', file: 'ep1.png' },
@@ -17,10 +18,11 @@ describe('shotList', () => {
     ]);
   });
 
-  it('survives missing data', () => {
-    expect(shotList(null, null)).toEqual([]);
+  it('survives missing data, keeping only the data-free site card', () => {
+    const site = [{ route: '/_og/site', file: 'site.png' }];
+    expect(shotList(null, null)).toEqual(site);
     expect(shotList({ episodes: [{ title: 'no id' }] }, { crawlers: [{ name: 'no id' }] })).toEqual(
-      [],
+      site,
     );
   });
 });

@@ -125,8 +125,13 @@ describe('broadcast archive', () => {
     ).not.toHaveAttribute('aria-current');
   });
 
-  it('links to the show channels from the header', async () => {
-    renderAt('/');
+  /*
+   * 011 (T1123): the show channels are hub chrome now - they ride the header on
+   * a hub route and stay off the front door, whose own footer and community
+   * page carry the links instead.
+   */
+  it('links to the show channels from the header on a hub route', async () => {
+    renderAt('/ep/1?fake=1');
     const banner = screen.getByRole('banner');
     const youtube = await within(banner).findAllByRole('link', { name: copy.youtube });
     expect(youtube[0]).toHaveAttribute('href', makeShow().links.youtube);
@@ -144,7 +149,7 @@ describe('broadcast archive', () => {
    * the assertion is about every copy of it.
    */
   it('links to the System Registry when the show publishes one', async () => {
-    renderAt('/');
+    renderAt('/ep/1?fake=1');
     const banner = screen.getByRole('banner');
     const links = await within(banner).findAllByRole('link', { name: copy.registry });
     expect(links.length).toBeGreaterThan(0);
@@ -153,7 +158,7 @@ describe('broadcast archive', () => {
 
   it('omits the Registry link for a show that publishes no registry', async () => {
     stubFetch({ withoutRegistry: true });
-    renderAt('/');
+    renderAt('/ep/1?fake=1');
     const banner = screen.getByRole('banner');
     // The header has landed once the show links are there.
     await waitFor(() =>

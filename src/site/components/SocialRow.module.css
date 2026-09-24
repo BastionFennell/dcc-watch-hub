@@ -1,0 +1,28 @@
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 44 px both ways, so the row is thumb-sized on the phone it was designed for. */
+.link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 var(--space-6);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-pill);
+  color: var(--brand-fg);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+.link:hover {
+  border-color: var(--brand-2);
+  color: var(--brand-fg-2);
+}

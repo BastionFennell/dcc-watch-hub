@@ -1,0 +1,101 @@
+/*
+ * The shell every marketing page shares (011 §6). One column at 375 px with a
+ * 16 px gutter, widening to a centred 1040 px measure from 900 px. Imported by
+ * all five pages so the front door has one rhythm rather than five.
+ */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-9);
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-7);
+  /* Nothing on a marketing page may scroll the viewport sideways (011 §6). */
+  min-width: 0;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+  min-width: 0;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--system-pill-fg);
+}
+
+.pageTitle {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.sectionTitle {
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.lead {
+  color: var(--text-2);
+  font-size: var(--text-md);
+  line-height: 1.55;
+  max-width: 62ch;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+/* The roster: two across on a phone, five across on a desktop (011 §3.1). */
+.roster {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.roster > li {
+  display: flex;
+  min-width: 0;
+}
+
+.roster > li > * {
+  width: 100%;
+}
+
+@media (min-width: 900px) {
+  .page {
+    gap: var(--space-9);
+    padding: var(--space-9) var(--space-8);
+  }
+
+  .pageTitle {
+    font-size: 40px;
+  }
+
+  .sectionTitle {
+    font-size: var(--text-xl);
+  }
+
+  .roster {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--space-6);
+  }
+}

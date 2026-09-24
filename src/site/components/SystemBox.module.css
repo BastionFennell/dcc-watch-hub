@@ -1,0 +1,49 @@
+/* The announce style, and the only one on the front door (011 §6). */
+.box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-7);
+  background: var(--system-bg);
+  color: var(--system-fg);
+  border: 1px solid var(--system-pill-border);
+  border-radius: var(--radius-lg);
+}
+
+.kicker {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.body {
+  font-size: var(--text-md);
+  line-height: 1.55;
+}
+
+.body a {
+  color: var(--text);
+  text-decoration: underline;
+  /* A link inside the box is a tap target like any other (011 §6). */
+  display: inline-block;
+  min-height: 44px;
+  line-height: 44px;
+}
+
+.footer {
+  margin-top: var(--space-2);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--system-pill-border);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text);
+}

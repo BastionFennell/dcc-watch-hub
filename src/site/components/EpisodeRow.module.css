@@ -1,0 +1,95 @@
+/*
+ * 375 px: the still sits above the text, full width, and the button is the
+ * whole row's width so it is unmissable with a thumb. From 900 px the still
+ * moves to the left and the row reads as a row (011 §6).
+ */
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+  padding: var(--space-6);
+  background: var(--panel);
+  border: var(--border-hairline);
+  border-radius: var(--radius-lg);
+}
+
+.thumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  background: var(--panel-deep);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.dot {
+  margin: 0 0.5em;
+  color: var(--text-4);
+}
+
+.duration {
+  font-variant-numeric: tabular-nums;
+}
+
+.title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.summary {
+  color: var(--text-2);
+  font-size: var(--text-md);
+  line-height: 1.5;
+  max-width: 62ch;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-5);
+  margin-top: var(--space-2);
+}
+
+/* The wait, stated once, in the System's blue but not in a System box: a chip
+   is a label, and the box is reserved for announcements (011 §6). */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--space-5);
+  min-height: 28px;
+  border: 1px solid var(--system-pill-border);
+  border-radius: var(--radius-pill);
+  color: var(--system-pill-fg);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+@media (min-width: 900px) {
+  .row {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-7);
+    padding: var(--space-7);
+  }
+}

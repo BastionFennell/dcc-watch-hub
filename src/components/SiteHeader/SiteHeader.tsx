@@ -1,4 +1,4 @@
-import { Link } from 'react-router';
+import { Link, NavLink, useLocation } from 'react-router';
 import type { EpisodeMeta, Show } from '../../data/types';
 import { prevNext, seasonOf } from '../../data/show';
 import { useScrolled } from '../../hooks/useScrolled';
@@ -6,6 +6,8 @@ import { useEpisodePath } from '../../hooks/useEpisodePath';
 import { IconBroadcast, IconChevronLeft, IconChevronRight } from '../icons';
 import { EpisodesMenu } from './EpisodesMenu';
 import { copy } from '../../copy';
+import { siteCopy } from '../../site/copy';
+import { isHubRoute } from './hubRoutes';
 import styles from './SiteHeader.module.css';
 
 export interface SiteHeaderProps {
@@ -31,10 +33,17 @@ function ShowLinks({ show, className }: { show: Show; className: string }) {
 /**
  * The persistent broadcast chrome (FR-050..FR-052): slim, dark, sticky, and
  * shrinking once the page scrolls so the stage stays dominant.
+ *
+ * One header across the hub and the front door (011, constitution VIII). The
+ * site nav - Watch / Crawlers / Community - is on every route; the hub's own
+ * controls (the episode-context slot, the Codex link, the show channels) appear
+ * only on a hub route, where a viewer is actually inside the broadcast.
  */
 export function SiteHeader({ show, current }: SiteHeaderProps) {
   const episodePath = useEpisodePath();
   const scrolled = useScrolled();
+  const { pathname } = useLocation();
+  const hubRoute = isHubRoute(pathname);
   const { prev, next } = show && current ? prevNext(show, current.id) : {};
   const season = show && current ? seasonOf(show, current.id) : 1;
 
@@ -56,7 +65,7 @@ export function SiteHeader({ show, current }: SiteHeaderProps) {
       </Link>
 
       <div className={styles.center}>
-        {current ? (
+        {hubRoute && current ? (
           <>
             {prev ? (
               <Link to={episodePath(prev.id)} className={styles.arrow} aria-label={copy.prevEpisode}>
@@ -75,9 +84,22 @@ export function SiteHeader({ show, current }: SiteHeaderProps) {
         ) : null}
       </div>
 
-      <nav className={styles.right} aria-label={copy.episodes}>
-        {show ? (
-          <>
+      <div className={styles.right}>
+        {/* The front door's nav, on every route including the hub's (011 §1). */}
+        <nav className={styles.site} aria-label={siteCopy.siteNavLabel}>
+          <NavLink to="/watch" className={styles.siteLink}>
+            {siteCopy.navWatch}
+          </NavLink>
+          <NavLink to="/crawlers" className={styles.siteLink}>
+            {siteCopy.navCrawlers}
+          </NavLink>
+          <NavLink to="/community" className={styles.siteLink}>
+            {siteCopy.navCommunity}
+          </NavLink>
+        </nav>
+
+        {hubRoute && show ? (
+          <nav className={styles.hub} aria-label={copy.episodes}>
             <EpisodesMenu show={show} currentId={current?.id}>
               {/*
                 The glossary rides in the phone menu beside the show links, for
@@ -97,9 +119,9 @@ export function SiteHeader({ show, current }: SiteHeaderProps) {
               </Link>
             ) : null}
             <ShowLinks show={show} className={styles.links} />
-          </>
+          </nav>
         ) : null}
-      </nav>
+      </div>
     </header>
   );
 }

@@ -1,0 +1,46 @@
+/*
+ * One button shape for the whole front door. 44 px minimum in both directions
+ * (011 §6), and a filled variant that only ever appears once per surface.
+ */
+.cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 var(--space-7);
+  border-radius: var(--radius-md);
+  font-size: var(--text-md);
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.cta[data-variant='primary'] {
+  background: var(--brand-2);
+  border: 1px solid var(--brand-2);
+  color: var(--brand-fg-2);
+}
+
+.cta[data-variant='primary']:hover {
+  background: var(--brand);
+  color: var(--brand-fg-2);
+}
+
+.cta[data-variant='secondary'] {
+  background: transparent;
+  border: var(--border-hairline-2);
+  color: var(--brand-fg);
+}
+
+.cta[data-variant='secondary']:hover {
+  border-color: var(--brand-2);
+  color: var(--brand-fg-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta {
+    transition: none;
+  }
+}

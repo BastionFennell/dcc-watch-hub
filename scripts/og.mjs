@@ -95,7 +95,11 @@ async function startPreview(port, base) {
 
 /** Every image this build wants: the route to shoot and the file to write. */
 export function shotList(show, crawlers) {
-  const shots = [];
+  /*
+   * The site card first: it is the fallback `og:image` for every route that
+   * has none of its own, so it is the one shot that does not depend on data.
+   */
+  const shots = [{ route: '/_og/site', file: 'site.png' }];
   for (const crawler of crawlers?.crawlers ?? []) {
     if (typeof crawler?.id !== 'string' || crawler.id === '') continue;
     shots.push({ route: `/_og/crawler/${crawler.id}`, file: `crawler-${crawler.id}.png` });

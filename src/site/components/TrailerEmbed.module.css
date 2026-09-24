@@ -1,0 +1,59 @@
+/* A 16:9 box that never reflows when the poster is swapped for the player. */
+.frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--panel-deep);
+  border: var(--border-hairline-2);
+}
+
+.iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.poster {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  cursor: pointer;
+}
+
+.posterImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Comfortably past the 44 px floor: it is the one control on the hero. */
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-2);
+  color: var(--brand-fg-2);
+  transition: background-color 160ms ease;
+}
+
+.poster:hover .play {
+  background: var(--brand);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .play {
+    transition: none;
+  }
+}
