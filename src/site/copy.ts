@@ -85,13 +85,12 @@ export const siteCopy = {
 
   // --- /crawlers/:id
   /*
-   * Section labels, set in mono caps (011 R2). Short on purpose: they are
-   * signposts between blocks of the crawler's own words, not headlines, and a
+   * The page's one section label, set in mono caps (011 R2). Short on purpose:
+   * a signpost over a block of the crawler's own words, not a headline, and a
    * section whose data is empty prints neither the label nor a placeholder.
+   * The entry achievement has none - its own kicker is the heading.
    */
   pocketsTitle: 'Pockets',
-  entryAchievementTitle: 'Entry achievement',
-  appearsInTitle: 'Appears in',
   /** The achievement's payout line. Rendered with whichever halves exist. */
   reward: (box: string, item: string) => `Reward: ${box} → ${item}`,
   rewardBox: (box: string) => `Reward: ${box}`,

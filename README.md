@@ -135,7 +135,7 @@ five static, prerendered routes whose job is to convert a stranger in ten second
 | `/` | Hero (tagline, pitch, the gated CTA pair, a click-to-play trailer), the five roster cards, a "New to Dungeon Crawler Carl?" System box, the Discord strip with the cadence, the footer |
 | `/watch` | Every episode grouped by floor, deepest floor first and newest episode first inside it, each row with its still, runtime, spoiler-safe summary and gated CTA. **This is the old `/` archive.** |
 | `/crawlers` | The roster grid (2 columns at 375 px, 5 across on a laptop). Status filter chips appear only when more than one status exists |
-| `/crawlers/:id` | One crawler (redesigned in 011 revision 2): a portrait / text hero with the archetype, the name, the handle, the "Played by" credit and one "Start at Episode 1" CTA, then whichever of concept, pockets, the entry achievement and "Appears in" have anything in them, then the prev/next bar. No floor, no level, no "alive" pill - and no placeholders |
+| `/crawlers/:id` | One crawler (redesigned in 011 revision 2): a portrait / text hero with the archetype, the name, the handle, the "Played by" credit and one "Start at Episode 1" CTA, then whichever of concept, pockets and the entry achievement have anything in them (the achievement carries no section label of its own), then the prev/next bar. No floor, no level, no "alive" pill - and no placeholders |
 | `/community` | The single link every social bio points at: Discord first, the platform row, the cadence, and one paragraph on how to help |
 
 All five are prerendered to real HTML at build time (`dist/watch/index.html`, and so on), so a
@@ -183,8 +183,8 @@ crawler id (`harry`, `mimi`, `ronald`, `xo`, `veil`) so the live status line can
 **`dist/data/status.json`** (generated, never committed) - `{ generatedAt, episodeId, crawlers, appearances }`.
 `scripts/build-status.ts` runs the hub reducer to the end of the newest episode past its
 `hubLiveAt` and emits each crawler's `{ level, hp, floor, lastEpisodeId }`, plus an `appearances`
-map (crawler id to the ids of every published episode whose data names them) so a crawler page
-renders "Appears in" from its own HTML instead of fetching every episode file.
+map (crawler id to the ids of every published episode whose data names them). The crawler page
+no longer renders an "Appears in" list (dropped 2026-09-25); the map stays for other readers.
 
 ### How `hubLiveAt` gates the CTA
 
@@ -1200,8 +1200,8 @@ events, written to exercise every event type. Regenerate them from real sheets w
       than into some other page's markup;
    2. `scripts/build-status.ts` (via `tsx`) - runs the hub reducer to the end of the newest
       episode whose `hubLiveAt` is past, and writes `dist/data/status.json`, together with the
-      `appearances` map (which crawler is named by which published episode) so a crawler page
-      never fetches an episode file to list its own appearances;
+      `appearances` map (which crawler is named by which published episode), which no page
+      renders today but which costs the build nothing to keep;
    3. `scripts/prerender.mjs` - renders `/`, `/watch`, `/crawlers`, `/community` and
       `/crawlers/{id}` with the SSR bundle, and writes `dist/<route>/index.html` with the route's
       head tags in `<head>` and the data it was rendered from in a

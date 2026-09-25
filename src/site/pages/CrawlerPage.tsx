@@ -9,7 +9,8 @@
  * who this is, not how far they have got.
  *
  * The entry achievement is the page's one System-styled element: the only thing
- * here the System itself said.
+ * here the System itself said, and it wears no section label because its own
+ * "Achievement unlocked" kicker is already the heading.
  */
 import { useEffect } from 'react';
 import { Link, useParams } from 'react-router';
@@ -17,8 +18,6 @@ import { useShow } from '../../data/ShowContext';
 import { useCrawlers } from '../../data/CrawlersContext';
 import { NotFoundPage } from '../../pages/NotFoundPage';
 import { useNow } from '../useNow';
-import { useAppearances } from '../useAppearances';
-import { hubLive } from '../gate';
 import { Seo } from '../seo';
 import { siteCopy } from '../copy';
 import { trackCrawlerView, trackCta } from '../analytics';
@@ -45,7 +44,6 @@ export function CrawlerPage() {
   const { show } = useShow();
   const { profiles, status, loading } = useCrawlers();
   const now = useNow(60_000, Date.parse(status?.generatedAt ?? '') || Date.now());
-  const appearances = useAppearances(id);
 
   const index = profiles.findIndex((profile) => profile.id === id);
   const profile = index === -1 ? undefined : profiles[index];
@@ -70,8 +68,6 @@ export function CrawlerPage() {
   const { player } = profile;
   const links = show?.links ?? NO_LINKS;
   const opener = show === null ? undefined : firstEpisode(show.episodes);
-  // "Only for published episodes" (011 R2): the gate decides, as everywhere.
-  const published = appearances.filter((episode) => hubLive(episode, now));
   const detail = [player.pronouns, player.bio].filter((part) => part !== undefined).join(' · ');
 
   return (
@@ -157,36 +153,13 @@ export function CrawlerPage() {
             </section>
           )}
 
-          {achievement === undefined ? null : (
-            <section className={styles.block} aria-labelledby="achievement">
-              <h2 className={styles.label} id="achievement">
-                {siteCopy.entryAchievementTitle}
-              </h2>
-              <EntryAchievement achievement={achievement} />
-            </section>
-          )}
-
           {/*
-           * Precomputed by the build where there is one, derived after mount
-           * where there is not - so the list is empty on the first render of a
-           * page that has to fetch for it, and hydration stays honest.
+           * No section label above it: the box's own "Achievement unlocked"
+           * kicker is the heading, and a mono caps label over a System panel
+           * only said the same thing twice. The text column's gap gives it its
+           * air, whether it follows the pockets, the concept or the credit.
            */}
-          {published.length === 0 ? null : (
-            <section className={styles.block} aria-labelledby="appears">
-              <h2 className={styles.label} id="appears">
-                {siteCopy.appearsInTitle}
-              </h2>
-              <ul className={styles.appearances}>
-                {published.map((episode) => (
-                  <li key={episode.id}>
-                    <Link className={styles.appearance} to={`/ep/${episode.id}`}>
-                      {episode.title}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+          {achievement === undefined ? null : <EntryAchievement achievement={achievement} />}
         </div>
       </article>
 

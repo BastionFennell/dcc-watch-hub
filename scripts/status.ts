@@ -33,9 +33,9 @@ export function publishedEpisodes(show: Show, now: number): EpisodeMeta[] {
 
 /**
  * Who this episode's data names: the party it opened with, plus the actor of
- * every event. The same question `useAppearances` asks on the client - answered
- * here instead, so a crawler page does not fetch every episode to render a list
- * of links (011 §3.4).
+ * every event. It feeds the `appearances` map in `status.json`. No page renders
+ * that map since "Appears in" was dropped (011 R2, 2026-09-25); it stays because
+ * the build answers the question once and cheaply.
  */
 export function crawlerIdsIn(episode: EpisodeData): Set<string> {
   const ids = new Set<string>();

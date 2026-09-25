@@ -109,8 +109,6 @@ describe('CrawlerPage sections', () => {
     renderCrawler('harry');
     // Harry is the empty crawler: no concept, no pockets, no achievement.
     expect(screen.queryByRole('heading', { name: siteCopy.pocketsTitle })).toBeNull();
-    expect(screen.queryByRole('heading', { name: siteCopy.entryAchievementTitle })).toBeNull();
-    expect(screen.queryByRole('heading', { name: siteCopy.appearsInTitle })).toBeNull();
     expect(screen.queryByRole('heading', { name: /concept/i })).toBeNull();
     expect(screen.queryByTestId('entry-achievement')).toBeNull();
     // ...and above all, no placeholder standing in for any of them.
@@ -122,6 +120,9 @@ describe('CrawlerPage sections', () => {
   it('renders the entry achievement as the page\'s one System-styled block', () => {
     renderCrawler();
     const box = screen.getByTestId('entry-achievement');
+    // No section label over it: the kicker inside the box is the heading
+    // (author, 2026-09-25).
+    expect(screen.queryByRole('heading', { name: /entry achievement/i })).toBeNull();
     expect(within(box).getByText(siteCopy.achievementKicker)).toBeInTheDocument();
     expect(within(box).getByText('Method Acting')).toBeInTheDocument();
     expect(within(box).getByText('You committed to the bit.')).toBeInTheDocument();
@@ -141,53 +142,25 @@ describe('CrawlerPage sections', () => {
       }),
     });
     expect(screen.queryByTestId('entry-achievement')).toBeNull();
-    expect(screen.queryByRole('heading', { name: siteCopy.entryAchievementTitle })).toBeNull();
-  });
-});
-
-describe('CrawlerPage appearances', () => {
-  it('fills in the appearances after mount, and not before', async () => {
-    renderCrawler();
-    // Nothing on the first render: that is the render the prerendered HTML is
-    // compared against (011, `useAppearances`).
-    expect(screen.queryByRole('heading', { name: siteCopy.appearsInTitle })).toBeNull();
-
-    await waitFor(() =>
-      expect(screen.getByRole('heading', { name: siteCopy.appearsInTitle })).toBeInTheDocument(),
-    );
-    const section = screen
-      .getByRole('heading', { name: siteCopy.appearsInTitle })
-      .closest('section');
-    expect(within(section as HTMLElement).getAllByRole('link')).toHaveLength(
-      makeShow().episodes.length,
-    );
   });
 
-  it('links the episode titles only - no floor, no still, no summary', () => {
+  /*
+   * "Appears in" was dropped on 2026-09-25 by the author: the crawler page
+   * lists no episodes at all any more, whether or not the build precomputed
+   * them into `status.json` (which it still does, for other readers).
+   */
+  it('lists no episode links, precomputed appearances or not', async () => {
     renderSite(<CrawlerPage />, {
       path: '/crawlers/stuntman',
       routePath: '/crawlers/:id',
       status: { ...makeStatus(), appearances: { stuntman: [1, 3] } },
     });
-    const section = screen
-      .getByRole('heading', { name: siteCopy.appearsInTitle })
-      .closest('section');
-    const links = within(section as HTMLElement).getAllByRole('link');
-    expect(links.map((link) => link.textContent)).toEqual([
-      'Episode 1 - The World Dungeon',
-      'Episode 3 - Descent',
-    ]);
-    expect(links[0]).toHaveAttribute('href', '/ep/1');
-    expect(links[1]).toHaveAttribute('href', '/ep/3');
-  });
-
-  it('shows no appearances section for a crawler the build never saw', () => {
-    renderSite(<CrawlerPage />, {
-      path: '/crawlers/stuntman',
-      routePath: '/crawlers/:id',
-      status: { ...makeStatus(), appearances: { harry: [1] } },
-    });
-    expect(screen.queryByRole('heading', { name: siteCopy.appearsInTitle })).toBeNull();
+    const hero = screen.getByRole('heading', { level: 1 }).closest('article');
+    expect(within(hero as HTMLElement).queryAllByRole('link', { name: /^Episode \d/ })).toEqual([]);
+    expect(screen.queryByRole('heading', { name: /appears in/i })).toBeNull();
+    // ...and nothing arrives after mount either.
+    await waitFor(() => expect(screen.getByTestId('entry-achievement')).toBeInTheDocument());
+    expect(within(hero as HTMLElement).queryAllByRole('link', { name: /^Episode \d/ })).toEqual([]);
   });
 });
 

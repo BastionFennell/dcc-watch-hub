@@ -84,11 +84,15 @@ three content adjustments the author confirmed.
 - **No progression spoilers in the hero**: no floor number, no level line, no "ALIVE" pill. The
   authored status pill shows only when status is not `alive` (dead / fused / unknown). A viewer
   progress-aware pill is parked as a data-model question.
-- **Keep the entry achievement** when present, restyled to look like the System awarding an
-  achievement (the hub's `AchievementToast` look: System-blue hairline frame, mono "ACHIEVEMENT
-  UNLOCKED" kicker, trophy glyph, the title large, the verbatim text, then "Reward: {box} -> {item}"
-  as the payout line). It is the page's only System-styled element.
-- **Keep "Appears in"** as plain episode links (title only, no floor), only for published episodes.
+- **Keep the entry achievement** when present, with no section label over it (dropped 2026-09-25 by
+  the author: the box's own "ACHIEVEMENT UNLOCKED" kicker is the heading), restyled to look like
+  the System awarding an achievement (the hub's `AchievementToast` look: System-blue hairline frame,
+  mono "ACHIEVEMENT UNLOCKED" kicker, trophy glyph, the title large, the verbatim text, then
+  "Reward: {box} -> {item}" as the payout line). It is the page's only System-styled element.
+- ~~**Keep "Appears in"** as plain episode links (title only, no floor), only for published
+  episodes.~~ **Dropped on 2026-09-25 by the author.** The crawler page lists no episodes: the
+  section, its copy key and the `useAppearances` hook are gone. The build-time `appearances` map in
+  `status.json` stays (`scripts/status.ts` still writes it) for other readers.
 - **Player credit moves into the hero**: "Played by {name}" (name bright, weight 600, rest muted),
   under a hairline. No standalone player section; pronouns/bio/links, when present, sit under the
   credit in one muted line.

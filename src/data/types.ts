@@ -159,9 +159,10 @@ export interface StatusFile {
   episodeId: number | null;
   crawlers: Record<string, CrawlerStatus>;
   /**
-   * "Appears in", precomputed: crawler id -> the ids of every published episode
-   * whose data names them, ascending. Undefined for a status file written
-   * before 011 T1125, which is the signal to derive it on the client instead.
+   * Precomputed by the build: crawler id -> the ids of every published episode
+   * whose data names them, ascending. It fed the crawler page's "Appears in"
+   * list until that was dropped (011 R2, 2026-09-25); no page reads it today,
+   * and a status file written before 011 T1125 carries none.
    */
   appearances?: Record<string, number[]>;
 }

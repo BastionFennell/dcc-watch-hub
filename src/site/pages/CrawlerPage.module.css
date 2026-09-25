@@ -191,30 +191,6 @@
   color: var(--ink-body);
 }
 
-/* Titles only, and no floor: where they turn up, not how deep it was. */
-.appearances {
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  border-top: var(--border-hairline);
-}
-
-.appearance {
-  display: flex;
-  align-items: center;
-  min-height: 44px;
-  padding: var(--space-3) 0;
-  border-bottom: var(--border-hairline);
-  font-size: 16px;
-  color: var(--brand-fg);
-}
-
-.appearance:hover {
-  color: var(--brand-fg-2);
-}
-
 /* ---------------------------------------------------------- the next bar */
 
 .prevNext {
