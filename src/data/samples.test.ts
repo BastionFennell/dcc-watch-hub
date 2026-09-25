@@ -122,13 +122,14 @@ describe('public/data/show.json', () => {
    * file: the schema asks for a real URI, so a "TODO:" placeholder would not
    * validate. They are listed in the README instead (011 spec, "Author to fill").
    */
-  it('keeps the two links that exist and omits the ones that do not', () => {
+  it('carries all five real social links (author, 2026-09-25)', () => {
     const show = showRaw as Show;
-    expect(show.links.youtube).toBeTruthy();
-    expect(show.links.discord).toBeTruthy();
-    expect(show.links.tiktok).toBeUndefined();
-    expect(show.links.bluesky).toBeUndefined();
-    expect(show.links.instagram).toBeUndefined();
+    expect(show.links.youtube).toBe('https://www.youtube.com/@DungeonCrawlCast');
+    expect(show.links.discord).toBe('https://discord.gg/9ezX89epYD');
+    expect(show.links.tiktok).toBe('https://www.tiktok.com/@dungeoncrawlcast');
+    expect(show.links.bluesky).toBe('https://bsky.app/profile/dungeoncrawlcast.bsky.social');
+    expect(show.links.instagram).toBe('https://www.instagram.com/dungeoncrawlcast/');
+    for (const url of Object.values(show.links)) expect(url).not.toMatch(/REPLACE_ME|TODO/);
   });
 });
 

@@ -1113,9 +1113,9 @@ The episodes those crawlers appear in (events, ticker copy, NPCs, map) are still
 | `episodes[0].title` | `"Episode 1 - The World Dungeon"` | the real episode title |
 | `episodes[1].title` | `"Episode 2 - The Meat District"` | the real episode title |
 | `episodes[2].title` | `"Episode 3 - Descent"` | the real episode title |
-| `links.discord` | `"https://discord.gg/REPLACE_ME"` | the real invite |
+| `links.discord` | `"https://discord.gg/9ezX89epYD"` | filled (2026-09-25); tiktok, bluesky, instagram too |
 | `links.youtube` | `"https://www.youtube.com/@DungeonCrawlCast"` | confirm this is the real channel URL |
-| `links.tiktok` / `links.bluesky` / `links.instagram` | **absent** - the schema asks for a real URI, so there is no placeholder to leave in | add each one as a full URL when the account exists |
+| `links.tiktok` / `links.bluesky` / `links.instagram` | filled (2026-09-25) | - |
 | `trailerYoutubeId` | **absent** - the home page falls back to the newest episode's embed | the trailer's video id, once a trailer is cut |
 | `episodes[*].premiereAt` / `hubLiveAt` | sample dates in August and September 2026, two days apart | the real premiere, and the premiere + 48 h hub unlock |
 | `episodes[*].summary` | one invented spoiler-safe line each | the real one-sentence summary |
