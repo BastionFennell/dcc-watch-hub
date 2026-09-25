@@ -26,19 +26,14 @@ import { EntryAchievement } from '../components/EntryAchievement';
 import { GatedCta } from '../components/GatedCta';
 import { SiteFooter } from '../components/SiteFooter';
 import { SocialRow } from '../components/SocialRow';
-import type { EpisodeMeta, ShowLinks } from '../../data/types';
+import type { ShowLinks } from '../../data/types';
+import { firstEpisode } from '../gate';
 import page from './page.module.css';
 import styles from './CrawlerPage.module.css';
 
 const NO_LINKS: ShowLinks = { youtube: '', discord: '' };
 
 /** The page's one CTA points at the start of the show, not the newest episode. */
-function firstEpisode(episodes: EpisodeMeta[]): EpisodeMeta | undefined {
-  let first: EpisodeMeta | undefined;
-  for (const episode of episodes) if (first === undefined || episode.id < first.id) first = episode;
-  return first;
-}
-
 export function CrawlerPage() {
   const { id = '' } = useParams();
   const { show } = useShow();
@@ -67,7 +62,7 @@ export function CrawlerPage() {
   const achievement = profile.entryAchievement;
   const { player } = profile;
   const links = show?.links ?? NO_LINKS;
-  const opener = show === null ? undefined : firstEpisode(show.episodes);
+  const opener = show === null ? undefined : (firstEpisode(show) ?? undefined);
   const detail = [player.pronouns, player.bio].filter((part) => part !== undefined).join(' · ');
 
   return (
