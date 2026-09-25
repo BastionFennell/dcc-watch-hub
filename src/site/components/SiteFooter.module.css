@@ -1,0 +1,27 @@
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-9);
+  padding-top: var(--space-7);
+  border-top: var(--border-hairline);
+  color: var(--text-3);
+  font-size: var(--text-sm);
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--brand-fg);
+}
+
+.line {
+  max-width: 60ch;
+}

@@ -1,0 +1,107 @@
+/* What was in their pockets: a list, and it should look like one (011 §3.4). */
+.pockets {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-width: 62ch;
+}
+
+.pocket {
+  position: relative;
+  padding: var(--space-4) var(--space-5) var(--space-4) var(--space-8);
+  background: var(--panel);
+  border: var(--border-hairline);
+  border-radius: var(--radius-md);
+  color: var(--text-2);
+  font-size: var(--text-md);
+}
+
+.pocket::before {
+  content: '·';
+  position: absolute;
+  left: var(--space-5);
+  color: var(--brand-fg);
+}
+
+.player {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+.playerBust {
+  width: 96px;
+  height: 96px;
+  flex: none;
+  object-fit: cover;
+  border-radius: var(--radius-pill);
+  background: var(--brand-deep);
+}
+
+.playerText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.playerName {
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.pronouns {
+  margin-left: var(--space-4);
+  color: var(--text-3);
+  font-size: var(--text-sm);
+  font-weight: 400;
+}
+
+.prevNext {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-5);
+}
+
+.prevNextLink {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  justify-content: center;
+  min-height: 44px;
+  padding: var(--space-5) var(--space-6);
+  background: var(--panel);
+  border: var(--border-hairline);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-size: var(--text-md);
+}
+
+.prevNextLink:hover {
+  border-color: var(--brand-2);
+  color: var(--text);
+}
+
+.next {
+  text-align: right;
+}
+
+.prevNextLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+@media (min-width: 900px) {
+  .player {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--space-8);
+  }
+}

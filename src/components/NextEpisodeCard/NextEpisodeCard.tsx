@@ -33,7 +33,7 @@ export function NextEpisodeCard({ next }: NextEpisodeCardProps) {
         ) : (
           <>
             <p className={styles.title}>{copy.archiveTitle}</p>
-            <Link to="/" className={styles.action}>
+            <Link to="/watch" className={styles.action}>
               {copy.returnToArchive}
             </Link>
           </>

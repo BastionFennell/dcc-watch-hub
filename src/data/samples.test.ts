@@ -2,13 +2,30 @@
  * The shipped sample data is the contract's only executable proof. If an editor
  * (or a later wave) breaks public/data/*.json, this fails before the app does.
  */
-import { readFileSync, existsSync } from 'node:fs';
+import {
+  readFileSync,
+  existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe,
+  expect,
+  it } from 'vitest';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
-import type { EpisodeData, NpcEvent, Registry, Show, SpellRegistry } from './types';
-import { isRegistry, isShow, isSpellRegistry, normalizeEpisode, normalizeRegistry, validateSpells } from './validate';
+import type { CrawlerRoster,
+  EpisodeData,
+  NpcEvent,
+  Registry,
+  Show,
+  SpellRegistry } from './types';
+import {
+  isRegistry,
+  isShow,
+  isSpellRegistry,
+  normalizeEpisode,
+  normalizeRegistry,
+  validateSpells,
+} from './validate';
+import { validateCrawlers } from './roster';
 import { resolveSpell, spellIndex } from '../engine/spells';
 import { fromInitialState } from '../engine/state';
 import { orderedEpisodeIds } from './show';
@@ -24,7 +41,11 @@ const contracts = resolve(root, 'specs/007-npc-registry/contracts');
 // 009 extends the episode contract once more (the crawler's `mana` box and the
 // `mana` event); the show and spell schemas are untouched and stay with 008.
 const episodeSchemaPath = resolve(root, 'specs/009-mana/contracts/episode.schema.json');
-const showSchemaPath = resolve(root, 'specs/008-real-crawlers/contracts/show.schema.json');
+// 011 extends the show contract again (tagline / pitch / cadence / trailer, the
+// optional social links, and per episode premiereAt / hubLiveAt / summary /
+// ogImage) and adds the crawler roster's own schema.
+const showSchemaPath = resolve(root, 'specs/011-front-door/contracts/show.schema.json');
+const crawlersSchemaPath = resolve(root, 'specs/011-front-door/contracts/crawlers.schema.json');
 const spellsSchemaPath = resolve(root, 'specs/008-real-crawlers/contracts/spells.schema.json');
 const dataDir = resolve(root, 'public/data');
 
@@ -39,6 +60,7 @@ const validateShow = ajv.compile(readJson(showSchemaPath) as object);
 const validateEpisode = ajv.compile(readJson(episodeSchemaPath) as object);
 const validateRegistry = ajv.compile(readJson(resolve(contracts, 'npcs.schema.json')) as object);
 const validateSpellSchema = ajv.compile(readJson(spellsSchemaPath) as object);
+const validateCrawlerSchema = ajv.compile(readJson(crawlersSchemaPath) as object);
 
 const showRaw = readJson(resolve(dataDir, 'show.json'));
 
@@ -56,6 +78,57 @@ describe('public/data/show.json', () => {
   it('lists every episode under a floor', () => {
     const show = showRaw as Show;
     expect(orderedEpisodeIds(show)).toEqual(show.episodes.map((e) => e.id));
+  });
+
+  /* ------------------------------------------- 011: the front door */
+
+  it('carries the marketing copy the home page renders', () => {
+    const show = showRaw as Show;
+    expect(show.tagline).toBe('Earth got cancelled. They got renewed.');
+    expect(show.pitch).toBeTruthy();
+    expect(show.cadence).toBeTruthy();
+    // No trailer has been cut yet, so `trailerYoutubeId` is deliberately absent
+    // and the home page's hero falls back to the newest episode (011 §3.1).
+    expect(show.trailerYoutubeId).toBeUndefined();
+  });
+
+  /*
+   * Every sample episode is published AND past its hub gate, so the shipped data
+   * shows the "Open the System feed" side of the CTA. To exercise the other side
+   * by hand, push one episode's `hubLiveAt` into the future: the gate is a pure
+   * comparison against `Date.now()` and nothing else has to change.
+   */
+  it('dates every episode: premiered, then unlocked about two days later', () => {
+    const show = showRaw as Show;
+    const now = Date.now();
+    for (const episode of show.episodes) {
+      expect(episode.premiereAt, `ep${episode.id} premiereAt`).toBeTruthy();
+      expect(episode.hubLiveAt, `ep${episode.id} hubLiveAt`).toBeTruthy();
+      const premiere = Date.parse(episode.premiereAt as string);
+      const live = Date.parse(episode.hubLiveAt as string);
+      expect(Number.isNaN(premiere), `ep${episode.id} premiereAt parses`).toBe(false);
+      expect(live - premiere, `ep${episode.id} unlocks after it premieres`).toBeGreaterThan(0);
+      expect(live, `ep${episode.id} is already unlocked`).toBeLessThan(now);
+      expect(episode.summary, `ep${episode.id} summary`).toBeTruthy();
+    }
+    const third = show.episodes.find((episode) => episode.id === 3);
+    const gap =
+      Date.parse(third?.hubLiveAt as string) - Date.parse(third?.premiereAt as string);
+    expect(gap).toBe(2 * 24 * 60 * 60 * 1000);
+  });
+
+  /*
+   * TikTok / Bluesky / Instagram are on the author's fill-in list, not in the
+   * file: the schema asks for a real URI, so a "TODO:" placeholder would not
+   * validate. They are listed in the README instead (011 spec, "Author to fill").
+   */
+  it('keeps the two links that exist and omits the ones that do not', () => {
+    const show = showRaw as Show;
+    expect(show.links.youtube).toBeTruthy();
+    expect(show.links.discord).toBeTruthy();
+    expect(show.links.tiktok).toBeUndefined();
+    expect(show.links.bluesky).toBeUndefined();
+    expect(show.links.instagram).toBeUndefined();
   });
 });
 
@@ -462,5 +535,92 @@ describe('spell refs across the sample episodes', () => {
     const view = resolveSpell({ ref: 'frost-scar', rank: 3 }, index);
     expect(view.mana).toBe(2);
     expect(view.tags).toEqual(['Attack', 'Ice']);
+  });
+});
+
+/* --------------------------------------------- 011: the crawler roster */
+
+const crawlersRaw = readJson(resolve(dataDir, 'crawlers.json'));
+
+describe('public/data/crawlers.json', () => {
+  it('validates against contracts/crawlers.schema.json', () => {
+    const ok = validateCrawlerSchema(crawlersRaw);
+    expect(validateCrawlerSchema.errors ?? []).toEqual([]);
+    expect(ok).toBe(true);
+  });
+
+  it('passes the runtime guard with nothing dropped', () => {
+    const roster = validateCrawlers(crawlersRaw);
+    expect(roster.crawlers).toHaveLength((crawlersRaw as CrawlerRoster).crawlers.length);
+    expect(roster.crawlers).toHaveLength(5);
+  });
+
+  /*
+   * The join that makes the live status line work: crawlers.json uses the hub
+   * crawler ids, so `status.json` (keyed by the same ids) needs no mapping.
+   */
+  it('gives every crawler an id episode 1 already knows', () => {
+    const roster = validateCrawlers(crawlersRaw);
+    const party = normalizeEpisode(readJson(resolve(dataDir, 'ep1.json'))).initialState.party;
+    const ids = new Set(party.map((crawler) => crawler.id));
+    expect(roster.crawlers.map((crawler) => crawler.id)).toEqual([
+      'harry',
+      'mimi',
+      'ronald',
+      'xo',
+      'veil',
+    ]);
+    for (const crawler of roster.crawlers) {
+      expect(ids, `${crawler.id} is in ep1's party`).toContain(crawler.id);
+    }
+  });
+
+  it('points every piece of art at a file that exists', () => {
+    const roster = validateCrawlers(crawlersRaw);
+    const withFull = roster.crawlers.filter((crawler) => crawler.art.full !== undefined);
+    expect(withFull.map((crawler) => crawler.id)).toEqual(['harry', 'mimi', 'ronald', 'xo', 'veil']);
+    for (const crawler of roster.crawlers) {
+      expect(existsSync(resolve(root, `public${crawler.art.bust}`)), crawler.id).toBe(true);
+      if (crawler.art.full !== undefined) {
+        expect(existsSync(resolve(root, `public${crawler.art.full}`)), crawler.id).toBe(true);
+      }
+    }
+  });
+
+  it('reuses the hub portrait as the bust and the hub art as the full figure', () => {
+    const roster = validateCrawlers(crawlersRaw);
+    const party = normalizeEpisode(readJson(resolve(dataDir, 'ep1.json'))).initialState.party;
+    for (const crawler of roster.crawlers) {
+      const hub = party.find((entry) => entry.id === crawler.id);
+      expect(crawler.art.bust, crawler.id).toBe(hub?.portrait);
+      expect(crawler.art.full, crawler.id).toBe(hub?.art);
+      expect(crawler.player.name, crawler.id).toBe(hub?.player);
+      expect(crawler.characterName, crawler.id).toBe(hub?.name);
+    }
+  });
+
+  /*
+   * Placeholders must read as placeholders on the page: no "TODO:" ever reaches
+   * a rendered name. The two archetype names the author has given us are real;
+   * the other three stand in with the character's own name until they land.
+   */
+  it('ships placeholders that read as prose, and lists them under "todo"', () => {
+    const roster = validateCrawlers(crawlersRaw);
+    const byId = new Map(roster.crawlers.map((crawler) => [crawler.id, crawler]));
+    expect(byId.get('ronald')?.name).toBe('The Stuntman');
+    expect(byId.get('mimi')?.name).toBe('The Actress');
+    for (const crawler of roster.crawlers) {
+      for (const text of [crawler.name, crawler.characterName, crawler.handle, crawler.concept]) {
+        expect(text, `${crawler.id} renders no TODO marker`).not.toMatch(/TODO/);
+      }
+      expect(crawler.handle).toMatch(/^Dungeon Crawler /);
+      expect(crawler.status).toBe('alive');
+    }
+    // Archetype names from the author (2026-09-23): Harry is The Writer.
+    expect(byId.get('harry')?.name).toBe('The Writer');
+    expect(byId.get('xo')?.name).toBe('The 1st AD');
+    expect(byId.get('veil')?.name).toBe('The Psychic');
+    expect(byId.get('harry')?.concept).toBe('Concept coming soon.');
+    expect(roster.todo?.length ?? 0).toBeGreaterThanOrEqual(5);
   });
 });

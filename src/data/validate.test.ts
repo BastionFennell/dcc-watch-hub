@@ -1,4 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
+import {
+  describe,
+  expect,
+  it,
+  vi } from 'vitest';
 import {
   DataError,
   isEpisodeData,
@@ -14,8 +18,17 @@ import {
   isSpellRegistry,
   validateSpells,
 } from './validate';
+import { validateCrawlers, validateStatus } from './roster';
 import type { AnyEvent } from './types';
-import { makeEpisode, makeEpisodeRaw, makeRegistry, makeShow, makeSpells } from '../test/fixtures';
+import {
+  makeCrawlers,
+  makeEpisode,
+  makeEpisodeRaw,
+  makeRegistry,
+  makeShow,
+  makeSpells,
+  makeStatus,
+} from '../test/fixtures';
 
 describe('normalizeEvent', () => {
   it('keeps a well-formed known event', () => {
@@ -911,5 +924,129 @@ describe('normalizeCrawler - the mana box (009)', () => {
       current: 0,
       max: 0,
     });
+  });
+});
+
+/* ------------------------------------------------- front door (011) */
+
+describe('validateCrawlers', () => {
+  it('keeps a well-formed roster verbatim', () => {
+    const roster = makeCrawlers();
+    expect(validateCrawlers(roster)).toEqual(roster);
+  });
+
+  it("carries the author's todo list through, dropping empty entries", () => {
+    const roster = validateCrawlers({ ...makeCrawlers(), todo: ['Names', '', 7, 'Bios'] });
+    expect(roster.todo).toEqual(['Names', 'Bios']);
+  });
+
+  it('drops a crawler missing something no page can invent, and warns', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const roster = makeCrawlers();
+    const broken = {
+      crawlers: [
+        roster.crawlers[0],
+        { ...roster.crawlers[1], art: {} },
+        { ...roster.crawlers[1], id: 'nameless', name: '' },
+        { ...roster.crawlers[1], id: 'unplayed', player: {} },
+        { ...roster.crawlers[1], id: 'ghost', status: 'vanished' },
+      ],
+    };
+    expect(validateCrawlers(broken).crawlers.map((c) => c.id)).toEqual(['stuntman']);
+    expect(warn).toHaveBeenCalledTimes(4);
+    warn.mockRestore();
+  });
+
+  it('drops a duplicate id, keeping the first', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const [first, second] = makeCrawlers().crawlers;
+    const roster = validateCrawlers({
+      crawlers: [first, { ...second, id: 'stuntman', name: 'Impostor' }],
+    });
+    expect(roster.crawlers).toHaveLength(1);
+    expect(roster.crawlers[0].name).toBe('The Stuntman');
+    warn.mockRestore();
+  });
+
+  it('never throws on rubbish: an empty roster instead', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(validateCrawlers(null)).toEqual({ crawlers: [] });
+    expect(validateCrawlers('nope')).toEqual({ crawlers: [] });
+    expect(validateCrawlers({ crawlers: {} })).toEqual({ crawlers: [] });
+    warn.mockRestore();
+  });
+
+  it('drops a malformed player link but keeps the player', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const [first] = makeCrawlers().crawlers;
+    const roster = validateCrawlers({
+      crawlers: [{ ...first, player: { ...first.player, links: { bluesky: 'x', broken: null } } }],
+    });
+    expect(roster.crawlers[0].player.links).toEqual({ bluesky: 'x' });
+    warn.mockRestore();
+  });
+
+  it('drops an entry achievement with no text, keeping the crawler', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const [first] = makeCrawlers().crawlers;
+    const roster = validateCrawlers({
+      crawlers: [{ ...first, entryAchievement: { title: 'Method Acting' } }],
+    });
+    expect(roster.crawlers).toHaveLength(1);
+    expect(roster.crawlers[0].entryAchievement).toBeUndefined();
+    warn.mockRestore();
+  });
+});
+
+describe('validateStatus', () => {
+  it('keeps a well-formed status file verbatim', () => {
+    const status = makeStatus();
+    expect(validateStatus(status)).toEqual(status);
+  });
+
+  it('drops a malformed crawler entry and warns, keeping the rest', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const status = validateStatus({
+      generatedAt: '2026-09-01T00:00:00.000Z',
+      episodeId: 2,
+      crawlers: {
+        harry: { level: 2, hp: { current: 22, max: 22 }, floor: 1, lastEpisodeId: 2 },
+        mimi: { level: 2, floor: 1, lastEpisodeId: 2 },
+      },
+    });
+    expect(Object.keys(status?.crawlers ?? {})).toEqual(['harry']);
+    expect(warn).toHaveBeenCalledTimes(1);
+    warn.mockRestore();
+  });
+
+  it('accepts a file generated before any episode was published', () => {
+    expect(validateStatus({ generatedAt: 'x', episodeId: null, crawlers: {} })).toEqual({
+      generatedAt: 'x',
+      episodeId: null,
+      crawlers: {},
+    });
+  });
+
+  it('keeps the precomputed appearances, dropping anything that is not a list of ids', () => {
+    const status = validateStatus({
+      generatedAt: 'x',
+      episodeId: 3,
+      crawlers: {},
+      appearances: { harry: [1, 2, 3], mimi: [1, 'two', 3], veil: 'nope' },
+    });
+    expect(status?.appearances).toEqual({ harry: [1, 2, 3], mimi: [1, 3] });
+  });
+
+  it('leaves appearances undefined for a file that carries none', () => {
+    const status = validateStatus({ generatedAt: 'x', episodeId: null, crawlers: {} });
+    // Undefined, not empty: it is what tells the crawler page to derive them.
+    expect(status).not.toHaveProperty('appearances');
+  });
+
+  it('never throws: null for a file that is not a status file', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(validateStatus(null)).toBeNull();
+    expect(validateStatus({ crawlers: [] })).toBeNull();
+    warn.mockRestore();
   });
 });

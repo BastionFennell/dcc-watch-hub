@@ -22,12 +22,24 @@
  * 135 seen quartermaster, 140 met unknown-id, 185 update unlock weakness, 195
  * defeated hoarder) - all past t = 100, so every earlier feed count still holds.
  */
-import type { Crawler, EpisodeData, Registry, Show, SpellRegistry } from '../data/types';
+import type {
+  Crawler,
+  CrawlerRoster,
+  EpisodeData,
+  Registry,
+  Show,
+  SpellRegistry,
+  StatusFile,
+} from '../data/types';
 import { normalizeEpisode } from '../data/validate';
 
 export function makeShow(): Show {
   return {
     title: 'Dungeon Crawl Cast',
+    // 011: the front door's copy. The hub ignores all three.
+    tagline: 'Heart and chaos in the World Dungeon.',
+    pitch: 'Five people from a film crew. One apocalypse.',
+    cadence: 'New crawls every other week.',
     seasons: [
       {
         season: 1,
@@ -326,5 +338,58 @@ export function makeSpells(): SpellRegistry {
         page: 38,
       },
     ],
+  };
+}
+
+/* ------------------------------------------------- front door (011) */
+
+/**
+ * A two-crawler roster whose ids match the fixture party (`stuntman`, `harry`),
+ * so `status.json` joins onto it the way the real files do.
+ */
+export function makeCrawlers(): CrawlerRoster {
+  return {
+    crawlers: [
+      {
+        id: 'stuntman',
+        name: 'The Stuntman',
+        characterName: 'Ronald Hudson',
+        handle: 'Dungeon Crawler Ronald',
+        player: { name: 'Danny', pronouns: 'he/him', bio: 'Two sentences about Danny.' },
+        concept: 'Thrill-seeking stunt performer.',
+        pockets: ['A roll of gaffer tape', 'Half a protein bar'],
+        entryAchievement: {
+          title: 'Method Acting',
+          text: 'You committed to the bit.',
+          box: 'Golden Monster Box',
+          item: 'Liquid Latex',
+        },
+        art: { bust: '/img/crawlers/stuntman.svg', full: '/img/crawlers/stuntman-art.png' },
+        status: 'alive',
+      },
+      {
+        id: 'harry',
+        name: 'Harry',
+        characterName: 'Harold Wallace',
+        handle: 'Dungeon Crawler Harry',
+        player: { name: 'Marcus' },
+        concept: 'Concept coming soon.',
+        pockets: [],
+        art: { bust: '/img/crawlers/harry.svg' },
+        status: 'alive',
+      },
+    ],
+  };
+}
+
+/** The generated live status for the roster above. */
+export function makeStatus(): StatusFile {
+  return {
+    generatedAt: '2026-09-01T00:00:00.000Z',
+    episodeId: 1,
+    crawlers: {
+      stuntman: { level: 3, hp: { current: 18, max: 24 }, floor: 1, lastEpisodeId: 1 },
+      harry: { level: 2, hp: { current: 22, max: 22 }, floor: 1, lastEpisodeId: 1 },
+    },
   };
 }

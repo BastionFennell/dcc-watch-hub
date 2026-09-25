@@ -8,6 +8,14 @@ export default defineConfig({
   // 5173 is often taken by another Vite project on the author's machine.
   server: { port: 5180 },
   plugins: [react()],
+  /*
+   * 011: the prerenderer builds a second bundle from the same config -
+   *   vite build --ssr src/entry-server.tsx --outDir dist/server
+   * - which runs after the client build (so `emptyOutDir` cannot eat it) and is
+   * deleted again at the end of `scripts/postbuild.mjs`. Nothing below needs to
+   * change for it: CSS Modules resolve in the SSR graph on their own, and the
+   * `modulePreload` setting only applies to the client build.
+   */
   build: {
     outDir: 'dist',
     sourcemap: false,

@@ -1,0 +1,97 @@
+/*
+ * The hero is one column at 375 px - eyebrow, headline, pitch, both CTAs, then
+ * the video - which puts the buttons above the fold on a 375x667 screen before
+ * the embed pushes anything down (011 §6). Two columns from 900 px.
+ */
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  min-width: 0;
+}
+
+.heroText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.tagline {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+.ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+  margin-top: var(--space-3);
+}
+
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 var(--space-7);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-md);
+  color: var(--brand-fg);
+  font-size: var(--text-md);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.secondary:hover {
+  border-color: var(--brand-2);
+  color: var(--brand-fg-2);
+}
+
+.heroMedia {
+  min-width: 0;
+}
+
+.strips {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-7);
+}
+
+.discord {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-7);
+  background: var(--brand-deep);
+  border: 1px solid var(--brand);
+  border-radius: var(--radius-lg);
+}
+
+.cadence {
+  color: var(--brand-fg);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+@media (min-width: 900px) {
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-9);
+  }
+
+  .tagline {
+    font-size: 44px;
+  }
+
+  .strips {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}

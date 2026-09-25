@@ -1,0 +1,188 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://dcc-watch-hub/contracts/show.v4.schema.json",
+  "title": "Show (011: the front door)",
+  "type": "object",
+  "required": [
+    "title",
+    "seasons",
+    "episodes",
+    "links"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "seasons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "season",
+          "floors"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "season": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "floors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "floor",
+                "label",
+                "episodes"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "floor": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "episodes": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "episodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "youtubeId",
+          "floor",
+          "durationSec",
+          "dataUrl"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "youtubeId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{11}$"
+          },
+          "floor": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "durationSec": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "dataUrl": {
+            "type": "string",
+            "pattern": "^/.+\\.json$"
+          },
+          "premiereAt": {
+            "comment": "011: when the episode went up on YouTube.",
+            "type": "string",
+            "format": "date-time"
+          },
+          "hubLiveAt": {
+            "comment": "011: when /ep/{id} unlocks. Absent means live now.",
+            "type": "string",
+            "format": "date-time"
+          },
+          "summary": {
+            "comment": "011: one spoiler-safe sentence.",
+            "type": "string",
+            "minLength": 1
+          },
+          "ogImage": {
+            "comment": "011: share image; defaults to /og/ep{id}.png.",
+            "type": "string",
+            "pattern": "^/.+[.](png|jpg|jpeg|webp)$"
+          }
+        }
+      }
+    },
+    "links": {
+      "type": "object",
+      "required": [
+        "youtube",
+        "discord"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "youtube": {
+          "type": "string",
+          "format": "uri"
+        },
+        "discord": {
+          "type": "string",
+          "format": "uri"
+        },
+        "tiktok": {
+          "comment": "011: optional social link.",
+          "type": "string",
+          "format": "uri"
+        },
+        "bluesky": {
+          "comment": "011: optional social link.",
+          "type": "string",
+          "format": "uri"
+        },
+        "instagram": {
+          "comment": "011: optional social link.",
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "registryUrl": {
+      "type": "string",
+      "pattern": "^/.+[.]json$"
+    },
+    "spellsUrl": {
+      "comment": "008 revision 4: the shared spell registry, loaded exactly like registryUrl.",
+      "type": "string",
+      "pattern": "^/.+[.]json$"
+    },
+    "tagline": {
+      "comment": "011: the H1 of the home page.",
+      "type": "string",
+      "minLength": 1
+    },
+    "pitch": {
+      "comment": "011: the paragraph under the tagline.",
+      "type": "string",
+      "minLength": 1
+    },
+    "cadence": {
+      "comment": "011: \"New crawls every other week.\"",
+      "type": "string",
+      "minLength": 1
+    },
+    "trailerYoutubeId": {
+      "comment": "011: the hero embed; the newest episode stands in when absent.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{11}$"
+    }
+  }
+}

@@ -155,6 +155,24 @@ export const copy = {
 
   /** Document title suffix: the show is always the broadcaster. */
   pageTitle: (name: string) => `${name} · Dungeon Crawl Cast`,
+  /**
+   * A hub page's document title (011 T1126). The front door is the show;
+   * inside an episode the viewer is watching the System feed, and the tab
+   * says so.
+   */
+  hubPageTitle: (name: string) => `${name} · System feed`,
+
+  /*
+   * The site navigation, in the header on every route (011 §1). Plain words,
+   * not the System's: a stranger arriving from a short has not met it yet.
+   * They live here rather than in `src/site/copy.ts` because the header is in
+   * the viewer's entry chunk and that file is a page of marketing prose -
+   * `siteCopy` re-exports them so the front door still reads `siteCopy.navX`.
+   */
+  siteNavLabel: 'Site',
+  navWatch: 'Watch',
+  navCrawlers: 'Crawlers',
+  navCommunity: 'Community',
   archiveLoading: 'The System is retrieving the broadcast archive.',
 
   /* --- appended by T019–T024 (party rail, event feed, stage) --- */

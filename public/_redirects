@@ -1,1 +1,5 @@
-/*    /index.html   200
+# Netlify / Cloudflare Pages: a hub deep link (/ep/3, /codex, /studio) has no
+# file of its own and must boot from the empty shell, not from the prerendered
+# home page - 404.html is that shell (scripts/postbuild.mjs writes it first).
+# The prerendered marketing routes have real files and are served before this.
+/*    /404.html   200

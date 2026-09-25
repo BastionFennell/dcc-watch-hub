@@ -30,7 +30,12 @@ import type {
   SpellUpgrade,
   UnknownEvent,
 } from './types';
-import { ENTITY_KINDS, GEAR_SLOTS, NPC_ACTIONS, SPELL_KINDS } from './types';
+import {
+  ENTITY_KINDS,
+  GEAR_SLOTS,
+  NPC_ACTIONS,
+  SPELL_KINDS,
+} from './types';
 
 export class DataError extends Error {
   constructor(message: string) {
@@ -41,7 +46,7 @@ export class DataError extends Error {
 
 /* ------------------------------------------------------------- primitives */
 
-function isRecord(x: unknown): x is Record<string, unknown> {
+export function isRecord(x: unknown): x is Record<string, unknown> {
   return typeof x === 'object' && x !== null && !Array.isArray(x);
 }
 
@@ -55,7 +60,7 @@ export function toNumber(x: unknown): number | null {
   return null;
 }
 
-function toString_(x: unknown): string | null {
+export function toString_(x: unknown): string | null {
   if (typeof x === 'string') return x;
   if (typeof x === 'number' && Number.isFinite(x)) return String(x);
   return null;
@@ -93,7 +98,7 @@ function toSkillRank(x: unknown): number | null {
 }
 
 /** Drops anything that is not a non-empty string; never fatal (007, FR-601). */
-function toNonEmptyStringList(x: unknown): string[] {
+export function toNonEmptyStringList(x: unknown): string[] {
   if (!Array.isArray(x)) return [];
   const out: string[] = [];
   for (const item of x) {

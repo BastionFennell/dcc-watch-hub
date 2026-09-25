@@ -1,0 +1,112 @@
+/*
+ * Share-image layout (011 §4). Fixed pixels everywhere: these frames are only
+ * ever rendered at 1200x630 by a headless browser, so a relative unit here
+ * would be a unit relative to nothing.
+ */
+.frame {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  width: 1200px;
+  height: 630px;
+  overflow: hidden;
+  background: var(--canvas);
+  color: var(--text);
+}
+
+/* ------------------------------------------------------------- episode */
+
+.episode {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 24px;
+  width: 1200px;
+  height: 630px;
+  padding: 80px;
+  border-left: 8px solid var(--system-bg);
+}
+
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-family: var(--font-mono);
+  font-size: 26px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--system-fg);
+}
+
+.kickerDot {
+  color: var(--text-4);
+}
+
+.episodeTitle {
+  font-size: 72px;
+  font-weight: 700;
+  line-height: 1.08;
+  /* Four lines at most; a longer title is cut rather than pushed off frame. */
+  max-height: 312px;
+  overflow: hidden;
+}
+
+.episodeSummary {
+  font-size: 28px;
+  line-height: 1.4;
+  color: var(--text-2);
+  max-width: 900px;
+  max-height: 120px;
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------------------- site */
+
+.site {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 28px;
+  width: 1200px;
+  height: 630px;
+  padding: 96px;
+  border-left: 8px solid var(--brand-2);
+}
+
+.siteTagline {
+  font-size: 76px;
+  font-weight: 700;
+  line-height: 1.08;
+  max-width: 1000px;
+}
+
+.sitePitch {
+  font-size: 30px;
+  line-height: 1.4;
+  color: var(--text-2);
+  max-width: 900px;
+}
+
+/* -------------------------------------------------------------- shared */
+
+.mark {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 26px;
+  color: var(--brand-fg);
+}
+
+.mark img {
+  width: 40px;
+  height: 40px;
+}
+
+.markCorner {
+  position: absolute;
+  right: 80px;
+  bottom: 56px;
+}

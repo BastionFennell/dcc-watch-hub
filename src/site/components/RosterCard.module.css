@@ -1,0 +1,259 @@
+/*
+ * One layout module, three renders (011 §4). Everything the card, the hero and
+ * the OG frame share lives at the top; each `[data-variant]` block below only
+ * says what is different about that render.
+ *
+ * 375 px first: the card is designed for a two-up phone grid and only gains
+ * room at 900 px (constitution VIII).
+ */
+.root {
+  display: block;
+  min-width: 0;
+  color: var(--text);
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.levelPill {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--brand-fg);
+  background: var(--brand-deep);
+  border-radius: var(--radius-pill);
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.statusPill {
+  flex: none;
+  font-size: var(--text-2xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: var(--radius-pill);
+  padding: 2px 8px;
+  white-space: nowrap;
+  color: var(--text-2);
+  background: var(--panel-deep);
+  border: var(--border-hairline-2);
+}
+
+.statusPill[data-status='dead'] {
+  color: var(--danger-fg);
+  border-color: var(--danger);
+}
+
+.statusPill[data-status='fused'] {
+  color: var(--amber-fg);
+  border-color: var(--amber-bg);
+}
+
+.statusPill[data-status='alive'] {
+  color: var(--hp);
+  border-color: var(--hairline-2);
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.handle {
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+/* ------------------------------------------------------------------ card */
+
+.root[data-variant='card'] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  height: 100%;
+  /* 44 px is the floor for a tap target; a card is far taller, and this keeps
+     it true even when the art fails to load (011 §6). */
+  min-height: 44px;
+  padding: var(--space-5);
+  background: var(--panel);
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-lg);
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.root[data-variant='card']:hover {
+  border-color: var(--brand-2);
+  background: var(--panel-deep);
+  color: var(--text);
+}
+
+.root[data-variant='card']:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-color: var(--brand-2);
+}
+
+.cardArt {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  background: var(--brand-deep);
+}
+
+.cardText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.cardName {
+  font-size: var(--text-md);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.cardCharacter {
+  color: var(--text-2);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------------ hero */
+
+.root[data-variant='hero'] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-7);
+  align-items: center;
+}
+
+.heroArt {
+  width: 100%;
+  max-width: 320px;
+  border-radius: var(--radius-xl);
+  background: var(--brand-deep);
+  justify-self: center;
+}
+
+.heroText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.heroName {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+/* -------------------------------------------------------------------- og */
+
+/*
+ * Fixed pixels only: the frame is screenshotted at exactly 1200x630 by
+ * `scripts/og.mjs`, so nothing here may depend on a viewport it will never see.
+ */
+.root[data-variant='og'] {
+  position: relative;
+  display: grid;
+  grid-template-columns: 460px 1fr;
+  align-items: center;
+  gap: 48px;
+  width: 1200px;
+  height: 630px;
+  padding: 64px;
+  background: var(--canvas);
+  border-left: 8px solid var(--brand-2);
+}
+
+.ogArt {
+  width: 420px;
+  height: 520px;
+  object-fit: cover;
+  object-position: top center;
+  border-radius: 16px;
+  background: var(--brand-deep);
+}
+
+.ogText {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ogName {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--system-fg);
+}
+
+.ogCharacter {
+  font-size: 68px;
+  font-weight: 700;
+  line-height: 1.05;
+  color: var(--text);
+}
+
+.ogHandle {
+  font-size: 28px;
+  color: var(--text-2);
+}
+
+.ogHook {
+  margin-top: 8px;
+  font-size: 24px;
+  line-height: 1.35;
+  color: var(--text-2);
+}
+
+.ogMark {
+  position: absolute;
+  right: 64px;
+  bottom: 48px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 22px;
+  color: var(--brand-fg);
+}
+
+.ogMark img {
+  width: 32px;
+  height: 32px;
+}
+
+/* --------------------------------------------------------------- desktop */
+
+@media (min-width: 900px) {
+  .root[data-variant='hero'] {
+    grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
+    gap: var(--space-9);
+    align-items: start;
+  }
+
+  .heroArt {
+    max-width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root[data-variant='card'] {
+    transition: none;
+  }
+}

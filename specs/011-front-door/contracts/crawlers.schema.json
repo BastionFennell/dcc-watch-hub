@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://dcc-watch-hub/contracts/crawlers.schema.json",
+  "title": "Crawler roster (011: the front door)",
+  "comment": "public/data/crawlers.json. Authored, never generated: the live numbers (level, HP, floor) come from the build-time status.json, and death is authored here, never inferred from events.",
+  "type": "object",
+  "required": ["crawlers"],
+  "additionalProperties": false,
+  "properties": {
+    "todo": {
+      "comment": "What the author still has to fill in. Rendered nowhere; read by humans and by the README.",
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "crawlers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "characterName", "handle", "player", "concept", "pockets", "art", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "comment": "The hub crawler id, so status.json joins without a mapping table.",
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "name": { "type": "string", "minLength": 1 },
+          "characterName": { "type": "string", "minLength": 1 },
+          "handle": { "type": "string", "minLength": 1 },
+          "player": {
+            "type": "object",
+            "required": ["name"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "pronouns": { "type": "string", "minLength": 1 },
+              "bio": { "type": "string", "minLength": 1 },
+              "bust": { "type": "string", "pattern": "^/.+$" },
+              "links": {
+                "type": "object",
+                "additionalProperties": { "type": "string", "minLength": 1 }
+              }
+            }
+          },
+          "concept": { "type": "string", "minLength": 1 },
+          "pockets": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "entryAchievement": {
+            "type": "object",
+            "required": ["title", "text"],
+            "additionalProperties": false,
+            "properties": {
+              "title": { "type": "string", "minLength": 1 },
+              "text": { "type": "string", "minLength": 1 },
+              "box": { "type": "string", "minLength": 1 },
+              "item": { "type": "string", "minLength": 1 }
+            }
+          },
+          "art": {
+            "type": "object",
+            "required": ["bust"],
+            "additionalProperties": false,
+            "properties": {
+              "bust": { "type": "string", "pattern": "^/.+$" },
+              "full": { "type": "string", "pattern": "^/.+$" }
+            }
+          },
+          "og": { "type": "string", "pattern": "^/.+[.](png|jpg|jpeg|webp)$" },
+          "status": { "enum": ["alive", "dead", "fused", "unknown"] }
+        }
+      }
+    }
+  }
+}

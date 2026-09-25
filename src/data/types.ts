@@ -26,11 +26,29 @@ export interface EpisodeMeta {
   floor: number;
   durationSec: number;
   dataUrl: string;
+
+  /* Front door fields (011). Every one is optional: a show.json written before
+     this feature still loads, and the hub ignores all of them. */
+  /** ISO 8601. When the episode went up on YouTube. */
+  premiereAt?: string;
+  /**
+   * ISO 8601. When the System feed (`/ep/:id`) unlocks for this episode.
+   * Absent means "live now", so the sample episodes keep working (011 spec).
+   */
+  hubLiveAt?: string;
+  /** One spoiler-safe sentence, shown on `/`, `/watch` and in meta tags. */
+  summary?: string;
+  /** Share image; defaults to `/og/ep{id}.png` when absent. */
+  ogImage?: string;
 }
 
 export interface ShowLinks {
   youtube: string;
   discord: string;
+  /* 011: the social row on `/community`. Absent means the platform is not shown. */
+  tiktok?: string;
+  bluesky?: string;
+  instagram?: string;
 }
 
 export interface Show {
@@ -50,6 +68,108 @@ export interface Show {
    * no crawler sheet can carry a `ref`, and every spell entry stands alone.
    */
   spellsUrl?: string;
+
+  /* Front door fields (011). Optional, and unread by the hub. */
+  /** The H1 of the home page. */
+  tagline?: string;
+  /** The paragraph under the tagline: what the show is, in two sentences. */
+  pitch?: string;
+  /** "New crawls every other week." Shown on `/` and `/community`. */
+  cadence?: string;
+  /** The hero embed on `/`; falls back to the newest episode when absent. */
+  trailerYoutubeId?: string;
+}
+
+/* ------------------------------------------------- front door (011) */
+
+/** What the author writes about a crawler; the live numbers come from `status.json`. */
+export type CrawlerLiveStatus = 'alive' | 'dead' | 'fused' | 'unknown';
+
+export const CRAWLER_LIVE_STATUSES = [
+  'alive',
+  'dead',
+  'fused',
+  'unknown',
+] as const satisfies readonly CrawlerLiveStatus[];
+
+/** The real person behind a crawler. Everything but the name is optional. */
+export interface CrawlerPlayer {
+  name: string;
+  pronouns?: string;
+  bio?: string;
+  /** Photo of the player, if they want one on the page. */
+  bust?: string;
+  links?: Record<string, string>;
+}
+
+/** The System text the crawler entered the dungeon with. */
+export interface CrawlerEntryAchievement {
+  title: string;
+  text: string;
+  box?: string;
+  item?: string;
+}
+
+/**
+ * One row of `crawlers.json` (011). `id` is the hub crawler id (`harry`, ...)
+ * so the build-time `status.json` joins onto it without a mapping table.
+ */
+export interface CrawlerProfile {
+  id: string;
+  /** Archetype name: "The Stuntman". */
+  name: string;
+  characterName: string;
+  handle: string;
+  player: CrawlerPlayer;
+  concept: string;
+  /** "What was in their pockets when the world ended", one item per line. */
+  pockets: string[];
+  entryAchievement?: CrawlerEntryAchievement;
+  art: { bust: string; full?: string };
+  og?: string;
+  status: CrawlerLiveStatus;
+}
+
+/** The whole `crawlers.json` file. `todo` is the author's fill-in list. */
+export interface CrawlerRoster {
+  crawlers: CrawlerProfile[];
+  todo?: string[];
+}
+
+/** One crawler's live line, reduced from the newest published episode. */
+export interface CrawlerStatus {
+  level: number;
+  hp: Hp;
+  floor: number;
+  lastEpisodeId: number;
+}
+
+/**
+ * `dist/data/status.json`, generated at build time and never committed.
+ * `episodeId` is `null` when no episode is past its `hubLiveAt` yet.
+ */
+export interface StatusFile {
+  generatedAt: string;
+  episodeId: number | null;
+  crawlers: Record<string, CrawlerStatus>;
+  /**
+   * "Appears in", precomputed: crawler id -> the ids of every published episode
+   * whose data names them, ascending. Undefined for a status file written
+   * before 011 T1125, which is the signal to derive it on the client instead.
+   */
+  appearances?: Record<string, number[]>;
+}
+
+/**
+ * The `<script id="__DCC__">` payload a prerendered page carries (011). `show`
+ * and `crawlers` stay `unknown` because they go through the same validators the
+ * fetched files do - an embedded blob is not more trusted than a fetched one.
+ */
+export interface Embedded {
+  route: string;
+  show: unknown;
+  crawlers: unknown;
+  status: StatusFile | null;
 }
 
 /* -------------------------------------------------------------- registry */

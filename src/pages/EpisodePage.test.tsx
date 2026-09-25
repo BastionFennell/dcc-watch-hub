@@ -17,7 +17,15 @@ import { resumeKey } from '../playback/resume';
 import { parseDeepLinkT } from '../playback/deepLink';
 import { LOG_OPEN_KEY } from '../prefs/logOpen';
 import { __fakeSources } from '../components/VideoStage/FakeStage';
-import { makeEpisode, makeEpisodeRaw, makeRegistry, makeShow, makeSpells } from '../test/fixtures';
+import {
+  makeCrawlers,
+  makeEpisode,
+  makeEpisodeRaw,
+  makeRegistry,
+  makeShow,
+  makeSpells,
+  makeStatus,
+} from '../test/fixtures';
 
 const episode = makeEpisode(1);
 const party = episode.initialState.party;
@@ -59,6 +67,24 @@ function stubFetch(episodeOk = true, withRegistry = true) {
       if (!withRegistry) delete (show as { registryUrl?: string }).registryUrl;
       return Promise.resolve(
         new Response(JSON.stringify(show), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
+    }
+    // 011: <App> mounts the roster provider, so these two are fetched on every
+    // route. Answered properly here so the hub tests stay free of validator noise.
+    if (url.includes('crawlers.json')) {
+      return Promise.resolve(
+        new Response(JSON.stringify(makeCrawlers()), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
+    }
+    if (url.includes('status.json')) {
+      return Promise.resolve(
+        new Response(JSON.stringify(makeStatus()), {
           status: 200,
           headers: { 'content-type': 'application/json' },
         }),
@@ -454,7 +480,11 @@ describe('EpisodePage', () => {
     act(() => source.end());
 
     expect(screen.queryByRole('link', { name: copy.nextEpisodeCard })).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: copy.returnToArchive })).toHaveAttribute('href', '/');
+    // The archive is /watch since the front door took / (011 §1).
+    expect(screen.getByRole('link', { name: copy.returnToArchive })).toHaveAttribute(
+      'href',
+      '/watch',
+    );
   });
 
   it('shows the System not-found copy for a non-integer episode id', async () => {
@@ -498,7 +528,7 @@ describe('EpisodePage', () => {
     await waitFor(() => expect(screen.getByText(copy.feedHeader('0:00'))).toBeInTheDocument());
     await waitFor(() => expect(screen.getAllByTestId('crawler-frame')).toHaveLength(5));
     expect(feedCount()).toBe(0);
-    expect(document.title).toBe(copy.pageTitle(makeShow().episodes[1].title));
+    expect(document.title).toBe(copy.hubPageTitle(makeShow().episodes[1].title));
   });
 
   /* ---------------------------- v2 US1 / 003 US1: the rail's glance card (T119, T310) */

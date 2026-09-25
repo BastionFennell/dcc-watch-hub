@@ -1,15 +1,30 @@
 import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes, useMatch } from 'react-router';
 import { ShowProvider, useShow } from './data/ShowContext';
+import type { Embedded } from './data/types';
 import { RegistryProvider } from './data/RegistryContext';
 import { RegistryIndexProvider } from './data/RegistryIndexContext';
 import { findEpisode } from './data/show';
 import { SiteHeader } from './components/SiteHeader/SiteHeader';
 import { SystemNotice } from './components/SystemNotice/SystemNotice';
-import { HubPage } from './pages/HubPage';
 import { EpisodePage } from './pages/EpisodePage';
 import { RegistryPage } from './pages/RegistryPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+/*
+ * The front door (011, constitution VIII). Every marketing page is its own
+ * chunk - see `site/pages/lazy.tsx` for why they are not plain `React.lazy` -
+ * so the viewer's entry bundle is unchanged by their existence, and the
+ * prerenderer can still render them synchronously.
+ */
+import {
+  CommunityPage,
+  CrawlerPage,
+  CrawlersPage,
+  HomePage,
+  SiteLayout,
+  OgRoutes,
+  WatchPage,
+} from './site/pages/lazy';
 import { copy } from './copy';
 import styles from './App.module.css';
 
@@ -25,7 +40,7 @@ import styles from './App.module.css';
 const StudioHomePage = lazy(() => import('./studio/pages/StudioHomePage'));
 const StudioEpisodePage = lazy(() => import('./studio/pages/StudioEpisodePage'));
 
-function AppShell() {
+function AppShell({ embedded }: AppProps) {
   const { show, error, reload } = useShow();
   const match = useMatch('/ep/:id');
   const rawId = match?.params.id;
@@ -53,7 +68,33 @@ function AppShell() {
           </section>
         ) : (
           <Routes>
-            <Route path="/" element={<HubPage />} />
+            {/*
+              The front door (011 §1). One layout route, one lazy chunk: it
+              carries the roster provider the marketing pages read and the hub
+              has no use for, and every page under it is its own chunk again.
+              The fallback is `null` because a prerendered page hydrates over
+              markup that is already on screen - a spinner would only replace
+              something better.
+            */}
+            <Route
+              element={
+                <Suspense fallback={null}>
+                  <SiteLayout embedded={embedded} />
+                </Suspense>
+              }
+            >
+              <Route path="/" element={<HomePage />} />
+              <Route path="/watch" element={<WatchPage />} />
+              <Route path="/crawlers" element={<CrawlersPage />} />
+              <Route path="/crawlers/:id" element={<CrawlerPage />} />
+              <Route path="/community" element={<CommunityPage />} />
+              {/*
+                `/_og/*`: the share-image frames `scripts/og.mjs` screenshots
+                at build time. Its own chunk again - a viewer never draws one.
+              */}
+              <Route path="/_og/*" element={<OgRoutes />} />
+            </Route>
+
             <Route path="/ep/:id" element={<EpisodePage />} />
             <Route path="/codex" element={<RegistryPage />} />
             {/*
@@ -85,15 +126,24 @@ function AppShell() {
   );
 }
 
-export function App() {
+export interface AppProps {
+  /**
+   * The prerenderer's payload (011). The browser leaves it undefined and the
+   * providers read the page themselves; `entry-server` passes it in, because
+   * there is no page to read on the server.
+   */
+  embedded?: Embedded | null;
+}
+
+export function App({ embedded }: AppProps = {}) {
   return (
-    <ShowProvider>
+    <ShowProvider embedded={embedded}>
       {/* The registry needs the show's `registryUrl`, so it nests inside (007 R1). */}
       <RegistryProvider>
         {/* The index is lazy: nothing is fetched until the page or the panel
             asks for it (007 R3, R3-FR-644). */}
         <RegistryIndexProvider>
-          <AppShell />
+          <AppShell embedded={embedded} />
         </RegistryIndexProvider>
       </RegistryProvider>
     </ShowProvider>

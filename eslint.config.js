@@ -82,8 +82,13 @@ export default tseslint.config(
     // Context providers legitimately export a provider component and its hook.
     files: [
       'src/data/ShowContext.tsx',
+      'src/data/CrawlersContext.tsx',
       'src/data/RegistryContext.tsx',
       'src/data/RegistryIndexContext.tsx',
+      // 011: <Seo> ships with the pure helpers that build the same tags for the
+      // server's head string; splitting them would separate two halves of one
+      // contract.
+      'src/site/seo.tsx',
     ],
     rules: {
       'react-refresh/only-export-components': 'off',

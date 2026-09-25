@@ -1,0 +1,41 @@
+.discord {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-8) var(--space-7);
+  background: var(--brand-deep);
+  border: 1px solid var(--brand);
+  border-radius: var(--radius-lg);
+}
+
+/* The one large button on the page; it is why the page exists. */
+.big {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0 var(--space-8);
+  border-radius: var(--radius-md);
+  background: var(--brand-2);
+  color: var(--brand-fg-2);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  text-align: center;
+}
+
+.big:hover {
+  background: var(--brand);
+  color: var(--brand-fg-2);
+}
+
+.cadence {
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+@media (min-width: 900px) {
+  .big {
+    align-self: flex-start;
+  }
+}

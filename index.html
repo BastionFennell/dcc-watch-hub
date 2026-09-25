@@ -4,12 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#131320" />
+    <!-- data-dcc-shell: the placeholder head, replaced at build time on a prerendered
+         route and removed by the page's own <Seo> on every other one (src/boot.ts). -->
     <meta
+      data-dcc-shell
       name="description"
       content="The System's broadcast feed: watch Dungeon Crawl Cast recap episodes with a synchronized crawler status overlay."
     />
+    <!--
+      The front door's hero poster is a YouTube still, and on a phone it is the
+      Largest Contentful Paint. Opening the connection while the CSS is still
+      downloading takes the DNS, TCP and TLS round trips off its critical path.
+      No crossorigin: a plain <img> is not a CORS request.
+    -->
+    <link rel="preconnect" href="https://i.ytimg.com" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Dungeon Crawl Cast · System Feed</title>
+    <title data-dcc-shell>Dungeon Crawl Cast · System Feed</title>
   </head>
   <body>
     <div id="root"></div>
