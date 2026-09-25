@@ -155,7 +155,7 @@ before it renders (`src/site/pages/lazy.tsx` explains the two-state wrapper), be
 |---|---|---|
 | `tagline` | `/` H1 | One line. The promise. |
 | `pitch` | `/` lead, every default description | Two or three sentences. |
-| `cadence` | `/`, `/community` | "New crawls every other week." |
+| `cadence` | `/`, `/community` | "New crawls every week." |
 | `trailerYoutubeId` | `/` hero embed | Optional. Without it the hero embeds the newest episode instead, and the "Latest episode" card is hidden so the same video is not on the page twice |
 | `links.{youtube,discord,tiktok,bluesky,instagram}` | social row, footer, `/community` | Only the ones present are rendered - no greyed-out icons |
 | `episodes[].premiereAt` | JSON-LD `uploadDate` | ISO. When the video went up |
