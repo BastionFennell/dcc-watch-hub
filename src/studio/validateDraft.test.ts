@@ -28,7 +28,7 @@ function draftWith(events: RawEvent[], meta: Partial<DraftMeta> = {}): StudioDra
             handle: 'Harry',
             player: 'Marcus',
             level: 2,
-            hp: { current: 22, max: 22 },
+            hp: { current: 10, max: 10 },
             portrait: '/img/harry.svg',
             class: null,
             inventory: [],
@@ -77,7 +77,7 @@ describe('issuesFor - the events', () => {
     expect(issues).toHaveLength(1);
     expect(issues[0].severity).toBe('error');
     expect(issues[0].message).toBe(
-      'HP at 0:10 is missing something it needs; the viewer will ignore it.',
+      'HB at 0:10 is missing something it needs; the viewer will ignore it.',
     );
     expect(issues[0].uid).toBe(draft.events[0].uid);
   });

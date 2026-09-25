@@ -117,11 +117,18 @@ export const EVENT_FORMS: Record<EventType, EventFormSpec> = {
   hp: {
     type: 'hp',
     group: 'crawler',
-    label: 'HP',
+    label: 'HB',
     fields: [
       ACTOR,
-      { key: 'current', kind: 'int', label: 'Current HP', required: true, min: 0 },
-      { key: 'max', kind: 'int', label: 'Max HP', required: true, min: 1 },
+      {
+        key: 'current',
+        kind: 'int',
+        label: 'HB slots (of 10)',
+        required: true,
+        min: 0,
+        help: 'The health bar is ten slots. Log slots, not hit points.',
+      },
+      { key: 'max', kind: 'int', label: 'Slots on the bar', required: true, min: 1 },
     ],
   },
   mana: {

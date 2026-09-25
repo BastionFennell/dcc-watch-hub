@@ -1,5 +1,6 @@
 /** Types for the pure half of `prerender.mjs` (the script itself is plain ESM). */
 export declare const STATIC_ROUTES: string[];
+export declare function crawlerIdIn(route: string): string | null;
 export declare function routesFor(crawlers: unknown): string[];
 export declare function embedScript(data: unknown): string;
 export declare function injectPage(

@@ -83,7 +83,7 @@ describe('formsByGroup', () => {
 
 describe('lookups', () => {
   it('reads a form by type and shrugs at an unknown one', () => {
-    expect(formFor('hp')?.label).toBe('HP');
+    expect(formFor('hp')?.label).toBe('HB');
     expect(formFor('future_type')).toBeUndefined();
     expect(isKnownEventType('hp')).toBe(true);
     expect(isKnownEventType('future_type')).toBe(false);

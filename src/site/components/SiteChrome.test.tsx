@@ -1,25 +1,18 @@
 // @vitest-environment jsdom
 /**
- * The small pieces every front-door page is built from (011 §3, §6): the live
- * line, the one announce style, the platform row and the footer.
+ * The small pieces every front-door page is built from (011 §3, §6): the one
+ * announce style, the platform row and the footer. The live line went with
+ * StatusLine in 012 - level, HP and floor are the dossier's to report now.
  */
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { SiteFooter } from './SiteFooter';
 import { SocialRow } from './SocialRow';
-import { StatusLine } from './StatusLine';
 import { SystemBox } from './SystemBox';
 import { siteCopy } from '../copy';
 import { copy } from '../../copy';
-import { makeShow, makeStatus } from '../../test/fixtures';
-
-describe('StatusLine', () => {
-  it('reads level, health bars and floor in one line', () => {
-    render(<StatusLine status={makeStatus().crawlers.stuntman} />);
-    expect(screen.getByTestId('status-line')).toHaveTextContent('Level 3 · 18/24 HB · Floor 1');
-  });
-});
+import { makeShow } from '../../test/fixtures';
 
 describe('SystemBox', () => {
   it('is the System speaking: the tag, a title, the text and an optional reward', () => {

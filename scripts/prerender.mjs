@@ -21,6 +21,12 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 /** The static routes every build prerenders, in sitemap order. */
 export const STATIC_ROUTES = ['/', '/watch', '/crawlers', '/community'];
 
+/** `/crawlers/harry` -> `harry`; anything else -> `null`. */
+export function crawlerIdIn(route) {
+  const match = /^\/crawlers\/([^/]+)$/.exec(route);
+  return match === null ? null : match[1];
+}
+
 /** Every route to prerender: the static ones, then one page per crawler. */
 export function routesFor(crawlers) {
   const ids = Array.isArray(crawlers?.crawlers)
@@ -91,7 +97,17 @@ async function main() {
 
   const routes = routesFor(crawlers);
   for (const route of routes) {
-    const data = { route, show, crawlers, status };
+    /*
+     * 012: a crawler page carries its own dossier and nobody else's, so the
+     * locked rows prerender at the right count and the client fetches nothing.
+     * Written by `scripts/build-dossier.ts` during `prebuild`, before Vite
+     * copied `public/` into `dist/`; `null` is legal (no build step ran), and
+     * the panel falls back to fetching.
+     */
+    const id = crawlerIdIn(route);
+    const dossier =
+      id === null ? null : await readJson(resolve(root, `public/data/dossier/${id}.json`), null);
+    const data = { route, show, crawlers, status, dossier };
     const { html, head } = render(route, data);
     const page = injectPage(template, { head, html, data });
     const out = outputPath(dist, route);

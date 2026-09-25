@@ -1,0 +1,35 @@
+{
+  "id": "ronald",
+  "updates": [
+    {
+      "episode": 1,
+      "kind": "update",
+      "onCamera": true,
+      "title": "Ronald breaks the fall and the arm",
+      "body": "He insists the doorway was not load-bearing and goes under the ceiling to prove it. The System files the arm under production expenses and awards him the stunt credit anyway.",
+      "chips": ["UNPAID STUNT DOUBLE", "DUCT TAPE"],
+      "level": 1,
+      "condition": "alive"
+    },
+    {
+      "episode": 2,
+      "kind": "quiet",
+      "onCamera": false,
+      "title": "Ronald works the rigging above the shot",
+      "body": "The Stuntman spends Row Nine over the lens, resetting lines nobody asked him to reset. The feed cuts to him twice and finds nothing it can sell.",
+      "chips": [],
+      "level": 2,
+      "condition": "alive"
+    },
+    {
+      "episode": 3,
+      "kind": "update",
+      "onCamera": true,
+      "title": "Ronald sticks a three-story landing",
+      "body": "The stairwell offers a handrail and he declines it. He lands it, mostly, and the standings move five hundred places in his favor before the Warden notices any of them.",
+      "chips": ["THREE-STORY LANDING", "RANK 520"],
+      "level": 3,
+      "condition": "alive"
+    }
+  ]
+}

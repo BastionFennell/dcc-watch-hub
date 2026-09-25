@@ -5,7 +5,7 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { EMBEDDED_ID, readEmbedded } from './load';
-import { makeCrawlers, makeShow, makeStatus } from '../test/fixtures';
+import { makeCrawlers, makeDossier, makeShow, makeStatus } from '../test/fixtures';
 
 function embed(text: string): void {
   const script = document.createElement('script');
@@ -37,6 +37,25 @@ describe('readEmbedded', () => {
     expect(embedded?.show).toEqual(makeShow());
     expect(embedded?.crawlers).toEqual(makeCrawlers());
     expect(embedded?.status).toEqual(makeStatus());
+  });
+
+  /* 012: the crawler route carries its crawler's dossier and nobody else's. */
+  it('hands the dossier through unread, like every other blob', () => {
+    embed(
+      JSON.stringify({
+        route: '/crawlers/stuntman',
+        show: makeShow(),
+        crawlers: makeCrawlers(),
+        status: null,
+        dossier: makeDossier('stuntman'),
+      }),
+    );
+    expect(readEmbedded()?.dossier).toEqual(makeDossier('stuntman'));
+  });
+
+  it('reads a pre-012 payload, and every non-crawler route, as no dossier', () => {
+    embed(JSON.stringify({ route: '/', show: makeShow(), crawlers: makeCrawlers(), status: null }));
+    expect(readEmbedded()?.dossier).toBeNull();
   });
 
   it('accepts a payload with no status file, without warning about it', () => {

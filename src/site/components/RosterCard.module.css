@@ -12,52 +12,6 @@
   color: var(--text);
 }
 
-.pills {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.levelPill {
-  flex: none;
-  font-family: var(--font-mono);
-  font-size: var(--text-2xs);
-  color: var(--brand-fg);
-  background: var(--brand-deep);
-  border-radius: var(--radius-pill);
-  padding: 2px 8px;
-  white-space: nowrap;
-}
-
-.statusPill {
-  flex: none;
-  font-size: var(--text-2xs);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  border-radius: var(--radius-pill);
-  padding: 2px 8px;
-  white-space: nowrap;
-  color: var(--text-2);
-  background: var(--panel-deep);
-  border: var(--border-hairline-2);
-}
-
-.statusPill[data-status='dead'] {
-  color: var(--danger-fg);
-  border-color: var(--danger);
-}
-
-.statusPill[data-status='fused'] {
-  color: var(--amber-fg);
-  border-color: var(--amber-bg);
-}
-
-.statusPill[data-status='alive'] {
-  color: var(--hp);
-  border-color: var(--hairline-2);
-}
-
 .eyebrow {
   font-family: var(--font-mono);
   font-size: var(--text-2xs);

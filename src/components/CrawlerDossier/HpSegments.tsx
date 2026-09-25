@@ -7,19 +7,20 @@ export interface HpSegmentsProps {
   max: number;
   /** 0–10, straight from the `hpSegments` selector. */
   filled: number;
-  /** The mono caps "HP" label before the strip; on everywhere by default (T344). */
+  /** The mono caps "HB" label before the strip; on everywhere by default (T344). */
   label?: boolean;
 }
 
 /**
- * The official sheet's ten-segment HP strip (FR-110, research R3). The colors
+ * The official sheet's ten-slot HB strip (FR-110, research R3): one segment
+ * per health-bar slot, so `filled` is the slot count itself. The colors
  * ramp red → amber → green across `--hp-seg-1..10`, so a strip that is one
  * segment long reads as danger without any extra state.
  *
  * The author kept that sheet fidelity and asked for a label instead (UX review
- * 1.3), so the strip now leads with a mono caps "HP" wherever it renders. The
- * label is `aria-hidden`: the strip's own `aria-label` already opens with the
- * numbers and ends in "HP", and a second one would only be read twice.
+ * 1.3), so the strip now leads with a mono caps "HB" wherever it renders. The
+ * label is `aria-hidden`: the strip's own `aria-label` already names the bar
+ * and its slots, and a second label would only be read twice.
  */
 export function HpSegments({ current, max, filled, label = true }: HpSegmentsProps) {
   return (

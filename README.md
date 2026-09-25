@@ -243,6 +243,94 @@ Three custom events, all from `src/site/analytics.ts`:
 | `outbound` | `{ to, episode? }` | A link leaves the site: YouTube, Discord, TikTok, Bluesky, Instagram |
 | `crawler_view` | `{ crawler }` | A crawler page mounts |
 
+### The crawler dossier - "Where are they now?" (012)
+
+Under the hero on every `/crawlers/:id` there is a panel with **one card per aired episode**, and
+every card starts shut. The reader opens them one at a time, or all at once with
+"Reveal all - I'm caught up", and what they opened lasts exactly as long as the visit.
+
+**The invariant is the feature: absence is never a signal.** A short card list is itself a spoiler,
+so every crawler has a card for every aired episode, forever. An episode a crawler was not in gets
+a real card that says so - and that same quiet card turns up routinely on crawlers who are having a
+fine time, so it can never be read as a tell. After a death the cards keep coming and simply change
+subject: the estate, the legacy item, the reruns. Constitution 1.5.1, Principle VIII.
+
+Everything the panel says about a crawler is derived from **the cards that reader has opened**,
+never from the file: level is the last revealed level in episode order, condition is `deceased` if
+any revealed card says so (sticky - reading the newest revealed card alone once printed "Alive"
+next to a posthumous merch update), and "last on camera" is the highest revealed episode they were
+in. Nothing revealed yet means three grey pills, not three dashes: a dash is a statement.
+
+#### Authoring
+
+One file per crawler at `content/status/<id>.json` (repo root, never served). See
+`content/status/README.md` for the full rules; the shape is:
+
+```json
+{ "id": "harry",
+  "updates": [
+    { "episode": 1, "kind": "update", "onCamera": true,
+      "title": "<= 60 chars, present tense",
+      "body": "1-3 sentences, present tense, System voice",
+      "chips": ["<= 3 SHORT MONO FACTS"], "level": null, "condition": "alive" }
+  ] }
+```
+
+- `level: null` means "ask the hub reducer what they were at the end of that episode".
+- `condition` is sticky: a `deceased` card may not be followed by an `alive` one.
+- An episode with no authored entry becomes an **auto quiet card** (`Off camera this episode`), so
+  an author who writes nothing still ships a full, unremarkable feed.
+- `floor` is not authored - it comes from `show.json`.
+
+`npm run build:dossier` (run for you by `predev` and `prebuild`) compiles those into
+`public/data/dossier/<id>.json`, which is gitignored and regenerated every build. **Cards for
+episodes that have not aired never reach the bundle**: "aired" means past `hubLiveAt` at build
+time, which is why the deploy workflow also runs weekly.
+
+The lint **fails the build** on: a card for an episode `show.json` does not have; two cards for one
+episode; cards out of ascending order; an empty or over-long (> 60) title; an empty body; more than
+three chips or an empty one; a level below 1; a condition that goes back from `deceased` to
+`alive`. It **warns** (and carries on) about a card for an episode that has not aired - legal to
+write ahead, dropped at compile time - and about a `quiet` card that claims `onCamera`. A *missing*
+card for an aired episode is not an error at all: that is the normal case, and the compiler fills
+it. The same lint runs as a vitest test over `content/status/*.json` against the live `show.json`,
+so it fails in CI as well as in the build.
+
+#### Reveal state: this visit only
+
+Plain React state inside `Dossier` - a `Set<number>` of the episodes this reader has opened, here,
+now. **The author's decision (2026-09-25) is not to remember the reader's choices**, so there is no
+storage key, no store module, and the panel never touches `localStorage` at all (a test spies on
+`Storage.prototype` and asserts it stays untouched). A reload, or a walk to the next crawler,
+starts fully locked; "Reveal all - I'm caught up" opens every row on the page and "Hide everything
+again" shuts them.
+
+That also settles hydration for free: the prerendered HTML, the first client render and every
+remount are the same locked panel, so there is nothing for the two to disagree about.
+
+#### Leak rules (what the tests defend)
+
+- No card text in the page title, `meta[name=description]`, any `og:*` tag, any JSON-LD, or the URL
+  - no fragment, no query param. The panel emits no links at all.
+- Nothing of a card is in the DOM before it is revealed: not the text, not a class, not a data
+  attribute. The two placeholder bars are fixed widths; the locked row's whole accessible name is
+  "Reveal the Episode 9 status update" and nothing else.
+- **Locked markup is byte-identical across crawlers** apart from the name, the id, and the
+  heading's pronoun. A snapshot test renders two crawlers with the same card count and compares
+  after substitution, and the prerendered HTML is compared the same way.
+- No locked-state string or ARIA label matches `deceased|death|final|killed|memorial`.
+- The compiled dossier *is* embedded in the prerender payload (`__DCC__.dossier`) so the locked
+  panel ships with the right number of rows and the client fetches nothing - leak tests strip that
+  script before asserting on the document.
+- The hero has no status pill and `crawlers.json` has no `status` field: a crawler's condition
+  exists only inside a card the reader chose to open.
+
+#### Launch state
+
+A deploy with no aired episode yet - or a crawler whose file has not landed - renders the header
+and one line, "The System files its first report after Episode 1." No panel, no rows, nothing to
+count. `dossierFor(id) === null` is that state, and it is never a statement about anyone.
+
 ### Author to fill
 
 `public/data/crawlers.json` carries its own list in a top-level `"todo"` array, reproduced here:
@@ -295,7 +383,7 @@ feed for that crawler's glance card - how they are doing *right now*, in a coupl
 
 1. **Header** - portrait, name, handle · played by {player}, class (or "Unclassed") · level. The
    "·" is decorative and hidden; a comma beside it is what a screen reader hears.
-2. **Vitals** - an `HP` label, the sheet's ten-segment strip and current/max, then a `MANA`
+2. **Vitals** - an `HB` label, the sheet's ten-slot strip and current/max, then a `MANA`
    row directly beneath it: one System-blue segment per point of the pool, filled to the current
    value, and current/max. A crawler with no pool (`max` 0) has no mana row at all.
 3. **Rank** - a `RANK` label, the current rank, a ↑/↓ delta against the previous elapsed `rank`
@@ -333,7 +421,7 @@ overlay allowed to cover the stage. Revision 2 lays it out as a character sheet 
   instead. At ≤ 900 px the art becomes a banner above the identity.
 - **Top band** - identity (portrait, name, handle, played by, race, pronouns, crawler number,
   level, class, floor) and vitals side by side, with the **STATS** strip (STR / INT / CON / DEX
-  / CHA, when the data carries them) full width beneath them. **VITALS** is the HP strip, then
+  / CHA, when the data carries them) full width beneath them. **VITALS** is the HB strip, then
   the **MANA** row under it (one segment per point, System blue, current/max), then rank.
 - **Hotbar** - the Hotlist as ten numbered square keys filled in order, empty keys dashed and
   unlit, and a `+N` marker after key ten when the crawler is tracking more than ten. A key shows
@@ -869,7 +957,7 @@ required; columns are `timecode,type,actor,field1,field2,field3`
 | `system_message` | text | – | – |
 | `achievement` | title | desc | – |
 | `loot` | item | source | – |
-| `hp` | current | max | – |
+| `hp` | current (HB slots) | max (10) | – |
 | `mana` | current | max (number, optional) | – |
 | `level_up` | level | – | – |
 | `rank` | rank | – | – |
@@ -916,6 +1004,13 @@ Each crawler there may carry the optional sheet fields the dossier renders - `ra
 and `art` (a full-figure image path; the record falls back to the bust without it). They need no new CSV columns, and v1 files without them keep working: the
 dossier simply omits what it does not know.
 
+**HP is measured in HB slots** (author, 2026-09-25). The DCC health bar is ten slots - the
+sheet's 10%..100% strip - and the rules count in slots ("heal 2 HB slots"), never in hit points.
+So every crawler writes `hp: { current: 10, max: 10 }` at t = 0, and an `hp` event's `current` is
+how many of those ten slots are still lit. `max` stays a plain number in the type, but a `max`
+that is not 10 earns a console warning ("HB is ten slots") on load, because it is almost always
+hit points written into a slot count. The ten-segment strip therefore maps 1:1 to slots.
+
 **Mana** (009) is the one optional field with a rule behind it. Write `mana` and it is taken
 verbatim - a sheet is allowed to disagree. Leave it out and the state derives it: `max` is the
 crawler's `stats.int` and the pool starts full, so a file that never heard of mana still shows a
@@ -932,7 +1027,7 @@ in a CSV cell, so this structure lives in `--initial-state` only: `hotlist`, `in
 `inventory` `remove` matches on that name and drops the whole entry.
 The converter sorts events by `t`, normalizes them, and prints a summary such as
 `wrote public/data/ep4.json (42 events, 2 warnings)`. **Warnings still produce output** (unknown
-actor, impossible HP, timecode past `--duration`, unknown type, bad `chapter.kind`, an
+actor, impossible HB, timecode past `--duration`, unknown type, bad `chapter.kind`, an
 accessory `unequip` with no item - the last one worn comes off, a legacy `rank` row with
 `crawler` in field1 - the rank is read out of field2, and - only with `--registry` - an `npc`
 row naming an entity or a fact the registry does not have); **errors write nothing and

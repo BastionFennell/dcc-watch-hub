@@ -21,13 +21,13 @@ describe('defaultsFor (FR-1004)', () => {
   it('prefills hp with the crawler current values at that second', () => {
     expect(defaultsFor('hp', 'harry', stateAt(draft, 100))).toEqual({
       actor: 'harry',
-      current: 4,
-      max: 22,
+      current: 2,
+      max: 10,
     });
     expect(defaultsFor('hp', 'harry', stateAt(draft, 175))).toEqual({
       actor: 'harry',
-      current: 20,
-      max: 22,
+      current: 9,
+      max: 10,
     });
   });
 

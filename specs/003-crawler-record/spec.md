@@ -274,3 +274,29 @@ the right. The left half is the page's single `<h1>`, which retires the sr-only 
 duplicated the title. `stageCaption(meta, t)` and `copy.feedText.stageCaption` are removed with
 their last caller; `--stage-overlay-bottom` stays, because the minimap badge still needs to
 clear the host's control bar.
+
+### Revision 3 (2026-09-25) - HP is measured in HB slots, not hit points
+
+The author: "Max HB is always ten." The Dungeon Crawler Carl health bar is a ten-slot strip -
+the sheet's 10%..100% segments - and the rules count in slots ("heal 2 HB slots"). The hub's
+`hp: { current, max }` had been filled from the sheets in the wrong unit: the numbers on the
+sheet were hit points *per slot*, so Harry shipped as 20/20 and X.O. as 30/30.
+
+Corrected everywhere:
+
+- Every crawler in `ep{1,2,3}.json` and `scripts/samples/ep1.initial.json` opens on
+  `hp: { current: 10, max: 10 }`. Every `hp` event (and the CSV sample rows) was scaled to the
+  ten-slot bar and rounded half up - 4/20 → 2/10, 11/20 → 6/10, 19/20 → 10/10, 30/30 → 10/10 -
+  with `max` now 10.
+- `Hp.max` stays a plain `number` (no literal 10 in the type), so a longer bar remains
+  expressible, but `validate.ts` emits a `console.warn` ("HB is ten slots") for any crawler or
+  `hp` event whose `max` is not 10. It is a warning, never an error; the value is kept verbatim
+  and the reducer clamps to it exactly as before. `src/engine/**` is otherwise unchanged.
+- The ten-segment strip of FR-110 is untouched and now maps 1:1 to slots: `hpSegments` still
+  scales `ceil(current / max * 10)` so an arbitrary `max` keeps working.
+- Wording: the mono caps label is `HB` (T344's `copy.hpLabel`), the strip's accessible name is
+  "Health bar N of 10 slots", and the feed reads "{actor} holding at 2/10 HB". `HB` is the term
+  the author's own copy already used (status chips, the front-door live line in
+  `specs/011-front-door/addendum.md` §Hero). The Studio's `hp` form is labelled `HB`, with
+  "HB slots (of 10)" on the reading itself.
+- `content/status/*.json` chips moved to slots (`4/20 HB` → `2/10 HB`, `5/20 HB` → `3/10 HB`).

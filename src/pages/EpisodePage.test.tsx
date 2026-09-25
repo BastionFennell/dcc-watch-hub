@@ -224,7 +224,7 @@ describe('EpisodePage', () => {
   it('shows initial party state and an empty feed at t = 0', async () => {
     await mountEpisode();
 
-    expect(within(frame('harry')).getByText(copy.hpValue(22, 22))).toBeInTheDocument();
+    expect(within(frame('harry')).getByText(copy.hpValue(10, 10))).toBeInTheDocument();
     expect(within(frame('xo')).getByText(copy.levelShort(1))).toBeInTheDocument();
     expect(feedCount()).toBe(0);
     expect(screen.getByText(copy.feedHeader('0:00'))).toBeInTheDocument();
@@ -234,13 +234,13 @@ describe('EpisodePage', () => {
     const { seek } = await mountEpisode();
 
     seek(50);
-    expect(within(frame('harry')).getByText(copy.hpValue(4, 22))).toBeInTheDocument();
+    expect(within(frame('harry')).getByText(copy.hpValue(2, 10))).toBeInTheDocument();
     expect(frame('harry')).toHaveAttribute('data-danger');
     expect(frame('xo')).not.toHaveAttribute('data-danger');
 
     // Harry heals at t = 170: the danger state is a function of t, not history.
     seek(180);
-    expect(within(frame('harry')).getByText(copy.hpValue(20, 22))).toBeInTheDocument();
+    expect(within(frame('harry')).getByText(copy.hpValue(9, 10))).toBeInTheDocument();
     expect(frame('harry')).not.toHaveAttribute('data-danger');
   });
 
@@ -253,7 +253,7 @@ describe('EpisodePage', () => {
     seek(20);
     expect(feedCount()).toBe(1);
     expect(frame('harry')).not.toHaveAttribute('data-danger');
-    expect(within(frame('harry')).getByText(copy.hpValue(22, 22))).toBeInTheDocument();
+    expect(within(frame('harry')).getByText(copy.hpValue(10, 10))).toBeInTheDocument();
   });
 
   it('caps the feed at the 8 most recent events, newest first', async () => {
@@ -577,9 +577,9 @@ describe('EpisodePage', () => {
     expect(within(latest).getByText('Gate Crasher')).toBeInTheDocument();
     expect(within(latest).getByText(formatTime(60))).toBeInTheDocument();
 
-    // Vitals: the ten-segment strip and the HP readout, in the card.
+    // Vitals: the ten-slot strip and the HB readout, in the card.
     expect(within(panel).getAllByTestId('hp-segment')).toHaveLength(10);
-    expect(within(panel).getByTestId('glance-hp')).toHaveTextContent(copy.hpValue(20, 22));
+    expect(within(panel).getByTestId('glance-hp')).toHaveTextContent(copy.hpValue(9, 10));
 
     // Three history rows here, and never a placeholder dash: the card holds its
     // height in CSS instead (review 0.1, R2-FR-201).
@@ -616,9 +616,9 @@ describe('EpisodePage', () => {
     expect(identity.getByText('10,491,201')).toBeInTheDocument();
     expect(identity.getByText('Compensated Anarchist')).toBeInTheDocument(); // class at 95
 
-    // Vitals: the ten-segment strip, the HP readout, current and best rank.
+    // Vitals: the ten-slot strip, the HB readout, current and best rank.
     expect(within(section('vitals')).getAllByTestId('hp-segment')).toHaveLength(10);
-    expect(within(dialog).getByTestId('dossier-hp')).toHaveTextContent(copy.hpValue(20, 22));
+    expect(within(dialog).getByTestId('dossier-hp')).toHaveTextContent(copy.hpValue(9, 10));
     expect(within(dialog).getByTestId('rank-current')).toHaveTextContent(copy.rankValue(3550));
     expect(within(dialog).getByTestId('rank-best')).toHaveTextContent(copy.rankValue(3012));
 

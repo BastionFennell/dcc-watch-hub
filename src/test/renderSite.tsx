@@ -12,8 +12,8 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { vi } from 'vitest';
 import { ShowProvider } from '../data/ShowContext';
 import { CrawlersProvider } from '../data/CrawlersContext';
-import type { CrawlerRoster, Show, StatusFile } from '../data/types';
-import { makeCrawlers, makeShow, makeStatus } from './fixtures';
+import type { CrawlerRoster, DossierFile, Show, StatusFile } from '../data/types';
+import { makeCrawlers, makeDossier, makeShow, makeStatus } from './fixtures';
 
 export interface RenderSiteOptions {
   /** The route to mount at; also the payload's `route`. */
@@ -21,6 +21,12 @@ export interface RenderSiteOptions {
   show?: Show | null;
   crawlers?: CrawlerRoster | null;
   status?: StatusFile | null;
+  /**
+   * 012: the compiled dossier the payload carries. Defaults to one for the
+   * crawler in `path`, which is what a prerendered `/crawlers/:id` carries -
+   * pass `null` for the launch state (a deploy with no cards yet).
+   */
+  dossier?: DossierFile | null;
   /** Epoch ms the clock is pinned to for this render. */
   now?: number;
   /**
@@ -30,12 +36,23 @@ export interface RenderSiteOptions {
   routePath?: string;
 }
 
+/**
+ * The dossier a prerendered page would carry: one for `/crawlers/:id`, none
+ * anywhere else. Without it every crawler-page test would go to the network
+ * for a file that is generated at build time.
+ */
+function dossierIn(path: string): DossierFile | null {
+  const id = /^\/crawlers\/([^/]+)$/.exec(path)?.[1];
+  return id === undefined ? null : makeDossier(id);
+}
+
 export function renderSite(ui: ReactNode, options: RenderSiteOptions = {}) {
   const {
     path = '/',
     show = makeShow(),
     crawlers = makeCrawlers(),
     status = makeStatus(),
+    dossier = dossierIn(path),
     now,
     routePath,
   } = options;
@@ -45,7 +62,7 @@ export function renderSite(ui: ReactNode, options: RenderSiteOptions = {}) {
     vi.setSystemTime(now);
   }
 
-  const embedded = { route: path, show, crawlers, status };
+  const embedded = { route: path, show, crawlers, status, dossier };
   const element =
     routePath === undefined ? ui : <Routes><Route path={routePath} element={ui} /></Routes>;
 

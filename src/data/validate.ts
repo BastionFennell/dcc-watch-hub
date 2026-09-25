@@ -198,6 +198,7 @@ export function normalizeEvent(raw: unknown): AnyEvent {
       if (actor === null || current === null || max === null || max <= 0) {
         return unknownEvent(t, raw);
       }
+      warnIfNotTenSlots(`hp event at t = ${t} for "${actor}"`, max);
       return { t, type: 'hp', actor, current, max };
     }
     /*
@@ -492,12 +493,24 @@ function toMana(raw: unknown): Hp | null {
   return { current, max };
 }
 
+/**
+ * The health bar is ten slots (author, 2026-09-25). A sheet that writes any
+ * other `max` is almost always counting hit points instead of HB slots, so say
+ * so - once per reading, and only as a warning. The value is kept verbatim:
+ * `Hp.max` is still a plain number and the reducer clamps to whatever it says.
+ */
+function warnIfNotTenSlots(where: string, max: number): void {
+  if (max !== 10) console.warn(`${where}: hp max is ${max}; HB is ten slots.`);
+}
+
 export function normalizeCrawler(raw: Crawler): Crawler {
   const crawler: Crawler = { ...raw };
   const drop = (field: string): void => {
     delete (crawler as unknown as Record<string, unknown>)[field];
     console.warn(`Crawler "${raw.id}": dropping malformed "${field}".`);
   };
+
+  warnIfNotTenSlots(`Crawler "${raw.id}"`, crawler.hp.max);
 
   if (crawler.race !== undefined && typeof crawler.race !== 'string') drop('race');
   if (crawler.pronouns !== undefined && typeof crawler.pronouns !== 'string') drop('pronouns');

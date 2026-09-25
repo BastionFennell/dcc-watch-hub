@@ -25,6 +25,7 @@
 import type {
   Crawler,
   CrawlerRoster,
+  DossierFile,
   EpisodeData,
   Registry,
   Show,
@@ -32,6 +33,7 @@ import type {
   StatusFile,
 } from '../data/types';
 import { normalizeEpisode } from '../data/validate';
+import { quietBody, quietTitle } from '../site/dossier/quiet';
 
 export function makeShow(): Show {
   return {
@@ -88,6 +90,7 @@ function crawler(
   id: string,
   name: string,
   level: number,
+  /** HB slots on the bar - ten for everyone (author, 2026-09-25). */
   max: number,
   handle = '',
   player = '',
@@ -115,7 +118,7 @@ export function makeEpisodeRaw(episodeId = 1): unknown {
     episodeId,
     initialState: {
       party: [
-        crawler('stuntman', 'The Stuntman', 3, 24, 'Dungeon Crawler Danny', 'Danny', {
+        crawler('stuntman', 'The Stuntman', 3, 10, 'Dungeon Crawler Danny', 'Danny', {
           race: 'Human',
           pronouns: 'he/him',
         }),
@@ -124,7 +127,7 @@ export function makeEpisodeRaw(episodeId = 1): unknown {
          * keeps the plain string entries every earlier test asserts on, so the
          * two shapes are exercised side by side in the same episode.
          */
-        crawler('psychic', 'The Psychic', 3, 20, 'Signal', 'Rae', {
+        crawler('psychic', 'The Psychic', 3, 10, 'Signal', 'Rae', {
           race: 'Human',
           pronouns: 'she/her',
           /*
@@ -151,7 +154,7 @@ export function makeEpisodeRaw(episodeId = 1): unknown {
             },
           ],
         }),
-        crawler('harry', 'Harry', 2, 22, 'Harry', 'Marcus', {
+        crawler('harry', 'Harry', 2, 10, 'Harry', 'Marcus', {
           race: 'Human',
           pronouns: 'he/him',
           crawlerNumber: '10,491,201',
@@ -161,11 +164,11 @@ export function makeEpisodeRaw(episodeId = 1): unknown {
           gear: { hands: 'Enchanted Crowbar' },
           art: '/img/crawlers/harry-art.svg',
         }),
-        crawler('xo', 'X.O.', 1, 18, 'X.O.', 'Jules', {
+        crawler('xo', 'X.O.', 1, 10, 'X.O.', 'Jules', {
           race: 'Crocodilian',
           pronouns: 'they/them',
         }),
-        crawler('actress', 'The Actress', 3, 21, 'Understudy', 'Nia', {
+        crawler('actress', 'The Actress', 3, 10, 'Understudy', 'Nia', {
           race: 'Human',
           pronouns: 'she/her',
           art: '/img/crawlers/actress-art.svg',
@@ -176,7 +179,7 @@ export function makeEpisodeRaw(episodeId = 1): unknown {
     events: [
       { t: 12, type: 'system_message', text: 'Attention crawlers. The broadcast is live.' },
       { t: 30, type: 'loot', actor: 'harry', item: 'Enchanted Crowbar', source: 'Bronze Box' },
-      { t: 45, type: 'hp', actor: 'harry', current: 4, max: 22 },
+      { t: 45, type: 'hp', actor: 'harry', current: 2, max: 10 },
       { t: 60, type: 'achievement', actor: 'harry', title: 'Gate Crasher', desc: 'Ten mobs, one door.' },
       { t: 61, type: 'achievement', actor: 'xo', title: 'Understudy', desc: 'Survived the opener.' },
       { t: 62, type: 'achievement', actor: 'stuntman', title: 'Stunt Double', desc: 'Took the hit.' },
@@ -219,7 +222,7 @@ export function makeEpisodeRaw(episodeId = 1): unknown {
       { t: 165, type: 'hotlist', actor: 'harry', add: ['Crowbar'], remove: ['Door'] },
       { t: 168, type: 'unequip', actor: 'harry', slot: 'hands' },
       { t: 169, type: 'equip', actor: 'harry', slot: 'hands', item: 'Torch' },
-      { t: 170, type: 'hp', actor: 'harry', current: 20, max: 22 },
+      { t: 170, type: 'hp', actor: 'harry', current: 9, max: 10 },
       // 009: a dip that leaves the pool alone (no `max`), then a full restore.
       { t: 171, type: 'mana', actor: 'psychic', current: 2 },
       { t: 172, type: 'mana', actor: 'psychic', current: 5, max: 5 },
@@ -355,6 +358,7 @@ export function makeCrawlers(): CrawlerRoster {
         name: 'The Stuntman',
         characterName: 'Ronald Hudson',
         handle: 'Dungeon Crawler Ronald',
+        pronouns: 'he/him',
         player: { name: 'Danny', pronouns: 'he/him', bio: 'Two sentences about Danny.' },
         concept: 'Thrill-seeking stunt performer.',
         pockets: ['A roll of gaffer tape', 'Half a protein bar'],
@@ -366,20 +370,19 @@ export function makeCrawlers(): CrawlerRoster {
           reward: 'Inside is a bottle of Liquid Latex.',
         },
         art: { bust: '/img/crawlers/stuntman.svg', full: '/img/crawlers/stuntman-art.png' },
-        status: 'alive',
       },
       {
         id: 'harry',
         name: 'Harry',
         characterName: 'Harold Wallace',
         handle: 'Dungeon Crawler Harry',
+        pronouns: 'she/her',
         // The unwritten crawler: every optional field empty, so a test can ask
         // what the page renders when the author has not filled it in (011 R2).
         player: { name: 'Marcus' },
         concept: '',
         pockets: [],
         art: { bust: '/img/crawlers/harry.svg' },
-        status: 'alive',
       },
     ],
   };
@@ -391,8 +394,57 @@ export function makeStatus(): StatusFile {
     generatedAt: '2026-09-01T00:00:00.000Z',
     episodeId: 1,
     crawlers: {
-      stuntman: { level: 3, hp: { current: 18, max: 24 }, floor: 1, lastEpisodeId: 1 },
-      harry: { level: 2, hp: { current: 22, max: 22 }, floor: 1, lastEpisodeId: 1 },
+      stuntman: { level: 3, hp: { current: 8, max: 10 }, floor: 1, lastEpisodeId: 1 },
+      harry: { level: 2, hp: { current: 10, max: 10 }, floor: 1, lastEpisodeId: 1 },
     },
+  };
+}
+
+/**
+ * A compiled dossier for the roster above (012): three aired episodes, one
+ * card each, with the shapes the panel has to handle side by side - an update
+ * on camera, a generated quiet card, and an update filed off camera. Nobody
+ * dies here; the death cases are built in the tests that are about death, so
+ * every other test's fixture stays free of the words.
+ */
+export function makeDossier(id = 'stuntman'): DossierFile {
+  return {
+    id,
+    generatedAt: '2026-09-01T00:00:00.000Z',
+    updates: [
+      {
+        episode: 1,
+        floor: 1,
+        kind: 'update',
+        onCamera: true,
+        title: 'Ronald breaks the fall and the arm',
+        body: 'He goes under the ceiling to prove a point about doorways.',
+        chips: ['UNPAID STUNT DOUBLE'],
+        level: 1,
+        condition: 'alive',
+      },
+      {
+        episode: 2,
+        floor: 1,
+        kind: 'quiet',
+        onCamera: false,
+        title: quietTitle,
+        body: quietBody('Ronald Hudson'),
+        chips: [],
+        level: 2,
+        condition: 'alive',
+      },
+      {
+        episode: 3,
+        floor: 2,
+        kind: 'update',
+        onCamera: false,
+        title: 'Ronald rigs the descent from the landing above',
+        body: 'The Stuntman spends the episode out of frame and on a rope.',
+        chips: ['RANK 520'],
+        level: 3,
+        condition: 'alive',
+      },
+    ],
   };
 }

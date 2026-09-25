@@ -1,32 +1,21 @@
 /**
  * `/crawlers` - the roster (011 §3.3).
  *
- * The filter chips appear only when there is something to filter: five living
- * crawlers make a row of chips that all do the same thing, which is chrome
- * pretending to be a feature. One status, no chips.
+ * No filter chips (012). They filtered on an authored `status` field that no
+ * longer exists, and could not exist: a row of chips reading "Alive / Dead" is
+ * a spoiler served to everyone who lands here, and a chip that appears the week
+ * someone dies is a worse one. Condition lives in the dossier now, one card at
+ * a time, behind a click the reader chose to make.
  */
-import { useState } from 'react';
 import { useCrawlers } from '../../data/CrawlersContext';
 import { Seo } from '../seo';
 import { siteCopy } from '../copy';
 import { RosterCard } from '../components/RosterCard';
 import { SiteFooter } from '../components/SiteFooter';
-import type { CrawlerLiveStatus } from '../../data/types';
 import page from './page.module.css';
-import styles from './CrawlersPage.module.css';
 
 export function CrawlersPage() {
-  const { profiles, status } = useCrawlers();
-  const [filter, setFilter] = useState<CrawlerLiveStatus | null>(null);
-
-  // First-seen order, so the chips read in the order the roster does.
-  const present: CrawlerLiveStatus[] = [];
-  for (const profile of profiles) {
-    if (!present.includes(profile.status)) present.push(profile.status);
-  }
-  const showChips = present.length > 1;
-  const shown =
-    filter === null || !showChips ? profiles : profiles.filter((p) => p.status === filter);
+  const { profiles } = useCrawlers();
 
   return (
     <div className={page.page}>
@@ -43,34 +32,10 @@ export function CrawlersPage() {
         <p className={page.lead}>{siteCopy.crawlersLead}</p>
       </div>
 
-      {showChips ? (
-        <div className={styles.chips} role="group" aria-label={siteCopy.filterLabel}>
-          <button
-            type="button"
-            className={styles.chip}
-            aria-pressed={filter === null}
-            onClick={() => setFilter(null)}
-          >
-            {siteCopy.filterAll}
-          </button>
-          {present.map((value) => (
-            <button
-              key={value}
-              type="button"
-              className={styles.chip}
-              aria-pressed={filter === value}
-              onClick={() => setFilter(value)}
-            >
-              {siteCopy.statusLabel[value]}
-            </button>
-          ))}
-        </div>
-      ) : null}
-
       <ul className={page.roster}>
-        {shown.map((profile) => (
+        {profiles.map((profile) => (
           <li key={profile.id}>
-            <RosterCard profile={profile} status={status?.crawlers[profile.id]} variant="card" />
+            <RosterCard profile={profile} variant="card" />
           </li>
         ))}
       </ul>

@@ -36,8 +36,8 @@ describe('episodeAt / stateAt', () => {
     const episode = episodeAt(draft);
     expect(episode?.episodeId).toBe(1);
     const state = stateAt(draft, 46);
-    expect(crawlerAt(state, 'harry')?.hp).toEqual({ current: 4, max: 22 });
-    expect(crawlerAt(stateAt(draft, 44), 'harry')?.hp).toEqual({ current: 22, max: 22 });
+    expect(crawlerAt(state, 'harry')?.hp).toEqual({ current: 2, max: 10 });
+    expect(crawlerAt(stateAt(draft, 44), 'harry')?.hp).toEqual({ current: 10, max: 10 });
   });
 
   it('returns null rather than throwing on a draft that cannot normalize', () => {
