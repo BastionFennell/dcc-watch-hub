@@ -60,6 +60,19 @@ describe('SocialRow', () => {
     );
   });
 
+  it('keeps the pill row by default and switches to tiles on request', () => {
+    const { rerender } = render(<SocialRow links={makeShow().links} />);
+    expect(screen.getByTestId('social-row')).toHaveAttribute('data-variant', 'pills');
+    rerender(<SocialRow links={makeShow().links} variant="tiles" />);
+    const tiles = screen.getByTestId('social-row');
+    expect(tiles).toHaveAttribute('data-variant', 'tiles');
+    // The tiles are the same links: identity claim and safe target are unchanged.
+    for (const link of screen.getAllByRole('link')) {
+      expect(link).toHaveAttribute('rel', 'me noopener');
+      expect(link).toHaveAttribute('target', '_blank');
+    }
+  });
+
   it('renders nothing at all when the show has no links', () => {
     render(<SocialRow links={{ youtube: '', discord: '' }} />);
     expect(screen.queryByTestId('social-row')).toBeNull();

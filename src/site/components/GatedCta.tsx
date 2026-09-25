@@ -18,14 +18,35 @@ export interface GatedCtaProps {
   links: ShowLinks;
   /** The filled button. One per surface; everything else is the outline. */
   primary?: boolean;
+  /**
+   * The crawler page's shape (011 R2): a full-width translucent brand tint that
+   * sits in the hero grid rather than next to other buttons. Overrides
+   * `primary`; nothing else on the front door uses it.
+   */
+  quiet?: boolean;
+  /**
+   * Overrides the gate's own wording. The gate still decides where the button
+   * goes; a surface whose promise is "start here" says so on both sides of
+   * `hubLiveAt` rather than renaming itself when the feed opens.
+   */
+  label?: string;
   /** Analytics, wired in Wave C: `hub_open` and `outbound` live here. */
   onTrack?: (cta: Cta) => void;
 }
 
-export function GatedCta({ episode, now, links, primary = false, onTrack }: GatedCtaProps) {
-  const cta = ctaFor(episode, now, links);
+export function GatedCta({
+  episode,
+  now,
+  links,
+  primary = false,
+  quiet = false,
+  label,
+  onTrack,
+}: GatedCtaProps) {
+  const gate = ctaFor(episode, now, links);
+  const cta = label === undefined ? gate : { ...gate, label };
   const className = styles.cta;
-  const variant = primary ? 'primary' : 'secondary';
+  const variant = quiet ? 'quiet' : primary ? 'primary' : 'secondary';
   const handleClick = onTrack === undefined ? undefined : () => onTrack(cta);
 
   if (cta.kind === 'hub') {

@@ -2,13 +2,16 @@
  * The shell every marketing page shares (011 §6). One column at 375 px with a
  * 16 px gutter, widening to a centred 1040 px measure from 900 px. Imported by
  * all five pages so the front door has one rhythm rather than five.
+ *
+ * The measure is `--site-measure` (011 R2), shared with `SiteFooter` so the
+ * footer's links start on the same pixel as the paragraph above them.
  */
 .page {
   display: flex;
   flex-direction: column;
   gap: var(--space-9);
   width: 100%;
-  max-width: 1040px;
+  max-width: var(--site-measure);
   margin: 0 auto;
   padding: var(--space-8) var(--space-7);
   /* Nothing on a marketing page may scroll the viewport sideways (011 §6). */

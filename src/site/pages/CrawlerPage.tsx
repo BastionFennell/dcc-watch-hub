@@ -1,9 +1,16 @@
 /**
- * `/crawlers/:id` - one crawler, and the player behind them (011 §3.4).
+ * `/crawlers/:id` - one crawler, and the player behind them (011 §3.4, R2).
  *
- * The entry achievement is the centrepiece and the only System box on the page:
- * it is the one thing here the System itself announced. Everything else is the
- * show talking about its own cast.
+ * Revision 2's two rules shape the whole page. **Empty renders nothing**: a
+ * section whose data the author has not written yet prints no heading, no
+ * placeholder and certainly no "coming soon", because one filled section beats
+ * five empty ones. And **the hero keeps no secrets it should not**: no floor,
+ * no level, no "ALIVE" pill - a stranger arriving from a search result learns
+ * who this is, not how far they have got.
+ *
+ * The entry achievement is the page's one System-styled element: the only thing
+ * here the System itself said, and it wears no section label because its own
+ * "Achievement unlocked" kicker is already the heading.
  */
 import { useEffect } from 'react';
 import { Link, useParams } from 'react-router';
@@ -11,28 +18,27 @@ import { useShow } from '../../data/ShowContext';
 import { useCrawlers } from '../../data/CrawlersContext';
 import { NotFoundPage } from '../../pages/NotFoundPage';
 import { useNow } from '../useNow';
-import { useAppearances } from '../useAppearances';
 import { Seo } from '../seo';
 import { siteCopy } from '../copy';
-import { trackCrawlerView } from '../analytics';
+import { trackCrawlerView, trackCta } from '../analytics';
 import { asset, crawlerOgImage } from '../media';
-import { EpisodeRow } from '../components/EpisodeRow';
-import { RosterCard } from '../components/RosterCard';
+import { EntryAchievement } from '../components/EntryAchievement';
+import { GatedCta } from '../components/GatedCta';
 import { SiteFooter } from '../components/SiteFooter';
 import { SocialRow } from '../components/SocialRow';
-import { SystemBox } from '../components/SystemBox';
 import type { ShowLinks } from '../../data/types';
+import { firstEpisode } from '../gate';
 import page from './page.module.css';
 import styles from './CrawlerPage.module.css';
 
 const NO_LINKS: ShowLinks = { youtube: '', discord: '' };
 
+/** The page's one CTA points at the start of the show, not the newest episode. */
 export function CrawlerPage() {
   const { id = '' } = useParams();
   const { show } = useShow();
   const { profiles, status, loading } = useCrawlers();
   const now = useNow(60_000, Date.parse(status?.generatedAt ?? '') || Date.now());
-  const appearances = useAppearances(id);
 
   const index = profiles.findIndex((profile) => profile.id === id);
   const profile = index === -1 ? undefined : profiles[index];
@@ -53,113 +59,104 @@ export function CrawlerPage() {
 
   const prev = index > 0 ? profiles[index - 1] : undefined;
   const next = index < profiles.length - 1 ? profiles[index + 1] : undefined;
-  const live = status?.crawlers[profile.id];
   const achievement = profile.entryAchievement;
-  const playerLinks = profile.player.links;
+  const { player } = profile;
+  const links = show?.links ?? NO_LINKS;
+  const opener = show === null ? undefined : (firstEpisode(show) ?? undefined);
+  const detail = [player.pronouns, player.bio].filter((part) => part !== undefined).join(' · ');
 
   return (
-    <div className={page.page}>
+    <div className={`${page.page} ${styles.page}`}>
       <Seo
         title={siteCopy.pageTitle(profile.characterName)}
-        description={siteCopy.crawlerDescription(profile.characterName, profile.concept)}
+        description={siteCopy.crawlerDescription(
+          profile.characterName,
+          profile.concept,
+          profile.name,
+        )}
         canonicalPath={`/crawlers/${profile.id}`}
         ogImage={crawlerOgImage(profile)}
         ogType="profile"
       />
 
-      <RosterCard profile={profile} status={live} variant="hero" />
+      <article className={styles.hero}>
+        <img
+          className={styles.portrait}
+          src={asset(profile.art.full ?? profile.art.bust)}
+          alt={profile.characterName}
+          /* Above the fold on its own page, so it is never deferred (T1124). */
+          loading="eager"
+        />
 
-      <section className={page.section} aria-labelledby="concept">
-        <h2 className={page.sectionTitle} id="concept">
-          {siteCopy.conceptTitle}
-        </h2>
-        <p className={page.lead}>{profile.concept}</p>
-      </section>
-
-      {profile.pockets.length === 0 ? null : (
-        <section className={page.section} aria-labelledby="pockets">
-          <h2 className={page.sectionTitle} id="pockets">
-            {siteCopy.pocketsTitle}
-          </h2>
-          <ul className={styles.pockets}>
-            {profile.pockets.map((item) => (
-              <li key={item} className={styles.pocket}>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {achievement === undefined ? null : (
-        <section className={page.section} aria-labelledby="achievement">
-          <h2 className={page.sectionTitle} id="achievement">
-            {siteCopy.entryAchievementTitle}
-          </h2>
-          <SystemBox
-            title={achievement.title}
-            footer={
-              achievement.box === undefined || achievement.item === undefined
-                ? undefined
-                : siteCopy.reward(achievement.box, achievement.item)
-            }
-          >
-            <p>{achievement.text}</p>
-          </SystemBox>
-        </section>
-      )}
-
-      <section className={page.section} aria-labelledby="player">
-        <h2 className={page.sectionTitle} id="player">
-          {siteCopy.playerTitle}
-        </h2>
-        <div className={styles.player}>
-          {profile.player.bust === undefined ? null : (
-            <img
-              className={styles.playerBust}
-              src={asset(profile.player.bust)}
-              alt={profile.player.name}
-              loading="lazy"
+        {/* Its own grid child rather than a button inside the text: the CTA
+            wants the portrait's width, and the 1fr row under it is what holds
+            the 16 px gap open however tall the text column grows. */}
+        {opener === undefined ? null : (
+          <div className={styles.ctaCell}>
+            <GatedCta
+              episode={opener}
+              now={now}
+              links={links}
+              quiet
+              label={siteCopy.startAtEpisodeOne}
+              onTrack={(cta) => trackCta(cta, opener.id)}
             />
-          )}
-          <div className={styles.playerText}>
-            <p className={styles.playerName}>
-              {profile.player.name}
-              {profile.player.pronouns === undefined ? null : (
-                <span className={styles.pronouns}>{profile.player.pronouns}</span>
+          </div>
+        )}
+
+        <div className={styles.text}>
+          <div className={styles.titleBlock}>
+            <p className={styles.eyebrow}>{profile.name}</p>
+            <h1 className={styles.name}>{profile.characterName}</h1>
+            <p className={styles.handleRow}>
+              <span className={styles.handle}>{profile.handle}</span>
+              {/* "Alive" is the default and says nothing worth a pill; the ones
+                  that are not are the news (011 R2). */}
+              {profile.status === 'alive' ? null : (
+                <span className={styles.statusPill} data-status={profile.status}>
+                  {siteCopy.statusLabel[profile.status]}
+                </span>
               )}
             </p>
-            {profile.player.bio === undefined ? null : (
-              <p className={page.lead}>{profile.player.bio}</p>
-            )}
-            {playerLinks === undefined ? null : (
-              <SocialRow links={{ ...NO_LINKS, ...playerLinks }} />
-            )}
           </div>
-        </div>
-      </section>
 
-      {/*
-       * Derived on the client (see `useAppearances`), so this section is empty
-       * on the server and fills in after mount rather than risking a mismatch.
-       */}
-      {appearances.length === 0 ? null : (
-        <section className={page.section} aria-labelledby="appears">
-          <h2 className={page.sectionTitle} id="appears">
-            {siteCopy.appearsInTitle}
-          </h2>
-          <div className={page.stack}>
-            {appearances.map((episode) => (
-              <EpisodeRow
-                key={episode.id}
-                episode={episode}
-                now={now}
-                links={show?.links ?? NO_LINKS}
-              />
-            ))}
+          <div className={styles.credit}>
+            <p className={styles.creditLine}>
+              <span className={styles.creditPrefix}>{siteCopy.playedBy} </span>
+              <span className={styles.playerName}>{player.name}</span>
+            </p>
+            {detail === '' ? null : <p className={styles.creditDetail}>{detail}</p>}
+            {player.links === undefined ? null : (
+              <SocialRow links={{ ...NO_LINKS, ...player.links }} />
+            )}
           </div>
-        </section>
-      )}
+
+          {profile.concept === '' ? null : <p className={styles.concept}>{profile.concept}</p>}
+
+          {profile.pockets.length === 0 ? null : (
+            <section className={styles.block} aria-labelledby="pockets">
+              <h2 className={styles.label} id="pockets">
+                {siteCopy.pocketsTitle}
+              </h2>
+              <ul className={styles.pockets}>
+                {profile.pockets.map((item) => (
+                  <li key={item} className={styles.pocket}>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {/*
+           * No section label above it: the box's own "Achievement unlocked"
+           * kicker is the heading, and a mono caps label over a System panel
+           * only said the same thing twice. The text column's gap gives it its
+           * air, whether it follows the pockets, the concept or the credit.
+           */}
+          {achievement === undefined ? null : <EntryAchievement achievement={achievement} />}
+        </div>
+      </article>
 
       <nav className={styles.prevNext} aria-label={siteCopy.crawlersTitle}>
         {prev === undefined ? (
@@ -167,7 +164,7 @@ export function CrawlerPage() {
         ) : (
           <Link className={styles.prevNextLink} to={`/crawlers/${prev.id}`} rel="prev">
             <span className={styles.prevNextLabel}>{siteCopy.prevCrawler}</span>
-            <span>{prev.characterName}</span>
+            <span className={styles.prevNextName}>{`← ${prev.characterName}`}</span>
           </Link>
         )}
         {next === undefined ? (
@@ -179,7 +176,7 @@ export function CrawlerPage() {
             rel="next"
           >
             <span className={styles.prevNextLabel}>{siteCopy.nextCrawler}</span>
-            <span>{next.characterName}</span>
+            <span className={styles.prevNextName}>{`${next.characterName} →`}</span>
           </Link>
         )}
       </nav>

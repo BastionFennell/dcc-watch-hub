@@ -58,11 +58,18 @@ export function renderSite(ui: ReactNode, options: RenderSiteOptions = {}) {
   );
 }
 
-/** `makeShow()` with a `hubLiveAt` on the newest episode, for gate tests. */
-export function makeGatedShow(hubLiveAt: string): Show {
+/**
+ * `makeShow()` with a `hubLiveAt` on one episode, for gate tests: the newest by
+ * default (the watch rows and the latest card), or `which: 'first'` for the home
+ * hero, which points at the opener.
+ */
+export function makeGatedShow(hubLiveAt: string, which: 'newest' | 'first' = 'newest'): Show {
   const show = makeShow();
-  const newest = show.episodes[show.episodes.length - 1];
-  newest.hubLiveAt = hubLiveAt;
-  newest.summary = 'The stairs down are open.';
+  const target =
+    which === 'first'
+      ? show.episodes.reduce((a, b) => (b.id < a.id ? b : a))
+      : show.episodes[show.episodes.length - 1];
+  target.hubLiveAt = hubLiveAt;
+  target.summary = 'The stairs down are open.';
   return show;
 }

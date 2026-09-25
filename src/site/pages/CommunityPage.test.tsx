@@ -26,10 +26,18 @@ describe('CommunityPage', () => {
 
   it('carries the platform row, the cadence and the support paragraph', () => {
     renderSite(<CommunityPage />, { path: '/community' });
-    expect(screen.getByTestId('social-row')).toBeInTheDocument();
-    expect(screen.getByText('New crawls every other week.')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: siteCopy.supportTitle })).toBeInTheDocument();
+    // The platforms are the tile grid here, not the inline pill row (011 R2 polish).
+    expect(screen.getByTestId('social-row')).toHaveAttribute('data-variant', 'tiles');
+    // The cadence is a chip beside the heading, not a line adrift under the row.
+    const cadence = screen.getByText('New crawls every other week.');
+    expect(cadence).toBeInTheDocument();
+    expect(cadence.previousElementSibling).toBe(
+      screen.getByRole('heading', { name: siteCopy.followTitle }),
+    );
+    // The closing paragraph has no heading (author copy, 2026-09-25); the landmark is named instead.
+    expect(screen.getByRole('region', { name: siteCopy.supportAria })).toBeInTheDocument();
     expect(screen.getByText(siteCopy.supportBody)).toBeInTheDocument();
+    expect(screen.getByText(siteCopy.communityDiscordBody)).toBeInTheDocument();
   });
 
   it('carries its own head', () => {

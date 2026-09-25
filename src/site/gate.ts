@@ -92,3 +92,12 @@ export function newestEpisode(show: Show): EpisodeMeta | null {
   }
   return newest;
 }
+
+/** The opener: the lowest-numbered episode. The one spoiler-free entry point for a stranger. */
+export function firstEpisode(show: Show): EpisodeMeta | null {
+  let first: EpisodeMeta | null = null;
+  for (const episode of show.episodes) {
+    if (first === null || episode.id < first.id) first = episode;
+  }
+  return first;
+}

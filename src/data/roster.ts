@@ -86,11 +86,13 @@ function toEntryAchievement(x: unknown, crawlerId: string): CrawlerEntryAchievem
   }
   const box = toString_(x.box);
   const item = toString_(x.item);
+  const reward = toString_(x.reward);
   return {
     title,
     text,
     ...(box === null || box === '' ? {} : { box }),
     ...(item === null || item === '' ? {} : { item }),
+    ...(reward === null || reward === '' ? {} : { reward }),
   };
 }
 
@@ -103,7 +105,13 @@ function toCrawlerProfile(raw: unknown): CrawlerProfile | null {
   const name = toString_(raw.name);
   const characterName = toString_(raw.characterName);
   const handle = toString_(raw.handle);
-  const concept = toString_(raw.concept);
+  /*
+   * An unwritten concept is a real state, not a broken row (011 R2): the page
+   * renders nothing where it would have gone rather than a placeholder, so
+   * empty - and absent, which reads the same - is normal, not a reason to drop
+   * the crawler.
+   */
+  const concept = toString_(raw.concept) ?? '';
   const status = toLiveStatus(raw.status);
   const player = toPlayer(raw.player, id);
   const bust = isRecord(raw.art) ? toString_(raw.art.bust) : null;
@@ -111,7 +119,6 @@ function toCrawlerProfile(raw: unknown): CrawlerProfile | null {
   if (name === null || name === '') return null;
   if (characterName === null || characterName === '') return null;
   if (handle === null || handle === '') return null;
-  if (concept === null || concept === '') return null;
   if (status === null || player === null) return null;
   if (bust === null || bust === '') return null;
 

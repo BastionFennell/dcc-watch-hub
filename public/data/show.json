@@ -2,7 +2,7 @@
   "title": "Dungeon Crawl Cast",
   "tagline": "Earth got cancelled. They got renewed.",
   "pitch": "One film crew. One apocalypse. Now they're the show.",
-  "cadence": "New crawls every other week.",
+  "cadence": "New crawls every week.",
   "seasons": [
     {
       "season": 1,
@@ -62,7 +62,10 @@
   ],
   "links": {
     "youtube": "https://www.youtube.com/@DungeonCrawlCast",
-    "discord": "https://discord.gg/REPLACE_ME"
+    "discord": "https://discord.gg/9ezX89epYD",
+    "tiktok": "https://www.tiktok.com/@dungeoncrawlcast",
+    "bluesky": "https://bsky.app/profile/dungeoncrawlcast.bsky.social",
+    "instagram": "https://www.instagram.com/dungeoncrawlcast/"
   },
   "registryUrl": "/data/npcs.json",
   "spellsUrl": "/data/spells.json"

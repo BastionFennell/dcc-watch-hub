@@ -85,7 +85,7 @@ describe('the named events', () => {
 
   it('calls a hub CTA hub_open and a YouTube CTA outbound', () => {
     const calls = spy();
-    trackCta({ kind: 'hub', href: '/ep/3', label: 'Open the System feed' }, 3);
+    trackCta({ kind: 'hub', href: '/ep/3', label: 'Watch in the Augmented Viewer' }, 3);
     trackCta({ kind: 'youtube', href: 'https://youtu.be/x', label: 'Watch on YouTube' }, 3);
     expect(calls).toEqual([
       ['hub_open', { props: { episode: 3 } }],

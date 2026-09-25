@@ -43,7 +43,10 @@
               }
             }
           },
-          "concept": { "type": "string", "minLength": 1 },
+          "concept": {
+            "comment": "Empty is a real state: the page renders nothing rather than a placeholder (011 R2).",
+            "type": "string"
+          },
           "pockets": {
             "type": "array",
             "items": { "type": "string", "minLength": 1 }
@@ -56,7 +59,12 @@
               "title": { "type": "string", "minLength": 1 },
               "text": { "type": "string", "minLength": 1 },
               "box": { "type": "string", "minLength": 1 },
-              "item": { "type": "string", "minLength": 1 }
+              "item": { "type": "string", "minLength": 1 },
+              "reward": {
+                "comment": "The verbatim reward paragraph, under the \"Reward: {box} -> {item}\" payout line.",
+                "type": "string",
+                "minLength": 1
+              }
             }
           },
           "art": {

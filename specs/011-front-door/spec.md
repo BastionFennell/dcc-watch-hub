@@ -56,9 +56,8 @@ Plausible script (outbound-links variant) injected only when `VITE_PLAUSIBLE_DOM
 `track(name, props)` helper used for `hub_open`, `crawler_view`, `outbound` (YouTube/Discord).
 No cookies, no banner.
 
-## Author to fill (placeholders shipped, marked `TODO:` in the JSON and listed in README)
-Crawler archetype names (`name`; only "The Stuntman" for Ronald and "The Actress" for Mimi are
-known), `concept`, `pockets`, `entryAchievement`, player bios and links; `trailerYoutubeId`;
+## Author to fill (unwritten fields ship empty and render nothing; listed in the JSON's `todo` and in the README)
+`concept`, `pockets`, player bios and links; `trailerYoutubeId`;
 real `premiereAt`/`hubLiveAt`; TikTok / Bluesky / Instagram links; the site URL once the domain is
 registered; the Plausible domain. Domain registration itself is outside this repo.
 
@@ -73,3 +72,84 @@ registered; the Plausible domain. Domain registration itself is outside this rep
 The addendum's §8 checklist, verified in tasks T1130-T1132, plus: hub routes and tests unchanged;
 viewer entry chunk within 3 kB of 418.08 kB (the marketing pages are lazy chunks); `npm run build`
 succeeds without Chrome (OG skipped, warned).
+
+## Revision 2 (2026-09-24) - crawler page redesign
+
+From an external design review of `/crawlers/:id` (values read off the live page), adopted with
+three content adjustments the author confirmed.
+
+### Content rules
+- **Empty states render nothing**: no heading, no placeholder, never "coming soon". A page with
+  one filled section beats one with five placeholders.
+- **No progression spoilers in the hero**: no floor number, no level line, no "ALIVE" pill. The
+  authored status pill shows only when status is not `alive` (dead / fused / unknown). A viewer
+  progress-aware pill is parked as a data-model question.
+- **Keep the entry achievement** when present, with no section label over it (dropped 2026-09-25 by
+  the author: the box's own "ACHIEVEMENT UNLOCKED" kicker is the heading), restyled to look like
+  the System awarding an achievement (the hub's `AchievementToast` look: System-blue hairline frame,
+  mono "ACHIEVEMENT UNLOCKED" kicker, trophy glyph, the title large, the verbatim text, then
+  "Reward: {box} -> {item}" as the payout line). It is the page's only System-styled element.
+- ~~**Keep "Appears in"** as plain episode links (title only, no floor), only for published
+  episodes.~~ **Dropped on 2026-09-25 by the author.** The crawler page lists no episodes: the
+  section, its copy key and the `useAppearances` hook are gone. The build-time `appearances` map in
+  `status.json` stays (`scripts/status.ts` still writes it) for other readers.
+- **Player credit moves into the hero**: "Played by {name}" (name bright, weight 600, rest muted),
+  under a hairline. No standalone player section; pronouns/bio/links, when present, sit under the
+  credit in one muted line.
+- **One CTA**: "Start at Episode 1" as a grid child of the hero, using `GatedCta` for episode 1
+  (YouTube before `hubLiveAt`, System feed after). Prev/next crawler in one full-width bar
+  (prev left, next right).
+
+### Layout (desktop)
+Hero grid: `grid-template-columns: 320px minmax(0, 1fr)`, areas `"art text" "cta text" "fill text"`,
+rows `auto auto 1fr` (the 1fr fill row keeps the 16 px gap under the portrait), column-gap 56,
+row-gap 16, align-items/content start; the text column is full width (no `ch` cap on the paragraph
+so paragraph, rules, and dividers end on the same pixel). Portrait 320 px, 14 px radius, hairline
+border, soft shadow. Pockets: hairline rows (`<ul>` top border, `<li>` 11px 0 padding + bottom
+border), no bullet glyphs. Next bar: full width, 56 px top margin, 18/20 padding, 10 px radius.
+Type scale: eyebrow 11/0.16em caps accent; name 34/650/-0.02em; handle 12 mono 0.06em muted;
+credit 13 muted; body 16/28; section label 11/0.16em caps 600 muted.
+
+### Responsive (<= 720 px)
+Single column, areas `"art" "text" "cta"` (CTA after the description), row-gap 28, portrait max
+280 px, name 28 px, CTA capped at 280 px, nav bar stacks.
+
+### Tokens
+Map the review's colours to existing tokens where a role exists; add tokens only for missing roles
+and list them in the README. The page container and the footer share one `--site-measure` width.
+
+### Not committed
+The reviewer's mockup copy (Harry's concept and pockets) is dummy text and must not land.
+
+### Revision 2 as built (2026-09-24)
+
+- **Archetype names and entry achievements are no longer placeholders.** All five archetype names
+  and all five entry achievements are authored, transcribed verbatim. `CrawlerEntryAchievement`
+  gains `reward`: the reward paragraph the System read out, rendered under the
+  "Reward: {box} -> {item}" payout line. Schema and validator updated in the same change.
+- **Empty is a valid value.** `concept` may be `""` and `pockets` `[]`; the validator keeps the
+  crawler and the page renders nothing for that section. `"Concept coming soon."` and its siblings
+  are gone from `crawlers.json`; the `todo` list stays.
+- **Tokens added**: `--site-measure` (992 px, shared by `page.module.css` and `SiteFooter`),
+  `--text-display` (28 px, 34 px from 721 px up), `--ink-muted` / `--ink-body`. `--hairline` already
+  existed and was reused rather than redefined.
+- **`EntryAchievement`** (`src/site/components/`) carries the achievement. It shares the hub
+  `AchievementToast`'s tokens and shape - System-blue panel, amber mono kicker, trophy glyph
+  (`IconRank`), title, verbatim text - but is a static block: no queue, no window, no animation.
+  The hub component is not imported.
+- **`GatedCta` gains `quiet` and `label`.** `quiet` is the crawler hero's full-width 44 px brand
+  tint; `label` lets the hero say "Start at Episode 1" on both sides of the `hubLiveAt` gate. Every
+  other call site is untouched and unchanged.
+- **`StatusLine` is no longer used by the crawler page.** It stays, and `RosterCard`'s `hero`
+  variant still renders it.
+- **Reading order**: the CTA is the second grid child, so at <= 720 px the DOM order (art, CTA,
+  text) differs from the visual order the revision asks for (art, text, CTA). The CTA therefore
+  falls below the fold on a phone, which is the one place revision 2 and the addendum's §6
+  "hero CTAs above the fold" pull in different directions; revision 2 wins, as the later document.
+
+## Revision 3 (2026-09-25) - the archive reads oldest first
+
+`/watch` orders the descent forward (floors ascending, episodes ascending inside a floor) for
+someone starting the show, and offers the other end instead: a "Jump to latest" button under the
+heading that scrolls to the newest row (`id="ep-{id}"`, marked with a mono `LATEST` chip) and moves
+focus to its link, plus a "Back to top" link closing the list.

@@ -81,13 +81,13 @@ describe('broadcast archive', () => {
     expect(floorOne).not.toBeNull();
     expect(floorTwo).not.toBeNull();
 
-    // Newest first inside a floor, and every row is a feed link: the sample
-    // show has no hubLiveAt, so the gate is open everywhere.
+    // Oldest first inside a floor (011 R3), and every row is a feed link: the
+    // sample show has no hubLiveAt, so the gate is open everywhere.
     expect(
       within(floorOne as HTMLElement)
         .getAllByRole('link')
         .map((link) => link.getAttribute('href')),
-    ).toEqual(['/ep/2', '/ep/1']);
+    ).toEqual(['/ep/1', '/ep/2']);
     expect(
       within(floorTwo as HTMLElement)
         .getAllByRole('link')
@@ -109,7 +109,7 @@ describe('broadcast archive', () => {
   it('serves the crawler pages and the share-image frames', async () => {
     const { unmount } = renderAt('/crawlers/harry');
     await waitFor(() =>
-      expect(screen.getByRole('heading', { name: siteCopy.conceptTitle })).toBeInTheDocument(),
+      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Harold Wallace'),
     );
     unmount();
 

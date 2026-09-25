@@ -3,6 +3,7 @@
  * title, its floor and running time, the spoiler-safe summary, the gated
  * button, and - while the System feed is still shut - how long the wait is.
  */
+import type { Ref } from 'react';
 import type { EpisodeMeta, ShowLinks } from '../../data/types';
 import { countdown, hubLive, msUntilHubLive } from '../gate';
 import { asset, episodeThumb, formatDuration } from '../media';
@@ -15,13 +16,33 @@ export interface EpisodeRowProps {
   episode: EpisodeMeta;
   now: number;
   links: ShowLinks;
+  /** A fragment target for this row, so `/watch#ep-3` lands on it (011 R3). */
+  anchorId?: string;
+  /** The newest episode in the archive: marked, and jumped to (011 R3). */
+  latest?: boolean;
+  /** Handed to the archive so its jump control can scroll and focus this row. */
+  rowRef?: Ref<HTMLElement>;
 }
 
-export function EpisodeRow({ episode, now, links }: EpisodeRowProps) {
+export function EpisodeRow({
+  episode,
+  now,
+  links,
+  anchorId,
+  latest = false,
+  rowRef,
+}: EpisodeRowProps) {
   const locked = !hubLive(episode, now);
 
   return (
-    <article className={styles.row} data-testid={`episode-row-${episode.id}`}>
+    <article
+      className={styles.row}
+      data-testid={`episode-row-${episode.id}`}
+      {...(anchorId === undefined ? {} : { id: anchorId })}
+      ref={rowRef}
+      /* A scroll target needs somewhere to put the outline it gets on focus. */
+      {...(latest ? { tabIndex: -1 } : {})}
+    >
       <img
         className={styles.thumb}
         src={asset(episodeThumb(episode))}
@@ -37,6 +58,7 @@ export function EpisodeRow({ episode, now, links }: EpisodeRowProps) {
           <span>{siteCopy.floorLabel(episode.floor)}</span>
           <span className={styles.dot}>·</span>
           <span className={styles.duration}>{formatDuration(episode.durationSec)}</span>
+          {latest ? <span className={styles.latest}>{siteCopy.latestChip}</span> : null}
         </p>
         <h3 className={styles.title}>{episode.title}</h3>
         {episode.summary === undefined || episode.summary === '' ? null : (

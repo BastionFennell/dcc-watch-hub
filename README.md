@@ -113,10 +113,10 @@ with a populated feed and no network.
 | `src/prefs/` | viewer preferences that are not playback: `logOpen` (the broadcast log's open state) |
 | `src/components/` | stage, party rail, event feed, timeline, toast, minimap, header, rail panel, glance card, full record, dossier sections, floor map, resume card, share button + notice, broadcast log, phone tab strip, Encountered strip, entity record, registry entry |
 | `src/pages/` | `EpisodePage`, `RegistryPage`, `NotFoundPage` (the hub's own routes) |
-| `src/site/` | the front door (011): the five marketing pages, `RosterCard` / `GatedCta` / `SystemBox` / `EpisodeRow`, `gate.ts` (the `hubLiveAt` rule), `seo.tsx`, `jsonLd.ts`, `analytics.ts`, `meta.ts`, and the `/_og/**` frames - every page a lazy chunk |
+| `src/site/` | the front door (011): the five marketing pages, `RosterCard` / `GatedCta` / `SystemBox` / `EpisodeRow` / `EntryAchievement`, `gate.ts` (the `hubLiveAt` rule), `seo.tsx`, `jsonLd.ts`, `analytics.ts`, `meta.ts`, and the `/_og/**` frames - every page a lazy chunk |
 | `src/entry-server.tsx` | the prerenderer's half of the app; built separately and deleted from `dist/` at the end of the build |
 | `src/copy.ts` | **every** user-facing string, in the System's voice |
-| `src/styles/tokens.css` | the colour/spacing/type tokens from spec §6 |
+| `src/styles/tokens.css` | the colour/spacing/type tokens from spec §6, plus the four the front door added in 011 revision 2: `--site-measure` (992 px, the one width the marketing shell and the footer share), `--text-display` (the crawler name: 28 px, 34 px from 721 px up), and `--ink-muted` / `--ink-body` (the cooler greys the marketing type is set in, both AA on `--canvas`) |
 | `public/data/` | `show.json` + `ep{N}.json` + `npcs.json` + `spells.json` (static, fetched at load) |
 | `scripts/sheet-to-json.ts` | editor CSV → `ep{N}.json` converter |
 
@@ -133,9 +133,9 @@ five static, prerendered routes whose job is to convert a stranger in ten second
 | Route | What it shows |
 |---|---|
 | `/` | Hero (tagline, pitch, the gated CTA pair, a click-to-play trailer), the five roster cards, a "New to Dungeon Crawler Carl?" System box, the Discord strip with the cadence, the footer |
-| `/watch` | Every episode grouped by floor, deepest floor first and newest episode first inside it, each row with its still, runtime, spoiler-safe summary and gated CTA. **This is the old `/` archive.** |
+| `/watch` | Every episode grouped by floor, oldest first (floors ascending, episodes ascending inside a floor - 011 revision 3), each row with its still, runtime, spoiler-safe summary and gated CTA. A "Jump to latest" button under the heading scrolls to the newest row (`id="ep-{id}"`, marked `LATEST`) and focuses its link; a "Back to top" link closes the list. **This is the old `/` archive.** |
 | `/crawlers` | The roster grid (2 columns at 375 px, 5 across on a laptop). Status filter chips appear only when more than one status exists |
-| `/crawlers/:id` | One crawler: hero art, live status line, concept, pockets, the entry achievement as the page's single System box, the player behind them, "Appears in", prev/next |
+| `/crawlers/:id` | One crawler (redesigned in 011 revision 2): a portrait / text hero with the archetype, the name, the handle, the "Played by" credit and one "Start at Episode 1" CTA, then whichever of concept, pockets and the entry achievement have anything in them (the achievement carries no section label of its own), then the prev/next bar. No floor, no level, no "alive" pill - and no placeholders |
 | `/community` | The single link every social bio points at: Discord first, the platform row, the cadence, and one paragraph on how to help |
 
 All five are prerendered to real HTML at build time (`dist/watch/index.html`, and so on), so a
@@ -155,7 +155,7 @@ before it renders (`src/site/pages/lazy.tsx` explains the two-state wrapper), be
 |---|---|---|
 | `tagline` | `/` H1 | One line. The promise. |
 | `pitch` | `/` lead, every default description | Two or three sentences. |
-| `cadence` | `/`, `/community` | "New crawls every other week." |
+| `cadence` | `/`, `/community` | "New crawls every week." |
 | `trailerYoutubeId` | `/` hero embed | Optional. Without it the hero embeds the newest episode instead, and the "Latest episode" card is hidden so the same video is not on the page twice |
 | `links.{youtube,discord,tiktok,bluesky,instagram}` | social row, footer, `/community` | Only the ones present are rendered - no greyed-out icons |
 | `episodes[].premiereAt` | JSON-LD `uploadDate` | ISO. When the video went up |
@@ -183,16 +183,16 @@ crawler id (`harry`, `mimi`, `ronald`, `xo`, `veil`) so the live status line can
 **`dist/data/status.json`** (generated, never committed) - `{ generatedAt, episodeId, crawlers, appearances }`.
 `scripts/build-status.ts` runs the hub reducer to the end of the newest episode past its
 `hubLiveAt` and emits each crawler's `{ level, hp, floor, lastEpisodeId }`, plus an `appearances`
-map (crawler id to the ids of every published episode whose data names them) so a crawler page
-renders "Appears in" from its own HTML instead of fetching every episode file.
+map (crawler id to the ids of every published episode whose data names them). The crawler page
+no longer renders an "Appears in" list (dropped 2026-09-25); the map stays for other readers.
 
 ### How `hubLiveAt` gates the CTA
 
 One rule, in `src/site/gate.ts`, and every episode surface obeys it:
 
 - **Before `hubLiveAt`** the button reads **Watch on YouTube** and links out, and the row carries a
-  "System feed unlocks in 2d 4h" chip. The hub page still exists - nothing links to it.
-- **At or after `hubLiveAt`** the button becomes **Open the System feed** and links to `/ep/:id`.
+  "Augmented Viewer unlocks in 2d 4h" chip. The hub page still exists - nothing links to it.
+- **At or after `hubLiveAt`** the button becomes **Watch in the Augmented Viewer** and links to `/ep/:id`.
 - **No `hubLiveAt`** means live now, which is what keeps every pre-011 `show.json` working.
 
 The comparison is a plain `Date.now()` in the browser; there is no server. A prerendered page is
@@ -248,24 +248,27 @@ Three custom events, all from `src/site/analytics.ts`:
 `public/data/crawlers.json` carries its own list in a top-level `"todo"` array, reproduced here:
 
 1. Confirm the handles - they are all "Dungeon Crawler {first name}" placeholders today.
-2. `concept`: one or two lines per crawler from the character docs (only Ronald's is real).
-3. `pockets`: what was in their pockets when the world ended, one line per item.
-4. `entryAchievement`: the System text verbatim, plus the box and the item it paid out (only
-   Ronald's title / box / item are real).
-5. `player.pronouns`, `player.bio` (two sentences) and `player.links` for all five.
-6. `player.bust`: a photo of the real person, if they want one on the page.
-7. `show.json`: `trailerYoutubeId`, the real `premiereAt` / `hubLiveAt` dates, and
+2. `concept`: one or two lines per crawler from the character docs (only Ronald's is written).
+3. `pockets`: what was in their pockets when the world ended, one line per item (none written yet).
+4. `player.pronouns`, `player.bio` (two sentences) and `player.links` for all five.
+5. `player.bust`: a photo of the real person, if they want one on the page.
+6. `show.json`: `trailerYoutubeId`, the real `premiereAt` / `hubLiveAt` dates, and
    `links.tiktok` / `links.bluesky` / `links.instagram`.
 
 And outside the data files:
 
-8. The domain. `VITE_SITE_URL` defaults to `https://dungeoncrawlcast.com`; registering it is not
+7. The domain. `VITE_SITE_URL` defaults to `https://dungeoncrawlcast.com`; registering it is not
    something this repo can do.
-9. The Plausible site, if analytics is wanted (`VITE_PLAUSIBLE_DOMAIN`).
-10. Point every social bio at `/community`, which is the URL that page exists for.
+8. The Plausible site, if analytics is wanted (`VITE_PLAUSIBLE_DOMAIN`).
+9. Point every social bio at `/community`, which is the URL that page exists for.
 
-Nothing in `crawlers.json` renders the word "TODO": every placeholder reads as prose ("Concept
-coming soon."), so a screenshot taken today is not embarrassing.
+`entryAchievement` is done: all five are transcribed verbatim from the author's notes, with the
+`box`, the `item` and the `reward` paragraph the System read out.
+
+**Unwritten means empty, never "coming soon"** (011 revision 2). A field the author has not filled
+in is `""` or `[]` in the JSON and the crawler page renders *nothing* where it would have gone - no
+heading, no placeholder, no greyed-out box. One filled section beats five empty ones, and a
+screenshot taken today is not embarrassing because there is nothing in it to be embarrassed by.
 
 ### Parked (v2 - deliberately not built)
 
@@ -1110,9 +1113,9 @@ The episodes those crawlers appear in (events, ticker copy, NPCs, map) are still
 | `episodes[0].title` | `"Episode 1 - The World Dungeon"` | the real episode title |
 | `episodes[1].title` | `"Episode 2 - The Meat District"` | the real episode title |
 | `episodes[2].title` | `"Episode 3 - Descent"` | the real episode title |
-| `links.discord` | `"https://discord.gg/REPLACE_ME"` | the real invite |
+| `links.discord` | `"https://discord.gg/9ezX89epYD"` | filled (2026-09-25); tiktok, bluesky, instagram too |
 | `links.youtube` | `"https://www.youtube.com/@DungeonCrawlCast"` | confirm this is the real channel URL |
-| `links.tiktok` / `links.bluesky` / `links.instagram` | **absent** - the schema asks for a real URI, so there is no placeholder to leave in | add each one as a full URL when the account exists |
+| `links.tiktok` / `links.bluesky` / `links.instagram` | filled (2026-09-25) | - |
 | `trailerYoutubeId` | **absent** - the home page falls back to the newest episode's embed | the trailer's video id, once a trailer is cut |
 | `episodes[*].premiereAt` / `hubLiveAt` | sample dates in August and September 2026, two days apart | the real premiere, and the premiere + 48 h hub unlock |
 | `episodes[*].summary` | one invented spoiler-safe line each | the real one-sentence summary |
@@ -1120,8 +1123,8 @@ The episodes those crawlers appear in (events, ticker copy, NPCs, map) are still
 **`public/data/crawlers.json`** ships its own fill-in list in a top-level `"todo"` array, and
 **The front door → Author to fill** above reproduces it in order, together with the three things
 that live outside the data files (the domain, the Plausible site, and pointing every social bio at
-`/community`). Nothing in that file renders the word "TODO": every placeholder reads as prose
-("Concept coming soon.").
+`/community`). Nothing in that file renders the word "TODO", and nothing says "coming soon": an
+unwritten `concept` or `pockets` is empty, and the page renders nothing for it (011 revision 2).
 
 The three sample videos are the Blender Foundation's open movies: public, embeddable, and each a
 different video so switching episodes is visibly a fresh broadcast. Each `durationSec` is that
@@ -1197,8 +1200,8 @@ events, written to exercise every event type. Regenerate them from real sheets w
       than into some other page's markup;
    2. `scripts/build-status.ts` (via `tsx`) - runs the hub reducer to the end of the newest
       episode whose `hubLiveAt` is past, and writes `dist/data/status.json`, together with the
-      `appearances` map (which crawler is named by which published episode) so a crawler page
-      never fetches an episode file to list its own appearances;
+      `appearances` map (which crawler is named by which published episode), which no page
+      renders today but which costs the build nothing to keep;
    3. `scripts/prerender.mjs` - renders `/`, `/watch`, `/crawlers`, `/community` and
       `/crawlers/{id}` with the SSR bundle, and writes `dist/<route>/index.html` with the route's
       head tags in `<head>` and the data it was rendered from in a

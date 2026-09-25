@@ -30,7 +30,7 @@ describe('HomePage', () => {
   });
 
   it('sends the primary CTA to YouTube before the gate, with the archive beside it', () => {
-    renderSite(<HomePage />, { show: makeGatedShow(LIVE_AT), now: gate - 1 });
+    renderSite(<HomePage />, { show: makeGatedShow(LIVE_AT, 'first'), now: gate - 1 });
     const primary = screen.getByRole('link', { name: siteCopy.watchOnYouTube });
     expect(primary).toHaveAttribute('data-variant', 'primary');
     expect(primary.getAttribute('href')).toContain('youtube.com/watch');
@@ -43,9 +43,10 @@ describe('HomePage', () => {
   });
 
   it('flips to the System feed on the gate, with YouTube as the second button', () => {
-    renderSite(<HomePage />, { show: makeGatedShow(LIVE_AT), now: gate });
+    // The hero targets the opener, not the newest episode (author, 2026-09-25).
+    renderSite(<HomePage />, { show: makeGatedShow(LIVE_AT, 'first'), now: gate });
     const primary = screen.getByRole('link', { name: siteCopy.openSystemFeed });
-    expect(primary).toHaveAttribute('href', '/ep/3');
+    expect(primary).toHaveAttribute('href', '/ep/1');
     expect(primary).toHaveAttribute('data-variant', 'primary');
     const secondary = screen.getByRole('link', { name: siteCopy.watchOnYouTube });
     expect(secondary).toHaveAttribute('target', '_blank');

@@ -9,7 +9,7 @@
 import { Link } from 'react-router';
 import { useShow } from '../../data/ShowContext';
 import { useCrawlers } from '../../data/CrawlersContext';
-import { ctaFor, newestEpisode } from '../gate';
+import { ctaFor, firstEpisode, newestEpisode } from '../gate';
 import { useNow } from '../useNow';
 import { Seo } from '../seo';
 import { siteCopy } from '../copy';
@@ -32,10 +32,12 @@ export function HomePage() {
   const now = useNow(60_000, Date.parse(status?.generatedAt ?? '') || Date.now());
 
   const newest = show === null ? null : newestEpisode(show);
+  // The hero sends a stranger to the opener, not the newest episode (author, 2026-09-25).
+  const opener = show === null ? null : firstEpisode(show);
   const trailerId = show?.trailerYoutubeId;
   const hasTrailer = trailerId !== undefined && trailerId !== '';
   const embedId = hasTrailer ? trailerId : (newest?.youtubeId ?? '');
-  const primary = show !== null && newest !== null ? ctaFor(newest, now, show.links) : null;
+  const primary = show !== null && opener !== null ? ctaFor(opener, now, show.links) : null;
 
   return (
     <div className={page.page}>
@@ -53,14 +55,14 @@ export function HomePage() {
           <p className={page.eyebrow}>{siteCopy.heroEyebrow}</p>
           <h1 className={styles.tagline}>{show?.tagline ?? siteCopy.defaultTitle}</h1>
           <p className={page.lead}>{show?.pitch ?? siteCopy.defaultDescription}</p>
-          {show !== null && newest !== null ? (
+          {show !== null && opener !== null ? (
             <div className={styles.ctas}>
               <GatedCta
-                episode={newest}
+                episode={opener}
                 now={now}
                 links={show.links}
                 primary
-                onTrack={(cta) => trackCta(cta, newest.id)}
+                onTrack={(cta) => trackCta(cta, opener.id)}
               />
               {/*
                * The secondary is the other half of the same choice. Once the
@@ -72,9 +74,9 @@ export function HomePage() {
                 <a
                   className={styles.secondary}
                   href={
-                    newest.youtubeId === ''
+                    opener.youtubeId === ''
                       ? show.links.youtube
-                      : `https://www.youtube.com/watch?v=${newest.youtubeId}`
+                      : `https://www.youtube.com/watch?v=${opener.youtubeId}`
                   }
                   target="_blank"
                   rel="noopener"
