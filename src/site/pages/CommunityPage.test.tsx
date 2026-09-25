@@ -28,8 +28,11 @@ describe('CommunityPage', () => {
     renderSite(<CommunityPage />, { path: '/community' });
     expect(screen.getByTestId('social-row')).toBeInTheDocument();
     expect(screen.getByText('New crawls every other week.')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: siteCopy.supportTitle })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: siteCopy.followTitle })).toBeInTheDocument();
+    // The closing paragraph has no heading (author copy, 2026-09-25); the landmark is named instead.
+    expect(screen.getByRole('region', { name: siteCopy.supportAria })).toBeInTheDocument();
     expect(screen.getByText(siteCopy.supportBody)).toBeInTheDocument();
+    expect(screen.getByText(siteCopy.communityDiscordBody)).toBeInTheDocument();
   });
 
   it('carries its own head', () => {

@@ -114,11 +114,17 @@ export const siteCopy = {
   nextCrawler: 'Next crawler',
 
   // --- /community
-  communityTitle: 'Find the show',
-  communityLead: 'One link for every bio, and the room where the crawl gets argued about.',
-  supportTitle: 'How to support the show',
+  communityTitle: 'Keep up with the crawl',
+  communityLead: 'Watch new episodes, follow the cast, and join the Dungeon Crawl Cast community.',
+  /** The Discord card on /community (the home strip keeps `discordBody`). */
+  communityDiscordBody:
+    'Talk episodes, swap floor theories, share your favorite moments, and hang out with other crawlers between sessions.',
+  followTitle: 'Follow the crawl',
+  /** Landmark name for the heading-less closing paragraph. */
+  supportAria: 'How to support the show',
+  /** Closing paragraph on /community; it has no heading by design (author copy, 2026-09-25). */
   supportBody:
-    'Subscribe on YouTube so the algorithm stops pretending we are not here, send one episode to one person who would like it, and come argue about the floor in the Discord. That is the whole ask.',
+    'If you\'re having fun with the crawl, help us bring a few more people into the dungeon. Subscribe on YouTube, send your favorite episode to a friend, or come hang out with us in Discord. We\'re glad you\'re here.',
 
   // --- platforms (the social row shows only the ones show.json carries)
   platform: {

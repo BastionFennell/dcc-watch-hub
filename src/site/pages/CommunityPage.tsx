@@ -38,7 +38,7 @@ export function CommunityPage() {
             <h2 className={page.sectionTitle} id="discord">
               {siteCopy.discordTitle}
             </h2>
-            <p className={page.lead}>{siteCopy.discordBody}</p>
+            <p className={page.lead}>{siteCopy.communityDiscordBody}</p>
             <a
               className={styles.big}
               href={show.links.discord}
@@ -52,7 +52,7 @@ export function CommunityPage() {
 
           <section className={page.section} aria-labelledby="platforms">
             <h2 className={page.sectionTitle} id="platforms">
-              {siteCopy.navCommunity}
+              {siteCopy.followTitle}
             </h2>
             <SocialRow links={show.links} />
             {show.cadence === undefined ? null : (
@@ -62,10 +62,7 @@ export function CommunityPage() {
         </>
       )}
 
-      <section className={page.section} aria-labelledby="support">
-        <h2 className={page.sectionTitle} id="support">
-          {siteCopy.supportTitle}
-        </h2>
+      <section className={page.section} aria-label={siteCopy.supportAria}>
         <p className={page.lead}>{siteCopy.supportBody}</p>
       </section>
 

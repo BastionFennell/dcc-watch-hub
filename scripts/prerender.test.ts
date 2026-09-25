@@ -120,7 +120,7 @@ describe('a prerendered page', () => {
     const page = injectPage(TEMPLATE, { head, html, data });
 
     expect(page).toContain(`<title${M}>Community · Dungeon Crawl Cast</title>`);
-    expect(page).toContain('Find the show');
+    expect(page).toContain('Keep up with the crawl');
     expect(page).toContain('<div id="root"><div class=');
     const payload = page
       .split('<script id="__DCC__" type="application/json">')[1]
