@@ -28,6 +28,7 @@
           "name": { "type": "string", "minLength": 1 },
           "characterName": { "type": "string", "minLength": 1 },
           "handle": { "type": "string", "minLength": 1 },
+          "pronouns": { "type": "string", "minLength": 1 },
           "player": {
             "type": "object",
             "required": ["name"],

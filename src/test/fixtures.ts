@@ -357,6 +357,7 @@ export function makeCrawlers(): CrawlerRoster {
         name: 'The Stuntman',
         characterName: 'Ronald Hudson',
         handle: 'Dungeon Crawler Ronald',
+        pronouns: 'he/him',
         player: { name: 'Danny', pronouns: 'he/him', bio: 'Two sentences about Danny.' },
         concept: 'Thrill-seeking stunt performer.',
         pockets: ['A roll of gaffer tape', 'Half a protein bar'],
@@ -374,6 +375,7 @@ export function makeCrawlers(): CrawlerRoster {
         name: 'Harry',
         characterName: 'Harold Wallace',
         handle: 'Dungeon Crawler Harry',
+        pronouns: 'she/her',
         // The unwritten crawler: every optional field empty, so a test can ask
         // what the page renders when the author has not filled it in (011 R2).
         player: { name: 'Marcus' },

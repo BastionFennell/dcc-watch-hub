@@ -13,15 +13,15 @@
 - [X] T1210 Gates; `deploy.yml` weekly schedule
 
 ## Wave B
-- [ ] T1211 `src/site/copy.ts` dossier strings (eyebrow, headings by pronoun, banner, strip labels, LOCKED/REVEAL/UPDATE/QUIET, footer, launch line, quiet card text via `quiet.ts`)
-- [ ] T1212 `DossierStrip` (grey pills when unrevealed)
-- [ ] T1213 `DossierRow` locked + revealed states, a11y, focus handoff, motion
-- [ ] T1214 `Dossier` panel (header, banner, strip, rows, footer, bulk control, launch state)
-- [ ] T1215 Mount on `CrawlerPage`; hero pill gone; <= 560 px layout
-- [ ] T1216 Snapshot test: locked render identical across two crawlers after name/id substitution
-- [ ] T1217 Leak tests: no forbidden strings in locked markup/labels; head/OG/JSON-LD contain no card text; nothing revealed in the DOM before reveal
-- [ ] T1218 Keyboard test: reveal by Enter and Space; focus lands on the heading
-- [ ] T1219 Persistence test: reload + navigation between crawler pages; storage throw
-- [ ] T1220 Prerender check: two crawler pages differ only in name/id inside the panel
-- [ ] T1221 README: the dossier (authoring, lint, reveal store, leak rules)
-- [ ] T1222 Gates + screenshots (1440, 375; locked, partially revealed, all revealed) + axe
+- [X] T1211 `src/site/copy.ts` dossier strings (eyebrow, headings by pronoun, banner, strip labels, LOCKED/REVEAL/UPDATE/QUIET, footer, launch line, quiet card text via `quiet.ts`)
+- [X] T1212 `DossierStrip` (grey pills when unrevealed)
+- [X] T1213 `DossierRow` locked + revealed states, a11y, focus handoff, motion
+- [X] T1214 `Dossier` panel (header, banner, strip, rows, footer, bulk control, launch state)
+- [X] T1215 Mount on `CrawlerPage`; hero pill gone; <= 560 px layout
+- [X] T1216 Snapshot test: locked render identical across two crawlers after name/id substitution
+- [X] T1217 Leak tests: no forbidden strings in locked markup/labels; head/OG/JSON-LD contain no card text; nothing revealed in the DOM before reveal
+- [X] T1218 Keyboard test: reveal by Enter and Space; focus lands on the heading
+- [X] T1219 Persistence test: reload + navigation between crawler pages; storage throw
+- [X] T1220 Prerender check: two crawler pages differ only in name/id inside the panel
+- [X] T1221 README: the dossier (authoring, lint, reveal store, leak rules)
+- [X] T1222 Gates + screenshots (1440, 375; locked, partially revealed, all revealed) + axe

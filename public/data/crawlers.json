@@ -28,7 +28,8 @@
       "art": {
         "bust": "/img/crawlers/harry.png",
         "full": "/img/crawlers/harry-art.png"
-      }
+      },
+      "pronouns": "he/them"
     },
     {
       "id": "mimi",
@@ -50,7 +51,8 @@
       "art": {
         "bust": "/img/crawlers/mimi.png",
         "full": "/img/crawlers/mimi-art.png"
-      }
+      },
+      "pronouns": "she/her"
     },
     {
       "id": "ronald",
@@ -72,7 +74,8 @@
       "art": {
         "bust": "/img/crawlers/ronald.png",
         "full": "/img/crawlers/ronald-art.png"
-      }
+      },
+      "pronouns": "he/him"
     },
     {
       "id": "xo",
@@ -94,7 +97,8 @@
       "art": {
         "bust": "/img/crawlers/xo.png",
         "full": "/img/crawlers/xo-art.png"
-      }
+      },
+      "pronouns": "he/them"
     },
     {
       "id": "veil",
@@ -116,7 +120,8 @@
       "art": {
         "bust": "/img/crawlers/veil.png",
         "full": "/img/crawlers/veil-art.png"
-      }
+      },
+      "pronouns": "she/they"
     }
   ]
 }

@@ -22,6 +22,7 @@ import { Seo } from '../seo';
 import { siteCopy } from '../copy';
 import { trackCrawlerView, trackCta } from '../analytics';
 import { asset, crawlerOgImage } from '../media';
+import { Dossier } from '../components/Dossier/Dossier';
 import { EntryAchievement } from '../components/EntryAchievement';
 import { GatedCta } from '../components/GatedCta';
 import { SiteFooter } from '../components/SiteFooter';
@@ -37,7 +38,7 @@ const NO_LINKS: ShowLinks = { youtube: '', discord: '' };
 export function CrawlerPage() {
   const { id = '' } = useParams();
   const { show } = useShow();
-  const { profiles, status, loading } = useCrawlers();
+  const { profiles, status, loading, dossierFor } = useCrawlers();
   const now = useNow(60_000, Date.parse(status?.generatedAt ?? '') || Date.now());
 
   const index = profiles.findIndex((profile) => profile.id === id);
@@ -153,6 +154,15 @@ export function CrawlerPage() {
           {achievement === undefined ? null : <EntryAchievement achievement={achievement} />}
         </div>
       </article>
+
+      {/*
+       * The dossier (012): full width of the page measure, under the hero grid
+       * and above the bar that walks the roster. `dossierFor` answers `null`
+       * until the file is here - on a prerendered page it is here already, so
+       * the locked rows are in the server's HTML and the row count never
+       * changes under the reader.
+       */}
+      <Dossier profile={profile} dossier={dossierFor(profile.id)} />
 
       <nav className={styles.prevNext} aria-label={siteCopy.crawlersTitle}>
         {prev === undefined ? (

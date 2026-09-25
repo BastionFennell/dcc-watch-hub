@@ -1,0 +1,193 @@
+/*
+ * The dossier panel (012). The page's second block after the hero, full width
+ * of the front-door measure: a heading block in the page's own voice, then one
+ * dark panel that holds everything the System filed - band, banner, strip,
+ * rows, footer - so the whole feed reads as one object on the page.
+ */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+  min-width: 0;
+  margin-top: 56px;
+}
+
+/* --------------------------------------------------------- the heading */
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.heading {
+  font-size: var(--text-display);
+  font-weight: 650;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.sub {
+  font-size: var(--text-md);
+  line-height: 1.6;
+  color: var(--ink-muted);
+}
+
+/* The launch state's whole body: one line, and no panel to count rows in. */
+.launch {
+  padding: var(--space-8);
+  background: var(--panel);
+  border: var(--border-hairline);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-md);
+  line-height: 1.6;
+  color: var(--ink-body);
+}
+
+/* ----------------------------------------------------------- the panel */
+
+.panel {
+  min-width: 0;
+  background: var(--panel);
+  border: var(--border-hairline);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* The file's own band: whose dossier this is, and how far it runs. */
+.band {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding: var(--space-6) var(--space-8);
+  background: var(--panel-deep);
+  border-bottom: var(--border-hairline);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.file {
+  color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+
+.range {
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* The one warning on the page. Amber, not System blue: this is the panel
+   talking to the reader, not the System talking to the crawlers. */
+.banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding: var(--space-6) var(--space-8);
+  background: var(--amber-bg);
+  border-bottom: var(--border-hairline);
+}
+
+.warning {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--amber-fg);
+  font-weight: 600;
+}
+
+.hint {
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  color: var(--amber-fg);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ---------------------------------------------------------- the footer */
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding: var(--space-6) var(--space-8);
+  background: var(--panel-deep);
+}
+
+.count {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.bulk {
+  min-height: 44px;
+  padding: var(--space-4) var(--space-7);
+  background: transparent;
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-pill);
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--text-md);
+  cursor: pointer;
+}
+
+.bulk:hover {
+  border-color: var(--brand-line);
+  color: var(--text);
+}
+
+.bulk:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+@media (max-width: 560px) {
+  .band,
+  .banner,
+  .footer {
+    padding: var(--space-6) var(--space-7);
+  }
+
+  /* The hint is the affordance; at this width the tap is the affordance. */
+  .banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-6);
+  }
+
+  .bulk {
+    width: 100%;
+  }
+}

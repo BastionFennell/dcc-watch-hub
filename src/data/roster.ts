@@ -102,6 +102,7 @@ function toCrawlerProfile(raw: unknown): CrawlerProfile | null {
   const name = toString_(raw.name);
   const characterName = toString_(raw.characterName);
   const handle = toString_(raw.handle);
+  const pronouns = toString_(raw.pronouns);
   /*
    * An unwritten concept is a real state, not a broken row (011 R2): the page
    * renders nothing where it would have gone rather than a placeholder, so
@@ -127,6 +128,7 @@ function toCrawlerProfile(raw: unknown): CrawlerProfile | null {
     name,
     characterName,
     handle,
+    ...(pronouns === null || pronouns === '' ? {} : { pronouns }),
     player,
     concept,
     pockets: toNonEmptyStringList(raw.pockets),

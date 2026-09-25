@@ -116,6 +116,8 @@ export interface CrawlerProfile {
   name: string;
   characterName: string;
   handle: string;
+  /** The character's pronouns as on the sheet ("she/they"); drives the dossier heading (012). */
+  pronouns?: string;
   player: CrawlerPlayer;
   concept: string;
   /** "What was in their pockets when the world ended", one item per line. */

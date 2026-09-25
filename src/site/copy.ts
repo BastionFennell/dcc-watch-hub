@@ -106,6 +106,72 @@ export const siteCopy = {
   prevCrawler: 'Previous crawler',
   nextCrawler: 'Next crawler',
 
+  /* ------------------------------------------ the crawler dossier (012) */
+  /*
+   * Every word the panel says, in one group. The rule that shapes all of them:
+   * a locked card must be able to say what it is without saying anything about
+   * what is inside it, so nothing here is written per crawler, per condition or
+   * per kind - `LOCKED` and "Reveal the Episode 9 status update" read exactly
+   * the same over a quiet card, an update and a death.
+   *
+   * The quiet card's own words live in `src/site/dossier/quiet.ts`, because the
+   * build script says them too and `scripts/**` may not import this file.
+   */
+  dossier: {
+    /** Mono caps over the panel, in the voice of the thing filing the report. */
+    eyebrow: 'SYSTEM FEED · CRAWLER DOSSIER',
+    /** The h2, in the crawler's own pronoun (see `dossier/derive.ts`). */
+    heading: (pronoun: 'he' | 'she' | 'they') =>
+      pronoun === 'they' ? 'Where are they now?' : `Where is ${pronoun} now?`,
+    /** The promise under the heading: nothing here is open until you open it. */
+    sub: 'Every card starts hidden.',
+    /** The panel's band: whose file this is, and how far it runs. */
+    fileRange: (first: number, last: number) =>
+      first === last ? `EPISODE ${first}` : `EPISODES ${first}-${last}`,
+    /** The banner, left and right. The warning sign is the only glyph here. */
+    bannerWarning: '⚠ SPOILERS · ONE CARD PER EPISODE',
+    bannerHint: 'Click a card to reveal it. Your choices are remembered.',
+    /** The strip's three cells. Their values come only from revealed cards. */
+    levelLabel: 'LEVEL',
+    conditionLabel: 'CONDITION',
+    lastOnCameraLabel: 'LAST ON CAMERA',
+    /*
+     * The two conditions, as the strip prints them. They exist only in the
+     * revealed state: an unrevealed cell is a grey pill labelled "Hidden", and
+     * the word "Deceased" is never in the document until a reader opens the
+     * card that says it.
+     */
+    alive: 'Alive',
+    deceased: 'Deceased',
+    /** The strip's third value: the newest revealed episode they were in. */
+    lastOnCamera: (episode: number) => `Ep ${episode}`,
+    /** What an unrevealed strip cell is called, since it has no text. */
+    hiddenValue: 'Hidden',
+    /** The row's tag column: the episode, then what kind of row this is. */
+    episodeTag: (episode: number) => `EP ${episode}`,
+    locked: 'LOCKED',
+    reveal: 'REVEAL',
+    update: 'UPDATE',
+    quiet: 'QUIET',
+    /**
+     * A locked row's whole accessible name. Deliberately neutral: it names the
+     * episode and the action and nothing else, so a screen reader hears the
+     * same sentence over every card of every crawler.
+     */
+    revealAria: (episode: number) => `Reveal the Episode ${episode} status update`,
+    /** The footer's count. Identical across crawlers, which is the point. */
+    hidden: (count: number) => `${count} update${count === 1 ? '' : 's'} hidden`,
+    /** The one bulk control, in its two states. */
+    revealAll: 'Reveal all - I\'m caught up',
+    hideAll: 'Hide everything again',
+    /**
+     * The launch state: a deploy with no aired episode yet. It says when the
+     * first report lands rather than leaving an empty panel, because an empty
+     * panel reads as a fault.
+     */
+    launch: 'The System files its first report after Episode 1.',
+  } as const,
+
   // --- /community
   communityTitle: 'Keep up with the crawl',
   communityLead: 'Watch new episodes, follow the cast, and join the Dungeon Crawl Cast community.',

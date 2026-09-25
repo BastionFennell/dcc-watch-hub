@@ -243,6 +243,98 @@ Three custom events, all from `src/site/analytics.ts`:
 | `outbound` | `{ to, episode? }` | A link leaves the site: YouTube, Discord, TikTok, Bluesky, Instagram |
 | `crawler_view` | `{ crawler }` | A crawler page mounts |
 
+### The crawler dossier - "Where are they now?" (012)
+
+Under the hero on every `/crawlers/:id` there is a panel with **one card per aired episode**, and
+every card starts shut. The reader opens them one at a time, or all at once with
+"Reveal all - I'm caught up", and what they opened is remembered in their browser.
+
+**The invariant is the feature: absence is never a signal.** A short card list is itself a spoiler,
+so every crawler has a card for every aired episode, forever. An episode a crawler was not in gets
+a real card that says so - and that same quiet card turns up routinely on crawlers who are having a
+fine time, so it can never be read as a tell. After a death the cards keep coming and simply change
+subject: the estate, the legacy item, the reruns. Constitution 1.5.0, Principle VIII.
+
+Everything the panel says about a crawler is derived from **the cards that reader has opened**,
+never from the file: level is the last revealed level in episode order, condition is `deceased` if
+any revealed card says so (sticky - reading the newest revealed card alone once printed "Alive"
+next to a posthumous merch update), and "last on camera" is the highest revealed episode they were
+in. Nothing revealed yet means three grey pills, not three dashes: a dash is a statement.
+
+#### Authoring
+
+One file per crawler at `content/status/<id>.json` (repo root, never served). See
+`content/status/README.md` for the full rules; the shape is:
+
+```json
+{ "id": "harry",
+  "updates": [
+    { "episode": 1, "kind": "update", "onCamera": true,
+      "title": "<= 60 chars, present tense",
+      "body": "1-3 sentences, present tense, System voice",
+      "chips": ["<= 3 SHORT MONO FACTS"], "level": null, "condition": "alive" }
+  ] }
+```
+
+- `level: null` means "ask the hub reducer what they were at the end of that episode".
+- `condition` is sticky: a `deceased` card may not be followed by an `alive` one.
+- An episode with no authored entry becomes an **auto quiet card** (`Off camera this episode`), so
+  an author who writes nothing still ships a full, unremarkable feed.
+- `floor` is not authored - it comes from `show.json`.
+
+`npm run build:dossier` (run for you by `predev` and `prebuild`) compiles those into
+`public/data/dossier/<id>.json`, which is gitignored and regenerated every build. **Cards for
+episodes that have not aired never reach the bundle**: "aired" means past `hubLiveAt` at build
+time, which is why the deploy workflow also runs weekly.
+
+The lint **fails the build** on: a card for an episode `show.json` does not have; two cards for one
+episode; cards out of ascending order; an empty or over-long (> 60) title; an empty body; more than
+three chips or an empty one; a level below 1; a condition that goes back from `deceased` to
+`alive`. It **warns** (and carries on) about a card for an episode that has not aired - legal to
+write ahead, dropped at compile time - and about a `quiet` card that claims `onCamera`. A *missing*
+card for an aired episode is not an error at all: that is the normal case, and the compiler fills
+it. The same lint runs as a vitest test over `content/status/*.json` against the live `show.json`,
+so it fails in CI as well as in the build.
+
+#### The reveal store
+
+`localStorage`, under `dcc.reveals.v1`:
+`{ v: 1, revealed: { "<id>": [2, 5] }, caughtUpThrough: 0 }`. A card is open when its episode is
+listed for that crawler **or** its episode is at or below `caughtUpThrough`, the watermark the bulk
+control sets - a reader who is caught up is caught up on everyone, so it is global while the
+explicit list is per crawler. "Hide everything again" clears both.
+
+This is the one exception the constitution's storage rule carves out (1.5.0): it is a reader
+preference, never derived from events and never a statement about the story. Every access is
+wrapped; a browser that refuses storage (private mode, blocked site data, an embedded webview)
+gets an in-memory store and loses nothing but the memory. The server and the first client render
+are **always fully locked** (`getServerSnapshot` returns a frozen `LOCKED`), so the prerendered
+HTML can never disagree with hydration and the reader's own choices arrive in the render after
+mount.
+
+#### Leak rules (what the tests defend)
+
+- No card text in the page title, `meta[name=description]`, any `og:*` tag, any JSON-LD, or the URL
+  - no fragment, no query param. The panel emits no links at all.
+- Nothing of a card is in the DOM before it is revealed: not the text, not a class, not a data
+  attribute. The two placeholder bars are fixed widths; the locked row's whole accessible name is
+  "Reveal the Episode 9 status update" and nothing else.
+- **Locked markup is byte-identical across crawlers** apart from the name, the id, and the
+  heading's pronoun. A snapshot test renders two crawlers with the same card count and compares
+  after substitution, and the prerendered HTML is compared the same way.
+- No locked-state string or ARIA label matches `deceased|death|final|killed|memorial`.
+- The compiled dossier *is* embedded in the prerender payload (`__DCC__.dossier`) so the locked
+  panel ships with the right number of rows and the client fetches nothing - leak tests strip that
+  script before asserting on the document.
+- The hero has no status pill and `crawlers.json` has no `status` field: a crawler's condition
+  exists only inside a card the reader chose to open.
+
+#### Launch state
+
+A deploy with no aired episode yet - or a crawler whose file has not landed - renders the header
+and one line, "The System files its first report after Episode 1." No panel, no rows, nothing to
+count. `dossierFor(id) === null` is that state, and it is never a statement about anyone.
+
 ### Author to fill
 
 `public/data/crawlers.json` carries its own list in a top-level `"todo"` array, reproduced here:
