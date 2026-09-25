@@ -60,7 +60,12 @@ export const siteCopy = {
 
   // --- /watch
   watchTitle: 'Every episode',
-  watchLead: 'The whole descent, filed by floor, newest first.',
+  watchLead: 'The whole descent, filed by floor, from the first step down.',
+  /** The archive reads oldest first, so it offers the other end (011 R3). */
+  jumpToLatest: 'Jump to latest',
+  backToTop: 'Back to top',
+  /** Marks the newest row, in the row's own mono meta line. */
+  latestChip: 'LATEST',
   /** A floor the party has not reached yet (011 §3.2). */
   emptyFloor: (floor: number) => `Floor ${floor} - the descent continues.`,
   floorLabel: (floor: number) => `Floor ${floor}`,

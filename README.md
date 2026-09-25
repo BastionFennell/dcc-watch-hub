@@ -133,7 +133,7 @@ five static, prerendered routes whose job is to convert a stranger in ten second
 | Route | What it shows |
 |---|---|
 | `/` | Hero (tagline, pitch, the gated CTA pair, a click-to-play trailer), the five roster cards, a "New to Dungeon Crawler Carl?" System box, the Discord strip with the cadence, the footer |
-| `/watch` | Every episode grouped by floor, deepest floor first and newest episode first inside it, each row with its still, runtime, spoiler-safe summary and gated CTA. **This is the old `/` archive.** |
+| `/watch` | Every episode grouped by floor, oldest first (floors ascending, episodes ascending inside a floor - 011 revision 3), each row with its still, runtime, spoiler-safe summary and gated CTA. A "Jump to latest" button under the heading scrolls to the newest row (`id="ep-{id}"`, marked `LATEST`) and focuses its link; a "Back to top" link closes the list. **This is the old `/` archive.** |
 | `/crawlers` | The roster grid (2 columns at 375 px, 5 across on a laptop). Status filter chips appear only when more than one status exists |
 | `/crawlers/:id` | One crawler (redesigned in 011 revision 2): a portrait / text hero with the archetype, the name, the handle, the "Played by" credit and one "Start at Episode 1" CTA, then whichever of concept, pockets and the entry achievement have anything in them (the achievement carries no section label of its own), then the prev/next bar. No floor, no level, no "alive" pill - and no placeholders |
 | `/community` | The single link every social bio points at: Discord first, the platform row, the cadence, and one paragraph on how to help |

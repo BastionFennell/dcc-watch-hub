@@ -14,3 +14,47 @@
   font-size: var(--text-md);
   font-style: italic;
 }
+
+/*
+ * The two ends of the archive (011 R3). One shape for both, because they do
+ * the same job in opposite directions: a 44 px tap target with the front
+ * door's hairline outline, set in the mono of the rows' meta lines.
+ */
+.jumpRow {
+  display: flex;
+}
+
+.jump {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 var(--space-7);
+  background: transparent;
+  border: var(--border-hairline-2);
+  border-radius: var(--radius-md);
+  color: var(--brand-fg);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 160ms ease, color 160ms ease;
+}
+
+.jump:hover {
+  border-color: var(--brand-2);
+  color: var(--brand-fg-2);
+}
+
+.jump:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jump {
+    transition: none;
+  }
+}

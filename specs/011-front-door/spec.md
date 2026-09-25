@@ -146,3 +146,10 @@ The reviewer's mockup copy (Harry's concept and pockets) is dummy text and must 
   text) differs from the visual order the revision asks for (art, text, CTA). The CTA therefore
   falls below the fold on a phone, which is the one place revision 2 and the addendum's §6
   "hero CTAs above the fold" pull in different directions; revision 2 wins, as the later document.
+
+## Revision 3 (2026-09-25) - the archive reads oldest first
+
+`/watch` orders the descent forward (floors ascending, episodes ascending inside a floor) for
+someone starting the show, and offers the other end instead: a "Jump to latest" button under the
+heading that scrolls to the newest row (`id="ep-{id}"`, marked with a mono `LATEST` chip) and moves
+focus to its link, plus a "Back to top" link closing the list.

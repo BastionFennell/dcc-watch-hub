@@ -93,3 +93,19 @@
     padding: var(--space-7);
   }
 }
+
+/* The newest episode, named in the meta line rather than over the still: the
+   row is already a row, and this is one more fact about it (011 R3). */
+.latest {
+  margin-left: auto;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--system-pill-border);
+  border-radius: var(--radius-sm);
+  color: var(--system-pill-fg);
+  letter-spacing: 0.12em;
+}
+
+/* The jump control parks focus here; the ring belongs to the link it moves to. */
+.row:focus {
+  outline: none;
+}
