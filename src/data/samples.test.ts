@@ -94,7 +94,7 @@ describe('public/data/show.json', () => {
 
   /*
    * Every sample episode is published AND past its hub gate, so the shipped data
-   * shows the "Open the System feed" side of the CTA. To exercise the other side
+   * shows the "Watch in the Augmented Viewer" side of the CTA. To exercise the other side
    * by hand, push one episode's `hubLiveAt` into the future: the gate is a pure
    * comparison against `Date.now()` and nothing else has to change.
    */

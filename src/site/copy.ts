@@ -25,7 +25,7 @@ export const siteCopy = {
   // The gated call to action (011 §2.1). Before `hubLiveAt` the only place to
   // watch is YouTube; after it, the System feed opens.
   watchOnYouTube: 'Watch on YouTube',
-  openSystemFeed: 'Open the System feed',
+  openSystemFeed: 'Watch in the Augmented Viewer',
 
   /* ------------------------------------------------ Wave B (011 §3, §4, §6) */
 
@@ -33,7 +33,7 @@ export const siteCopy = {
   heroEyebrow: 'A Dungeon Crawler Carl actual play',
   browseEveryEpisode: 'Browse every episode',
   /** Shown on an episode whose feed has not opened yet (011 §3.2). */
-  countdownChip: (left: string) => `System feed unlocks in ${left}`,
+  countdownChip: (left: string) => `Augmented Viewer unlocks in ${left}`,
 
   // --- home sections
   latestEpisodeTitle: 'Latest episode',

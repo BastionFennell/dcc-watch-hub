@@ -191,8 +191,8 @@ no longer renders an "Appears in" list (dropped 2026-09-25); the map stays for o
 One rule, in `src/site/gate.ts`, and every episode surface obeys it:
 
 - **Before `hubLiveAt`** the button reads **Watch on YouTube** and links out, and the row carries a
-  "System feed unlocks in 2d 4h" chip. The hub page still exists - nothing links to it.
-- **At or after `hubLiveAt`** the button becomes **Open the System feed** and links to `/ep/:id`.
+  "Augmented Viewer unlocks in 2d 4h" chip. The hub page still exists - nothing links to it.
+- **At or after `hubLiveAt`** the button becomes **Watch in the Augmented Viewer** and links to `/ep/:id`.
 - **No `hubLiveAt`** means live now, which is what keeps every pre-011 `show.json` working.
 
 The comparison is a plain `Date.now()` in the browser; there is no server. A prerendered page is
