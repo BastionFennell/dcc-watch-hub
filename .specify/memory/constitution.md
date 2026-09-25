@@ -1,4 +1,7 @@
 <!--
+Sync Impact 1.5.0 (2026-09-25): MINOR - storage constraint gains the crawler-dossier reveal store
+exception; Principle VIII gains the "absence is never a signal" rule for per-episode crawler
+status (one card per crawler per aired episode; locked markup identical across crawlers).
 Sync Impact 1.4.0 (2026-09-23): MINOR - added Principle VIII (Front Door: marketing routes share
 tokens/data, are prerendered with OG tags, may use build-time devDependencies, mobile-first, no
 autoplay, spoiler-safe gating). CLAUDE.md updated in the same change.
@@ -55,7 +58,10 @@ event log filtered to `event.t <= playhead`. Concretely:
   backward seek, forward seek, and the "no event before its `t`" invariant.
 - Persisted viewer state (for example a resume position in `localStorage`) MAY hold the playhead
   and viewer preferences only. It MUST NOT hold overlay state or anything derived from events;
-  on resume the overlay is recomputed from `initialState` at the restored playhead.
+  on resume the overlay is recomputed from `initialState` at the restored playhead. The front
+  door's crawler dossier (1.5.0) MAY additionally keep a per-viewer reveal store under
+  `dcc.reveals.v1`: which status cards a reader opened and a "caught up through" episode. It is
+  a reader preference, never derived from events, and never a signal about the story.
 
 Rationale: the product promise is a spoiler-free synchronized broadcast. Any state that is not a
 pure function of the playhead can leak future events or desynchronize after scrubbing.
@@ -156,6 +162,10 @@ front door, not a second site:
 - **No autoplay, no cookie banner.** Video is click-to-play; analytics, if any, is cookieless.
 - **Spoiler-safe by data.** The hub CTA for an episode unlocks at `hubLiveAt`; live crawler status
   comes only from episodes past that gate; death is authored, never inferred.
+- **Absence is never a signal.** Per-episode crawler status ships exactly one card per crawler per
+  aired episode, forever; cards for unaired episodes never reach the bundle; a crawler's condition
+  appears only inside cards the reader has chosen to reveal, and locked markup is byte-identical
+  across crawlers apart from name and slug.
 
 ## Technical Constraints
 
@@ -196,4 +206,4 @@ Compliance is reviewed at every plan (Constitution Check gate) and at implementa
 (acceptance checklist). Use `CLAUDE.md` for runtime development guidance and pointers to the
 active plan.
 
-**Version**: 1.4.0 | **Ratified**: 2026-09-14 | **Last Amended**: 2026-09-23
+**Version**: 1.5.0 | **Ratified**: 2026-09-14 | **Last Amended**: 2026-09-25
