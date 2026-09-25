@@ -73,3 +73,47 @@ registered; the Plausible domain. Domain registration itself is outside this rep
 The addendum's §8 checklist, verified in tasks T1130-T1132, plus: hub routes and tests unchanged;
 viewer entry chunk within 3 kB of 418.08 kB (the marketing pages are lazy chunks); `npm run build`
 succeeds without Chrome (OG skipped, warned).
+
+## Revision 2 (2026-09-24) - crawler page redesign
+
+From an external design review of `/crawlers/:id` (values read off the live page), adopted with
+three content adjustments the author confirmed.
+
+### Content rules
+- **Empty states render nothing**: no heading, no placeholder, never "coming soon". A page with
+  one filled section beats one with five placeholders.
+- **No progression spoilers in the hero**: no floor number, no level line, no "ALIVE" pill. The
+  authored status pill shows only when status is not `alive` (dead / fused / unknown). A viewer
+  progress-aware pill is parked as a data-model question.
+- **Keep the entry achievement** when present, restyled to look like the System awarding an
+  achievement (the hub's `AchievementToast` look: System-blue hairline frame, mono "ACHIEVEMENT
+  UNLOCKED" kicker, trophy glyph, the title large, the verbatim text, then "Reward: {box} -> {item}"
+  as the payout line). It is the page's only System-styled element.
+- **Keep "Appears in"** as plain episode links (title only, no floor), only for published episodes.
+- **Player credit moves into the hero**: "Played by {name}" (name bright, weight 600, rest muted),
+  under a hairline. No standalone player section; pronouns/bio/links, when present, sit under the
+  credit in one muted line.
+- **One CTA**: "Start at Episode 1" as a grid child of the hero, using `GatedCta` for episode 1
+  (YouTube before `hubLiveAt`, System feed after). Prev/next crawler in one full-width bar
+  (prev left, next right).
+
+### Layout (desktop)
+Hero grid: `grid-template-columns: 320px minmax(0, 1fr)`, areas `"art text" "cta text" "fill text"`,
+rows `auto auto 1fr` (the 1fr fill row keeps the 16 px gap under the portrait), column-gap 56,
+row-gap 16, align-items/content start; the text column is full width (no `ch` cap on the paragraph
+so paragraph, rules, and dividers end on the same pixel). Portrait 320 px, 14 px radius, hairline
+border, soft shadow. Pockets: hairline rows (`<ul>` top border, `<li>` 11px 0 padding + bottom
+border), no bullet glyphs. Next bar: full width, 56 px top margin, 18/20 padding, 10 px radius.
+Type scale: eyebrow 11/0.16em caps accent; name 34/650/-0.02em; handle 12 mono 0.06em muted;
+credit 13 muted; body 16/28; section label 11/0.16em caps 600 muted.
+
+### Responsive (<= 720 px)
+Single column, areas `"art" "text" "cta"` (CTA after the description), row-gap 28, portrait max
+280 px, name 28 px, CTA capped at 280 px, nav bar stacks.
+
+### Tokens
+Map the review's colours to existing tokens where a role exists; add tokens only for missing roles
+and list them in the README. The page container and the footer share one `--site-measure` width.
+
+### Not committed
+The reviewer's mockup copy (Harry's concept and pockets) is dummy text and must not land.
