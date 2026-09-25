@@ -2,7 +2,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// The deploy workflow sets VITE_BASE=/dcc-watch-hub/ for GitHub Pages.
+// The deploy workflow sets VITE_BASE=/ (custom domain root); set /<repo>/ for a project subpath.
 export default defineConfig({
   base: process.env.VITE_BASE ?? '/',
   // 5173 is often taken by another Vite project on the author's machine.

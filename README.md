@@ -1242,9 +1242,13 @@ If no Chrome is found it prints a warning and exits 0 - the build still succeeds
 
 One-time: repo **Settings → Pages → Source: "GitHub Actions"**.
 
-Then every push to `main` runs `.github/workflows/deploy.yml`, which builds with
-`VITE_BASE=/dcc-watch-hub/`, uploads `dist/`, and deploys it. Site:
-<https://bastionfennell.github.io/dcc-watch-hub/>
+Then every push to `main` runs `.github/workflows/deploy.yml`, which builds with `VITE_BASE=/`,
+uploads `dist/`, and deploys it. The site is served from the custom domain
+<https://dungeoncrawlcast.com/> (Settings -> Pages -> Custom domain). DNS at the registrar:
+four `A` records on the apex pointing at `185.199.108.153`, `185.199.109.153`,
+`185.199.110.153`, `185.199.111.153`, and a `CNAME` for `www` pointing at
+`bastionfennell.github.io`. Once the DNS check passes, tick **Enforce HTTPS**. If the site ever
+moves back to the project subpath, set `VITE_BASE=/dcc-watch-hub/` in the workflow.
 
 ### Netlify / Cloudflare Pages
 

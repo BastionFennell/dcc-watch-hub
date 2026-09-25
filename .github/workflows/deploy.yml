@@ -31,9 +31,9 @@ jobs:
       - run: npm run build
         env:
           CHROME_PATH: /usr/bin/google-chrome
-          # Pages serves the site under a sub-path; every prerendered asset and
-          # absolute URL is resolved against it.
-          VITE_BASE: /dcc-watch-hub/
+          # The site is served from the custom domain root (dungeoncrawlcast.com), so no
+          # subpath; set /<repo>/ here if it ever moves back to the project URL.
+          VITE_BASE: /
           # Repository variables, both optional: without SITE_URL the canonical
           # origin falls back to the registered domain, and without
           # PLAUSIBLE_DOMAIN no analytics is loaded at all.
