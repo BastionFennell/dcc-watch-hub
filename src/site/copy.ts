@@ -84,13 +84,28 @@ export const siteCopy = {
   levelPill: (level: number) => `Lv ${level}`,
 
   // --- /crawlers/:id
-  conceptTitle: 'The concept',
-  pocketsTitle: 'What was in their pockets when the world ended',
+  /*
+   * Section labels, set in mono caps (011 R2). Short on purpose: they are
+   * signposts between blocks of the crawler's own words, not headlines, and a
+   * section whose data is empty prints neither the label nor a placeholder.
+   */
+  pocketsTitle: 'Pockets',
   entryAchievementTitle: 'Entry achievement',
-  /** The achievement box's footer line. */
-  reward: (box: string, item: string) => `Reward: ${box} → ${item}`,
-  playerTitle: 'The player',
   appearsInTitle: 'Appears in',
+  /** The achievement's payout line. Rendered with whichever halves exist. */
+  reward: (box: string, item: string) => `Reward: ${box} → ${item}`,
+  rewardBox: (box: string) => `Reward: ${box}`,
+  rewardItem: (item: string) => `Reward: ${item}`,
+  /**
+   * The System announcing the achievement, in the hub toast's voice but its own
+   * words: the toast says a new one just landed, this one has been on the
+   * record since the crawl began.
+   */
+  achievementKicker: 'Achievement unlocked',
+  /** The hero's credit. The player's name is bright; the rest is not. */
+  playedBy: 'Played by',
+  /** The hero's one call to action, on both sides of the `hubLiveAt` gate. */
+  startAtEpisodeOne: 'Start at Episode 1',
   prevCrawler: 'Previous crawler',
   nextCrawler: 'Next crawler',
 
@@ -117,7 +132,12 @@ export const siteCopy = {
   // --- share images and per-page heads
   watchDescription: 'Every episode of Dungeon Crawl Cast, filed by floor.',
   crawlersDescription: 'The five crawlers of Dungeon Crawl Cast, and the players behind them.',
-  crawlerDescription: (name: string, concept: string) => `${name}. ${concept}`,
+  /*
+   * A crawler whose concept is not written yet still needs a description: the
+   * archetype is the one line about them that is always true (011 R2).
+   */
+  crawlerDescription: (name: string, concept: string, archetype: string) =>
+    concept === '' ? `${name} - ${archetype} on Dungeon Crawl Cast.` : `${name}. ${concept}`,
   communityDescription:
     'Discord, YouTube and everywhere else Dungeon Crawl Cast turns up, plus how often new crawls land.',
 } as const;

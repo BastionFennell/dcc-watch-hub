@@ -113,10 +113,10 @@ with a populated feed and no network.
 | `src/prefs/` | viewer preferences that are not playback: `logOpen` (the broadcast log's open state) |
 | `src/components/` | stage, party rail, event feed, timeline, toast, minimap, header, rail panel, glance card, full record, dossier sections, floor map, resume card, share button + notice, broadcast log, phone tab strip, Encountered strip, entity record, registry entry |
 | `src/pages/` | `EpisodePage`, `RegistryPage`, `NotFoundPage` (the hub's own routes) |
-| `src/site/` | the front door (011): the five marketing pages, `RosterCard` / `GatedCta` / `SystemBox` / `EpisodeRow`, `gate.ts` (the `hubLiveAt` rule), `seo.tsx`, `jsonLd.ts`, `analytics.ts`, `meta.ts`, and the `/_og/**` frames - every page a lazy chunk |
+| `src/site/` | the front door (011): the five marketing pages, `RosterCard` / `GatedCta` / `SystemBox` / `EpisodeRow` / `EntryAchievement`, `gate.ts` (the `hubLiveAt` rule), `seo.tsx`, `jsonLd.ts`, `analytics.ts`, `meta.ts`, and the `/_og/**` frames - every page a lazy chunk |
 | `src/entry-server.tsx` | the prerenderer's half of the app; built separately and deleted from `dist/` at the end of the build |
 | `src/copy.ts` | **every** user-facing string, in the System's voice |
-| `src/styles/tokens.css` | the colour/spacing/type tokens from spec §6 |
+| `src/styles/tokens.css` | the colour/spacing/type tokens from spec §6, plus the four the front door added in 011 revision 2: `--site-measure` (992 px, the one width the marketing shell and the footer share), `--text-display` (the crawler name: 28 px, 34 px from 721 px up), and `--ink-muted` / `--ink-body` (the cooler greys the marketing type is set in, both AA on `--canvas`) |
 | `public/data/` | `show.json` + `ep{N}.json` + `npcs.json` + `spells.json` (static, fetched at load) |
 | `scripts/sheet-to-json.ts` | editor CSV → `ep{N}.json` converter |
 
@@ -135,7 +135,7 @@ five static, prerendered routes whose job is to convert a stranger in ten second
 | `/` | Hero (tagline, pitch, the gated CTA pair, a click-to-play trailer), the five roster cards, a "New to Dungeon Crawler Carl?" System box, the Discord strip with the cadence, the footer |
 | `/watch` | Every episode grouped by floor, deepest floor first and newest episode first inside it, each row with its still, runtime, spoiler-safe summary and gated CTA. **This is the old `/` archive.** |
 | `/crawlers` | The roster grid (2 columns at 375 px, 5 across on a laptop). Status filter chips appear only when more than one status exists |
-| `/crawlers/:id` | One crawler: hero art, live status line, concept, pockets, the entry achievement as the page's single System box, the player behind them, "Appears in", prev/next |
+| `/crawlers/:id` | One crawler (redesigned in 011 revision 2): a portrait / text hero with the archetype, the name, the handle, the "Played by" credit and one "Start at Episode 1" CTA, then whichever of concept, pockets, the entry achievement and "Appears in" have anything in them, then the prev/next bar. No floor, no level, no "alive" pill - and no placeholders |
 | `/community` | The single link every social bio points at: Discord first, the platform row, the cadence, and one paragraph on how to help |
 
 All five are prerendered to real HTML at build time (`dist/watch/index.html`, and so on), so a
@@ -248,24 +248,27 @@ Three custom events, all from `src/site/analytics.ts`:
 `public/data/crawlers.json` carries its own list in a top-level `"todo"` array, reproduced here:
 
 1. Confirm the handles - they are all "Dungeon Crawler {first name}" placeholders today.
-2. `concept`: one or two lines per crawler from the character docs (only Ronald's is real).
-3. `pockets`: what was in their pockets when the world ended, one line per item.
-4. `entryAchievement`: the System text verbatim, plus the box and the item it paid out (only
-   Ronald's title / box / item are real).
-5. `player.pronouns`, `player.bio` (two sentences) and `player.links` for all five.
-6. `player.bust`: a photo of the real person, if they want one on the page.
-7. `show.json`: `trailerYoutubeId`, the real `premiereAt` / `hubLiveAt` dates, and
+2. `concept`: one or two lines per crawler from the character docs (only Ronald's is written).
+3. `pockets`: what was in their pockets when the world ended, one line per item (none written yet).
+4. `player.pronouns`, `player.bio` (two sentences) and `player.links` for all five.
+5. `player.bust`: a photo of the real person, if they want one on the page.
+6. `show.json`: `trailerYoutubeId`, the real `premiereAt` / `hubLiveAt` dates, and
    `links.tiktok` / `links.bluesky` / `links.instagram`.
 
 And outside the data files:
 
-8. The domain. `VITE_SITE_URL` defaults to `https://dungeoncrawlcast.com`; registering it is not
+7. The domain. `VITE_SITE_URL` defaults to `https://dungeoncrawlcast.com`; registering it is not
    something this repo can do.
-9. The Plausible site, if analytics is wanted (`VITE_PLAUSIBLE_DOMAIN`).
-10. Point every social bio at `/community`, which is the URL that page exists for.
+8. The Plausible site, if analytics is wanted (`VITE_PLAUSIBLE_DOMAIN`).
+9. Point every social bio at `/community`, which is the URL that page exists for.
 
-Nothing in `crawlers.json` renders the word "TODO": every placeholder reads as prose ("Concept
-coming soon."), so a screenshot taken today is not embarrassing.
+`entryAchievement` is done: all five are transcribed verbatim from the author's notes, with the
+`box`, the `item` and the `reward` paragraph the System read out.
+
+**Unwritten means empty, never "coming soon"** (011 revision 2). A field the author has not filled
+in is `""` or `[]` in the JSON and the crawler page renders *nothing* where it would have gone - no
+heading, no placeholder, no greyed-out box. One filled section beats five empty ones, and a
+screenshot taken today is not embarrassing because there is nothing in it to be embarrassed by.
 
 ### Parked (v2 - deliberately not built)
 
@@ -1120,8 +1123,8 @@ The episodes those crawlers appear in (events, ticker copy, NPCs, map) are still
 **`public/data/crawlers.json`** ships its own fill-in list in a top-level `"todo"` array, and
 **The front door → Author to fill** above reproduces it in order, together with the three things
 that live outside the data files (the domain, the Plausible site, and pointing every social bio at
-`/community`). Nothing in that file renders the word "TODO": every placeholder reads as prose
-("Concept coming soon.").
+`/community`). Nothing in that file renders the word "TODO", and nothing says "coming soon": an
+unwritten `concept` or `pockets` is empty, and the page renders nothing for it (011 revision 2).
 
 The three sample videos are the Blender Foundation's open movies: public, embeddable, and each a
 different video so switching episodes is visibly a fresh broadcast. Each `durationSec` is that

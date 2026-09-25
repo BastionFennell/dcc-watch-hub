@@ -109,7 +109,7 @@ describe('broadcast archive', () => {
   it('serves the crawler pages and the share-image frames', async () => {
     const { unmount } = renderAt('/crawlers/harry');
     await waitFor(() =>
-      expect(screen.getByRole('heading', { name: siteCopy.conceptTitle })).toBeInTheDocument(),
+      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Harold Wallace'),
     );
     unmount();
 

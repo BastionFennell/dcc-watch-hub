@@ -1,70 +1,227 @@
-/* What was in their pockets: a list, and it should look like one (011 §3.4). */
-.pockets {
+/*
+ * `/crawlers/:id` (011 R2). Two blocks stacked in the shared shell: the hero,
+ * which is everything about the crawler, and the bar that walks the roster.
+ *
+ * The shell's own 32 px gap is turned off here because this page sets its own
+ * vertical rhythm - the next bar wants 56 px of air, not 32.
+ */
+.page {
+  gap: 0;
+}
+
+/*
+ * Desktop hero. Three rows in the left column - portrait, CTA, and a 1fr filler
+ * that eats whatever height the text column has left - so the gap under the
+ * portrait is exactly the 16 px row-gap however long the text runs. The text
+ * column spans all three rows and is uncapped: paragraph, hairline and list
+ * rules all end on the same pixel, which is the whole point of the grid.
+ */
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'art' 'text' 'cta';
+  gap: 28px;
+  align-items: start;
+  align-content: start;
+  min-width: 0;
+}
+
+.portrait {
+  grid-area: art;
+  width: 100%;
+  max-width: 280px;
+  border-radius: 14px;
+  border: var(--border-hairline);
+  background: var(--brand-deep);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
+}
+
+.ctaCell {
+  grid-area: cta;
+  display: flex;
+  min-width: 0;
+  /* A full-bleed button on a phone reads as a banner; 280 px reads as a button. */
+  max-width: 280px;
+}
+
+.text {
+  grid-area: text;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-8);
+  min-width: 0;
+}
+
+/* -------------------------------------------------------------- the name */
+
+/* Eyebrow, name and handle read as one object, so they sit tight together. */
+.titleBlock {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  max-width: 62ch;
+  min-width: 0;
 }
 
-.pocket {
-  position: relative;
-  padding: var(--space-4) var(--space-5) var(--space-4) var(--space-8);
-  background: var(--panel);
-  border: var(--border-hairline);
-  border-radius: var(--radius-md);
-  color: var(--text-2);
-  font-size: var(--text-md);
-}
-
-.pocket::before {
-  content: '·';
-  position: absolute;
-  left: var(--space-5);
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   color: var(--brand-fg);
 }
 
-.player {
+.name {
+  font-size: var(--text-display);
+  font-weight: 650;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.handleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.handle {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+}
+
+/* Authored, and only ever the news: `alive` prints nothing at all (011 R2). */
+.statusPill {
+  flex: none;
+  font-size: var(--text-2xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: var(--radius-pill);
+  padding: 2px 8px;
+  white-space: nowrap;
+  color: var(--text-2);
+  background: var(--panel-deep);
+  border: var(--border-hairline-2);
+}
+
+.statusPill[data-status='dead'] {
+  color: var(--danger-fg);
+  border-color: var(--danger);
+}
+
+.statusPill[data-status='fused'] {
+  color: var(--amber-fg);
+  border-color: var(--amber-bg);
+}
+
+/* ------------------------------------------------------------ the credit */
+
+.credit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-7);
+  border-top: var(--border-hairline);
+}
+
+.creditLine {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.creditPrefix {
+  color: var(--ink-muted);
+}
+
+.playerName {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.creditDetail {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+
+/* ----------------------------------------------------------- the content */
+
+.concept {
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--ink-body);
+}
+
+.block {
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
   min-width: 0;
 }
 
-.playerBust {
-  width: 96px;
-  height: 96px;
-  flex: none;
-  object-fit: cover;
-  border-radius: var(--radius-pill);
-  background: var(--brand-deep);
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
 }
 
-.playerText {
+/*
+ * Pockets as hairline rows: a list that looks like an inventory, not like a
+ * stack of cards. No bullet glyph - the rules do that job.
+ */
+.pockets {
+  display: block;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: var(--border-hairline);
+}
+
+.pocket {
+  padding: 11px 0;
+  border-bottom: var(--border-hairline);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ink-body);
+}
+
+/* Titles only, and no floor: where they turn up, not how deep it was. */
+.appearances {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: var(--border-hairline);
 }
 
-.playerName {
-  font-size: var(--text-lg);
-  font-weight: 600;
+.appearance {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: var(--space-3) 0;
+  border-bottom: var(--border-hairline);
+  font-size: 16px;
+  color: var(--brand-fg);
 }
 
-.pronouns {
-  margin-left: var(--space-4);
-  color: var(--text-3);
-  font-size: var(--text-sm);
-  font-weight: 400;
+.appearance:hover {
+  color: var(--brand-fg-2);
 }
+
+/* ---------------------------------------------------------- the next bar */
 
 .prevNext {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-5);
+  margin-top: 56px;
 }
 
 .prevNextLink {
@@ -73,12 +230,11 @@
   gap: var(--space-2);
   justify-content: center;
   min-height: 44px;
-  padding: var(--space-5) var(--space-6);
+  padding: 18px 20px;
   background: var(--panel);
   border: var(--border-hairline);
-  border-radius: var(--radius-md);
+  border-radius: 10px;
   color: var(--text);
-  font-size: var(--text-md);
 }
 
 .prevNextLink:hover {
@@ -86,22 +242,43 @@
   color: var(--text);
 }
 
+.prevNextLabel {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.prevNextName {
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+
 .next {
   text-align: right;
 }
 
-.prevNextLabel {
-  font-family: var(--font-mono);
-  font-size: var(--text-2xs);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-3);
-}
+/* ------------------------------------------------------------ 721 px up */
 
-@media (min-width: 900px) {
-  .player {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: var(--space-8);
+@media (min-width: 721px) {
+  .hero {
+    grid-template-columns: 320px minmax(0, 1fr);
+    grid-template-areas: 'art text' 'cta text' 'fill text';
+    grid-template-rows: auto auto 1fr;
+    column-gap: 56px;
+    row-gap: 16px;
+  }
+
+  .portrait {
+    max-width: 320px;
+  }
+
+  .ctaCell {
+    max-width: none;
+  }
+
+  .prevNext {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }

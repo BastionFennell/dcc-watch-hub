@@ -56,9 +56,8 @@ Plausible script (outbound-links variant) injected only when `VITE_PLAUSIBLE_DOM
 `track(name, props)` helper used for `hub_open`, `crawler_view`, `outbound` (YouTube/Discord).
 No cookies, no banner.
 
-## Author to fill (placeholders shipped, marked `TODO:` in the JSON and listed in README)
-Crawler archetype names (`name`; only "The Stuntman" for Ronald and "The Actress" for Mimi are
-known), `concept`, `pockets`, `entryAchievement`, player bios and links; `trailerYoutubeId`;
+## Author to fill (unwritten fields ship empty and render nothing; listed in the JSON's `todo` and in the README)
+`concept`, `pockets`, player bios and links; `trailerYoutubeId`;
 real `premiereAt`/`hubLiveAt`; TikTok / Bluesky / Instagram links; the site URL once the domain is
 registered; the Plausible domain. Domain registration itself is outside this repo.
 
@@ -117,3 +116,29 @@ and list them in the README. The page container and the footer share one `--site
 
 ### Not committed
 The reviewer's mockup copy (Harry's concept and pockets) is dummy text and must not land.
+
+### Revision 2 as built (2026-09-24)
+
+- **Archetype names and entry achievements are no longer placeholders.** All five archetype names
+  and all five entry achievements are authored, transcribed verbatim. `CrawlerEntryAchievement`
+  gains `reward`: the reward paragraph the System read out, rendered under the
+  "Reward: {box} -> {item}" payout line. Schema and validator updated in the same change.
+- **Empty is a valid value.** `concept` may be `""` and `pockets` `[]`; the validator keeps the
+  crawler and the page renders nothing for that section. `"Concept coming soon."` and its siblings
+  are gone from `crawlers.json`; the `todo` list stays.
+- **Tokens added**: `--site-measure` (992 px, shared by `page.module.css` and `SiteFooter`),
+  `--text-display` (28 px, 34 px from 721 px up), `--ink-muted` / `--ink-body`. `--hairline` already
+  existed and was reused rather than redefined.
+- **`EntryAchievement`** (`src/site/components/`) carries the achievement. It shares the hub
+  `AchievementToast`'s tokens and shape - System-blue panel, amber mono kicker, trophy glyph
+  (`IconRank`), title, verbatim text - but is a static block: no queue, no window, no animation.
+  The hub component is not imported.
+- **`GatedCta` gains `quiet` and `label`.** `quiet` is the crawler hero's full-width 44 px brand
+  tint; `label` lets the hero say "Start at Episode 1" on both sides of the `hubLiveAt` gate. Every
+  other call site is untouched and unchanged.
+- **`StatusLine` is no longer used by the crawler page.** It stays, and `RosterCard`'s `hero`
+  variant still renders it.
+- **Reading order**: the CTA is the second grid child, so at <= 720 px the DOM order (art, CTA,
+  text) differs from the visual order the revision asks for (art, text, CTA). The CTA therefore
+  falls below the fold on a phone, which is the one place revision 2 and the addendum's §6
+  "hero CTAs above the fold" pull in different directions; revision 2 wins, as the later document.

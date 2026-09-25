@@ -1,4 +1,8 @@
 .footer {
+  /* The page shell's measure (011 R2): the same left edge as everything above. */
+  width: 100%;
+  max-width: var(--site-measure);
+  margin-inline: auto;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);

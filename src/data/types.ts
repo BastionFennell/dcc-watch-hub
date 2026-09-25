@@ -108,6 +108,12 @@ export interface CrawlerEntryAchievement {
   text: string;
   box?: string;
   item?: string;
+  /**
+   * The verbatim reward paragraph, as the System read it out - what the box
+   * contains and what the item does. Rendered under the "Reward: {box} -> {item}"
+   * payout line; absent for an achievement that paid out nothing quotable.
+   */
+  reward?: string;
 }
 
 /**

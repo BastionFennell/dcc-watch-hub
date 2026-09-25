@@ -47,7 +47,8 @@ describe('render', () => {
   it("returns the page's own head, seeded from the show and overwritten by <Seo>", () => {
     const { head } = render('/crawlers/harry', data('/crawlers/harry'));
     expect(head).toContain(`<title${M}>Harold Wallace · Dungeon Crawl Cast</title>`);
-    expect(head).toContain(`<meta${M} name="description" content="Harold Wallace. Concept coming soon.`);
+    // Harry's concept is not written yet, so the archetype carries the meta.
+    expect(head).toContain(`<meta${M} name="description" content="Harold Wallace - Harry on`);
     expect(head).toContain(
       `<link${M} rel="canonical" href="https://dungeoncrawlcast.com/crawlers/harry" />`,
     );

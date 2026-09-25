@@ -127,6 +127,33 @@
   --tabstrip-h: 44px;
   --border-hairline: 1px solid var(--hairline);
   --border-hairline-2: 1px solid var(--hairline-2);
+
+  /*
+   * Front door (011 R2). One measure for every marketing shell and the footer,
+   * so the left edge of a paragraph, a rule and a footer link is the same pixel
+   * on every page.
+   */
+  --site-measure: 992px;
+  /*
+   * The crawler name, in explicit pixels rather than a scale step: the hero is
+   * the one place on the front door where the size is the design, and the hub's
+   * --text-xl moves with the viewer's monitor (1400/1900 below).
+   */
+  --text-display: 28px;
+  /*
+   * The front door's two greys (011 R2). Cooler than the hub's warm --text-2 /
+   * --text-3, which is what the marketing type was designed against; both clear
+   * WCAG AA on --canvas (--ink-muted 6.1:1, --ink-body 11.1:1).
+   */
+  --ink-muted: #8b93ad;
+  --ink-body: #c3c8db;
+}
+
+/* The hero name is the one type step the front door sets by breakpoint (011 R2). */
+@media (min-width: 721px) {
+  :root {
+    --text-display: 34px;
+  }
 }
 
 /*

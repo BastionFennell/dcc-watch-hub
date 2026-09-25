@@ -1,9 +1,15 @@
 // @vitest-environment jsdom
 /**
- * `/crawlers/:id` (011 §3.4): the hero, the concept, the pockets, the entry
- * achievement as the page's one System box, the player, the appearances derived
- * on the client, and the prev/next pair that walks the roster.
+ * `/crawlers/:id` (011 §3.4, revision 2): the hero, the one CTA, the credit,
+ * the sections that only exist when there is something in them, the entry
+ * achievement as the page's single System-styled block, and the bar that walks
+ * the roster.
+ *
+ * The rule under half of these: **empty renders nothing**. `harry` in the
+ * fixture roster is the unwritten crawler, and what the page does with him is
+ * as much a requirement as what it does with a filled one.
  */
+import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import { CrawlerPage } from './CrawlerPage';
@@ -11,6 +17,7 @@ import { siteCopy } from '../copy';
 import { copy } from '../../copy';
 import { renderSite } from '../../test/renderSite';
 import { makeCrawlers, makeEpisodeRaw, makeShow, makeStatus } from '../../test/fixtures';
+import type { CrawlerRoster } from '../../data/types';
 
 const [stuntman] = makeCrawlers().crawlers;
 
@@ -39,63 +46,106 @@ function renderCrawler(id = 'stuntman') {
   return renderSite(<CrawlerPage />, { path: `/crawlers/${id}`, routePath: '/crawlers/:id' });
 }
 
-describe('CrawlerPage', () => {
-  it('opens on the hero: archetype, character, handle, status and the live line', () => {
+/** The roster with one crawler patched, for the states data alone decides. */
+function rosterWith(patch: (roster: CrawlerRoster) => void): CrawlerRoster {
+  const roster = makeCrawlers();
+  patch(roster);
+  return roster;
+}
+
+describe('CrawlerPage hero', () => {
+  it('opens on the archetype, the character and the handle', () => {
     renderCrawler();
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(stuntman.characterName);
     expect(screen.getByText(stuntman.name)).toBeInTheDocument();
     expect(screen.getByText(stuntman.handle)).toBeInTheDocument();
-    expect(screen.getByText(siteCopy.statusLabel.alive)).toBeInTheDocument();
-    expect(screen.getByTestId('status-line')).toHaveTextContent('Level 3 · 18/24 HB · Floor 1');
   });
 
-  it('hides the live line for a crawler the build has no status for', () => {
+  it('credits the player in the hero, with the name brighter than the rest', () => {
+    renderCrawler();
+    const prefix = screen.getByText(`${siteCopy.playedBy}`, { exact: false });
+    expect(prefix).toBeInTheDocument();
+    expect(prefix.closest('p')).toHaveTextContent(`${siteCopy.playedBy} Danny`);
+    expect(screen.getByText('he/him · Two sentences about Danny.')).toBeInTheDocument();
+  });
+
+  /*
+   * No progression in the hero (011 R2): a stranger from a search result gets
+   * who this is, not how far they have got.
+   */
+  it('spoils nothing: no floor, no level line, no "alive" pill', () => {
+    renderCrawler();
+    expect(screen.queryByTestId('status-line')).toBeNull();
+    expect(screen.queryByText(siteCopy.statusLabel.alive)).toBeNull();
+    expect(document.body.textContent).not.toMatch(/Floor \d/);
+    expect(document.body.textContent).not.toMatch(/Lv \d|Level \d/);
+  });
+
+  it('shows the authored pill when the crawler is not alive', () => {
     renderSite(<CrawlerPage />, {
       path: '/crawlers/stuntman',
       routePath: '/crawlers/:id',
-      status: null,
+      crawlers: rosterWith((roster) => {
+        roster.crawlers[0].status = 'dead';
+      }),
     });
-    expect(screen.queryByTestId('status-line')).toBeNull();
+    expect(screen.getByText(siteCopy.statusLabel.dead)).toBeInTheDocument();
   });
+});
 
-  it('states the concept and lists the pockets', () => {
+describe('CrawlerPage sections', () => {
+  it('states the concept and lists the pockets when there are any', () => {
     renderCrawler();
     expect(screen.getByText(stuntman.concept)).toBeInTheDocument();
     const pockets = screen.getByRole('heading', { name: siteCopy.pocketsTitle }).closest('section');
-    expect(within(pockets as HTMLElement).getAllByRole('listitem').map((li) => li.textContent))
-      .toEqual(stuntman.pockets);
+    expect(
+      within(pockets as HTMLElement)
+        .getAllByRole('listitem')
+        .map((li) => li.textContent),
+    ).toEqual(stuntman.pockets);
   });
 
-  it('renders the entry achievement as the page\'s System box, reward and all', () => {
+  it('renders nothing at all for the sections the author has not filled in', () => {
+    renderCrawler('harry');
+    // Harry is the empty crawler: no concept, no pockets, no achievement.
+    expect(screen.queryByRole('heading', { name: siteCopy.pocketsTitle })).toBeNull();
+    expect(screen.queryByRole('heading', { name: siteCopy.entryAchievementTitle })).toBeNull();
+    expect(screen.queryByRole('heading', { name: siteCopy.appearsInTitle })).toBeNull();
+    expect(screen.queryByRole('heading', { name: /concept/i })).toBeNull();
+    expect(screen.queryByTestId('entry-achievement')).toBeNull();
+    // ...and above all, no placeholder standing in for any of them.
+    expect(document.body.textContent).not.toMatch(/coming soon/i);
+    // The hero itself still renders: the crawler is not a blank page.
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Harold Wallace');
+  });
+
+  it('renders the entry achievement as the page\'s one System-styled block', () => {
     renderCrawler();
-    const box = screen.getByTestId('system-box');
+    const box = screen.getByTestId('entry-achievement');
+    expect(within(box).getByText(siteCopy.achievementKicker)).toBeInTheDocument();
     expect(within(box).getByText('Method Acting')).toBeInTheDocument();
     expect(within(box).getByText('You committed to the bit.')).toBeInTheDocument();
     expect(within(box).getByText('Reward: Golden Monster Box → Liquid Latex')).toBeInTheDocument();
-    // One announce style, used once: the box is what makes it mean something.
-    expect(screen.getAllByTestId('system-box')).toHaveLength(1);
+    expect(within(box).getByText('Inside is a bottle of Liquid Latex.')).toBeInTheDocument();
+    expect(screen.getAllByTestId('entry-achievement')).toHaveLength(1);
+    // The hub's SystemBox is not what does this job any more (011 R2).
+    expect(screen.queryByTestId('system-box')).toBeNull();
   });
 
-  it('omits the achievement section entirely when there is none', () => {
-    const roster = makeCrawlers();
-    delete roster.crawlers[0].entryAchievement;
+  it('omits the achievement entirely when there is none', () => {
     renderSite(<CrawlerPage />, {
       path: '/crawlers/stuntman',
       routePath: '/crawlers/:id',
-      crawlers: roster,
+      crawlers: rosterWith((roster) => {
+        delete roster.crawlers[0].entryAchievement;
+      }),
     });
-    expect(screen.queryByTestId('system-box')).toBeNull();
+    expect(screen.queryByTestId('entry-achievement')).toBeNull();
     expect(screen.queryByRole('heading', { name: siteCopy.entryAchievementTitle })).toBeNull();
   });
+});
 
-  it('introduces the player behind the crawler', () => {
-    renderCrawler();
-    const player = screen.getByRole('heading', { name: siteCopy.playerTitle }).closest('section');
-    expect(within(player as HTMLElement).getAllByText(/Danny/).length).toBeGreaterThan(0);
-    expect(within(player as HTMLElement).getByText('he/him')).toBeInTheDocument();
-    expect(within(player as HTMLElement).getByText('Two sentences about Danny.')).toBeInTheDocument();
-  });
-
+describe('CrawlerPage appearances', () => {
   it('fills in the appearances after mount, and not before', async () => {
     renderCrawler();
     // Nothing on the first render: that is the render the prerendered HTML is
@@ -105,31 +155,30 @@ describe('CrawlerPage', () => {
     await waitFor(() =>
       expect(screen.getByRole('heading', { name: siteCopy.appearsInTitle })).toBeInTheDocument(),
     );
-    const section = screen.getByRole('heading', { name: siteCopy.appearsInTitle }).closest('section');
-    expect(within(section as HTMLElement).getAllByRole('heading', { level: 3 })).toHaveLength(
+    const section = screen
+      .getByRole('heading', { name: siteCopy.appearsInTitle })
+      .closest('section');
+    expect(within(section as HTMLElement).getAllByRole('link')).toHaveLength(
       makeShow().episodes.length,
     );
   });
 
-  it('prefers the appearances the build precomputed, and fetches nothing', () => {
-    const fetchSpy = vi.fn();
-    vi.stubGlobal('fetch', fetchSpy);
+  it('links the episode titles only - no floor, no still, no summary', () => {
     renderSite(<CrawlerPage />, {
       path: '/crawlers/stuntman',
       routePath: '/crawlers/:id',
       status: { ...makeStatus(), appearances: { stuntman: [1, 3] } },
     });
-
-    // First render, no waiting: that is what makes the list survive hydration.
     const section = screen
       .getByRole('heading', { name: siteCopy.appearsInTitle })
       .closest('section');
-    expect(
-      within(section as HTMLElement)
-        .getAllByRole('heading', { level: 3 })
-        .map((heading) => heading.textContent),
-    ).toEqual(['Episode 1 - The World Dungeon', 'Episode 3 - Descent']);
-    expect(fetchSpy).not.toHaveBeenCalled();
+    const links = within(section as HTMLElement).getAllByRole('link');
+    expect(links.map((link) => link.textContent)).toEqual([
+      'Episode 1 - The World Dungeon',
+      'Episode 3 - Descent',
+    ]);
+    expect(links[0]).toHaveAttribute('href', '/ep/1');
+    expect(links[1]).toHaveAttribute('href', '/ep/3');
   });
 
   it('shows no appearances section for a crawler the build never saw', () => {
@@ -140,21 +189,51 @@ describe('CrawlerPage', () => {
     });
     expect(screen.queryByRole('heading', { name: siteCopy.appearsInTitle })).toBeNull();
   });
+});
 
-  it('walks the roster with prev/next links', () => {
+describe('CrawlerPage CTA and navigation', () => {
+  const opener = makeShow().episodes[0];
+
+  it('points the one CTA at episode 1 on the hub once the feed is open', () => {
+    const show = makeShow();
+    show.episodes[0].hubLiveAt = '2020-01-01T00:00:00.000Z';
+    renderSite(<CrawlerPage />, {
+      path: '/crawlers/stuntman',
+      routePath: '/crawlers/:id',
+      show,
+    });
+    const cta = screen.getByRole('link', { name: siteCopy.startAtEpisodeOne });
+    expect(cta).toHaveAttribute('href', `/ep/${opener.id}`);
+    expect(cta).toHaveAttribute('data-kind', 'hub');
+  });
+
+  it('points it at YouTube while the feed is still shut', () => {
+    const show = makeShow();
+    show.episodes[0].hubLiveAt = '2099-01-01T00:00:00.000Z';
+    renderSite(<CrawlerPage />, {
+      path: '/crawlers/stuntman',
+      routePath: '/crawlers/:id',
+      show,
+      status: null,
+      now: Date.parse('2026-01-01T00:00:00.000Z'),
+    });
+    const cta = screen.getByRole('link', { name: siteCopy.startAtEpisodeOne });
+    expect(cta).toHaveAttribute('data-kind', 'youtube');
+    expect(cta.getAttribute('href')).toContain('youtube.com');
+  });
+
+  it('walks the roster with a prev/next bar', () => {
     const { unmount } = renderCrawler('stuntman');
     expect(screen.queryByRole('link', { name: new RegExp(siteCopy.prevCrawler) })).toBeNull();
-    expect(screen.getByRole('link', { name: new RegExp(siteCopy.nextCrawler) })).toHaveAttribute(
-      'href',
-      '/crawlers/harry',
-    );
+    const next = screen.getByRole('link', { name: new RegExp(siteCopy.nextCrawler) });
+    expect(next).toHaveAttribute('href', '/crawlers/harry');
+    expect(next).toHaveTextContent('Harold Wallace →');
     unmount();
 
     renderCrawler('harry');
-    expect(screen.getByRole('link', { name: new RegExp(siteCopy.prevCrawler) })).toHaveAttribute(
-      'href',
-      '/crawlers/stuntman',
-    );
+    const prev = screen.getByRole('link', { name: new RegExp(siteCopy.prevCrawler) });
+    expect(prev).toHaveAttribute('href', '/crawlers/stuntman');
+    expect(prev).toHaveTextContent('← Ronald Hudson');
     expect(screen.queryByRole('link', { name: new RegExp(siteCopy.nextCrawler) })).toBeNull();
   });
 
@@ -170,5 +249,22 @@ describe('CrawlerPage', () => {
     expect(document.querySelector('meta[property="og:image"]')?.getAttribute('content')).toContain(
       '/og/crawler-stuntman.png',
     );
+  });
+});
+
+/*
+ * jsdom computes no stylesheet, so the only honest way to assert a shared
+ * measure is to read the modules: one token, used by the shell and the footer,
+ * so every left edge on the front door lands on the same pixel (011 R2).
+ */
+describe('the front door measure', () => {
+  const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
+
+  it('sizes the page shell and the footer from one token', () => {
+    expect(read('./page.module.css')).toContain('max-width: var(--site-measure)');
+    expect(read('../components/SiteFooter.module.css')).toContain(
+      'max-width: var(--site-measure)',
+    );
+    expect(read('../../styles/tokens.css')).toMatch(/--site-measure:\s*992px/);
   });
 });

@@ -600,11 +600,12 @@ describe('public/data/crawlers.json', () => {
   });
 
   /*
-   * Placeholders must read as placeholders on the page: no "TODO:" ever reaches
-   * a rendered name. The two archetype names the author has given us are real;
-   * the other three stand in with the character's own name until they land.
+   * What the author has not written yet is *empty*, not a placeholder: the page
+   * renders nothing where it would have gone, so "coming soon" never ships
+   * (011 R2). The fields that are always true - archetype, character name,
+   * handle - are filled for all five and carry no TODO marker.
    */
-  it('ships placeholders that read as prose, and lists them under "todo"', () => {
+  it('leaves the unwritten fields empty rather than filling them with prose', () => {
     const roster = validateCrawlers(crawlersRaw);
     const byId = new Map(roster.crawlers.map((crawler) => [crawler.id, crawler]));
     expect(byId.get('ronald')?.name).toBe('The Stuntman');
@@ -620,7 +621,40 @@ describe('public/data/crawlers.json', () => {
     expect(byId.get('harry')?.name).toBe('The Writer');
     expect(byId.get('xo')?.name).toBe('The 1st AD');
     expect(byId.get('veil')?.name).toBe('The Psychic');
-    expect(byId.get('harry')?.concept).toBe('Concept coming soon.');
+
+    // Only Ronald's concept is written; the rest render no paragraph at all.
+    expect(byId.get('ronald')?.concept).not.toBe('');
+    for (const id of ['harry', 'mimi', 'xo', 'veil']) {
+      expect(byId.get(id)?.concept, `${id} has no concept yet`).toBe('');
+    }
+    // Nobody's pockets are written yet, so nobody shows a pockets list.
+    for (const crawler of roster.crawlers) {
+      expect(crawler.pockets, `${crawler.id} has no pockets yet`).toEqual([]);
+    }
     expect(roster.todo?.length ?? 0).toBeGreaterThanOrEqual(5);
+  });
+
+  /** The one section that is fully authored: all five, verbatim (011 R2). */
+  it('carries a real entry achievement for every crawler', () => {
+    const roster = validateCrawlers(crawlersRaw);
+    expect(roster.crawlers).toHaveLength(5);
+    for (const crawler of roster.crawlers) {
+      const entry = crawler.entryAchievement;
+      expect(entry, `${crawler.id} has an entry achievement`).toBeDefined();
+      expect(entry?.title).not.toBe('');
+      expect(entry?.box).toBeDefined();
+      expect(entry?.item).toBeDefined();
+      expect(entry?.reward).toBeDefined();
+      for (const text of [entry?.title, entry?.text, entry?.reward]) {
+        expect(text, `${crawler.id} is transcribed, not stubbed`).not.toMatch(
+          /coming soon|has not been|NEW ACHIEVEMENT|recieved/i,
+        );
+      }
+    }
+  });
+
+  /** Nothing anywhere in the roster file says "coming soon" (011 R2). */
+  it('ships no "coming soon" copy at all', () => {
+    expect(JSON.stringify(crawlersRaw)).not.toMatch(/coming soon/i);
   });
 });

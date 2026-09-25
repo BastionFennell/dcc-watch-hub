@@ -363,6 +363,7 @@ export function makeCrawlers(): CrawlerRoster {
           text: 'You committed to the bit.',
           box: 'Golden Monster Box',
           item: 'Liquid Latex',
+          reward: 'Inside is a bottle of Liquid Latex.',
         },
         art: { bust: '/img/crawlers/stuntman.svg', full: '/img/crawlers/stuntman-art.png' },
         status: 'alive',
@@ -372,8 +373,10 @@ export function makeCrawlers(): CrawlerRoster {
         name: 'Harry',
         characterName: 'Harold Wallace',
         handle: 'Dungeon Crawler Harry',
+        // The unwritten crawler: every optional field empty, so a test can ask
+        // what the page renders when the author has not filled it in (011 R2).
         player: { name: 'Marcus' },
-        concept: 'Concept coming soon.',
+        concept: '',
         pockets: [],
         art: { bust: '/img/crawlers/harry.svg' },
         status: 'alive',
