@@ -237,7 +237,7 @@ describe('normalizeCrawler - optional sheet fields', () => {
     handle: 'Harry',
     player: 'Marcus',
     level: 2,
-    hp: { current: 22, max: 22 },
+    hp: { current: 10, max: 10 },
     portrait: '/img/crawlers/harry.svg',
     class: null,
     inventory: [],
@@ -287,6 +287,29 @@ describe('normalizeCrawler - optional sheet fields', () => {
     expect(crawler.hotlist).toBeUndefined();
     expect(crawler.skills).toBeUndefined();
     expect(warn).toHaveBeenCalledTimes(6);
+    warn.mockRestore();
+  });
+
+  /*
+   * The health bar is ten slots (author, 2026-09-25). A `max` of 20 or 30 is
+   * the old mistake - hit points written into a slot count - so it is worth a
+   * warning, but never an error: the value is kept verbatim and the reducer
+   * clamps to it exactly as before.
+   */
+  it('warns, but does not change anything, when a bar is not ten slots', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const crawler = normalizeCrawler({ ...base, hp: { current: 4, max: 20 } } as never);
+
+    expect(crawler.hp).toEqual({ current: 4, max: 20 });
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain('HB is ten slots');
+    warn.mockRestore();
+  });
+
+  it('says nothing about a ten-slot bar', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    normalizeCrawler(base as never);
+    expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
   });
 
@@ -367,7 +390,7 @@ describe('normalizeCrawler - gear and art (R2-FR-220/224)', () => {
     handle: 'Harry',
     player: 'Marcus',
     level: 2,
-    hp: { current: 22, max: 22 },
+    hp: { current: 10, max: 10 },
     portrait: '/img/crawlers/harry.svg',
     class: null,
     inventory: [],
@@ -600,7 +623,7 @@ describe('normalizeCrawler - structured entries and spells (008 R2)', () => {
     handle: 'Crawler Mimi',
     player: '',
     level: 1,
-    hp: { current: 20, max: 20 },
+    hp: { current: 10, max: 10 },
     portrait: '/img/crawlers/mimi.png',
     class: null,
     inventory: [],
@@ -1018,7 +1041,7 @@ describe('validateStatus', () => {
       generatedAt: '2026-09-01T00:00:00.000Z',
       episodeId: 2,
       crawlers: {
-        harry: { level: 2, hp: { current: 22, max: 22 }, floor: 1, lastEpisodeId: 2 },
+        harry: { level: 2, hp: { current: 10, max: 10 }, floor: 1, lastEpisodeId: 2 },
         mimi: { level: 2, floor: 1, lastEpisodeId: 2 },
       },
     });

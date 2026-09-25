@@ -2,7 +2,7 @@
  * Static data contracts. Framework-free: this module is imported by the engine,
  * the app, and the authoring script alike (constitution: Author-Friendly Data Pipeline).
  *
- * Source of truth: dcc-watch-hub-spec.md §4 and
+ * Source of truth: dcc-watch-hub-spec.md Â§4 and
  * specs/001-watch-hub-v1/contracts/{show,episode}.schema.json
  */
 
@@ -351,6 +351,21 @@ export interface SpellRegistry {
 /** `[row, col]` into the floor grid. */
 export type Cell = [number, number];
 
+/**
+ * A health bar, measured in HB *slots* - never in hit points.
+ *
+ * The DCC sheet prints the health bar as a ten-slot strip (10%..100%), and the
+ * rules count in slots: a heal reads "2 HB slots", not "12 hit points". So
+ * `max` is 10 for every crawler and `current` is how many of those ten slots
+ * are still lit (author, 2026-09-25). The field stays a plain number rather
+ * than a literal 10 - a future floor is free to hand somebody a longer bar, and
+ * every selector already scales into ten segments - but `validate.ts` warns on
+ * any sheet whose `max` is not 10, because that is nearly always the old
+ * mistake of writing hit points into a slot count.
+ *
+ * `mana` reuses this shape (009) and is *not* in slots: a pool is counted
+ * one-for-one, so its `max` is the crawler's INT.
+ */
 export interface Hp {
   current: number;
   max: number;

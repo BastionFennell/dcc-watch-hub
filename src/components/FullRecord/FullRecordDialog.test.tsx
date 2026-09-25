@@ -325,7 +325,7 @@ describe('FullRecordDialog', () => {
     expect(identity.getByText('Compensated Anarchist')).toBeInTheDocument();
 
     expect(within(section('vitals')).getAllByTestId('hp-segment')).toHaveLength(10);
-    expect(screen.getByTestId('dossier-hp')).toHaveTextContent(copy.hpValue(20, 22));
+    expect(screen.getByTestId('dossier-hp')).toHaveTextContent(copy.hpValue(9, 10));
     expect(within(section('stats')).getByText(copy.statLabels.dex)).toBeInTheDocument();
 
     expect(within(section('hotlist')).getByText('Crowbar')).toBeInTheDocument();
@@ -668,6 +668,6 @@ describe('the record’s MANA row', () => {
     expect(screen.getByTestId('dossier-mana')).toHaveTextContent(copy.hpValue(0, 0));
     expect(vitals.getByText(copy.vitalsMana)).toBeInTheDocument();
     expect(vitals.getAllByTestId('hp-segment')).toHaveLength(10);
-    expect(screen.getByTestId('dossier-hp')).toHaveTextContent(copy.hpValue(18, 18));
+    expect(screen.getByTestId('dossier-hp')).toHaveTextContent(copy.hpValue(10, 10));
   });
 });

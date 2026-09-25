@@ -9,8 +9,8 @@
         "player": "Bobby",
         "level": 1,
         "hp": {
-          "current": 20,
-          "max": 20
+          "current": 10,
+          "max": 10
         },
         "portrait": "/img/crawlers/harry.png",
         "class": null,
@@ -88,8 +88,8 @@
         "player": "Lulu",
         "level": 1,
         "hp": {
-          "current": 20,
-          "max": 20
+          "current": 10,
+          "max": 10
         },
         "portrait": "/img/crawlers/mimi.png",
         "class": null,
@@ -182,8 +182,8 @@
         "player": "Madio",
         "level": 1,
         "hp": {
-          "current": 20,
-          "max": 20
+          "current": 10,
+          "max": 10
         },
         "portrait": "/img/crawlers/ronald.png",
         "class": null,
@@ -264,8 +264,8 @@
         "player": "Danny",
         "level": 1,
         "hp": {
-          "current": 30,
-          "max": 30
+          "current": 10,
+          "max": 10
         },
         "portrait": "/img/crawlers/xo.png",
         "class": null,
@@ -349,8 +349,8 @@
         "player": "Sarah",
         "level": 1,
         "hp": {
-          "current": 20,
-          "max": 20
+          "current": 10,
+          "max": 10
         },
         "portrait": "/img/crawlers/veil.png",
         "class": null,
@@ -524,8 +524,8 @@
       "t": 128,
       "type": "hp",
       "actor": "ronald",
-      "current": 15,
-      "max": 20
+      "current": 8,
+      "max": 10
     },
     {
       "t": 146,
@@ -685,8 +685,8 @@
       "t": 347,
       "type": "hp",
       "actor": "harry",
-      "current": 6,
-      "max": 20
+      "current": 3,
+      "max": 10
     },
     {
       "t": 365,
@@ -755,8 +755,8 @@
       "t": 463,
       "type": "hp",
       "actor": "harry",
-      "current": 19,
-      "max": 20
+      "current": 10,
+      "max": 10
     },
     {
       "t": 480,

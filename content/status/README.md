@@ -34,7 +34,7 @@ Those two strings live in `src/site/dossier/quiet.ts`. Change them there, never 
       "onCamera": true,
       "title": "Harry meets the door and wins",
       "body": "One or two sentences, present tense, System voice.",
-      "chips": ["GATE CRASHER", "4/20 HB"],
+      "chips": ["GATE CRASHER", "2/10 HB"],
       "level": null,
       "condition": "alive"
     }
@@ -52,9 +52,13 @@ and the page still fills. That is a legal, shipping state, not a TODO.
 | `onCamera` | did they appear on screen? Feeds "Last on camera" in the strip.                  |
 | `title`    | <= 60 characters, present tense.                                                 |
 | `body`     | 1-3 sentences, present tense, System voice.                                      |
-| `chips`    | 0-3 short mono facts. Think `RANK 740`, `4/20 HB`, `WARDEN KEY`.                 |
+| `chips`    | 0-3 short mono facts. Think `RANK 740`, `2/10 HB`, `WARDEN KEY`.                 |
 | `level`    | an integer, or `null` to derive it from the hub reducer at the end of the episode. |
 | `condition`| `alive` or `deceased`. Sticky: never back to `alive`.                            |
+
+A health-bar chip is written in **HB slots**, not hit points: the bar is ten slots, so it reads
+`2/10 HB`, never `4/20 HB` (author, 2026-09-25; see specs/003-crawler-record/spec.md,
+Revision 3).
 
 `floor` is **not** authored. It comes from `show.json`, so the two can never disagree.
 

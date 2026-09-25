@@ -383,7 +383,7 @@ feed for that crawler's glance card - how they are doing *right now*, in a coupl
 
 1. **Header** - portrait, name, handle · played by {player}, class (or "Unclassed") · level. The
    "·" is decorative and hidden; a comma beside it is what a screen reader hears.
-2. **Vitals** - an `HP` label, the sheet's ten-segment strip and current/max, then a `MANA`
+2. **Vitals** - an `HB` label, the sheet's ten-slot strip and current/max, then a `MANA`
    row directly beneath it: one System-blue segment per point of the pool, filled to the current
    value, and current/max. A crawler with no pool (`max` 0) has no mana row at all.
 3. **Rank** - a `RANK` label, the current rank, a ↑/↓ delta against the previous elapsed `rank`
@@ -421,7 +421,7 @@ overlay allowed to cover the stage. Revision 2 lays it out as a character sheet 
   instead. At ≤ 900 px the art becomes a banner above the identity.
 - **Top band** - identity (portrait, name, handle, played by, race, pronouns, crawler number,
   level, class, floor) and vitals side by side, with the **STATS** strip (STR / INT / CON / DEX
-  / CHA, when the data carries them) full width beneath them. **VITALS** is the HP strip, then
+  / CHA, when the data carries them) full width beneath them. **VITALS** is the HB strip, then
   the **MANA** row under it (one segment per point, System blue, current/max), then rank.
 - **Hotbar** - the Hotlist as ten numbered square keys filled in order, empty keys dashed and
   unlit, and a `+N` marker after key ten when the crawler is tracking more than ten. A key shows
@@ -957,7 +957,7 @@ required; columns are `timecode,type,actor,field1,field2,field3`
 | `system_message` | text | – | – |
 | `achievement` | title | desc | – |
 | `loot` | item | source | – |
-| `hp` | current | max | – |
+| `hp` | current (HB slots) | max (10) | – |
 | `mana` | current | max (number, optional) | – |
 | `level_up` | level | – | – |
 | `rank` | rank | – | – |
@@ -1004,6 +1004,13 @@ Each crawler there may carry the optional sheet fields the dossier renders - `ra
 and `art` (a full-figure image path; the record falls back to the bust without it). They need no new CSV columns, and v1 files without them keep working: the
 dossier simply omits what it does not know.
 
+**HP is measured in HB slots** (author, 2026-09-25). The DCC health bar is ten slots - the
+sheet's 10%..100% strip - and the rules count in slots ("heal 2 HB slots"), never in hit points.
+So every crawler writes `hp: { current: 10, max: 10 }` at t = 0, and an `hp` event's `current` is
+how many of those ten slots are still lit. `max` stays a plain number in the type, but a `max`
+that is not 10 earns a console warning ("HB is ten slots") on load, because it is almost always
+hit points written into a slot count. The ten-segment strip therefore maps 1:1 to slots.
+
 **Mana** (009) is the one optional field with a rule behind it. Write `mana` and it is taken
 verbatim - a sheet is allowed to disagree. Leave it out and the state derives it: `max` is the
 crawler's `stats.int` and the pool starts full, so a file that never heard of mana still shows a
@@ -1020,7 +1027,7 @@ in a CSV cell, so this structure lives in `--initial-state` only: `hotlist`, `in
 `inventory` `remove` matches on that name and drops the whole entry.
 The converter sorts events by `t`, normalizes them, and prints a summary such as
 `wrote public/data/ep4.json (42 events, 2 warnings)`. **Warnings still produce output** (unknown
-actor, impossible HP, timecode past `--duration`, unknown type, bad `chapter.kind`, an
+actor, impossible HB, timecode past `--duration`, unknown type, bad `chapter.kind`, an
 accessory `unequip` with no item - the last one worn comes off, a legacy `rank` row with
 `crawler` in field1 - the rank is read out of field2, and - only with `--registry` - an `npc`
 row naming an entity or a fact the registry does not have); **errors write nothing and

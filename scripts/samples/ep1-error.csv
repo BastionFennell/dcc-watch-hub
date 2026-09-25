@@ -2,7 +2,7 @@ timecode,type,actor,field1,field2,field3
 0:06,system_message,,"Welcome, crawlers. Floor One is open to the galactic feed.",,
 00:14,chapter,,Cold Open - The Doorway,story,
 28,loot,harry,Enchanted Crowbar,Bronze Adventurer Box,
-abc,hp,harry,12,22,
+abc,hp,harry,6,10,
 1:10,skill,harry,Powerful Strike,high,
 1:00,achievement,harry,Gate Crasher,Killed 10 mobs with a door.,
 1:40,equip,harry,cape,Velvet Cloak,

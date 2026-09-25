@@ -52,12 +52,12 @@ describe('CrawlerGlance', () => {
     expect(header.querySelectorAll('.sr-only')).toHaveLength(1);
   });
 
-  it('labels the HP strip and keeps the sheet’s ten segments (T344)', () => {
+  it('labels the HB strip and keeps the sheet’s ten slots (T344)', () => {
     renderGlance(glanceAt(200));
     expect(screen.getByText(copy.hpLabel)).toBeInTheDocument();
-    expect(screen.getByTestId('hp-segments')).toHaveAttribute('aria-label', copy.hpAria(20, 22));
+    expect(screen.getByTestId('hp-segments')).toHaveAttribute('aria-label', copy.hpAria(9, 10));
     expect(screen.getAllByTestId('hp-segment')).toHaveLength(10);
-    expect(screen.getByTestId('glance-hp')).toHaveTextContent(copy.hpValue(20, 22));
+    expect(screen.getByTestId('glance-hp')).toHaveTextContent(copy.hpValue(9, 10));
   });
 
   it('labels the rank row and names the move since the previous rank point', () => {
@@ -261,9 +261,9 @@ describe('CrawlerGlance - the MANA row', () => {
     expect(screen.getByTestId('glance-mana')).toHaveTextContent(copy.hpValue(0, 0));
   });
 
-  it('leaves the HP strip exactly as it was', () => {
+  it('leaves the HB strip exactly as it was', () => {
     renderGlance(glanceAt(0, 'psychic'));
     expect(screen.getAllByTestId('hp-segment')).toHaveLength(10);
-    expect(screen.getByTestId('glance-hp')).toHaveTextContent(copy.hpValue(20, 20));
+    expect(screen.getByTestId('glance-hp')).toHaveTextContent(copy.hpValue(10, 10));
   });
 });

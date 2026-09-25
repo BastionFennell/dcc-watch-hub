@@ -243,6 +243,26 @@ describe.each(show.episodes.map((meta) => [meta.id, meta] as const))(
       }
     });
 
+    // The health bar is ten slots, always (author, 2026-09-25). Every sheet
+    // opens on a full bar, and no reading anywhere in the episode can be more
+    // than the ten slots there are - if a later edit pass writes hit points
+    // into this field again, this is where it shows up.
+    it('measures every health bar in HB slots: ten of them, full at t = 0', () => {
+      const episode = normalizeEpisode(raw);
+      for (const crawler of episode.initialState.party) {
+        expect(crawler.hp, `${crawler.id} opens on a full ten-slot bar`).toEqual({
+          current: 10,
+          max: 10,
+        });
+      }
+      for (const event of episode.events) {
+        if (event.type !== 'hp') continue;
+        expect(event.max, `hp event at t = ${event.t} is a ten-slot bar`).toBe(10);
+        expect(event.current, `hp event at t = ${event.t} fits the bar`).toBeLessThanOrEqual(10);
+        expect(event.current, `hp event at t = ${event.t} is not negative`).toBeGreaterThanOrEqual(0);
+      }
+    });
+
     // 009: every sheet now writes the mana box explicitly, and every one of them
     // agrees with the rule the state would have applied anyway - a full pool the
     // size of the crawler's INT.
