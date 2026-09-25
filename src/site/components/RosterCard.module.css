@@ -19,17 +19,6 @@
   gap: var(--space-2);
 }
 
-.levelPill {
-  flex: none;
-  font-family: var(--font-mono);
-  font-size: var(--text-2xs);
-  color: var(--brand-fg);
-  background: var(--brand-deep);
-  border-radius: var(--radius-pill);
-  padding: 2px 8px;
-  white-space: nowrap;
-}
-
 .statusPill {
   flex: none;
   font-size: var(--text-2xs);

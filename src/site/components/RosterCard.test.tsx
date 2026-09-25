@@ -32,15 +32,9 @@ describe('RosterCard card', () => {
     expect(screen.getByRole('link')).toHaveAttribute('href', '/elsewhere');
   });
 
-  it('shows the level pill only when there is live status to show', () => {
-    const { unmount } = renderCard(
-      <RosterCard profile={stuntman} status={status} variant="card" />,
-    );
-    expect(screen.getByText(siteCopy.levelPill(status.level))).toBeInTheDocument();
-    unmount();
-
-    renderCard(<RosterCard profile={stuntman} variant="card" />);
-    expect(screen.queryByText(siteCopy.levelPill(status.level))).toBeNull();
+  it('never shows a level pill, even with live status (author, 2026-09-25)', () => {
+    renderCard(<RosterCard profile={stuntman} status={status} variant="card" />);
+    expect(screen.queryByText(/^Lv /)).toBeNull();
   });
 
   it('leaves "alive" off the card and puts anything else on it', () => {

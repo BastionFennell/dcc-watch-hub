@@ -86,7 +86,6 @@ export const siteCopy = {
   /** The live line under a crawler: "Level 2 · 4/6 HB · Floor 1" (011 §5). */
   statusLine: (level: number, current: number, max: number, floor: number) =>
     `Level ${level} · ${current}/${max} HB · Floor ${floor}`,
-  levelPill: (level: number) => `Lv ${level}`,
 
   // --- /crawlers/:id
   /*
