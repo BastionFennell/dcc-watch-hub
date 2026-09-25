@@ -1,26 +1,89 @@
-.discord {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-  padding: var(--space-8) var(--space-7);
-  background: var(--brand-deep);
-  border: 1px solid var(--brand);
-  border-radius: var(--radius-lg);
+/*
+ * `/community` (011 §3.5). The shell gives the page the shared measure; this
+ * file gives it one reading column inside that measure, so the card, the
+ * tiles, the paragraph and the footer all start and end on the same pixel.
+ *
+ * The shell's own 32 px gap is turned off: the rhythm here is 24 px between
+ * blocks and 8 px from a heading to what it introduces, and nothing else.
+ */
+.page {
+  gap: 0;
 }
 
-/* The one large button on the page; it is why the page exists. */
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  width: 100%;
+  max-width: 720px;
+  margin-inline: auto;
+  min-width: 0;
+}
+
+/* One heading size for both sections: the shell's step moves with the monitor. */
+.h2 {
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text);
+}
+
+/* The lead runs the column's width - a 62ch cap here only rags the right edge. */
+.lead {
+  max-width: none;
+  color: var(--ink-body);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* ------------------------------------------------------------ the Discord card */
+
+/*
+ * The reason the page exists, and no bigger than it needs to be: text left,
+ * button right, one hairline of --brand-line at 35% so the purple has an edge
+ * rather than reading as a slab.
+ */
+.discord {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-7);
+  padding: 24px;
+  background: var(--brand-deep);
+  border: 1px solid rgb(120 113 202 / 35%); /* --brand-line */
+  border-radius: var(--radius-lg);
+  min-width: 0;
+}
+
+.discordText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.discordBody {
+  color: var(--brand-fg);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+/* The one button on the page. */
 .big {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 56px;
+  width: 100%;
+  min-height: 46px;
   padding: 0 var(--space-8);
+  border: 1px solid var(--brand-line);
   border-radius: var(--radius-md);
   background: var(--brand-2);
   color: var(--brand-fg-2);
-  font-size: var(--text-lg);
+  font-size: 15px;
   font-weight: 600;
   text-align: center;
+  white-space: nowrap;
 }
 
 .big:hover {
@@ -28,14 +91,71 @@
   color: var(--brand-fg-2);
 }
 
-.cadence {
-  color: var(--text-2);
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
+/* The global ring is --brand-line, which is the fill's own hue: this one shows. */
+.big:focus-visible {
+  outline: 2px solid var(--brand-fg-2);
+  outline-offset: 2px;
 }
 
-@media (min-width: 900px) {
+/* ----------------------------------------------------------- follow the crawl */
+
+.follow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+/* Heading and schedule on one baseline; the chip wraps under it on a phone. */
+.followHead {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-5);
+}
+
+/* The System stating the schedule, not an orphan line of mono. */
+.cadence {
+  flex: none;
+  padding: 3px var(--space-5);
+  border: 1px solid var(--system-pill-border);
+  border-radius: var(--radius-pill);
+  color: var(--system-pill-fg);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------ how to support */
+
+.support {
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--hairline);
+  min-width: 0;
+}
+
+.supportBody {
+  max-width: none;
+  color: var(--ink-body);
+  font-size: 16px;
+  line-height: 28px;
+}
+
+/* -------------------------------------------------------------- 721 px up */
+
+@media (min-width: 721px) {
+  .discord {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-8);
+    padding: 28px;
+  }
+
   .big {
-    align-self: flex-start;
+    width: auto;
+    min-height: 48px;
   }
 }

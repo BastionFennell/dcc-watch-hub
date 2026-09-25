@@ -26,3 +26,43 @@
   border-color: var(--brand-2);
   color: var(--brand-fg-2);
 }
+
+/*
+ * The `tiles` variant (/community): the platform row as the section itself.
+ * Auto-fill at 140 px means five across on a desktop column and two on a
+ * phone, with no breakpoint of its own.
+ */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: var(--space-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tiles > li {
+  display: flex;
+  min-width: 0;
+}
+
+.tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 56px;
+  padding: 0 var(--space-6);
+  background: var(--panel);
+  border: var(--border-hairline);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-size: var(--text-md);
+  font-weight: 600;
+  text-align: center;
+}
+
+.tile:hover {
+  border-color: var(--brand-line);
+  color: var(--brand-fg-2);
+}
