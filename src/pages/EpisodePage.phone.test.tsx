@@ -496,10 +496,11 @@ describe('EpisodePage on a phone', () => {
     const sheet = screen.getByTestId('rail-panel');
     expect(sheet).toHaveAttribute('data-presentation', 'sheet');
     expect(within(sheet).getByText(copy.registryPanelKicker)).toBeInTheDocument();
-    await waitFor(() =>
-      expect(within(sheet).getByTestId('registry-browser')).toBeInTheDocument(),
-    );
-    expect(within(sheet).getByTestId('registry-scope')).toHaveValue('through-1');
+    // The browser's shell is there the moment the sheet opens, but its toolbar
+    // is not: the scope control waits on the cross-episode index the panel asks
+    // for on open (R3-FR-644), so it is awaited rather than read.
+    expect(await within(sheet).findByTestId('registry-browser')).toBeInTheDocument();
+    expect(await within(sheet).findByTestId('registry-scope')).toHaveValue('through-1');
     // The stage is still up there, still where it was (R3 scenario 4).
     expect(screen.getByTestId('video-stage')).toBeInTheDocument();
     expect(seekSpy).not.toHaveBeenCalled();

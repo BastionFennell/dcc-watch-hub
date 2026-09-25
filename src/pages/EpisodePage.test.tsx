@@ -2068,13 +2068,20 @@ describe('EpisodePage', () => {
     return within(screen.getByTestId('encounter-rail')).getByTestId('encounter-browse');
   }
 
-  /** The panel's contents, once the index has landed. */
+  /**
+   * The panel's contents, once the index has landed. The browser's shell renders
+   * as soon as the panel opens - it never waits for the archive (R3 scenario 4)
+   * - so waiting for that alone would hand back a panel whose toolbar, sections
+   * and entries are still in flight. The standby line going away is the index
+   * arriving, and that is what everything below reads.
+   */
   async function browser(): Promise<HTMLElement> {
     const panel = screen.getByTestId('rail-panel');
+    const element = await within(panel).findByTestId('registry-browser');
     await waitFor(() =>
-      expect(within(panel).getByTestId('registry-browser')).toBeInTheDocument(),
+      expect(within(panel).queryByTestId('registry-browser-loading')).toBeNull(),
     );
-    return within(panel).getByTestId('registry-browser');
+    return element;
   }
 
   function entry(id: string): HTMLElement {
