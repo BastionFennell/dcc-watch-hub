@@ -1,4 +1,8 @@
 <!--
+Sync Impact 1.5.1 (2026-09-25): PATCH - reveal store dropped: the dossier keeps reveal state in
+memory for the page visit only, so the 1.5.0 storage exception is reverted and the storage rule
+reads "playhead and viewer preferences only" again. Principle VIII's "Absence is never a signal"
+bullet is unchanged.
 Sync Impact 1.5.0 (2026-09-25): MINOR - storage constraint gains the crawler-dossier reveal store
 exception; Principle VIII gains the "absence is never a signal" rule for per-episode crawler
 status (one card per crawler per aired episode; locked markup identical across crawlers).
@@ -58,10 +62,7 @@ event log filtered to `event.t <= playhead`. Concretely:
   backward seek, forward seek, and the "no event before its `t`" invariant.
 - Persisted viewer state (for example a resume position in `localStorage`) MAY hold the playhead
   and viewer preferences only. It MUST NOT hold overlay state or anything derived from events;
-  on resume the overlay is recomputed from `initialState` at the restored playhead. The front
-  door's crawler dossier (1.5.0) MAY additionally keep a per-viewer reveal store under
-  `dcc.reveals.v1`: which status cards a reader opened and a "caught up through" episode. It is
-  a reader preference, never derived from events, and never a signal about the story.
+  on resume the overlay is recomputed from `initialState` at the restored playhead.
 
 Rationale: the product promise is a spoiler-free synchronized broadcast. Any state that is not a
 pure function of the playhead can leak future events or desynchronize after scrubbing.
@@ -206,4 +207,4 @@ Compliance is reviewed at every plan (Constitution Check gate) and at implementa
 (acceptance checklist). Use `CLAUDE.md` for runtime development guidance and pointers to the
 active plan.
 
-**Version**: 1.5.0 | **Ratified**: 2026-09-14 | **Last Amended**: 2026-09-25
+**Version**: 1.5.1 | **Ratified**: 2026-09-14 | **Last Amended**: 2026-09-25

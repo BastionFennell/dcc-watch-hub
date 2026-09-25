@@ -13,23 +13,19 @@
  * behind sees the world as it was three episodes ago, and someone who has
  * opened nothing sees three grey pills.
  *
+ * The reveals are plain React state for this page visit and nothing else
+ * (author's decision, 2026-09-25): no storage, no key, nothing to carry between
+ * visits. A reload, or a walk to another crawler, starts fully locked - which
+ * also means the prerendered HTML and the first client render can never
+ * disagree, because both of them are the locked panel.
+ *
  * `dossier === null` is the launch state, not a statement: a deploy with no
  * aired episode yet, or a file that has not landed. It says when the first
  * report is due and stops there.
  */
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CrawlerProfile, DossierFile } from '../../../data/types';
 import { deriveStrip, headingFor } from '../../dossier/derive';
-import {
-  getLockedSnapshot,
-  getReveals,
-  hideAll,
-  isRevealed,
-  reveal,
-  revealAll,
-  saveReveals,
-  subscribe,
-} from '../../dossier/reveals';
 import { siteCopy } from '../../copy';
 import { DossierRow } from './DossierRow';
 import { DossierStrip } from './DossierStrip';
@@ -44,12 +40,22 @@ export interface DossierProps {
 const { dossier: copy } = siteCopy;
 
 export function Dossier({ profile, dossier }: DossierProps) {
+  const id = profile.id;
+
+  /** The episodes this reader has opened, here, now. Empty on every mount. */
+  const [revealed, setRevealed] = useState<ReadonlySet<number>>(() => new Set());
+
   /*
-   * The server and the hydrating client both see `LOCKED`, so the prerendered
-   * HTML and the first client render agree; this reader's own choices arrive
-   * in the re-render straight after mount.
+   * Walking from one crawler to the next keeps this component mounted, and
+   * nobody's reveals are anybody else's: re-lock the panel the moment the file
+   * on the desk changes. (Adjusting state during render, as React documents it:
+   * the re-render happens before anything is painted.)
    */
-  const state = useSyncExternalStore(subscribe, getReveals, getLockedSnapshot);
+  const [openFor, setOpenFor] = useState(id);
+  if (openFor !== id) {
+    setOpenFor(id);
+    setRevealed(new Set());
+  }
 
   /** The episode whose heading focus is owed to, once the swap has painted. */
   const [focusEpisode, setFocusEpisode] = useState<number | null>(null);
@@ -61,14 +67,10 @@ export function Dossier({ profile, dossier }: DossierProps) {
     setFocusEpisode(null);
   }, [focusEpisode]);
 
-  const id = profile.id;
-  const onReveal = useCallback(
-    (episode: number) => {
-      saveReveals(reveal(getReveals(), id, episode));
-      setFocusEpisode(episode);
-    },
-    [id],
-  );
+  const onReveal = useCallback((episode: number) => {
+    setRevealed((open) => (open.has(episode) ? open : new Set(open).add(episode)));
+    setFocusEpisode(episode);
+  }, []);
 
   const heading = `dossier-${id}`;
   const cards = dossier?.updates ?? [];
@@ -83,14 +85,14 @@ export function Dossier({ profile, dossier }: DossierProps) {
     );
   }
 
-  const revealedCards = cards.filter((card) => isRevealed(state, id, card.episode));
+  const revealedCards = cards.filter((card) => revealed.has(card.episode));
   const hiddenCount = cards.length - revealedCards.length;
   const anyOpen = revealedCards.length > 0;
   const highestAired = cards[cards.length - 1].episode;
 
+  /** One control, both ways: everything on this page, or nothing on it. */
   const onBulk = () => {
-    const now = getReveals();
-    saveReveals(anyOpen ? hideAll(now, id) : revealAll(now, id, highestAired));
+    setRevealed(anyOpen ? new Set() : new Set(cards.map((card) => card.episode)));
   };
 
   return (
@@ -105,10 +107,7 @@ export function Dossier({ profile, dossier }: DossierProps) {
           </span>
         </div>
 
-        <div className={styles.banner}>
-          <span className={styles.warning}>{copy.bannerWarning}</span>
-          <span className={styles.hint}>{copy.bannerHint}</span>
-        </div>
+        <p className={styles.banner}>{copy.bannerWarning}</p>
 
         <DossierStrip values={deriveStrip(revealedCards)} />
 
@@ -117,7 +116,7 @@ export function Dossier({ profile, dossier }: DossierProps) {
             <DossierRow
               key={card.episode}
               card={card}
-              revealed={isRevealed(state, id, card.episode)}
+              revealed={revealed.has(card.episode)}
               onReveal={onReveal}
               characterName={profile.characterName}
             />
@@ -143,7 +142,6 @@ function Header({ id, pronouns }: { id: string; pronouns?: string }) {
       <h2 className={styles.heading} id={id}>
         {copy.heading(headingFor(pronouns))}
       </h2>
-      <p className={styles.sub}>{copy.sub}</p>
     </header>
   );
 }

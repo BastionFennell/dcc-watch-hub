@@ -9,15 +9,14 @@
  *     DOM before the reader opens it (T1217);
  *  3. every card opens from the keyboard, and focus lands on what arrived
  *     (T1218);
- *  4. the reveals are this reader's, they survive a remount, they carry the
- *     watermark across crawlers, and a browser that refuses storage costs
- *     nothing but the memory of them (T1219).
+ *  4. the reveals last exactly as long as the visit - a remount starts fully
+ *     locked, and the panel never touches storage at all (T1219, superseded:
+ *     the author dropped the reveal store on 2026-09-25).
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { Dossier } from './Dossier';
 import { siteCopy } from '../../copy';
-import { REVEALS_KEY, loadReveals } from '../../dossier/reveals';
 import { makeCrawlers, makeDossier } from '../../../test/fixtures';
 import type { CrawlerProfile, DossierCard, DossierFile } from '../../../data/types';
 
@@ -45,27 +44,20 @@ function renderPanel(profile: CrawlerProfile = ronald, file: DossierFile | null 
   return render(<Dossier profile={profile} dossier={file ?? makeDossier(profile.id)} />);
 }
 
-beforeEach(() => {
-  localStorage.clear();
-  loadReveals();
-});
-
 afterEach(() => {
   cleanup();
-  localStorage.clear();
-  loadReveals();
   vi.unstubAllGlobals();
 });
 
 describe('the panel, locked', () => {
-  it('opens with the System eyebrow, the pronoun heading and the promise', () => {
+  it('opens with the System eyebrow, the pronoun heading and the one-line banner', () => {
     renderPanel();
     expect(screen.getByText(copy.eyebrow)).toBeInTheDocument();
     // Ronald's sheet says he/him, so the heading asks after him (character pronouns, not the player's).
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Where is he now?');
-    expect(screen.getByText(copy.sub)).toBeInTheDocument();
     expect(screen.getByText(copy.bannerWarning)).toBeInTheDocument();
-    expect(screen.getByText(copy.bannerHint)).toBeInTheDocument();
+    // The header is the eyebrow and the question; nothing sits under the h2.
+    expect(screen.queryByText(/Every card starts hidden/i)).toBeNull();
     // The band names the file and how far it runs, and nothing else.
     expect(screen.getByText(ronald.characterName.toUpperCase())).toBeInTheDocument();
     expect(screen.getByText(copy.fileRange(1, 3))).toBeInTheDocument();
@@ -198,47 +190,44 @@ describe('revealing', () => {
   });
 });
 
-describe('the reveals, remembered (T1219)', () => {
-  it('survives a remount, and one crawler\'s reveals are not another\'s', () => {
-    renderPanel(harold, makeDossier(harold.id));
+describe('the reveals, for this visit only (T1219, superseded 2026-09-25)', () => {
+  it('starts fully locked again after a remount', () => {
+    const { unmount } = renderPanel(harold, makeDossier(harold.id));
     fireEvent.click(screen.getByRole('button', { name: copy.revealAria(2) }));
-    expect(JSON.parse(localStorage.getItem(REVEALS_KEY) ?? '{}')).toMatchObject({
-      v: 1,
-      revealed: { harry: [2] },
-      caughtUpThrough: 0,
-    });
-    cleanup();
+    expect(screen.getByRole('heading', { level: 3 })).toBeInTheDocument();
+    unmount();
 
-    // Ronald's page, same browser: nothing of his has been opened.
-    renderPanel(ronald);
+    // A reload is this, from the panel's point of view: nothing came back.
+    renderPanel(harold, makeDossier(harold.id));
+    expect(screen.queryAllByRole('heading', { level: 3 })).toEqual([]);
     expect(screen.getAllByRole('button', { name: /^Reveal the Episode/ })).toHaveLength(3);
-    cleanup();
-
-    // Harold's page again: his card is where he left it.
-    renderPanel(harold, makeDossier(harold.id));
-    expect(screen.getByRole('heading', { level: 3 })).toBeInTheDocument();
-    expect(screen.getByText(copy.hidden(2))).toBeInTheDocument();
+    expect(screen.getByText(copy.hidden(3))).toBeInTheDocument();
   });
 
-  it('carries "I\'m caught up" across to the next crawler', () => {
-    renderPanel(harold, makeDossier(harold.id));
+  it('re-locks when the reader walks on to the next crawler without unmounting', () => {
+    const { rerender } = render(<Dossier profile={harold} dossier={makeDossier(harold.id)} />);
     fireEvent.click(screen.getByRole('button', { name: copy.revealAll }));
-    cleanup();
-
-    renderPanel(ronald);
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(3);
-    expect(screen.getByText(copy.hidden(0))).toBeInTheDocument();
+
+    rerender(<Dossier profile={ronald} dossier={makeDossier(ronald.id)} />);
+    expect(screen.queryAllByRole('heading', { level: 3 })).toEqual([]);
+    expect(screen.getByText(copy.hidden(3))).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: copy.revealAll })).toBeInTheDocument();
   });
 
-  it('still works when the browser refuses to store anything', () => {
-    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new DOMException('quota', 'QuotaExceededError');
-    });
+  it('never touches storage, reading or writing', () => {
+    const getItem = vi.spyOn(Storage.prototype, 'getItem');
+    const setItem = vi.spyOn(Storage.prototype, 'setItem');
+
     renderPanel();
+    fireEvent.click(screen.getByRole('button', { name: copy.revealAll }));
+    fireEvent.click(screen.getByRole('button', { name: copy.hideAll }));
     fireEvent.click(screen.getByRole('button', { name: copy.revealAria(1) }));
-    // The card opened; only its memory is gone.
     expect(screen.getByRole('heading', { level: 3 })).toBeInTheDocument();
-    expect(localStorage.getItem(REVEALS_KEY)).toBeNull();
+
+    expect(getItem).not.toHaveBeenCalled();
+    expect(setItem).not.toHaveBeenCalled();
+    getItem.mockRestore();
     setItem.mockRestore();
   });
 });

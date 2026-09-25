@@ -13,7 +13,7 @@ package.json                                      prebuild + predev + build:doss
 src/data/types.ts                                 DossierCard, DossierFile, Embedded.dossier?
 src/data/roster.ts                                validateDossier(raw), fetchDossier(id); CrawlerProfile.status removed
 src/site/dossier/derive.ts                        deriveStrip(revealedCards), headingFor(pronouns)
-src/site/dossier/reveals.ts                       store: load/save, isRevealed, reveal, revealAll, hideAll (try/catch, memory fallback)
+src/site/dossier/(reveals.ts deleted 2026-09-25)         reveals are in-memory React state in Dossier; no storage, no store module
 src/site/dossier/quiet.ts                         quiet-card strings (shared by script + UI)
 src/site/components/Dossier/{Dossier,DossierRow,DossierStrip}.tsx + css + tests
 src/site/pages/CrawlerPage.tsx                    mounts <Dossier> under the achievement; hero pill removed

@@ -9,8 +9,8 @@ the storage rule) encodes it.
 A full-width panel under the entry achievement on `/crawlers/:id`: a header, a spoiler banner, a
 status strip (Level / Condition / Last on camera), one locked row per **aired** episode in
 ascending order, and a footer with a hidden-count and one bulk control. Every card starts locked;
-the reader reveals cards one at a time, or all at once with "Reveal all - I'm caught up". Reveals
-persist per browser.
+the reader reveals cards one at a time, or all at once with "Reveal all - I'm caught up". Nothing
+is remembered between visits.
 
 ## Content model (authored) - `content/status/<id>.json` (repo root, NOT served)
 ```json
@@ -53,18 +53,19 @@ From the set of **revealed** cards only: `level` = last revealed non-null level 
 `condition` = `deceased` if any revealed card is `deceased`, else `alive`; `lastOnCamera` =
 highest revealed episode with `onCamera`, else none. Never from the full list.
 
-## Reveal store - `dcc.reveals.v1`
-`{ v: 1, revealed: Record<id, number[]>, caughtUpThrough: number }`. A card is open when its
-episode is listed for that crawler OR `episode <= caughtUpThrough`. "Reveal all - I'm caught up"
-sets `caughtUpThrough` to the highest aired episode; "Hide everything again" resets both for that
-crawler and sets `caughtUpThrough` to 0. All access in try/catch with an in-memory fallback.
-Prerender and first client render are always fully locked; the store is applied after mount.
+## Reveal state: in-memory per page visit; nothing persisted
+Plain React state inside `Dossier` - a `Set<number>` of revealed episodes for this visit. **Author
+decision, 2026-09-25: do not remember the reader's choices.** There is no storage key, no store
+module and no `localStorage` access of any kind; a reload, or a walk to another crawler, starts
+fully locked. "Reveal all - I'm caught up" opens every row on the page; "Hide everything again"
+shuts them all. Prerender, first client render and every remount are therefore the same locked
+panel, so hydration can never disagree.
 
 ## Component - `src/site/components/Dossier/`
 Header: mono eyebrow `SYSTEM FEED · CRAWLER DOSSIER`; h2 from the crawler's first pronoun
-(`he` -> "Where is he now?", `she` -> "Where is she now?", else "Where are they now?"); sub-line
-"Every card starts hidden." Banner: `⚠ SPOILERS · ONE CARD PER EPISODE` left, "Click a card to
-reveal it. Your choices are remembered." right. Strip: three cells; unrevealed values are grey
+(`he` -> "Where is he now?", `she` -> "Where is she now?", else "Where are they now?"); no sub-line
+(removed 2026-09-25). Banner: one line, `⚠ SPOILERS · ONE CARD PER EPISODE` (the affordance hint
+is gone with the store, 2026-09-25). Strip: three cells; unrevealed values are grey
 pills, not text. Rows: locked row = whole row is a `role="button"` `tabindex=0`
 `aria-expanded=false` with `aria-label="Reveal the Episode N status update"` (never content);
 left column `EP N` + `LOCKED`, two placeholder bars, `REVEAL` pill right; hover lifts the row and
@@ -87,7 +88,8 @@ tense. Portraits are never desaturated or regrouped.
 - "Aired" = past `hubLiveAt`; unaired cards never ship.
 - Hero status pill and `crawlers.json.status` are removed; `pronoun` comes from the existing
   `pronouns` field, not a new one.
-- Storage exception written into the constitution (1.5.0).
+- Storage exception written into the constitution (1.5.0), then reverted in 1.5.1 when the author
+  dropped the reveal store (2026-09-25).
 - The deploy workflow gains a weekly schedule so "aired" advances without a push.
 
 ## Acceptance

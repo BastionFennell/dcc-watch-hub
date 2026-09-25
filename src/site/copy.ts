@@ -123,14 +123,11 @@ export const siteCopy = {
     /** The h2, in the crawler's own pronoun (see `dossier/derive.ts`). */
     heading: (pronoun: 'he' | 'she' | 'they') =>
       pronoun === 'they' ? 'Where are they now?' : `Where is ${pronoun} now?`,
-    /** The promise under the heading: nothing here is open until you open it. */
-    sub: 'Every card starts hidden.',
     /** The panel's band: whose file this is, and how far it runs. */
     fileRange: (first: number, last: number) =>
       first === last ? `EPISODE ${first}` : `EPISODES ${first}-${last}`,
-    /** The banner, left and right. The warning sign is the only glyph here. */
+    /** The banner, and the whole of it. The warning sign is the only glyph here. */
     bannerWarning: '⚠ SPOILERS · ONE CARD PER EPISODE',
-    bannerHint: 'Click a card to reveal it. Your choices are remembered.',
     /** The strip's three cells. Their values come only from revealed cards. */
     levelLabel: 'LEVEL',
     conditionLabel: 'CONDITION',

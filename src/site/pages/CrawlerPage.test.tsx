@@ -16,7 +16,6 @@ import { CrawlerPage } from './CrawlerPage';
 import { siteCopy } from '../copy';
 import { copy } from '../../copy';
 import { renderSite } from '../../test/renderSite';
-import { loadReveals } from '../dossier/reveals';
 import {
   makeCrawlers,
   makeDossier,
@@ -43,15 +42,10 @@ function stubEpisodes() {
 
 beforeEach(() => {
   stubEpisodes();
-  // 012: the dossier's reveals are per browser, so each test gets a fresh one.
-  localStorage.clear();
-  loadReveals();
 });
 
 afterEach(() => {
   cleanup();
-  localStorage.clear();
-  loadReveals();
   vi.unstubAllGlobals();
   vi.useRealTimers();
 });

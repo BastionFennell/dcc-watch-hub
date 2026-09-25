@@ -37,12 +37,6 @@
   color: var(--text);
 }
 
-.sub {
-  font-size: var(--text-md);
-  line-height: 1.6;
-  color: var(--ink-muted);
-}
-
 /* The launch state's whole body: one line, and no panel to count rows in. */
 .launch {
   padding: var(--space-8);
@@ -91,32 +85,22 @@
   white-space: nowrap;
 }
 
-/* The one warning on the page. Amber, not System blue: this is the panel
-   talking to the reader, not the System talking to the crawlers. */
+/* The one warning on the page, and the whole of it. Amber, not System blue:
+   this is the panel talking to the reader, not the System talking to the
+   crawlers. One line - the tap is its own affordance, and nothing here
+   promises the reader anything is kept. */
 .banner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-5);
   padding: var(--space-6) var(--space-8);
   background: var(--amber-bg);
   border-bottom: var(--border-hairline);
-}
-
-.warning {
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
   letter-spacing: 0.12em;
+  line-height: 1.5;
   text-transform: uppercase;
   color: var(--amber-fg);
   font-weight: 600;
-}
-
-.hint {
-  font-size: var(--text-sm);
-  line-height: 1.4;
-  color: var(--amber-fg);
+  overflow-wrap: anywhere;
 }
 
 .rows {
@@ -172,13 +156,6 @@
   .banner,
   .footer {
     padding: var(--space-6) var(--space-7);
-  }
-
-  /* The hint is the affordance; at this width the tap is the affordance. */
-  .banner {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-3);
   }
 
   .footer {

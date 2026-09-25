@@ -247,13 +247,13 @@ Three custom events, all from `src/site/analytics.ts`:
 
 Under the hero on every `/crawlers/:id` there is a panel with **one card per aired episode**, and
 every card starts shut. The reader opens them one at a time, or all at once with
-"Reveal all - I'm caught up", and what they opened is remembered in their browser.
+"Reveal all - I'm caught up", and what they opened lasts exactly as long as the visit.
 
 **The invariant is the feature: absence is never a signal.** A short card list is itself a spoiler,
 so every crawler has a card for every aired episode, forever. An episode a crawler was not in gets
 a real card that says so - and that same quiet card turns up routinely on crawlers who are having a
 fine time, so it can never be read as a tell. After a death the cards keep coming and simply change
-subject: the estate, the legacy item, the reruns. Constitution 1.5.0, Principle VIII.
+subject: the estate, the legacy item, the reruns. Constitution 1.5.1, Principle VIII.
 
 Everything the panel says about a crawler is derived from **the cards that reader has opened**,
 never from the file: level is the last revealed level in episode order, condition is `deceased` if
@@ -296,21 +296,17 @@ card for an aired episode is not an error at all: that is the normal case, and t
 it. The same lint runs as a vitest test over `content/status/*.json` against the live `show.json`,
 so it fails in CI as well as in the build.
 
-#### The reveal store
+#### Reveal state: this visit only
 
-`localStorage`, under `dcc.reveals.v1`:
-`{ v: 1, revealed: { "<id>": [2, 5] }, caughtUpThrough: 0 }`. A card is open when its episode is
-listed for that crawler **or** its episode is at or below `caughtUpThrough`, the watermark the bulk
-control sets - a reader who is caught up is caught up on everyone, so it is global while the
-explicit list is per crawler. "Hide everything again" clears both.
+Plain React state inside `Dossier` - a `Set<number>` of the episodes this reader has opened, here,
+now. **The author's decision (2026-09-25) is not to remember the reader's choices**, so there is no
+storage key, no store module, and the panel never touches `localStorage` at all (a test spies on
+`Storage.prototype` and asserts it stays untouched). A reload, or a walk to the next crawler,
+starts fully locked; "Reveal all - I'm caught up" opens every row on the page and "Hide everything
+again" shuts them.
 
-This is the one exception the constitution's storage rule carves out (1.5.0): it is a reader
-preference, never derived from events and never a statement about the story. Every access is
-wrapped; a browser that refuses storage (private mode, blocked site data, an embedded webview)
-gets an in-memory store and loses nothing but the memory. The server and the first client render
-are **always fully locked** (`getServerSnapshot` returns a frozen `LOCKED`), so the prerendered
-HTML can never disagree with hydration and the reader's own choices arrive in the render after
-mount.
+That also settles hydration for free: the prerendered HTML, the first client render and every
+remount are the same locked panel, so there is nothing for the two to disagree about.
 
 #### Leak rules (what the tests defend)
 
