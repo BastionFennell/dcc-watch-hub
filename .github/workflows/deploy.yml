@@ -26,7 +26,8 @@ jobs:
       - run: npm ci
       - run: npm run build
         env:
-          VITE_BASE: /dcc-watch-hub/
+          # The site is served from the custom domain root (dungeoncrawlcast.com), so no subpath.
+          VITE_BASE: /
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
