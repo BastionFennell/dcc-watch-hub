@@ -3,6 +3,12 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  # 012: "aired" is a clock, not a commit. Every build drops the cards for
+  # episodes past their hubLiveAt and keeps the rest out of the bundle, so an
+  # episode unlocking on Saturday needs a rebuild even when nobody pushed.
+  # Monday 06:17 UTC - an odd minute, because the hour marks are congested.
+  schedule:
+    - cron: '17 6 * * 1'
   workflow_dispatch:
 
 permissions:

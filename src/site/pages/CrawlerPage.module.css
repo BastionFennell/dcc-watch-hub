@@ -94,30 +94,6 @@
   color: var(--ink-muted);
 }
 
-/* Authored, and only ever the news: `alive` prints nothing at all (011 R2). */
-.statusPill {
-  flex: none;
-  font-size: var(--text-2xs);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  border-radius: var(--radius-pill);
-  padding: 2px 8px;
-  white-space: nowrap;
-  color: var(--text-2);
-  background: var(--panel-deep);
-  border: var(--border-hairline-2);
-}
-
-.statusPill[data-status='dead'] {
-  color: var(--danger-fg);
-  border-color: var(--danger);
-}
-
-.statusPill[data-status='fused'] {
-  color: var(--amber-fg);
-  border-color: var(--amber-bg);
-}
-
 /* ------------------------------------------------------------ the credit */
 
 .credit {

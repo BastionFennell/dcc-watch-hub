@@ -25,6 +25,7 @@
 import type {
   Crawler,
   CrawlerRoster,
+  DossierFile,
   EpisodeData,
   Registry,
   Show,
@@ -32,6 +33,7 @@ import type {
   StatusFile,
 } from '../data/types';
 import { normalizeEpisode } from '../data/validate';
+import { quietBody, quietTitle } from '../site/dossier/quiet';
 
 export function makeShow(): Show {
   return {
@@ -366,7 +368,6 @@ export function makeCrawlers(): CrawlerRoster {
           reward: 'Inside is a bottle of Liquid Latex.',
         },
         art: { bust: '/img/crawlers/stuntman.svg', full: '/img/crawlers/stuntman-art.png' },
-        status: 'alive',
       },
       {
         id: 'harry',
@@ -379,7 +380,6 @@ export function makeCrawlers(): CrawlerRoster {
         concept: '',
         pockets: [],
         art: { bust: '/img/crawlers/harry.svg' },
-        status: 'alive',
       },
     ],
   };
@@ -394,5 +394,54 @@ export function makeStatus(): StatusFile {
       stuntman: { level: 3, hp: { current: 18, max: 24 }, floor: 1, lastEpisodeId: 1 },
       harry: { level: 2, hp: { current: 22, max: 22 }, floor: 1, lastEpisodeId: 1 },
     },
+  };
+}
+
+/**
+ * A compiled dossier for the roster above (012): three aired episodes, one
+ * card each, with the shapes the panel has to handle side by side - an update
+ * on camera, a generated quiet card, and an update filed off camera. Nobody
+ * dies here; the death cases are built in the tests that are about death, so
+ * every other test's fixture stays free of the words.
+ */
+export function makeDossier(id = 'stuntman'): DossierFile {
+  return {
+    id,
+    generatedAt: '2026-09-01T00:00:00.000Z',
+    updates: [
+      {
+        episode: 1,
+        floor: 1,
+        kind: 'update',
+        onCamera: true,
+        title: 'Ronald breaks the fall and the arm',
+        body: 'He goes under the ceiling to prove a point about doorways.',
+        chips: ['UNPAID STUNT DOUBLE'],
+        level: 1,
+        condition: 'alive',
+      },
+      {
+        episode: 2,
+        floor: 1,
+        kind: 'quiet',
+        onCamera: false,
+        title: quietTitle,
+        body: quietBody('Ronald Hudson'),
+        chips: [],
+        level: 2,
+        condition: 'alive',
+      },
+      {
+        episode: 3,
+        floor: 2,
+        kind: 'update',
+        onCamera: false,
+        title: 'Ronald rigs the descent from the landing above',
+        body: 'The Stuntman spends the episode out of frame and on a rope.',
+        chips: ['RANK 520'],
+        level: 3,
+        condition: 'alive',
+      },
+    ],
   };
 }

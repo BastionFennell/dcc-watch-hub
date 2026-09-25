@@ -18,10 +18,11 @@ import {
   isSpellRegistry,
   validateSpells,
 } from './validate';
-import { validateCrawlers, validateStatus } from './roster';
+import { validateCrawlers, validateDossier, validateStatus } from './roster';
 import type { AnyEvent } from './types';
 import {
   makeCrawlers,
+  makeDossier,
   makeEpisode,
   makeEpisodeRaw,
   makeRegistry,
@@ -949,12 +950,19 @@ describe('validateCrawlers', () => {
         { ...roster.crawlers[1], art: {} },
         { ...roster.crawlers[1], id: 'nameless', name: '' },
         { ...roster.crawlers[1], id: 'unplayed', player: {} },
-        { ...roster.crawlers[1], id: 'ghost', status: 'vanished' },
       ],
     };
     expect(validateCrawlers(broken).crawlers.map((c) => c.id)).toEqual(['stuntman']);
-    expect(warn).toHaveBeenCalledTimes(4);
+    expect(warn).toHaveBeenCalledTimes(3);
     warn.mockRestore();
+  });
+
+  /* 012: a `status` field is not a reason to drop anyone, and not read either. */
+  it('ignores a leftover status field rather than honouring it', () => {
+    const [first] = makeCrawlers().crawlers;
+    const roster = validateCrawlers({ crawlers: [{ ...first, status: 'dead' }] });
+    expect(roster.crawlers).toHaveLength(1);
+    expect(roster.crawlers[0]).not.toHaveProperty('status');
   });
 
   it('drops a duplicate id, keeping the first', () => {
@@ -1047,6 +1055,59 @@ describe('validateStatus', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     expect(validateStatus(null)).toBeNull();
     expect(validateStatus({ crawlers: [] })).toBeNull();
+    warn.mockRestore();
+  });
+});
+
+/* --------------------------------------------- 012: the compiled dossier */
+
+describe('validateDossier', () => {
+  it('keeps a well-formed file verbatim', () => {
+    const dossier = makeDossier('harry');
+    expect(validateDossier(dossier)).toEqual(dossier);
+  });
+
+  it('sorts ascending rather than trusting the order on disk', () => {
+    const dossier = makeDossier('harry');
+    const shuffled = { ...dossier, updates: [dossier.updates[2], dossier.updates[0]] };
+    expect(validateDossier(shuffled)?.updates.map((u) => u.episode)).toEqual([1, 3]);
+  });
+
+  it('drops a card it cannot render and warns, keeping the rest', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const dossier = makeDossier('harry');
+    const file = validateDossier({
+      ...dossier,
+      updates: [dossier.updates[0], { ...dossier.updates[1], kind: 'rumour' }],
+    });
+    expect(file?.updates.map((u) => u.episode)).toEqual([1]);
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('refuses a card with no onCamera flag: the strip would guess', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const dossier = makeDossier('harry');
+    const { onCamera: _dropped, ...withoutFlag } = dossier.updates[0];
+    expect(validateDossier({ ...dossier, updates: [withoutFlag] })?.updates).toEqual([]);
+    warn.mockRestore();
+  });
+
+  it('refuses a condition it does not know, rather than assuming alive', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const dossier = makeDossier('harry');
+    const file = validateDossier({
+      ...dossier,
+      updates: [{ ...dossier.updates[0], condition: 'missing' }],
+    });
+    expect(file?.updates).toEqual([]);
+    warn.mockRestore();
+  });
+
+  it('never throws: null for a file that is not a dossier', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(validateDossier(null)).toBeNull();
+    expect(validateDossier({ id: 'harry' })).toBeNull();
     warn.mockRestore();
   });
 });

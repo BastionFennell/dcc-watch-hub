@@ -8,8 +8,8 @@ content/status/{harry,mimi,ronald,xo,veil}.json   authored cards (sample content
 content/status/README.md                          authoring rules
 scripts/dossier.ts                                pure: lintUpdates(), compileDossier(show, crawler, authored, levels, now)
 scripts/build-dossier.ts                          tsx entry: reads files, runs reducer for levels, writes public/data/dossier/<id>.json
-scripts/postbuild.mjs                             runs dossier before prerender; prerender embeds dossier per crawler
-package.json                                      predev + build:dossier; .gitignore public/data/dossier/
+scripts/postbuild.mjs                             prerender embeds dossier per crawler (built in `prebuild`, before vite copies public/)
+package.json                                      prebuild + predev + build:dossier; .gitignore public/data/dossier/
 src/data/types.ts                                 DossierCard, DossierFile, Embedded.dossier?
 src/data/roster.ts                                validateDossier(raw), fetchDossier(id); CrawlerProfile.status removed
 src/site/dossier/derive.ts                        deriveStrip(revealedCards), headingFor(pronouns)

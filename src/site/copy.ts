@@ -74,18 +74,12 @@ export const siteCopy = {
   // --- /crawlers
   crawlersTitle: 'The crawlers',
   crawlersLead: 'Five contestants, one production company, no exit.',
-  filterAll: 'All',
-  filterLabel: 'Filter by status',
-  /** The authored `status` field, as a pill (011 §2.2). */
-  statusLabel: {
-    alive: 'Alive',
-    dead: 'Dead',
-    fused: 'Fused',
-    unknown: 'Unknown',
-  } as const,
-  /** The live line under a crawler: "Level 2 · 4/6 HB · Floor 1" (011 §5). */
-  statusLine: (level: number, current: number, max: number, floor: number) =>
-    `Level ${level} · ${current}/${max} HB · Floor ${floor}`,
+  /*
+   * 012 removed the status filter chips, the status pill and the live line.
+   * Every word they used to print said something about a crawler's condition,
+   * which is now the dossier's to say, per episode, only inside a card the
+   * reader opened. Wave B's dossier strings land below.
+   */
 
   // --- /crawlers/:id
   /*

@@ -4,7 +4,14 @@
  * The script itself (disk, the built bundle) is exercised by the build in Wave C.
  */
 import { beforeAll, describe, expect, it } from 'vitest';
-import { STATIC_ROUTES, embedScript, injectPage, outputPath, routesFor } from './prerender.mjs';
+import {
+  STATIC_ROUTES,
+  crawlerIdIn,
+  embedScript,
+  injectPage,
+  outputPath,
+  routesFor,
+} from './prerender.mjs';
 import { ready, render } from '../src/entry-server';
 import { makeCrawlers, makeShow, makeStatus } from '../src/test/fixtures';
 
@@ -46,6 +53,16 @@ describe('routesFor', () => {
     expect(routesFor(null)).toEqual(STATIC_ROUTES);
     expect(routesFor({ crawlers: [] })).toEqual(STATIC_ROUTES);
     expect(routesFor({ crawlers: [{ name: 'no id' }] })).toEqual(STATIC_ROUTES);
+  });
+});
+
+describe('crawlerIdIn', () => {
+  it('names the crawler a route is about, and nothing else (012)', () => {
+    expect(crawlerIdIn('/crawlers/harry')).toBe('harry');
+    expect(crawlerIdIn('/crawlers')).toBeNull();
+    expect(crawlerIdIn('/crawlers/harry/extra')).toBeNull();
+    expect(crawlerIdIn('/watch')).toBeNull();
+    expect(crawlerIdIn('/')).toBeNull();
   });
 });
 

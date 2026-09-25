@@ -1,0 +1,15 @@
+{
+  "id": "xo",
+  "updates": [
+    {
+      "episode": 1,
+      "kind": "update",
+      "onCamera": true,
+      "title": "X.O. opens the account early",
+      "body": "The 1st AD counts what the room owes before the room knows it owes anything, and takes the Quartermaster title for the trouble. Nine skills logged in one shift, which the System considers scheduling rather than combat.",
+      "chips": ["FIRST BLOOD", "QUARTERMASTER", "RANK 4188"],
+      "level": null,
+      "condition": "alive"
+    }
+  ]
+}

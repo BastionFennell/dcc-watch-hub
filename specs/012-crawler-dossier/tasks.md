@@ -1,16 +1,16 @@
 # Tasks - 012 crawler dossier
 
 ## Wave A
-- [ ] T1201 Types (`DossierCard`, `DossierFile`, `AuthoredUpdate`), schemas (content + compiled), `Embedded.dossier`
-- [ ] T1202 `content/status/README.md` + sample `content/status/<id>.json` for all five (System voice, present tense, sample episodes 1-3; Ronald ep2 quiet authored; one crawler with an empty file)
-- [ ] T1203 `scripts/dossier.ts`: `lintUpdates`, `compileDossier` (auto quiet cards, derived levels, aired filter, sticky condition) (+tests)
-- [ ] T1204 `scripts/build-dossier.ts` (levels via reducer per episode end; writes `public/data/dossier/*.json`; exits 1 on lint errors), wired into `predev`, `build:dossier`, and `postbuild.mjs` before prerender; `.gitignore`
-- [ ] T1205 Prerender embeds `dossier` for the crawler route; `readEmbedded` + `fetchDossier` fallback; `validateDossier` lenient
-- [ ] T1206 `src/site/dossier/derive.ts` (+tests incl. the sticky-condition case 9 + 12)
-- [ ] T1207 `src/site/dossier/reveals.ts` (+tests: persistence shape, caughtUpThrough, throw -> memory)
-- [ ] T1208 Remove `CrawlerProfile.status`, `StatusPill`, `StatusLine`, roster chips; update `crawlers.json`, schema, tests
-- [ ] T1209 Vitest lint over `content/status/*.json` against the live `show.json`
-- [ ] T1210 Gates; `deploy.yml` weekly schedule
+- [X] T1201 Types (`DossierCard`, `DossierFile`, `AuthoredUpdate`), schemas (content + compiled), `Embedded.dossier`
+- [X] T1202 `content/status/README.md` + sample `content/status/<id>.json` for all five (System voice, present tense, sample episodes 1-3; Ronald ep2 quiet authored; one crawler with an empty file)
+- [X] T1203 `scripts/dossier.ts`: `lintUpdates`, `compileDossier` (auto quiet cards, derived levels, aired filter, sticky condition) (+tests)
+- [X] T1204 `scripts/build-dossier.ts` (levels via reducer per episode end; writes `public/data/dossier/*.json`; exits 1 on lint errors), wired into `predev`, `build:dossier`, and `postbuild.mjs` before prerender; `.gitignore`
+- [X] T1205 Prerender embeds `dossier` for the crawler route; `readEmbedded` + `fetchDossier` fallback; `validateDossier` lenient
+- [X] T1206 `src/site/dossier/derive.ts` (+tests incl. the sticky-condition case 9 + 12)
+- [X] T1207 `src/site/dossier/reveals.ts` (+tests: persistence shape, caughtUpThrough, throw -> memory)
+- [X] T1208 Remove `CrawlerProfile.status`, `StatusPill`, `StatusLine`, roster chips; update `crawlers.json`, schema, tests
+- [X] T1209 Vitest lint over `content/status/*.json` against the live `show.json`
+- [X] T1210 Gates; `deploy.yml` weekly schedule
 
 ## Wave B
 - [ ] T1211 `src/site/copy.ts` dossier strings (eyebrow, headings by pronoun, banner, strip labels, LOCKED/REVEAL/UPDATE/QUIET, footer, launch line, quiet card text via `quiet.ts`)

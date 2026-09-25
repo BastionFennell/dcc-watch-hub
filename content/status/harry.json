@@ -1,0 +1,35 @@
+{
+  "id": "harry",
+  "updates": [
+    {
+      "episode": 1,
+      "kind": "update",
+      "onCamera": true,
+      "title": "Harry meets the door and wins",
+      "body": "Harold Wallace opens Floor One with a borrowed crowbar and a doorway the ceiling had opinions about. Ten mobs argue the point; the door settles it. The System logs his health bar at four slots and declines to intervene.",
+      "chips": ["GATE CRASHER", "4/20 HB", "COMP. ANARCHIST"],
+      "level": null,
+      "condition": "alive"
+    },
+    {
+      "episode": 2,
+      "kind": "update",
+      "onCamera": true,
+      "title": "Harry pays the blood tax, twice",
+      "body": "The Meat District charges him in advance and then charges him again. He spends most of Row Nine bleeding on other people's floors and climbs eight thousand places in the standings doing it.",
+      "chips": ["BLOOD TAX", "RANK 740", "5/20 HB"],
+      "level": 2,
+      "condition": "alive"
+    },
+    {
+      "episode": 3,
+      "kind": "update",
+      "onCamera": true,
+      "title": "Harry pockets a key that is still warm",
+      "body": "A Platinum Adventurer Box hands him the Warden Key on the way down, and nobody on the crew mentions on camera that it has a temperature. He is at six slots by the Sealed Cache and back to nineteen by the Warden Hall.",
+      "chips": ["WARDEN KEY", "PLATINUM BOX"],
+      "level": 3,
+      "condition": "alive"
+    }
+  ]
+}

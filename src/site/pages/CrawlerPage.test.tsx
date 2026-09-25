@@ -71,25 +71,16 @@ describe('CrawlerPage hero', () => {
 
   /*
    * No progression in the hero (011 R2): a stranger from a search result gets
-   * who this is, not how far they have got.
+   * who this is, not how far they have got. 012 takes the last of it - there
+   * is no status pill on this page for anyone, in any condition, because a
+   * pill is an answer to a question nobody asked.
    */
-  it('spoils nothing: no floor, no level line, no "alive" pill', () => {
+  it('spoils nothing: no floor, no level line, no condition anywhere', () => {
     renderCrawler();
     expect(screen.queryByTestId('status-line')).toBeNull();
-    expect(screen.queryByText(siteCopy.statusLabel.alive)).toBeNull();
     expect(document.body.textContent).not.toMatch(/Floor \d/);
     expect(document.body.textContent).not.toMatch(/Lv \d|Level \d/);
-  });
-
-  it('shows the authored pill when the crawler is not alive', () => {
-    renderSite(<CrawlerPage />, {
-      path: '/crawlers/stuntman',
-      routePath: '/crawlers/:id',
-      crawlers: rosterWith((roster) => {
-        roster.crawlers[0].status = 'dead';
-      }),
-    });
-    expect(screen.getByText(siteCopy.statusLabel.dead)).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/alive|dead|deceased|fused|unknown/i);
   });
 });
 

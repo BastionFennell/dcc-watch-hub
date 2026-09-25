@@ -122,11 +122,7 @@ export function HomePage() {
         <ul className={page.roster}>
           {profiles.map((profile) => (
             <li key={profile.id}>
-              <RosterCard
-                profile={profile}
-                status={status?.crawlers[profile.id]}
-                variant="card"
-              />
+              <RosterCard profile={profile} variant="card" />
             </li>
           ))}
         </ul>

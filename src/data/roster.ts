@@ -13,28 +13,25 @@
  * costs the live line.
  */
 import type {
+  CrawlerCondition,
   CrawlerEntryAchievement,
-  CrawlerLiveStatus,
   CrawlerPlayer,
   CrawlerProfile,
   CrawlerRoster,
   CrawlerStatus,
+  DossierCard,
+  DossierFile,
+  DossierKind,
   Hp,
   StatusFile,
 } from './types';
-import { CRAWLER_LIVE_STATUSES } from './types';
+import { CRAWLER_CONDITIONS, DOSSIER_KINDS } from './types';
 import { isRecord, toNonEmptyStringList, toNumber, toString_ } from './validate';
 import { fetchJson, joinBase, siteBaseUrl } from './load';
 
 const CRAWLERS_URL = '/data/crawlers.json';
 const STATUS_URL = '/data/status.json';
-
-function toLiveStatus(x: unknown): CrawlerLiveStatus | null {
-  const s = toString_(x);
-  return s !== null && (CRAWLER_LIVE_STATUSES as readonly string[]).includes(s)
-    ? (s as CrawlerLiveStatus)
-    : null;
-}
+const DOSSIER_URL = '/data/dossier';
 
 /** `{ name, ... }`. A player with no name is not a player, so the crawler falls. */
 function toPlayer(x: unknown, crawlerId: string): CrawlerPlayer | null {
@@ -112,14 +109,13 @@ function toCrawlerProfile(raw: unknown): CrawlerProfile | null {
    * the crawler.
    */
   const concept = toString_(raw.concept) ?? '';
-  const status = toLiveStatus(raw.status);
   const player = toPlayer(raw.player, id);
   const bust = isRecord(raw.art) ? toString_(raw.art.bust) : null;
 
   if (name === null || name === '') return null;
   if (characterName === null || characterName === '') return null;
   if (handle === null || handle === '') return null;
-  if (status === null || player === null) return null;
+  if (player === null) return null;
   if (bust === null || bust === '') return null;
 
   const full = isRecord(raw.art) ? toString_(raw.art.full) : null;
@@ -137,7 +133,6 @@ function toCrawlerProfile(raw: unknown): CrawlerProfile | null {
     ...(entryAchievement === undefined ? {} : { entryAchievement }),
     art: { bust, ...(full === null || full === '' ? {} : { full }) },
     ...(og === null || og === '' ? {} : { og }),
-    status,
   };
 }
 
@@ -241,6 +236,90 @@ function toAppearances(raw: Record<string, unknown>): Record<string, number[]> {
  */
 export async function fetchCrawlers(): Promise<CrawlerRoster> {
   return validateCrawlers(await fetchJson(joinBase(siteBaseUrl(), CRAWLERS_URL)));
+}
+
+/* ----------------------------------------------- the dossier (012) */
+
+/** One compiled card, or `null` for one this build cannot render. */
+function toDossierCard(x: unknown, crawlerId: string): DossierCard | null {
+  if (!isRecord(x)) return null;
+  const episode = toNumber(x.episode);
+  const floor = toNumber(x.floor);
+  const level = toNumber(x.level);
+  const title = toString_(x.title);
+  const body = toString_(x.body);
+  const kind = toString_(x.kind);
+  const condition = toString_(x.condition);
+  if (episode === null || floor === null || level === null) return null;
+  if (title === null || title === '' || body === null || body === '') return null;
+  if (kind === null || !(DOSSIER_KINDS as readonly string[]).includes(kind)) return null;
+  if (condition === null || !(CRAWLER_CONDITIONS as readonly string[]).includes(condition)) {
+    return null;
+  }
+  if (typeof x.onCamera !== 'boolean') {
+    console.warn(`Dossier "${crawlerId}": episode ${String(episode)} has no onCamera flag.`);
+    return null;
+  }
+  return {
+    episode,
+    floor,
+    kind: kind as DossierKind,
+    onCamera: x.onCamera,
+    title,
+    body,
+    chips: toNonEmptyStringList(x.chips),
+    level,
+    condition: condition as CrawlerCondition,
+  };
+}
+
+/**
+ * The compiled `dossier/<id>.json` (012). Lenient, like every loader here: a
+ * card the build wrote wrong costs that card and nothing else, and a file that
+ * is not a dossier costs the panel rather than the page. Never throws.
+ *
+ * It sorts ascending rather than trusting the order on disk, because the panel
+ * reads "the last revealed level" straight off this list and an out-of-order
+ * file would quietly answer the wrong question.
+ */
+export function validateDossier(raw: unknown): DossierFile | null {
+  if (!isRecord(raw) || !Array.isArray(raw.updates)) {
+    console.warn('Dossier: the file does not match the schema; ignoring it.');
+    return null;
+  }
+  const id = toString_(raw.id) ?? '';
+  const updates: DossierCard[] = [];
+  for (const item of raw.updates as unknown[]) {
+    const card = toDossierCard(item, id);
+    if (card === null) {
+      console.warn(`Dossier "${id}": dropping a malformed card.`);
+      continue;
+    }
+    updates.push(card);
+  }
+  updates.sort((a, b) => a.episode - b.episode);
+  return { id, generatedAt: toString_(raw.generatedAt) ?? '', updates };
+}
+
+/**
+ * One crawler's compiled dossier, or `null` when there is none. A 404 is a
+ * normal answer - a deploy that never ran the build step, or an id nobody has
+ * a file for - and it costs the panel, not the page.
+ */
+export async function fetchDossier(id: string): Promise<DossierFile | null> {
+  const url = joinBase(siteBaseUrl(), `${DOSSIER_URL}/${id}.json`);
+  let response: Response;
+  try {
+    response = await fetch(url);
+  } catch {
+    return null;
+  }
+  if (!response.ok) return null;
+  try {
+    return validateDossier((await response.json()) as unknown);
+  } catch {
+    return null;
+  }
 }
 
 /**

@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { CrawlersProvider, useCrawlers } from './CrawlersContext';
 import { EMBEDDED_ID } from './load';
-import { makeCrawlers, makeShow, makeStatus } from '../test/fixtures';
+import { makeCrawlers, makeDossier, makeShow, makeStatus } from '../test/fixtures';
 
 function json(body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -146,5 +146,102 @@ describe('CrawlersProvider (fetched)', () => {
     await waitFor(() => expect(screen.getByTestId('error')).toHaveTextContent('DataError'));
     expect(screen.getByTestId('profiles')).toHaveTextContent('');
     expect(screen.getByTestId('loading')).toHaveTextContent('false');
+  });
+});
+
+/* -------------------------------------------------- the dossier (012) */
+
+function DossierProbe({ id }: { id: string }) {
+  const { dossierFor } = useCrawlers();
+  const file = dossierFor(id);
+  return (
+    <ul>
+      <li data-testid="dossier">
+        {file === null ? 'none' : file.updates.map((u) => u.episode).join(',')}
+      </li>
+    </ul>
+  );
+}
+
+function mountDossier(id: string) {
+  return render(
+    <CrawlersProvider>
+      <DossierProbe id={id} />
+    </CrawlersProvider>,
+  );
+}
+
+describe('CrawlersProvider dossierFor', () => {
+  it('answers synchronously from the payload, fetching nothing', () => {
+    const asked = stubFetch(
+      () => json(makeCrawlers()),
+      () => json(makeStatus()),
+    );
+    embed({
+      route: '/crawlers/stuntman',
+      show: makeShow(),
+      crawlers: makeCrawlers(),
+      status: null,
+      dossier: makeDossier('stuntman'),
+    });
+    mountDossier('stuntman');
+    // No waitFor: the locked rows are in the server's HTML already.
+    expect(screen.getByTestId('dossier')).toHaveTextContent('1,2,3');
+    expect(asked).toEqual([]);
+  });
+
+  it('fetches the file for a crawler the payload does not carry', async () => {
+    const asked: string[] = [];
+    vi.stubGlobal('fetch', (input: RequestInfo | URL) => {
+      const url = String(input);
+      asked.push(url);
+      if (url.includes('/dossier/')) return Promise.resolve(json(makeDossier('harry')));
+      if (url.includes('status.json')) return Promise.resolve(json(makeStatus()));
+      return Promise.resolve(json(makeCrawlers()));
+    });
+    embed({
+      route: '/crawlers/stuntman',
+      show: makeShow(),
+      crawlers: makeCrawlers(),
+      status: null,
+      dossier: makeDossier('stuntman'),
+    });
+    mountDossier('harry');
+
+    expect(screen.getByTestId('dossier')).toHaveTextContent('none');
+    await waitFor(() => expect(screen.getByTestId('dossier')).toHaveTextContent('1,2,3'));
+    expect(asked.filter((url) => url.includes('/dossier/harry.json'))).toHaveLength(1);
+  });
+
+  /* dev, or a deploy that never ran the build step: no panel, no error. */
+  it('stays null on a 404 rather than failing the page', async () => {
+    stubFetch(
+      () => json(makeCrawlers()),
+      () => json(makeStatus()),
+    );
+    vi.stubGlobal('fetch', () =>
+      Promise.resolve(new Response('nope', { status: 404, statusText: 'Not Found' })),
+    );
+    mountDossier('harry');
+    await waitFor(() => expect(screen.getByTestId('dossier')).toHaveTextContent('none'));
+  });
+
+  it('ignores an embedded dossier that is not one, and says so once', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    stubFetch(
+      () => json(makeCrawlers()),
+      () => json(makeStatus()),
+    );
+    embed({
+      route: '/crawlers/stuntman',
+      show: makeShow(),
+      crawlers: makeCrawlers(),
+      status: null,
+      dossier: { id: 'stuntman', updates: 'nope' },
+    });
+    mountDossier('stuntman');
+    expect(screen.getByTestId('dossier')).toHaveTextContent('none');
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
   });
 });

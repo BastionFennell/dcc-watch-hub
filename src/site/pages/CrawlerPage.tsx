@@ -108,15 +108,11 @@ export function CrawlerPage() {
           <div className={styles.titleBlock}>
             <p className={styles.eyebrow}>{profile.name}</p>
             <h1 className={styles.name}>{profile.characterName}</h1>
+            {/* No status pill (012). The hero says who this is; whether they
+                are still alive is a question the dossier answers, and only
+                inside a card the reader opened on purpose. */}
             <p className={styles.handleRow}>
               <span className={styles.handle}>{profile.handle}</span>
-              {/* "Alive" is the default and says nothing worth a pill; the ones
-                  that are not are the news (011 R2). */}
-              {profile.status === 'alive' ? null : (
-                <span className={styles.statusPill} data-status={profile.status}>
-                  {siteCopy.statusLabel[profile.status]}
-                </span>
-              )}
             </p>
           </div>
 

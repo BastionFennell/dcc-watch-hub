@@ -1,0 +1,35 @@
+{
+  "id": "mimi",
+  "updates": [
+    {
+      "episode": 1,
+      "kind": "update",
+      "onCamera": true,
+      "title": "Mimi plays the poison for the cameras",
+      "body": "Something in Quadrant C poisons her in the first ten minutes and she holds the room for a full minute anyway. The System rates the performance highly and the poison not at all.",
+      "chips": ["SCENE STEALER", "POISONED, CLEARED"],
+      "level": 1,
+      "condition": "alive"
+    },
+    {
+      "episode": 2,
+      "kind": "update",
+      "onCamera": true,
+      "title": "Mimi trades a cracked visor for a clear one",
+      "body": "The Butcher Row costs her a visor and pays her back with a better one. She reads a room that is not there, takes the Static Diviner title, and stops narrating her own thoughts, which the audience objects to.",
+      "chips": ["STATIC DIVINER", "RESONANT VISOR", "RANK 3310"],
+      "level": null,
+      "condition": "alive"
+    },
+    {
+      "episode": 3,
+      "kind": "update",
+      "onCamera": true,
+      "title": "Mimi names the cold before it speaks",
+      "body": "She calls the thing on the Brine Stairs by name while it is still deciding whether to have one. The frost leaves a scar along her jaw that the Cartographer Sigil does nothing about.",
+      "chips": ["COLD READING", "FROST SCAR", "CARTO. SIGIL"],
+      "level": null,
+      "condition": "alive"
+    }
+  ]
+}

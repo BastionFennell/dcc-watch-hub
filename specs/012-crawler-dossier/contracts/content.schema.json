@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://dcc-watch-hub/contracts/content.schema.json",
+  "title": "Authored crawler status (012: the dossier)",
+  "comment": "content/status/<id>.json. Authored by hand, never served: the build compiles it into public/data/dossier/<id>.json. `floor` is not authored - it comes from show.json. See content/status/README.md for the rules the lint enforces on top of this schema (sticky condition, ascending order, no duplicates, aired filter).",
+  "type": "object",
+  "required": ["id", "updates"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "comment": "The crawler id from crawlers.json, and the file's own basename.",
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "updates": {
+      "comment": "Ascending by episode, at most one per episode. A missing aired episode is not an error: the build writes an auto quiet card for it.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["episode", "kind", "onCamera", "title", "body", "chips", "level", "condition"],
+        "additionalProperties": false,
+        "properties": {
+          "episode": {
+            "comment": "Must exist in show.json. A card for an episode that has not aired yet is reported and dropped.",
+            "type": "integer",
+            "minimum": 1
+          },
+          "kind": { "enum": ["update", "quiet"] },
+          "onCamera": { "type": "boolean" },
+          "title": { "type": "string", "minLength": 1, "maxLength": 60 },
+          "body": { "type": "string", "minLength": 1 },
+          "chips": {
+            "type": "array",
+            "maxItems": 3,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "level": {
+            "comment": "null derives the level from the hub reducer at the end of that episode.",
+            "type": ["integer", "null"],
+            "minimum": 1
+          },
+          "condition": { "enum": ["alive", "deceased"] }
+        }
+      }
+    }
+  }
+}
