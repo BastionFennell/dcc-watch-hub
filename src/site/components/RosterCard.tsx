@@ -78,9 +78,6 @@ export function RosterCard({ profile, status, variant, hook, href }: RosterCardP
           <h1 className={styles.heroName}>{profile.characterName}</h1>
           <p className={styles.handle}>{profile.handle}</p>
           <p className={styles.pills}>
-            {status === undefined ? null : (
-              <span className={styles.levelPill}>{siteCopy.levelPill(status.level)}</span>
-            )}
             <StatusPill profile={profile} />
           </p>
           {status === undefined ? null : <StatusLine status={status} />}
@@ -107,9 +104,7 @@ export function RosterCard({ profile, status, variant, hook, href }: RosterCardP
         <span className={styles.cardName}>{profile.name}</span>
         <span className={styles.cardCharacter}>{profile.characterName}</span>
         <span className={styles.pills}>
-          {status === undefined ? null : (
-            <span className={styles.levelPill}>{siteCopy.levelPill(status.level)}</span>
-          )}
+          {/* No level pill: with a fresh party everyone is level 1 and it said nothing (author, 2026-09-25). */}
           {/* "Alive" is the default state and says nothing a card has room for;
               the hero carries it for everyone (011 §4). */}
           {profile.status === 'alive' ? null : <StatusPill profile={profile} />}
