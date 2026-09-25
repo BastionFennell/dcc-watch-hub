@@ -92,6 +92,7 @@
 
   .strips {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    align-items: start;
+    /* Both strips share the row's height (author, 2026-09-25). */
+    align-items: stretch;
   }
 }

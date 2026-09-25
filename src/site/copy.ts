@@ -44,7 +44,7 @@ export const siteCopy = {
     'It is a book series about an apocalyptic game show with a cat who takes it personally. You do not need to have read a word of it to watch this.',
   newcomerLink: 'Start with the primer on YouTube',
   discordTitle: 'Join the Discord',
-  discordBody: 'Floor theories, crawler talk, and the schedule before anyone else gets it.',
+  discordBody: 'Talk episodes, swap theories, and meet other crawlers.',
   discordCta: 'Open the Discord',
 
   // --- footer
