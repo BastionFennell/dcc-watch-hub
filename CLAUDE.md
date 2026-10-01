@@ -1,7 +1,7 @@
 <!-- SPECKIT START -->
-Active feature: `specs/011-front-door/` (branch `011-front-door`) - the marketing site (`/`, `/watch`,
-`/crawlers`, `/crawlers/:id`, `/community`), prerendered with OG images. Features 001-010 are on
-`main` and documented under `specs/0*/`.
+Active feature: `specs/012-crawler-dossier/` (branch `012-where-are-they-now`) - the per-episode
+"Where are they now?" panel on crawler pages (one locked card per crawler per aired episode;
+absence is never a signal). Features 001-011 are on `main` and documented under `specs/0*/`.
 Read, in order: `.specify/memory/constitution.md`, then `spec.md`, `plan.md`, `research.md`,
 `data-model.md`, `contracts/`, `quickstart.md`, `tasks.md` under the newest `specs/NNN-*/` when a feature is active; otherwise read `specs/008-real-crawlers/spec.md` for the current data model.
 Earlier contracts still apply where later features do not amend them.

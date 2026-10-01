@@ -1,26 +1,19 @@
 // @vitest-environment jsdom
 /**
- * `/crawlers` (011 §3.3). The chips are the interesting rule: a roster where
- * everyone is alive gets none, because a filter that cannot filter is chrome.
+ * `/crawlers` (011 §3.3). 012 took the status filter chips out: they filtered
+ * on a roster field that no longer exists, and a row of chips reading
+ * "Alive / Dead" is a spoiler served to everyone who lands here.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, screen } from '@testing-library/react';
+import { cleanup, screen } from '@testing-library/react';
 import { CrawlersPage } from './CrawlersPage';
 import { siteCopy } from '../copy';
 import { renderSite } from '../../test/renderSite';
-import { makeCrawlers } from '../../test/fixtures';
 
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
 });
-
-/** The fixture roster with Harry killed off, so two statuses exist. */
-function mixedRoster() {
-  const roster = makeCrawlers();
-  roster.crawlers[1] = { ...roster.crawlers[1], status: 'dead' };
-  return roster;
-}
 
 describe('CrawlersPage', () => {
   it('links every crawler from the grid', () => {
@@ -32,22 +25,15 @@ describe('CrawlersPage', () => {
     expect(hrefs).toEqual(['/crawlers/stuntman', '/crawlers/harry']);
   });
 
-  it('shows no filter chips while every crawler shares one status', () => {
+  /*
+   * 012: nothing here filters, and nothing here says who is still standing.
+   * Every crawler is in the grid, in roster order, always.
+   */
+  it('offers no status filter, and names no condition anywhere', () => {
     renderSite(<CrawlersPage />, { path: '/crawlers' });
-    expect(screen.queryByRole('group', { name: siteCopy.filterLabel })).toBeNull();
-  });
-
-  it('offers chips once the roster has more than one status, and filters on them', () => {
-    renderSite(<CrawlersPage />, { path: '/crawlers', crawlers: mixedRoster() });
-    const chips = screen.getByRole('group', { name: siteCopy.filterLabel });
-    expect(chips).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: siteCopy.statusLabel.dead }));
-    expect(screen.getByRole('link', { name: /Harold/ })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /Ronald/ })).toBeNull();
-
-    fireEvent.click(screen.getByRole('button', { name: siteCopy.filterAll }));
-    expect(screen.getByRole('link', { name: /Ronald/ })).toBeInTheDocument();
+    expect(screen.queryAllByRole('group')).toHaveLength(0);
+    expect(screen.queryAllByRole('button')).toHaveLength(0);
+    expect(document.body.textContent).not.toMatch(/alive|dead|deceased|fused/i);
   });
 
   it('carries its own head', () => {

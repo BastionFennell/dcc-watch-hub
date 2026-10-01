@@ -2,7 +2,7 @@
  * Static data contracts. Framework-free: this module is imported by the engine,
  * the app, and the authoring script alike (constitution: Author-Friendly Data Pipeline).
  *
- * Source of truth: dcc-watch-hub-spec.md §4 and
+ * Source of truth: dcc-watch-hub-spec.md Â§4 and
  * specs/001-watch-hub-v1/contracts/{show,episode}.schema.json
  */
 
@@ -82,16 +82,6 @@ export interface Show {
 
 /* ------------------------------------------------- front door (011) */
 
-/** What the author writes about a crawler; the live numbers come from `status.json`. */
-export type CrawlerLiveStatus = 'alive' | 'dead' | 'fused' | 'unknown';
-
-export const CRAWLER_LIVE_STATUSES = [
-  'alive',
-  'dead',
-  'fused',
-  'unknown',
-] as const satisfies readonly CrawlerLiveStatus[];
-
 /** The real person behind a crawler. Everything but the name is optional. */
 export interface CrawlerPlayer {
   name: string;
@@ -126,6 +116,8 @@ export interface CrawlerProfile {
   name: string;
   characterName: string;
   handle: string;
+  /** The character's pronouns as on the sheet ("she/they"); drives the dossier heading (012). */
+  pronouns?: string;
   player: CrawlerPlayer;
   concept: string;
   /** "What was in their pockets when the world ended", one item per line. */
@@ -133,7 +125,12 @@ export interface CrawlerProfile {
   entryAchievement?: CrawlerEntryAchievement;
   art: { bust: string; full?: string };
   og?: string;
-  status: CrawlerLiveStatus;
+  /*
+   * No `status` field (012): a crawler's condition is not a property of the
+   * roster. It lives in the dossier, inside the per-episode cards a reader has
+   * chosen to reveal, because a pill on the hero is a spoiler that arrives
+   * before anyone asked for it (constitution VIII, "absence is never a signal").
+   */
 }
 
 /** The whole `crawlers.json` file. `todo` is the author's fill-in list. */
@@ -167,6 +164,85 @@ export interface StatusFile {
   appearances?: Record<string, number[]>;
 }
 
+/* ---------------------------------------------- the dossier (012) */
+
+/**
+ * A crawler's condition, as the System files it. Sticky: once a card reports
+ * `deceased`, no later card may report `alive` (the build lint fails on it).
+ * Death is authored, never inferred from an event log.
+ */
+export type CrawlerCondition = 'alive' | 'deceased';
+
+export const CRAWLER_CONDITIONS = [
+  'alive',
+  'deceased',
+] as const satisfies readonly CrawlerCondition[];
+
+/**
+ * `update` is a card with news in it; `quiet` is a card that says there is
+ * none. Both are real cards: a crawler who dies in Episode 9 keeps getting one
+ * per episode forever, so a short list can never be read as a death notice.
+ */
+export type DossierKind = 'update' | 'quiet';
+
+export const DOSSIER_KINDS = ['update', 'quiet'] as const satisfies readonly DossierKind[];
+
+/**
+ * One card as the author writes it in `content/status/<id>.json` (012).
+ *
+ * `floor` is absent on purpose - it comes from `show.json`, so the two can
+ * never disagree - and `level: null` means "ask the hub reducer what this
+ * crawler's level was at the end of that episode".
+ */
+export interface AuthoredUpdate {
+  episode: number;
+  kind: DossierKind;
+  onCamera: boolean;
+  /** <= 60 characters, present tense, System voice. */
+  title: string;
+  /** 1-3 sentences, present tense, System voice. */
+  body: string;
+  /** 0-3 short mono facts. */
+  chips: string[];
+  /** `null` derives the level from the reducer at the end of the episode. */
+  level: number | null;
+  condition: CrawlerCondition;
+}
+
+/** The whole authored file. An author with nothing to say ships `updates: []`. */
+export interface AuthoredDossier {
+  id: string;
+  updates: AuthoredUpdate[];
+}
+
+/**
+ * One compiled card, as it ships: every hole the author left is filled, so the
+ * component never has to derive anything but the strip.
+ */
+export interface DossierCard {
+  episode: number;
+  floor: number;
+  kind: DossierKind;
+  onCamera: boolean;
+  title: string;
+  body: string;
+  chips: string[];
+  level: number;
+  condition: CrawlerCondition;
+}
+
+/**
+ * `public/data/dossier/<id>.json`, generated at build time and never committed:
+ * exactly one card per *aired* episode, ascending. Cards for episodes past
+ * their `hubLiveAt` are the only ones that exist here, so an unaired card
+ * cannot leak through the bundle, the payload or a devtools tab.
+ */
+export interface DossierFile {
+  id: string;
+  generatedAt: string;
+  updates: DossierCard[];
+}
+
 /**
  * The `<script id="__DCC__">` payload a prerendered page carries (011). `show`
  * and `crawlers` stay `unknown` because they go through the same validators the
@@ -177,6 +253,11 @@ export interface Embedded {
   show: unknown;
   crawlers: unknown;
   status: StatusFile | null;
+  /**
+   * 012: the dossier for this route's crawler, on `/crawlers/:id` only. Absent
+   * on every other route and on a payload written before 012.
+   */
+  dossier?: DossierFile | null;
 }
 
 /* -------------------------------------------------------------- registry */
@@ -270,6 +351,21 @@ export interface SpellRegistry {
 /** `[row, col]` into the floor grid. */
 export type Cell = [number, number];
 
+/**
+ * A health bar, measured in HB *slots* - never in hit points.
+ *
+ * The DCC sheet prints the health bar as a ten-slot strip (10%..100%), and the
+ * rules count in slots: a heal reads "2 HB slots", not "12 hit points". So
+ * `max` is 10 for every crawler and `current` is how many of those ten slots
+ * are still lit (author, 2026-09-25). The field stays a plain number rather
+ * than a literal 10 - a future floor is free to hand somebody a longer bar, and
+ * every selector already scales into ten segments - but `validate.ts` warns on
+ * any sheet whose `max` is not 10, because that is nearly always the old
+ * mistake of writing hit points into a slot count.
+ *
+ * `mana` reuses this shape (009) and is *not* in slots: a pool is counted
+ * one-for-one, so its `max` is the crawler's INT.
+ */
 export interface Hp {
   current: number;
   max: number;

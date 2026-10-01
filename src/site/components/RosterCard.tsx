@@ -7,18 +7,15 @@
  * every token, class and piece of layout logic below it.
  */
 import { Link } from 'react-router';
-import type { CrawlerProfile, CrawlerStatus } from '../../data/types';
+import type { CrawlerProfile } from '../../data/types';
 import { asset } from '../media';
 import { siteCopy } from '../copy';
-import { StatusLine } from './StatusLine';
 import styles from './RosterCard.module.css';
 
 export type RosterCardVariant = 'card' | 'hero' | 'og';
 
 export interface RosterCardProps {
   profile: CrawlerProfile;
-  /** The live line's numbers; absent means the crawler has no episode yet. */
-  status?: CrawlerStatus;
   variant: RosterCardVariant;
   /** The OG frame's one-line hook, to the right of the name. */
   hook?: string;
@@ -26,16 +23,14 @@ export interface RosterCardProps {
   href?: string;
 }
 
-/** The authored status, as a pill. Hidden on a card for the common case. */
-function StatusPill({ profile }: { profile: CrawlerProfile }) {
-  return (
-    <span className={styles.statusPill} data-status={profile.status}>
-      {siteCopy.statusLabel[profile.status]}
-    </span>
-  );
-}
-
-export function RosterCard({ profile, status, variant, hook, href }: RosterCardProps) {
+/*
+ * 012: no status pill on any of the three renders, and no live line under the
+ * hero. A crawler's condition is not a property of the roster - it lives in the
+ * dossier, inside the per-episode cards a reader has chosen to reveal. A pill
+ * here would answer the question before anyone asked it, for every crawler, on
+ * a page a stranger can arrive at from a search result.
+ */
+export function RosterCard({ profile, variant, hook, href }: RosterCardProps) {
   const bust = asset(profile.art.bust);
   const full = asset(profile.art.full ?? profile.art.bust);
 
@@ -77,13 +72,6 @@ export function RosterCard({ profile, status, variant, hook, href }: RosterCardP
           <p className={styles.eyebrow}>{profile.name}</p>
           <h1 className={styles.heroName}>{profile.characterName}</h1>
           <p className={styles.handle}>{profile.handle}</p>
-          <p className={styles.pills}>
-            {status === undefined ? null : (
-              <span className={styles.levelPill}>{siteCopy.levelPill(status.level)}</span>
-            )}
-            <StatusPill profile={profile} />
-          </p>
-          {status === undefined ? null : <StatusLine status={status} />}
         </div>
       </div>
     );
@@ -106,14 +94,8 @@ export function RosterCard({ profile, status, variant, hook, href }: RosterCardP
       <span className={styles.cardText}>
         <span className={styles.cardName}>{profile.name}</span>
         <span className={styles.cardCharacter}>{profile.characterName}</span>
-        <span className={styles.pills}>
-          {status === undefined ? null : (
-            <span className={styles.levelPill}>{siteCopy.levelPill(status.level)}</span>
-          )}
-          {/* "Alive" is the default state and says nothing a card has room for;
-              the hero carries it for everyone (011 §4). */}
-          {profile.status === 'alive' ? null : <StatusPill profile={profile} />}
-        </span>
+        {/* No level pill (author, 2026-09-25) and no status pill (012): the
+            card is a name and a face, and everything else is behind a click. */}
       </span>
     </Link>
   );

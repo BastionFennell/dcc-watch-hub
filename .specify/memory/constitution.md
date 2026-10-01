@@ -1,4 +1,11 @@
 <!--
+Sync Impact 1.5.1 (2026-09-25): PATCH - reveal store dropped: the dossier keeps reveal state in
+memory for the page visit only, so the 1.5.0 storage exception is reverted and the storage rule
+reads "playhead and viewer preferences only" again. Principle VIII's "Absence is never a signal"
+bullet is unchanged.
+Sync Impact 1.5.0 (2026-09-25): MINOR - storage constraint gains the crawler-dossier reveal store
+exception; Principle VIII gains the "absence is never a signal" rule for per-episode crawler
+status (one card per crawler per aired episode; locked markup identical across crawlers).
 Sync Impact 1.4.0 (2026-09-23): MINOR - added Principle VIII (Front Door: marketing routes share
 tokens/data, are prerendered with OG tags, may use build-time devDependencies, mobile-first, no
 autoplay, spoiler-safe gating). CLAUDE.md updated in the same change.
@@ -156,6 +163,10 @@ front door, not a second site:
 - **No autoplay, no cookie banner.** Video is click-to-play; analytics, if any, is cookieless.
 - **Spoiler-safe by data.** The hub CTA for an episode unlocks at `hubLiveAt`; live crawler status
   comes only from episodes past that gate; death is authored, never inferred.
+- **Absence is never a signal.** Per-episode crawler status ships exactly one card per crawler per
+  aired episode, forever; cards for unaired episodes never reach the bundle; a crawler's condition
+  appears only inside cards the reader has chosen to reveal, and locked markup is byte-identical
+  across crawlers apart from name and slug.
 
 ## Technical Constraints
 
@@ -196,4 +207,4 @@ Compliance is reviewed at every plan (Constitution Check gate) and at implementa
 (acceptance checklist). Use `CLAUDE.md` for runtime development guidance and pointers to the
 active plan.
 
-**Version**: 1.4.0 | **Ratified**: 2026-09-14 | **Last Amended**: 2026-09-23
+**Version**: 1.5.1 | **Ratified**: 2026-09-14 | **Last Amended**: 2026-09-25

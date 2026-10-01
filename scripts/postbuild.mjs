@@ -1,6 +1,12 @@
 /**
  * Everything `vite build` cannot do on its own (011, spec "Build pipeline").
  *
+ * One step runs *before* all of this and not from here: `npm run prebuild`
+ * compiles `content/status/*.json` into `public/data/dossier/`. It has to
+ * precede `vite build`, because that is what copies `public/` into `dist/` -
+ * a dossier written at this point would never reach the output. Step 3 below
+ * reads those same files out of `public/` and embeds them per crawler.
+ *
  * Order matters:
  *  1. `dist/404.html` is a copy of the ORIGINAL shell, taken before the
  *     prerenderer overwrites `dist/index.html`. A static host with no rewrite

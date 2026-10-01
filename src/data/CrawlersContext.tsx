@@ -1,6 +1,7 @@
 /**
  * The front door's roster (011): the authored `crawlers.json` and the
- * build-time `status.json`, loaded once for every marketing page.
+ * build-time `status.json`, loaded once for every marketing page - plus, since
+ * 012, the compiled per-crawler dossier.
  *
  * The third React binding in `src/data`, on the same terms as the other two:
  * the ESLint `no-restricted-imports` guard covers the pure `src/data/**\/*.ts`
@@ -11,11 +12,18 @@
  * page, in `npm run dev`, or after a client-side navigation into a marketing
  * route, the provider fetches instead.
  */
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import type { CrawlerProfile, Embedded, StatusFile } from './types';
+import type { CrawlerProfile, DossierFile, Embedded, StatusFile } from './types';
 import { readEmbedded } from './load';
-import { fetchCrawlers, fetchStatus, validateCrawlers, validateStatus } from './roster';
+import {
+  fetchCrawlers,
+  fetchDossier,
+  fetchStatus,
+  validateCrawlers,
+  validateDossier,
+  validateStatus,
+} from './roster';
 
 export interface CrawlersContextValue {
   /** Empty until the roster lands, and for a deploy that ships none. */
@@ -28,6 +36,17 @@ export interface CrawlersContextValue {
   loading: boolean;
   /** Set only when the roster itself could not be read. */
   error: Error | null;
+  /**
+   * One crawler's compiled dossier (012), or `null` while it is not here yet -
+   * either because this page is still fetching it or because this deploy has
+   * none. `null` is never a statement about the crawler; the panel renders its
+   * launch state and nothing about anyone's condition.
+   *
+   * Synchronous when the page was prerendered, which is the case that matters:
+   * the locked rows are in the server's HTML, so the row count never changes
+   * under the reader.
+   */
+  dossierFor: (id: string) => DossierFile | null;
 }
 
 const CrawlersContext = createContext<CrawlersContextValue>({
@@ -35,11 +54,13 @@ const CrawlersContext = createContext<CrawlersContextValue>({
   status: null,
   loading: true,
   error: null,
+  dossierFor: () => null,
 });
 
 interface Seed {
   profiles: CrawlerProfile[];
   status: StatusFile | null;
+  dossiers: Record<string, DossierFile | null>;
 }
 
 /** The embedded roster, or `null` when this page carries none. */
@@ -52,9 +73,14 @@ function seedCrawlers(embedded: Embedded | null): Seed | null {
    * hands the blobs over unread, and both validators run here. Neither throws -
    * an empty roster is a legal (if sad) answer, and so is a missing status.
    */
+  const dossier =
+    embedded.dossier === undefined || embedded.dossier === null
+      ? null
+      : validateDossier(embedded.dossier);
   return {
     profiles: validateCrawlers(embedded.crawlers).crawlers,
     status: embedded.status === null ? null : validateStatus(embedded.status),
+    dossiers: dossier === null || dossier.id === '' ? {} : { [dossier.id]: dossier },
   };
 }
 
@@ -73,6 +99,15 @@ export function CrawlersProvider({ children, embedded }: CrawlersProviderProps) 
   const [status, setStatus] = useState<StatusFile | null>(seeded?.status ?? null);
   const [loading, setLoading] = useState(seeded === null);
   const [error, setError] = useState<Error | null>(null);
+  const [dossiers, setDossiers] = useState<Record<string, DossierFile | null>>(
+    seeded?.dossiers ?? {},
+  );
+  /*
+   * Which ids we have already gone looking for, so a re-render (or React's
+   * double-invoked development render) cannot start a second request for the
+   * same file. A ref rather than state: it must not itself cause a render.
+   */
+  const requested = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (seeded !== null) return;
@@ -111,8 +146,23 @@ export function CrawlersProvider({ children, embedded }: CrawlersProviderProps) 
     };
   }, [seeded]);
 
+  const dossierFor = useCallback(
+    (id: string): DossierFile | null => {
+      if (id === '') return null;
+      if (Object.prototype.hasOwnProperty.call(dossiers, id)) return dossiers[id];
+      if (!requested.current.has(id)) {
+        requested.current.add(id);
+        void fetchDossier(id).then((file) => {
+          setDossiers((previous) => ({ ...previous, [id]: file }));
+        });
+      }
+      return null;
+    },
+    [dossiers],
+  );
+
   return (
-    <CrawlersContext.Provider value={{ profiles, status, loading, error }}>
+    <CrawlersContext.Provider value={{ profiles, status, loading, error, dossierFor }}>
       {children}
     </CrawlersContext.Provider>
   );

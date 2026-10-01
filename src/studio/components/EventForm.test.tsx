@@ -4,7 +4,7 @@
  * the time row, why Save is off, the two save keys, and edit mode.
  *
  * The numbers quoted here are the fixture's own (see `defaults.test.ts`): Harry
- * is on 4/22 at t = 100, X.O. is level 1 at t = 60, and the Psychic holds
+ * is on 2/10 HB at t = 100, X.O. is level 1 at t = 60, and the Psychic holds
  * "Second Sight" at rank 2, so the next rank the form offers is 3.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -71,8 +71,8 @@ describe('EventForm - defaults (FR-1004)', () => {
     open({ t: 100, lastActor: 'harry' });
     pick('hp');
     expect(field('actor').value).toBe('harry');
-    expect(field('current').value).toBe('4');
-    expect(field('max').value).toBe('22');
+    expect(field('current').value).toBe('2');
+    expect(field('max').value).toBe('10');
   });
 
   it('prefills the next level on a level up', () => {
@@ -102,8 +102,10 @@ describe('EventForm - defaults (FR-1004)', () => {
     fireEvent.change(field('current'), { target: { value: '9' } });
     // Changing the crawler re-runs the defaults; the edited field stands.
     fireEvent.change(field('actor'), { target: { value: 'xo' } });
+    expect(field('actor').value).toBe('xo');
     expect(field('current').value).toBe('9');
-    expect(field('max').value).not.toBe('22');
+    // Every bar is ten slots now, so the re-run lands on X.O.'s own ten.
+    expect(field('max').value).toBe('10');
   });
 
   it('keeps the last actor across events (FR-1003)', () => {

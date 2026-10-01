@@ -74,19 +74,12 @@ export const siteCopy = {
   // --- /crawlers
   crawlersTitle: 'The crawlers',
   crawlersLead: 'Five contestants, one production company, no exit.',
-  filterAll: 'All',
-  filterLabel: 'Filter by status',
-  /** The authored `status` field, as a pill (011 §2.2). */
-  statusLabel: {
-    alive: 'Alive',
-    dead: 'Dead',
-    fused: 'Fused',
-    unknown: 'Unknown',
-  } as const,
-  /** The live line under a crawler: "Level 2 · 4/6 HB · Floor 1" (011 §5). */
-  statusLine: (level: number, current: number, max: number, floor: number) =>
-    `Level ${level} · ${current}/${max} HB · Floor ${floor}`,
-  levelPill: (level: number) => `Lv ${level}`,
+  /*
+   * 012 removed the status filter chips, the status pill and the live line.
+   * Every word they used to print said something about a crawler's condition,
+   * which is now the dossier's to say, per episode, only inside a card the
+   * reader opened. Wave B's dossier strings land below.
+   */
 
   // --- /crawlers/:id
   /*
@@ -112,6 +105,69 @@ export const siteCopy = {
   startAtEpisodeOne: 'Start at Episode 1',
   prevCrawler: 'Previous crawler',
   nextCrawler: 'Next crawler',
+
+  /* ------------------------------------------ the crawler dossier (012) */
+  /*
+   * Every word the panel says, in one group. The rule that shapes all of them:
+   * a locked card must be able to say what it is without saying anything about
+   * what is inside it, so nothing here is written per crawler, per condition or
+   * per kind - `LOCKED` and "Reveal the Episode 9 status update" read exactly
+   * the same over a quiet card, an update and a death.
+   *
+   * The quiet card's own words live in `src/site/dossier/quiet.ts`, because the
+   * build script says them too and `scripts/**` may not import this file.
+   */
+  dossier: {
+    /** Mono caps over the panel, in the voice of the thing filing the report. */
+    eyebrow: 'SYSTEM FEED · CRAWLER DOSSIER',
+    /** The h2, in the crawler's own pronoun (see `dossier/derive.ts`). */
+    heading: (pronoun: 'he' | 'she' | 'they') =>
+      pronoun === 'they' ? 'Where are they now?' : `Where is ${pronoun} now?`,
+    /** The panel's band: whose file this is, and how far it runs. */
+    fileRange: (first: number, last: number) =>
+      first === last ? `EPISODE ${first}` : `EPISODES ${first}-${last}`,
+    /** The banner, and the whole of it. The warning sign is the only glyph here. */
+    bannerWarning: '⚠ SPOILERS · ONE CARD PER EPISODE',
+    /** The strip's three cells. Their values come only from revealed cards. */
+    levelLabel: 'LEVEL',
+    conditionLabel: 'CONDITION',
+    lastOnCameraLabel: 'LAST ON CAMERA',
+    /*
+     * The two conditions, as the strip prints them. They exist only in the
+     * revealed state: an unrevealed cell is a grey pill labelled "Hidden", and
+     * the word "Deceased" is never in the document until a reader opens the
+     * card that says it.
+     */
+    alive: 'Alive',
+    deceased: 'Deceased',
+    /** The strip's third value: the newest revealed episode they were in. */
+    lastOnCamera: (episode: number) => `Ep ${episode}`,
+    /** What an unrevealed strip cell is called, since it has no text. */
+    hiddenValue: 'Hidden',
+    /** The row's tag column: the episode, then what kind of row this is. */
+    episodeTag: (episode: number) => `EP ${episode}`,
+    locked: 'LOCKED',
+    reveal: 'REVEAL',
+    update: 'UPDATE',
+    quiet: 'QUIET',
+    /**
+     * A locked row's whole accessible name. Deliberately neutral: it names the
+     * episode and the action and nothing else, so a screen reader hears the
+     * same sentence over every card of every crawler.
+     */
+    revealAria: (episode: number) => `Reveal the Episode ${episode} status update`,
+    /** The footer's count. Identical across crawlers, which is the point. */
+    hidden: (count: number) => `${count} update${count === 1 ? '' : 's'} hidden`,
+    /** The one bulk control, in its two states. */
+    revealAll: 'Reveal all - I\'m caught up',
+    hideAll: 'Hide everything again',
+    /**
+     * The launch state: a deploy with no aired episode yet. It says when the
+     * first report lands rather than leaving an empty panel, because an empty
+     * panel reads as a fault.
+     */
+    launch: 'The System files its first report after Episode 1.',
+  } as const,
 
   // --- /community
   communityTitle: 'Keep up with the crawl',

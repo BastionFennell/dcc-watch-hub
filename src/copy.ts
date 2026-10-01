@@ -86,7 +86,7 @@ export const copy = {
     loot: (actor: string, item: string, source?: string) =>
       source ? `${actor} opens a ${source} → ${item}` : `${actor} claims ${item}`,
     hp: (actor: string, current: number, max: number) =>
-      `${actor} holding at ${current}/${max} HP`,
+      `${actor} holding at ${current}/${max} HB`,
     levelUp: (actor: string, level: number) => `${actor} reaches Lv ${level}`,
     rankCrawler: (actor: string, rank: number) => `${actor} climbs to #${rank} overall`,
     mapReveal: (count: number, label?: string) =>
@@ -180,8 +180,13 @@ export const copy = {
   partyRailLabel: 'Crawler status',
   feedLabel: 'System event feed',
   levelShort: (level: number) => `Lv ${level}`,
+  /** "6/10" - slots, not hit points. Shared with the mana pool's own readout. */
   hpValue: (current: number, max: number) => `${current}/${max}`,
-  hpAria: (current: number, max: number) => `${current} of ${max} HP`,
+  /**
+   * The HB strip's accessible name. It says "slots" out loud because the number
+   * is a slot count, not a pool of hit points (author, 2026-09-25).
+   */
+  hpAria: (current: number, max: number) => `Health bar ${current} of ${max} slots`,
   stageLabel: (title: string) => `Broadcast: ${title}`,
 
   /** Dev-only scrubber (research R14); never reaches a viewer. */
@@ -352,8 +357,13 @@ export const copy = {
    */
   srSeparator: ', ',
 
-  /** Mono caps label before the sheet's ten-segment strip (review 1.3, T344). */
-  hpLabel: 'HP',
+  /**
+   * Mono caps label before the sheet's ten-slot strip (review 1.3, T344).
+   * "HB", not "HP": the strip counts health-bar slots, and HB is the term the
+   * author's own copy already uses everywhere else (status chips, front-door
+   * live line).
+   */
+  hpLabel: 'HB',
   /** Mono caps label before the rank numbers (review 1.4, T343). */
   rankLabel: 'RANK',
   /**

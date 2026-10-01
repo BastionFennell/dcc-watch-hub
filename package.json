@@ -8,7 +8,9 @@
     "node": ">=20.9 <21 || >=22"
   },
   "scripts": {
+    "predev": "tsx scripts/build-dossier.ts",
     "dev": "vite",
+    "prebuild": "tsx scripts/build-dossier.ts",
     "build": "vite build && vite build --ssr src/entry-server.tsx --outDir dist/server && node scripts/postbuild.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.json",
@@ -16,7 +18,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "sheet-to-json": "tsx scripts/sheet-to-json.ts",
-    "build:status": "tsx scripts/build-status.ts"
+    "build:status": "tsx scripts/build-status.ts",
+    "build:dossier": "tsx scripts/build-dossier.ts"
   },
   "dependencies": {
     "react": "^19.0.0",

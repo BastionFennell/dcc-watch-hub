@@ -9,8 +9,8 @@
         "player": "Bobby",
         "level": 1,
         "hp": {
-          "current": 20,
-          "max": 20
+          "current": 10,
+          "max": 10
         },
         "portrait": "/img/crawlers/harry.png",
         "class": null,
@@ -88,8 +88,8 @@
         "player": "Lulu",
         "level": 1,
         "hp": {
-          "current": 20,
-          "max": 20
+          "current": 10,
+          "max": 10
         },
         "portrait": "/img/crawlers/mimi.png",
         "class": null,
@@ -182,8 +182,8 @@
         "player": "Madio",
         "level": 1,
         "hp": {
-          "current": 20,
-          "max": 20
+          "current": 10,
+          "max": 10
         },
         "portrait": "/img/crawlers/ronald.png",
         "class": null,
@@ -264,8 +264,8 @@
         "player": "Danny",
         "level": 1,
         "hp": {
-          "current": 30,
-          "max": 30
+          "current": 10,
+          "max": 10
         },
         "portrait": "/img/crawlers/xo.png",
         "class": null,
@@ -349,8 +349,8 @@
         "player": "Sarah",
         "level": 1,
         "hp": {
-          "current": 20,
-          "max": 20
+          "current": 10,
+          "max": 10
         },
         "portrait": "/img/crawlers/veil.png",
         "class": null,
@@ -517,8 +517,8 @@
       "t": 105,
       "type": "hp",
       "actor": "harry",
-      "current": 12,
-      "max": 20
+      "current": 6,
+      "max": 10
     },
     {
       "t": 112,
@@ -756,8 +756,8 @@
       "t": 297,
       "type": "hp",
       "actor": "harry",
-      "current": 4,
-      "max": 20
+      "current": 2,
+      "max": 10
     },
     {
       "t": 300,
@@ -777,8 +777,8 @@
       "t": 312,
       "type": "hp",
       "actor": "veil",
-      "current": 11,
-      "max": 20
+      "current": 6,
+      "max": 10
     },
     {
       "t": 317,
@@ -834,15 +834,15 @@
       "t": 394,
       "type": "hp",
       "actor": "harry",
-      "current": 18,
-      "max": 20
+      "current": 9,
+      "max": 10
     },
     {
       "t": 402,
       "type": "hp",
       "actor": "veil",
-      "current": 20,
-      "max": 20
+      "current": 10,
+      "max": 10
     },
     {
       "t": 410,

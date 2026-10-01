@@ -120,7 +120,7 @@ describe('partyFrames', () => {
   it('flags danger below 25% and clears it when HP recovers', () => {
     const low = partyFrames(reduceTo(episode, 46), episode.events, 46);
     expect(low.find((f) => f.id === 'harry')?.danger).toBe(true);
-    expect(low.find((f) => f.id === 'harry')?.pct).toBe(18);
+    expect(low.find((f) => f.id === 'harry')?.pct).toBe(20);
     const recovered = partyFrames(reduceTo(episode, 171), episode.events, 171);
     expect(recovered.find((f) => f.id === 'harry')?.danger).toBe(false);
   });
@@ -440,7 +440,7 @@ describe('crawlerDossier', () => {
       floor: 1,
       stats: { str: 5, int: 6, con: 6, dex: 7, cha: 4 },
     });
-    expect(dossier?.hp).toEqual({ current: 20, max: 22, filled: 10, pct: 91 });
+    expect(dossier?.hp).toEqual({ current: 9, max: 10, filled: 9, pct: 90 });
     expect(dossier?.rank.current).toBe(3550);
   });
 
@@ -448,7 +448,7 @@ describe('crawlerDossier', () => {
     const dossier = dossierAt(90);
     expect(dossier?.class).toBeNull();
     expect(dossier?.rank.points).toEqual([]);
-    expect(dossier?.hp).toMatchObject({ current: 4, filled: 2 });
+    expect(dossier?.hp).toMatchObject({ current: 2, filled: 2 });
   });
 
   it('lists hotlist, skills, inventory and achievements as of t', () => {
@@ -539,7 +539,7 @@ describe('crawlerGlance', () => {
       level: 2,
       debuffs: [],
     });
-    expect(glance.hp).toEqual({ current: 20, max: 22, filled: 10, pct: 91 });
+    expect(glance.hp).toEqual({ current: 9, max: 10, filled: 9, pct: 90 });
     expect(glance.rank.current).toBe(3550);
     expect(glance.rank.best).toBe(3012);
   });

@@ -26,6 +26,13 @@ import {
   validateSpells,
 } from './validate';
 import { validateCrawlers } from './roster';
+import {
+  airedEpisodes,
+  compileDossier,
+  lintUpdates,
+  parseAuthored,
+} from '../../scripts/dossier';
+import { quietBody, quietTitle } from '../site/dossier/quiet';
 import { resolveSpell, spellIndex } from '../engine/spells';
 import { fromInitialState } from '../engine/state';
 import { orderedEpisodeIds } from './show';
@@ -233,6 +240,26 @@ describe.each(show.episodes.map((meta) => [meta.id, meta] as const))(
       const episode = normalizeEpisode(raw);
       for (const crawler of episode.initialState.party) {
         expect(existsSync(resolve(root, `public${crawler.portrait}`))).toBe(true);
+      }
+    });
+
+    // The health bar is ten slots, always (author, 2026-09-25). Every sheet
+    // opens on a full bar, and no reading anywhere in the episode can be more
+    // than the ten slots there are - if a later edit pass writes hit points
+    // into this field again, this is where it shows up.
+    it('measures every health bar in HB slots: ten of them, full at t = 0', () => {
+      const episode = normalizeEpisode(raw);
+      for (const crawler of episode.initialState.party) {
+        expect(crawler.hp, `${crawler.id} opens on a full ten-slot bar`).toEqual({
+          current: 10,
+          max: 10,
+        });
+      }
+      for (const event of episode.events) {
+        if (event.type !== 'hp') continue;
+        expect(event.max, `hp event at t = ${event.t} is a ten-slot bar`).toBe(10);
+        expect(event.current, `hp event at t = ${event.t} fits the bar`).toBeLessThanOrEqual(10);
+        expect(event.current, `hp event at t = ${event.t} is not negative`).toBeGreaterThanOrEqual(0);
       }
     });
 
@@ -616,8 +643,9 @@ describe('public/data/crawlers.json', () => {
         expect(text, `${crawler.id} renders no TODO marker`).not.toMatch(/TODO/);
       }
       expect(crawler.handle).toMatch(/^Dungeon Crawler /);
-      expect(crawler.status).toBe('alive');
     }
+    // 012: the roster carries no condition at all - not even "alive".
+    expect(JSON.stringify(crawlersRaw)).not.toMatch(/"status"/);
     // Archetype names from the author (2026-09-23): Harry is The Writer.
     expect(byId.get('harry')?.name).toBe('The Writer');
     expect(byId.get('xo')?.name).toBe('The 1st AD');
@@ -657,5 +685,102 @@ describe('public/data/crawlers.json', () => {
   /** Nothing anywhere in the roster file says "coming soon" (011 R2). */
   it('ships no "coming soon" copy at all', () => {
     expect(JSON.stringify(crawlersRaw)).not.toMatch(/coming soon/i);
+  });
+});
+
+/* -------------------------------------- 012: the authored crawler dossier */
+
+const contentDir = resolve(root, 'content/status');
+const dossierContracts = resolve(root, 'specs/012-crawler-dossier/contracts');
+const validateContentSchema = ajv.compile(
+  readJson(resolve(dossierContracts, 'content.schema.json')) as object,
+);
+const validateDossierSchema = ajv.compile(
+  readJson(resolve(dossierContracts, 'dossier.schema.json')) as object,
+);
+
+/*
+ * The real clock, not a fixed one. This is the same question the build asks,
+ * and it has to keep answering it every week as episodes unlock - a test frozen
+ * at an authoring date would stop noticing the day episode 4 aired.
+ */
+const dossierNow = Date.now();
+const aired = airedEpisodes(show, dossierNow).map((episode) => episode.id);
+const crawlerIds = validateCrawlers(crawlersRaw).crawlers.map((crawler) => crawler.id);
+
+/**
+ * Words a locked card, and therefore the whole shipped sample set, must not
+ * contain: nobody in the samples has died, so any of these means the copy has
+ * drifted into a register it is not allowed to use (spec, leak prevention).
+ */
+const FORBIDDEN = /deceased|death|final|killed|memorial/i;
+
+describe('content/status/*.json', () => {
+  it('has a file for every crawler in the roster', () => {
+    for (const id of crawlerIds) {
+      expect(existsSync(resolve(contentDir, `${id}.json`)), id).toBe(true);
+    }
+  });
+
+  it('validates against contracts/content.schema.json', () => {
+    for (const id of crawlerIds) {
+      const ok = validateContentSchema(readJson(resolve(contentDir, `${id}.json`)));
+      expect(validateContentSchema.errors ?? [], id).toEqual([]);
+      expect(ok, id).toBe(true);
+    }
+  });
+
+  /** The build's own lint, against the live show.json. An error here fails the build. */
+  it('passes the lint with no errors', () => {
+    for (const id of crawlerIds) {
+      const parsed = parseAuthored(readJson(resolve(contentDir, `${id}.json`)), id);
+      expect(parsed.errors, id).toEqual([]);
+      const lint = lintUpdates(
+        parsed.updates,
+        aired,
+        show.episodes.map((episode) => episode.id),
+      );
+      expect(lint.errors, id).toEqual([]);
+    }
+  });
+
+  /*
+   * The feature's invariant, proved on the shipped data: one card per aired
+   * episode for everyone, whether the author wrote three cards (harry), one
+   * (xo) or none at all (veil).
+   */
+  it('compiles to exactly one card per aired episode, for all five', () => {
+    for (const crawler of validateCrawlers(crawlersRaw).crawlers) {
+      const parsed = parseAuthored(readJson(resolve(contentDir, `${crawler.id}.json`)), crawler.id);
+      const file = compileDossier({
+        crawler,
+        show,
+        authored: parsed.updates,
+        levelAt: () => null,
+        now: dossierNow,
+      });
+      expect(file.updates.map((update) => update.episode), crawler.id).toEqual(aired);
+      const ok = validateDossierSchema(JSON.parse(JSON.stringify(file)));
+      expect(validateDossierSchema.errors ?? [], crawler.id).toEqual([]);
+      expect(ok, crawler.id).toBe(true);
+    }
+  });
+
+  it('keeps every sample card in the present tense and out of the death register', () => {
+    for (const id of crawlerIds) {
+      const raw = readFileSync(resolve(contentDir, `${id}.json`), 'utf8');
+      expect(raw, `${id} is all alive`).not.toMatch(FORBIDDEN);
+      const parsed = parseAuthored(JSON.parse(raw) as unknown, id);
+      for (const card of parsed.updates) {
+        expect(card.condition, `${id} episode ${String(card.episode)}`).toBe('alive');
+      }
+    }
+  });
+
+  it('says the same thing about a quiet episode for everyone', () => {
+    // The generated card is the whole point: identical but for the name.
+    expect(quietTitle).not.toMatch(FORBIDDEN);
+    expect(quietBody('Veil Ravencrest')).not.toMatch(FORBIDDEN);
+    expect(quietBody('Veil Ravencrest')).toContain('Veil Ravencrest');
   });
 });

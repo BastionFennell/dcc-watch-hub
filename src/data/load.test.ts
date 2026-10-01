@@ -1,8 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fetchRegistry, fetchSpells, joinBase, readEmbedded } from './load';
-import { fetchCrawlers, fetchStatus } from './roster';
+import { fetchCrawlers, fetchDossier, fetchStatus } from './roster';
 import { DataError } from './validate';
-import { makeCrawlers, makeRegistry, makeShow, makeSpells, makeStatus } from '../test/fixtures';
+import {
+  makeCrawlers,
+  makeDossier,
+  makeRegistry,
+  makeShow,
+  makeSpells,
+  makeStatus,
+} from '../test/fixtures';
 
 describe('joinBase', () => {
   it('leaves root-based deploys untouched', () => {
@@ -182,6 +189,37 @@ describe('fetchStatus', () => {
     await expect(fetchStatus()).resolves.toBeNull();
     vi.stubGlobal('fetch', () => Promise.resolve(new Response('{oops', { status: 200 })));
     await expect(fetchStatus()).resolves.toBeNull();
+  });
+});
+
+describe('fetchDossier', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('reads one crawler s file against the deploy base', async () => {
+    vi.stubEnv('BASE_URL', '/dcc-watch-hub/');
+    const asked: string[] = [];
+    vi.stubGlobal('fetch', (input: RequestInfo | URL) => {
+      asked.push(String(input));
+      return Promise.resolve(new Response(JSON.stringify(makeDossier('harry')), { status: 200 }));
+    });
+    await expect(fetchDossier('harry')).resolves.toEqual(makeDossier('harry'));
+    expect(asked).toEqual(['/dcc-watch-hub/data/dossier/harry.json']);
+    vi.unstubAllEnvs();
+  });
+
+  /* No build step has run, or nobody has written this crawler a file. */
+  it('resolves to null on a 404 rather than throwing', async () => {
+    vi.stubGlobal('fetch', () =>
+      Promise.resolve(new Response('nope', { status: 404, statusText: 'Not Found' })),
+    );
+    await expect(fetchDossier('harry')).resolves.toBeNull();
+  });
+
+  it('resolves to null when the network or the JSON fails', async () => {
+    vi.stubGlobal('fetch', () => Promise.reject(new Error('offline')));
+    await expect(fetchDossier('harry')).resolves.toBeNull();
+    vi.stubGlobal('fetch', () => Promise.resolve(new Response('{oops', { status: 200 })));
+    await expect(fetchDossier('harry')).resolves.toBeNull();
   });
 });
 

@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://dcc-watch-hub/contracts/crawlers.schema.json",
   "title": "Crawler roster (011: the front door)",
-  "comment": "public/data/crawlers.json. Authored, never generated: the live numbers (level, HP, floor) come from the build-time status.json, and death is authored here, never inferred from events.",
+  "comment": "public/data/crawlers.json. Authored, never generated: the live numbers (level, HP, floor) come from the build-time status.json. Amended by 012: the 'status' field is gone - a crawler's condition is authored per episode in content/status/<id>.json and reaches a reader only inside a card they have chosen to reveal, never as a property of the roster.",
   "type": "object",
   "required": ["crawlers"],
   "additionalProperties": false,
@@ -17,7 +17,7 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "name", "characterName", "handle", "player", "concept", "pockets", "art", "status"],
+        "required": ["id", "name", "characterName", "handle", "player", "concept", "pockets", "art"],
         "additionalProperties": false,
         "properties": {
           "id": {
@@ -28,6 +28,7 @@
           "name": { "type": "string", "minLength": 1 },
           "characterName": { "type": "string", "minLength": 1 },
           "handle": { "type": "string", "minLength": 1 },
+          "pronouns": { "type": "string", "minLength": 1 },
           "player": {
             "type": "object",
             "required": ["name"],
@@ -76,8 +77,7 @@
               "full": { "type": "string", "pattern": "^/.+$" }
             }
           },
-          "og": { "type": "string", "pattern": "^/.+[.](png|jpg|jpeg|webp)$" },
-          "status": { "enum": ["alive", "dead", "fused", "unknown"] }
+          "og": { "type": "string", "pattern": "^/.+[.](png|jpg|jpeg|webp)$" }
         }
       }
     }

@@ -124,5 +124,7 @@ export function readEmbedded(): Embedded | null {
     show: record.show,
     crawlers: record.crawlers,
     status: (record.status ?? null) as Embedded['status'],
+    // 012: present only on /crawlers/:id, and validated in CrawlersContext.
+    dossier: (record.dossier ?? null) as Embedded['dossier'],
   };
 }

@@ -11,12 +11,18 @@
  */
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { CrawlerPage } from './CrawlerPage';
 import { siteCopy } from '../copy';
 import { copy } from '../../copy';
 import { renderSite } from '../../test/renderSite';
-import { makeCrawlers, makeEpisodeRaw, makeShow, makeStatus } from '../../test/fixtures';
+import {
+  makeCrawlers,
+  makeDossier,
+  makeEpisodeRaw,
+  makeShow,
+  makeStatus,
+} from '../../test/fixtures';
 import type { CrawlerRoster } from '../../data/types';
 
 const [stuntman] = makeCrawlers().crawlers;
@@ -34,7 +40,9 @@ function stubEpisodes() {
   });
 }
 
-beforeEach(() => stubEpisodes());
+beforeEach(() => {
+  stubEpisodes();
+});
 
 afterEach(() => {
   cleanup();
@@ -71,25 +79,16 @@ describe('CrawlerPage hero', () => {
 
   /*
    * No progression in the hero (011 R2): a stranger from a search result gets
-   * who this is, not how far they have got.
+   * who this is, not how far they have got. 012 takes the last of it - there
+   * is no status pill on this page for anyone, in any condition, because a
+   * pill is an answer to a question nobody asked.
    */
-  it('spoils nothing: no floor, no level line, no "alive" pill', () => {
+  it('spoils nothing: no floor, no level line, no condition anywhere', () => {
     renderCrawler();
     expect(screen.queryByTestId('status-line')).toBeNull();
-    expect(screen.queryByText(siteCopy.statusLabel.alive)).toBeNull();
     expect(document.body.textContent).not.toMatch(/Floor \d/);
     expect(document.body.textContent).not.toMatch(/Lv \d|Level \d/);
-  });
-
-  it('shows the authored pill when the crawler is not alive', () => {
-    renderSite(<CrawlerPage />, {
-      path: '/crawlers/stuntman',
-      routePath: '/crawlers/:id',
-      crawlers: rosterWith((roster) => {
-        roster.crawlers[0].status = 'dead';
-      }),
-    });
-    expect(screen.getByText(siteCopy.statusLabel.dead)).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/alive|dead|deceased|fused|unknown/i);
   });
 });
 
@@ -222,6 +221,105 @@ describe('CrawlerPage CTA and navigation', () => {
     expect(document.querySelector('meta[property="og:image"]')?.getAttribute('content')).toContain(
       '/og/crawler-stuntman.png',
     );
+  });
+});
+
+/*
+ * The dossier on the page (012 T1215, T1217). The panel's own behaviour is
+ * tested next to it; what the page owes it is a place to stand and a head that
+ * gives nothing away.
+ */
+describe('the crawler dossier on the page', () => {
+  /** A file whose every string is distinctive, so a leak is unmistakable. */
+  function loudDossier(id: string) {
+    const file = makeDossier(id);
+    file.updates[2] = {
+      ...file.updates[2],
+      title: 'The final descent ends on the Brine Stairs',
+      body: 'A memorial banner hangs over Floor Two.',
+      chips: ['IN MEMORIAM'],
+      condition: 'deceased',
+    };
+    return file;
+  }
+
+  it('stands full width under the hero and above the bar that walks the roster', () => {
+    renderCrawler();
+    const panel = screen.getByRole('heading', { name: /where is|where are/i }).closest('section');
+    expect(panel).not.toBeNull();
+    const hero = screen.getByRole('heading', { level: 1 }).closest('article') as HTMLElement;
+    const nav = screen.getByRole('navigation', { name: siteCopy.crawlersTitle });
+    // Document order: hero, then the panel, then prev/next.
+    expect(hero.compareDocumentPosition(panel as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect((panel as HTMLElement).compareDocumentPosition(nav)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    // It is a child of the page, not of the hero grid.
+    expect(hero.contains(panel as Node)).toBe(false);
+    expect(screen.getAllByTestId('dossier-row')).toHaveLength(3);
+  });
+
+  it('keeps every card out of the title, the meta tags and the JSON-LD (T1217)', () => {
+    const file = loudDossier('stuntman');
+    renderSite(<CrawlerPage />, {
+      path: '/crawlers/stuntman',
+      routePath: '/crawlers/:id',
+      dossier: file,
+    });
+
+    const head = [
+      document.title,
+      ...[...document.querySelectorAll('meta')].map((tag) => tag.getAttribute('content') ?? ''),
+      ...[...document.querySelectorAll('script[type="application/ld+json"]')].map(
+        (tag) => tag.textContent ?? '',
+      ),
+      ...[...document.querySelectorAll('link')].map((tag) => tag.getAttribute('href') ?? ''),
+    ].join(' | ');
+
+    for (const card of file.updates) {
+      expect(head).not.toContain(card.title);
+      expect(head).not.toContain(card.body);
+      for (const chip of card.chips) expect(head).not.toContain(chip);
+    }
+    expect(head).not.toMatch(/deceased|death|killed|memorial/i);
+
+    // ...and opening every card changes none of it.
+    fireEvent.click(screen.getByRole('button', { name: /^Reveal all/ }));
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(3);
+    expect(document.title).toBe(siteCopy.pageTitle(stuntman.characterName));
+    expect(document.querySelector('meta[name="description"]')?.getAttribute('content')).not.toMatch(
+      /Brine Stairs|memorial/i,
+    );
+  });
+
+  it('puts nothing in the URL: no fragment, no query, no link out of the panel (T1217)', () => {
+    renderSite(<CrawlerPage />, {
+      path: '/crawlers/stuntman',
+      routePath: '/crawlers/:id',
+      dossier: loudDossier('stuntman'),
+    });
+    const panel = screen.getByRole('heading', { name: /where is|where are/i })
+      .closest('section') as HTMLElement;
+
+    fireEvent.click(screen.getByRole('button', { name: /^Reveal the Episode 2/ }));
+    expect(within(panel).queryAllByRole('link')).toEqual([]);
+    expect(panel.querySelectorAll('[href]')).toHaveLength(0);
+    expect(window.location.hash).toBe('');
+    expect(window.location.search).toBe('');
+    // The canonical link is still the page's own address, unqualified.
+    expect(document.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe(
+      'https://dungeoncrawlcast.com/crawlers/stuntman',
+    );
+  });
+
+  it('renders the launch state, and no rows, for a deploy with no cards yet', () => {
+    renderSite(<CrawlerPage />, {
+      path: '/crawlers/stuntman',
+      routePath: '/crawlers/:id',
+      dossier: { id: 'stuntman', generatedAt: '', updates: [] },
+    });
+    expect(screen.getByText(siteCopy.dossier.launch)).toBeInTheDocument();
+    expect(screen.queryAllByTestId('dossier-row')).toEqual([]);
   });
 });
 

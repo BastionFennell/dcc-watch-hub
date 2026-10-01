@@ -128,8 +128,8 @@ describe('The Studio, end to end', () => {
     await waitFor(() => expect(screen.getByTestId('event-form')).toBeInTheDocument());
     pickType('hp');
     fireEvent.change(form().getByLabelText(/^Crawler/), { target: { value: 'stuntman' } });
-    fireEvent.change(form().getByLabelText(/^Current HP/), { target: { value: '9' } });
-    fireEvent.change(form().getByLabelText(/^Max HP/), { target: { value: '24' } });
+    fireEvent.change(form().getByLabelText(/^HB slots/), { target: { value: '9' } });
+    fireEvent.change(form().getByLabelText(/^Slots on the bar/), { target: { value: '10' } });
     saveForm();
     await waitFor(() => expect(screen.queryByTestId('event-form')).not.toBeInTheDocument());
 

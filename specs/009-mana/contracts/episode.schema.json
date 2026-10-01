@@ -108,6 +108,7 @@
           "minimum": 1
         },
         "hp": {
+          "description": "The health bar in HB slots, not hit points: ten slots, so max is 10 and current is how many are lit (author, 2026-09-25). A max that is not 10 loads with a console warning.",
           "type": "object",
           "required": [
             "current",
@@ -474,6 +475,7 @@
                 ]
               },
               {
+                "description": "An hp reading in HB slots: current out of ten.",
                 "properties": {
                   "type": {
                     "const": "hp"

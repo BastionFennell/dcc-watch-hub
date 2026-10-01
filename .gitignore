@@ -12,3 +12,7 @@ coverage
 # Author source material: filled character sheets and full-res renders live outside git; optimized copies ship under public/img
 /character-sheets/
 /character-portraits/
+
+# 012: the compiled crawler dossier. Source lives in content/status/*.json;
+# `npm run build:dossier` (prebuild, predev) regenerates this on every build.
+public/data/dossier/
