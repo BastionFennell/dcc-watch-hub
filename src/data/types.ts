@@ -107,7 +107,7 @@ export interface CrawlerEntryAchievement {
 }
 
 /**
- * One row of `crawlers.json` (011). `id` is the hub crawler id (`harry`, ...)
+ * One row of `crawlers.json` (011). `id` is the hub crawler id (`mimi`, ...)
  * so the build-time `status.json` joins onto it without a mapping table.
  */
 export interface CrawlerProfile {

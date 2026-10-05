@@ -1,12 +1,12 @@
 /*
- * Wireframe: five panel boxes, hairline-2 border, radius 6, name 11–12px
+ * Wireframe: four panel boxes, hairline-2 border, radius 6, name 11–12px
  * semibold, "Lv N" muted, 4px HP bar. In v2 each box is the `<button>` that
  * opens that crawler's dossier, so it carries a pointer cursor, a hover border
  * and a focus ring (FR-104, research R9) - otherwise it looks identical (SC-106).
  */
 .rail {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-3);
   margin: 0;
   padding: 0;
@@ -258,21 +258,21 @@
 }
 
 /*
- * Five across next to the feed column starts truncating names around 1050px
+ * Four across next to the feed column still truncates names around 1050px
  * (review 0.9, T339). Between 901 and 1100px - the band where the desktop grid
- * is still two columns - the rail wraps to 3 + 2 instead. At or below 900px the
+ * is still two columns - the rail wraps to 2 + 2 instead. At or below 900px the
  * page has already stacked, so the rules below own that range.
  */
 @media (min-width: 901px) and (max-width: 1100px) {
   .rail:not([data-layout='grid']) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-/* Five across is unreadable on a phone: wrap to 3 + 2. */
+/* Four across is unreadable on a phone: wrap to an even 2 + 2. */
 @media (max-width: 640px) {
   .rail:not([data-layout='grid']) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .rail:not([data-layout='grid']) .portrait {
@@ -282,9 +282,9 @@
 }
 
 /*
- * At phone width a 3 + 2 grid leaves a ragged half-row (review 2.4, T339), so
- * the rail becomes a single scroll strip with snap points: every frame keeps
- * its full width, and the page still never scrolls sideways.
+ * Narrower still, a two-column grid squeezes the frames past reading (review
+ * 2.4, T339), so the rail becomes a single scroll strip with snap points: every
+ * frame keeps its full width, and the page still never scrolls sideways.
  */
 @media (max-width: 480px) {
   .rail:not([data-layout='grid']) {
@@ -318,9 +318,9 @@
  * The phone Party pane (006 T605, research R2). Inside a tab the rail has the
  * whole screen width and no feed beside it, so the frames read best as two
  * columns at their full 40 px portrait size - no scroll strip, nothing to swipe
- * sideways (the pane itself owns the horizontal gesture). Five crawlers leave a
- * ragged last row, so an odd final frame spans both columns rather than sitting
- * alone at half width.
+ * sideways (the pane itself owns the horizontal gesture). Four crawlers fill the
+ * rows evenly; the rule below still catches an odd final frame, so a party of
+ * five never leaves one sitting alone at half width.
  *
  * This block is last and unconditional: the grid is the same at every width,
  * because it only ever renders inside the phone tabs.

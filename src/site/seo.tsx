@@ -20,7 +20,7 @@ import { PRERENDERED_HEAD_ATTR, SHELL_HEAD_ATTR } from '../boot';
 export interface SeoProps {
   title: string;
   description: string;
-  /** Root-relative, e.g. `/crawlers/harry`. The deploy base is added here. */
+  /** Root-relative, e.g. `/crawlers/mimi`. The deploy base is added here. */
   canonicalPath: string;
   /** Root-relative or absolute. Root-relative is resolved against the site. */
   ogImage?: string;

@@ -56,8 +56,17 @@
   border-color: var(--brand-2);
 }
 
+/*
+ * 013: `height: auto` so the `aspect-ratio` actually governs. The `height=192`
+ * attribute on the <img> (there to reserve the box and keep CLS at 0) is a
+ * presentational `height` declaration, and it used to win - which left the art
+ * 192 px tall at whatever width the column happened to be. At five across that
+ * was a near-square 160 x 192; at four it would be a letterboxed 205 x 192,
+ * cropping the top of every bust. Auto hands the height back to the ratio.
+ */
 .cardArt {
   width: 100%;
+  height: auto;
   aspect-ratio: 1 / 1;
   object-fit: cover;
   border-radius: var(--radius-md);

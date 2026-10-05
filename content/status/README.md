@@ -1,7 +1,7 @@
 # Authoring the crawler dossier
 
 One file per crawler, `content/status/<id>.json`, where `<id>` is the crawler's id in
-`public/data/crawlers.json` (`harry`, `mimi`, `ronald`, `xo`, `veil`).
+`public/data/crawlers.json` (`mimi`, `ronald`, `xo`, `veil`).
 
 These files are **source**, not site data. Nothing here is served. `npm run build:dossier` compiles
 them into `public/data/dossier/<id>.json`, which is gitignored and regenerated on every build and
@@ -26,13 +26,13 @@ Those two strings live in `src/site/dossier/quiet.ts`. Change them there, never 
 
 ```json
 {
-  "id": "harry",
+  "id": "ronald",
   "updates": [
     {
       "episode": 1,
       "kind": "update",
       "onCamera": true,
-      "title": "Harry meets the door and wins",
+      "title": "Ronald meets the door and wins",
       "body": "One or two sentences, present tense, System voice.",
       "chips": ["GATE CRASHER", "2/10 HB"],
       "level": null,

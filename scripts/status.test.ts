@@ -49,7 +49,7 @@ describe('buildStatus', () => {
   it('reduces the newest published episode to its end', () => {
     const status = buildStatus(show, loadEpisode, gate(3));
     expect(status.episodeId).toBe(3);
-    expect(Object.keys(status.crawlers)).toEqual(['harry', 'mimi', 'ronald', 'xo', 'veil']);
+    expect(Object.keys(status.crawlers)).toEqual(['mimi', 'ronald', 'xo', 'veil']);
     expect(status.crawlers.xo.lastEpisodeId).toBe(3);
     // Episode 3 is on floor 2, and the map says so.
     expect(status.crawlers.xo.floor).toBe(2);
@@ -70,8 +70,8 @@ describe('buildStatus', () => {
   it('falls back to the previous episode before the newest unlocks', () => {
     const status = buildStatus(show, loadEpisode, gate(3) - 1);
     expect(status.episodeId).toBe(2);
-    expect(status.crawlers.harry.lastEpisodeId).toBe(2);
-    expect(status.crawlers.harry.floor).toBe(1);
+    expect(status.crawlers.ronald.lastEpisodeId).toBe(2);
+    expect(status.crawlers.ronald.floor).toBe(1);
   });
 
   it('emits an empty file, not a failure, before anything is published', () => {
@@ -106,12 +106,12 @@ describe('buildStatus', () => {
       gate(3),
     );
     expect(Object.keys(status.crawlers)).not.toContain('veil');
-    expect(Object.keys(status.crawlers)).toHaveLength(4);
+    expect(Object.keys(status.crawlers)).toHaveLength(3);
   });
 
   it('lists every published episode a crawler appears in, ascending', () => {
     const status = buildStatus(show, loadEpisode, gate(3));
-    expect(status.appearances?.harry).toEqual([1, 2, 3]);
+    expect(status.appearances?.ronald).toEqual([1, 2, 3]);
     // The map spans every published episode, not just the newest one.
     for (const ids of Object.values(status.appearances ?? {})) {
       expect([...ids].sort((a, b) => a - b)).toEqual(ids);
@@ -120,7 +120,7 @@ describe('buildStatus', () => {
 
   it('stops the appearances at the spoiler gate', () => {
     const status = buildStatus(show, loadEpisode, gate(3) - 1);
-    expect(status.appearances?.harry).toEqual([1, 2]);
+    expect(status.appearances?.ronald).toEqual([1, 2]);
   });
 
   it('leaves out a crawler no published episode names', () => {

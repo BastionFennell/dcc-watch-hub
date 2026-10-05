@@ -3,85 +3,6 @@
   "initialState": {
     "party": [
       {
-        "id": "harry",
-        "name": "Harold \"Harry\" Wallace",
-        "handle": "Harry",
-        "player": "Bobby",
-        "level": 1,
-        "hp": {
-          "current": 10,
-          "max": 10
-        },
-        "portrait": "/img/crawlers/harry.png",
-        "class": null,
-        "inventory": [
-          "Netbook w satchel case",
-          "Handheld retro emulator",
-          "Bag of weed/vape",
-          "Dumpy clothes"
-        ],
-        "rank": null,
-        "race": "Human-ish",
-        "pronouns": "he/them",
-        "crawlerNumber": "1651655",
-        "stats": {
-          "str": 3,
-          "int": 6,
-          "con": 5,
-          "dex": 2,
-          "cha": 4
-        },
-        "mana": {
-          "current": 6,
-          "max": 6
-        },
-        "hotlist": [],
-        "skills": [
-          {
-            "name": "Streetwise",
-            "rank": 1
-          },
-          {
-            "name": "Stealth",
-            "rank": 1
-          },
-          {
-            "name": "Investigation",
-            "rank": 1
-          },
-          {
-            "name": "Fabricate",
-            "rank": 1
-          },
-          {
-            "name": "Deception",
-            "rank": 3
-          },
-          {
-            "name": "Performance (writing)",
-            "rank": 3
-          },
-          {
-            "name": "Determine Value",
-            "rank": 2
-          },
-          {
-            "name": "Perception",
-            "rank": 2
-          },
-          {
-            "name": "Soul Collector (Fabricate Ending)",
-            "rank": 3
-          },
-          {
-            "name": "Unarmed",
-            "rank": 3
-          }
-        ],
-        "gear": {},
-        "art": "/img/crawlers/harry-art.png"
-      },
-      {
         "id": "mimi",
         "name": "Mimi Rivers",
         "handle": "Crawler Mimi",
@@ -677,14 +598,14 @@
     {
       "t": 324,
       "type": "loot",
-      "actor": "harry",
+      "actor": "ronald",
       "item": "Warden Key",
       "source": "Platinum Adventurer Box"
     },
     {
       "t": 347,
       "type": "hp",
-      "actor": "harry",
+      "actor": "veil",
       "current": 3,
       "max": 10
     },
@@ -754,7 +675,7 @@
     {
       "t": 463,
       "type": "hp",
-      "actor": "harry",
+      "actor": "veil",
       "current": 10,
       "max": 10
     },
@@ -796,7 +717,7 @@
     {
       "t": 541,
       "type": "inventory",
-      "actor": "harry",
+      "actor": "ronald",
       "add": [
         "Warden Key"
       ],
@@ -807,14 +728,14 @@
     {
       "t": 544,
       "type": "unequip",
-      "actor": "harry",
+      "actor": "ronald",
       "slot": "hands",
       "item": "Bent Pry Bar"
     },
     {
       "t": 546,
       "type": "equip",
-      "actor": "harry",
+      "actor": "ronald",
       "slot": "hands",
       "item": "Warden Key"
     },
@@ -883,7 +804,7 @@
     {
       "t": 627,
       "type": "achievement",
-      "actor": "harry",
+      "actor": "ronald",
       "title": "Warden Breaker",
       "desc": "Opened what was sealed for a reason."
     },
@@ -932,7 +853,7 @@
     {
       "t": 700,
       "type": "class",
-      "actor": "harry",
+      "actor": "veil",
       "class": "Compensated Anarchist"
     }
   ]

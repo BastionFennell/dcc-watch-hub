@@ -3,85 +3,6 @@
   "initialState": {
     "party": [
       {
-        "id": "harry",
-        "name": "Harold \"Harry\" Wallace",
-        "handle": "Harry",
-        "player": "Bobby",
-        "level": 1,
-        "hp": {
-          "current": 10,
-          "max": 10
-        },
-        "portrait": "/img/crawlers/harry.png",
-        "class": null,
-        "inventory": [
-          "Netbook w satchel case",
-          "Handheld retro emulator",
-          "Bag of weed/vape",
-          "Dumpy clothes"
-        ],
-        "rank": null,
-        "race": "Human-ish",
-        "pronouns": "he/them",
-        "crawlerNumber": "1651655",
-        "stats": {
-          "str": 3,
-          "int": 6,
-          "con": 5,
-          "dex": 2,
-          "cha": 4
-        },
-        "mana": {
-          "current": 6,
-          "max": 6
-        },
-        "hotlist": [],
-        "skills": [
-          {
-            "name": "Streetwise",
-            "rank": 1
-          },
-          {
-            "name": "Stealth",
-            "rank": 1
-          },
-          {
-            "name": "Investigation",
-            "rank": 1
-          },
-          {
-            "name": "Fabricate",
-            "rank": 1
-          },
-          {
-            "name": "Deception",
-            "rank": 3
-          },
-          {
-            "name": "Performance (writing)",
-            "rank": 3
-          },
-          {
-            "name": "Determine Value",
-            "rank": 2
-          },
-          {
-            "name": "Perception",
-            "rank": 2
-          },
-          {
-            "name": "Soul Collector (Fabricate Ending)",
-            "rank": 3
-          },
-          {
-            "name": "Unarmed",
-            "rank": 3
-          }
-        ],
-        "gear": {},
-        "art": "/img/crawlers/harry-art.png"
-      },
-      {
         "id": "mimi",
         "name": "Mimi Rivers",
         "handle": "Crawler Mimi",
@@ -586,7 +507,7 @@
     {
       "t": 191,
       "type": "status",
-      "actor": "harry",
+      "actor": "veil",
       "add": [
         "Bleeding"
       ],
@@ -609,7 +530,7 @@
     {
       "t": 224,
       "type": "achievement",
-      "actor": "harry",
+      "actor": "veil",
       "title": "Blood Tax",
       "desc": "Paid in advance, twice."
     },
@@ -635,10 +556,10 @@
     {
       "t": 250,
       "type": "skill",
-      "actor": "harry",
+      "actor": "xo",
       "name": "Powerful Strike",
       "rank": 2,
-      "desc": "The door never stood a chance."
+      "desc": "The hook rail never stood a chance."
     },
     {
       "t": 266,
@@ -668,7 +589,7 @@
     {
       "t": 300,
       "type": "rank",
-      "actor": "harry",
+      "actor": "veil",
       "rank": 1150
     },
     {
@@ -739,14 +660,14 @@
     {
       "t": 412,
       "type": "hp",
-      "actor": "harry",
+      "actor": "veil",
       "current": 3,
       "max": 10
     },
     {
       "t": 415,
       "type": "unequip",
-      "actor": "harry",
+      "actor": "xo",
       "slot": "hands",
       "item": "Bent Pry Bar"
     },
@@ -759,7 +680,7 @@
     {
       "t": 462,
       "type": "status",
-      "actor": "harry",
+      "actor": "veil",
       "add": [],
       "remove": [
         "Bleeding"
@@ -778,7 +699,7 @@
     {
       "t": 491,
       "type": "note",
-      "text": "Harry asks whether the hooks are load-bearing. Nobody answers."
+      "text": "X.O. asks whether the hooks are load-bearing. Nobody answers."
     },
     {
       "t": 520,
@@ -789,13 +710,13 @@
     {
       "t": 520,
       "type": "rank",
-      "actor": "harry",
+      "actor": "veil",
       "rank": 905
     },
     {
       "t": 549,
       "type": "hp",
-      "actor": "harry",
+      "actor": "veil",
       "current": 10,
       "max": 10
     },
@@ -882,7 +803,7 @@
     {
       "t": 671,
       "type": "rank",
-      "actor": "harry",
+      "actor": "veil",
       "rank": 740
     },
     {
@@ -896,7 +817,7 @@
     {
       "t": 700,
       "type": "skill",
-      "actor": "harry",
+      "actor": "xo",
       "name": "Crowbar Work",
       "rank": 2
     },
