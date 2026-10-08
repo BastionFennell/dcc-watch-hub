@@ -8,7 +8,7 @@ export interface ManaBarProps {
 
 /**
  * The mana meter on a party frame (009, revision 1). The dossier and the glance
- * draw one key per point, which five frames across a rail have no room for, so
+ * draw one key per point, which four frames across a rail have no room for, so
  * the frame falls back to a continuous bar - thinner than the HP bar above it
  * and in System blue, so the two never read as the same meter at a glance.
  *

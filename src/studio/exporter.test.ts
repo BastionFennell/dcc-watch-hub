@@ -189,9 +189,9 @@ describe('partyFromInitial', () => {
 
   it('copies the starting party without aliasing the file', () => {
     const party = partyFromInitial(raw) as { id: string }[];
-    expect(party.map((crawler) => crawler.id)).toEqual(['harry', 'mimi', 'ronald', 'xo', 'veil']);
+    expect(party.map((crawler) => crawler.id)).toEqual(['mimi', 'ronald', 'xo', 'veil']);
     party[0].id = 'changed';
-    expect((partyFromInitial(raw) as { id: string }[])[0].id).toBe('harry');
+    expect((partyFromInitial(raw) as { id: string }[])[0].id).toBe('mimi');
   });
 
   it('is empty for anything that is not an episode', () => {

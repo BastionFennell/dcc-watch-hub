@@ -32,9 +32,9 @@ npm run dev -- --open  # opens the archive
 - The panels mid-episode: <http://localhost:5180/ep/1?fake=1&t=580> (click a crawler, then
   the floor-map badge)
 - The broadcast log mid-episode: <http://localhost:5180/ep/1?fake=1&t=580> → scroll below the
-  party rail and open it (55 moments, 17 type chips and 5 crawler chips)
-- Straight to a full record: <http://localhost:5180/ep/1?fake=1&t=580&panel=dossier:harry&record=1>
-  (Harry's hotbar overflows at 9:32) and `…&panel=dossier:xo&record=1` (X.O.'s skills fill the
+  party rail and open it (55 moments, 17 type chips and 4 crawler chips)
+- Straight to a full record: <http://localhost:5180/ep/1?fake=1&t=580&panel=dossier:veil&record=1>
+  (Veil's hotbar overflows at 9:32) and `…&panel=dossier:xo&record=1` (X.O.'s skills fill the
   eight-tile grid and offer "View all (10)"). The `panel` / `record` flags are DEV-only.
 - The phone layout: the same <http://localhost:5180/ep/1?fake=1&t=580> in Chrome DevTools device
   mode at 400 × 800 - tabs under the timeline, scroll down for the mini-player, tap a crawler on
@@ -132,9 +132,9 @@ five static, prerendered routes whose job is to convert a stranger in ten second
 
 | Route | What it shows |
 |---|---|
-| `/` | Hero (tagline, pitch, the gated CTA pair, a click-to-play trailer), the five roster cards, a "New to Dungeon Crawler Carl?" System box, the Discord strip with the cadence, the footer |
+| `/` | Hero (tagline, pitch, the gated CTA pair, a click-to-play trailer), the four roster cards, a "New to Dungeon Crawler Carl?" System box, the Discord strip with the cadence, the footer |
 | `/watch` | Every episode grouped by floor, oldest first (floors ascending, episodes ascending inside a floor - 011 revision 3), each row with its still, runtime, spoiler-safe summary and gated CTA. A "Jump to latest" button under the heading scrolls to the newest row (`id="ep-{id}"`, marked `LATEST`) and focuses its link; a "Back to top" link closes the list. **This is the old `/` archive.** |
-| `/crawlers` | The roster grid (2 columns at 375 px, 5 across on a laptop). Status filter chips appear only when more than one status exists |
+| `/crawlers` | The roster grid (2 columns at 375 px, 4 across on a laptop). Status filter chips appear only when more than one status exists |
 | `/crawlers/:id` | One crawler (redesigned in 011 revision 2): a portrait / text hero with the archetype, the name, the handle, the "Played by" credit and one "Start at Episode 1" CTA, then whichever of concept, pockets and the entry achievement have anything in them (the achievement carries no section label of its own), then the prev/next bar. No floor, no level, no "alive" pill - and no placeholders |
 | `/community` | The single link every social bio points at: Discord first, the platform row, the cadence, and one paragraph on how to help |
 
@@ -164,7 +164,7 @@ before it renders (`src/site/pages/lazy.tsx` explains the two-state wrapper), be
 | `episodes[].ogImage` | share card, row thumbnail | Optional. Defaults to the generated `/og/ep{N}.png` |
 
 **`public/data/crawlers.json`** (new) - the roster. One entry per crawler, `id` equal to the hub's
-crawler id (`harry`, `mimi`, `ronald`, `xo`, `veil`) so the live status line can join on it:
+crawler id (`mimi`, `ronald`, `xo`, `veil`) so the live status line can join on it:
 
 | Field | What it is |
 |---|---|
@@ -267,7 +267,7 @@ One file per crawler at `content/status/<id>.json` (repo root, never served). Se
 `content/status/README.md` for the full rules; the shape is:
 
 ```json
-{ "id": "harry",
+{ "id": "ronald",
   "updates": [
     { "episode": 1, "kind": "update", "onCamera": true,
       "title": "<= 60 chars, present tense",
@@ -338,7 +338,7 @@ count. `dossierFor(id) === null` is that state, and it is never a statement abou
 1. Confirm the handles - they are all "Dungeon Crawler {first name}" placeholders today.
 2. `concept`: one or two lines per crawler from the character docs (only Ronald's is written).
 3. `pockets`: what was in their pockets when the world ended, one line per item (none written yet).
-4. `player.pronouns`, `player.bio` (two sentences) and `player.links` for all five.
+4. `player.pronouns`, `player.bio` (two sentences) and `player.links` for all four.
 5. `player.bust`: a photo of the real person, if they want one on the page.
 6. `show.json`: `trailerYoutubeId`, the real `premiereAt` / `hubLiveAt` dates, and
    `links.tiktok` / `links.bluesky` / `links.instagram`.
@@ -350,7 +350,7 @@ And outside the data files:
 8. The Plausible site, if analytics is wanted (`VITE_PLAUSIBLE_DOMAIN`).
 9. Point every social bio at `/community`, which is the URL that page exists for.
 
-`entryAchievement` is done: all five are transcribed verbatim from the author's notes, with the
+`entryAchievement` is done: all four are transcribed verbatim from the author's notes, with the
 `box`, the `item` and the `reward` paragraph the System read out.
 
 **Unwritten means empty, never "coming soon"** (011 revision 2). A field the author has not filled
@@ -515,8 +515,8 @@ Every feed row is a seek control: it shows the moment it happened and clicking i
 broadcast there (the pinned sponsor too). Before the first event has elapsed the feed reads
 "Standing by. The System reports when the broadcast begins."
 
-The party rail wraps to 3 + 2 between 900 and 1100 px, where five frames next to the feed
-column started truncating names, and becomes a horizontal snap strip at 480 px and below. Every
+The party rail wraps to 2 + 2 between 900 and 1100 px, where four frames next to the feed
+column still truncate names, and becomes a horizontal snap strip at 480 px and below. Every
 frame reserves its debuff-pip row whether or not it has one, so a seek never changes the rail's
 height.
 
@@ -683,8 +683,8 @@ tab lasts the visit; it is not in the URL and not remembered across reloads.
 
 - **Feed** is the ticker and the sponsor slot, as before. At 400 × 800 the first feed row lands at
   y 451 and six rows are fully above the fold.
-- **Party** is the crawler frames in two columns - four of them since 008, so the grid is square;
-  an odd crawler out spans both columns. Tapping one opens the glance as a sheet.
+- **Party** is the crawler frames in two columns - four of them since 013, so the grid is square;
+  an odd crawler out would span both columns. Tapping one opens the glance as a sheet.
 - **Map** is the floor map inline with its own zoom, fit and drag-to-pan - the stage's minimap
   badge is not rendered on phones, because the tab *is* the map.
 - **Log** is the broadcast log, already open, with no toggle: the tab is the open/closed control.
@@ -1189,8 +1189,8 @@ gets data in.
 ## Placeholders to replace before launch
 
 Everything below is sample data so the site is runnable today, with one exception: as of
-feature 008 the **party is real**. Harry, Mimi Rivers, Ronald "Madio" Hudson, Xavier "XO"
-Ortiz and Veil Ravencrest are transcribed from the author's filled Dungeon Crawler Carl RPG
+feature 008 the **party is real**. Mimi Rivers, Ronald "Madio" Hudson, Xavier "XO" Ortiz and
+Veil Ravencrest are transcribed from the author's filled Dungeon Crawler Carl RPG
 character sheets, and
 the sheets - not this repo - are the source of truth for their names, stats, skills, hotlist,
 inventory and gear. The sheets live in `character-sheets/` and the renders in
@@ -1225,9 +1225,9 @@ The three sample videos are the Blender Foundation's open movies: public, embedd
 different video so switching episodes is visibly a fresh broadcast. Each `durationSec` is that
 video's real length and the sample events are spread across it. Change ids and durations together.
 
-**Crawler portraits** - all five are real, cut from the author's renders:
+**Crawler portraits** - all four are real, cut from the author's renders:
 
-- `public/img/crawlers/{harry,mimi,ronald,xo,veil}.png` - 192×192 head-and-shoulders busts, cropped
+- `public/img/crawlers/{mimi,ronald,xo,veil}.png` - 192×192 head-and-shoulders busts, cropped
   from the full render at a matching scale (the raised hands of Ronald and Veil stay in frame).
 - `public/img/crawlers/{id}-art.png` - the full-figure transparent render, 820-900 px tall, under
   350 kB each; shown in the full record and on the crawler pages.
@@ -1451,7 +1451,7 @@ measurement of the same page disagrees: 1.5 s under real DevTools throttling, 0.
 Lighthouse's own run, and 0.67 s from a `PerformanceObserver` on an emulated slow-4G + 4x-CPU
 phone. The gap is bandwidth contention in the model - the LCP element is the hero's YouTube still,
 and it shares a simulated 1.6 Mbps with the 132 kB entry bundle and 283 kB of roster art. Two
-things would close it for real: re-encoding the five 192 x 192 crawler busts (55 kB of PNG each,
+things would close it for real: re-encoding the four 192 x 192 crawler busts (55 kB of PNG each,
 where a JPEG is under 10 kB), and a marketing-only JS entry so the front door does not download the
 hub. Both are follow-ups, not v1 work.
 

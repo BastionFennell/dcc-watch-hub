@@ -15,7 +15,7 @@
 /** The tag line of a card with no news in it. Present tense, System voice. */
 export const quietTitle = 'Off camera this episode';
 
-/** @param characterName the crawler's in-fiction name ("Harold \"Harry\" Wallace"). */
+/** @param characterName the crawler's in-fiction name ("Xavier \"X.O.\" Ortiz"). */
 export function quietBody(characterName: string): string {
   return `${characterName} sits this one out. No status change.`;
 }

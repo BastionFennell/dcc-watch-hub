@@ -18,7 +18,7 @@ export interface PartyRailProps {
   layout?: 'row' | 'grid';
 }
 
-/** The five crawler frames under the stage. Lays out however many exist. */
+/** The crawler frames under the stage. Lays out however many exist. */
 export function PartyRail({ frames, activeId, onActivate, layout = 'row' }: PartyRailProps) {
   return (
     <ul

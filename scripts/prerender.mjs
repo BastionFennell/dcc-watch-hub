@@ -21,7 +21,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 /** The static routes every build prerenders, in sitemap order. */
 export const STATIC_ROUTES = ['/', '/watch', '/crawlers', '/community'];
 
-/** `/crawlers/harry` -> `harry`; anything else -> `null`. */
+/** `/crawlers/mimi` -> `mimi`; anything else -> `null`. */
 export function crawlerIdIn(route) {
   const match = /^\/crawlers\/([^/]+)$/.exec(route);
   return match === null ? null : match[1];

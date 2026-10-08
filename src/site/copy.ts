@@ -38,7 +38,7 @@ export const siteCopy = {
   // --- home sections
   latestEpisodeTitle: 'Latest episode',
   meetTheCrawlersTitle: 'Meet the crawlers',
-  meetTheCrawlersLead: 'Five people from the same film crew, and one very bad Tuesday.',
+  meetTheCrawlersLead: 'Four people from the same film crew, and one very bad Tuesday.',
   newcomerTitle: 'New to Dungeon Crawler Carl?',
   newcomerBody:
     'It is a book series about an apocalyptic game show with a cat who takes it personally. You do not need to have read a word of it to watch this.',
@@ -73,7 +73,7 @@ export const siteCopy = {
 
   // --- /crawlers
   crawlersTitle: 'The crawlers',
-  crawlersLead: 'Five contestants, one production company, no exit.',
+  crawlersLead: 'Four contestants, one production company, no exit.',
   /*
    * 012 removed the status filter chips, the status pill and the live line.
    * Every word they used to print said something about a crawler's condition,
@@ -197,7 +197,7 @@ export const siteCopy = {
 
   // --- share images and per-page heads
   watchDescription: 'Every episode of Dungeon Crawl Cast, filed by floor.',
-  crawlersDescription: 'The five crawlers of Dungeon Crawl Cast, and the players behind them.',
+  crawlersDescription: 'The four crawlers of Dungeon Crawl Cast, and the players behind them.',
   /*
    * A crawler whose concept is not written yet still needs a description: the
    * archetype is the one line about them that is always true (011 R2).

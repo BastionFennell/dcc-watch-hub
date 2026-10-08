@@ -167,7 +167,7 @@ describe.each(show.episodes.map((meta) => [meta.id, meta] as const))(
       const episode = normalizeEpisode(raw);
       expect(episode.events.length).toBeGreaterThanOrEqual(25);
       // Raised from 60 in 003 revision 2: ep1 carries X.O.'s nine skills and
-      // Harry's eleven hotlist marks on top of the v2 log.
+      // Veil's eleven hotlist marks on top of the v2 log.
       expect(episode.events.length).toBeLessThanOrEqual(80);
 
       const counts = new Map<string, number>();
@@ -223,12 +223,11 @@ describe.each(show.episodes.map((meta) => [meta.id, meta] as const))(
     });
 
     // 008: the invented sample party is gone. Every episode ships the same
-    // crawlers read off the author's filled sheets, in rail order - four at
-    // first, and Veil Ravencrest when her sheet arrived.
-    it('carries the five real crawlers', () => {
+    // crawlers read off the author's filled sheets, in rail order. 013: The
+    // Writer left the show, so the party is the four who stayed.
+    it('carries the four real crawlers', () => {
       const episode = normalizeEpisode(raw);
       expect(episode.initialState.party.map((crawler) => crawler.id)).toEqual([
-        'harry',
         'mimi',
         'ronald',
         'xo',
@@ -580,7 +579,7 @@ describe('public/data/crawlers.json', () => {
   it('passes the runtime guard with nothing dropped', () => {
     const roster = validateCrawlers(crawlersRaw);
     expect(roster.crawlers).toHaveLength((crawlersRaw as CrawlerRoster).crawlers.length);
-    expect(roster.crawlers).toHaveLength(5);
+    expect(roster.crawlers).toHaveLength(4);
   });
 
   /*
@@ -592,7 +591,6 @@ describe('public/data/crawlers.json', () => {
     const party = normalizeEpisode(readJson(resolve(dataDir, 'ep1.json'))).initialState.party;
     const ids = new Set(party.map((crawler) => crawler.id));
     expect(roster.crawlers.map((crawler) => crawler.id)).toEqual([
-      'harry',
       'mimi',
       'ronald',
       'xo',
@@ -606,7 +604,7 @@ describe('public/data/crawlers.json', () => {
   it('points every piece of art at a file that exists', () => {
     const roster = validateCrawlers(crawlersRaw);
     const withFull = roster.crawlers.filter((crawler) => crawler.art.full !== undefined);
-    expect(withFull.map((crawler) => crawler.id)).toEqual(['harry', 'mimi', 'ronald', 'xo', 'veil']);
+    expect(withFull.map((crawler) => crawler.id)).toEqual(['mimi', 'ronald', 'xo', 'veil']);
     for (const crawler of roster.crawlers) {
       expect(existsSync(resolve(root, `public${crawler.art.bust}`)), crawler.id).toBe(true);
       if (crawler.art.full !== undefined) {
@@ -631,7 +629,7 @@ describe('public/data/crawlers.json', () => {
    * What the author has not written yet is *empty*, not a placeholder: the page
    * renders nothing where it would have gone, so "coming soon" never ships
    * (011 R2). The fields that are always true - archetype, character name,
-   * handle - are filled for all five and carry no TODO marker.
+   * handle - are filled for all four and carry no TODO marker.
    */
   it('leaves the unwritten fields empty rather than filling them with prose', () => {
     const roster = validateCrawlers(crawlersRaw);
@@ -646,14 +644,13 @@ describe('public/data/crawlers.json', () => {
     }
     // 012: the roster carries no condition at all - not even "alive".
     expect(JSON.stringify(crawlersRaw)).not.toMatch(/"status"/);
-    // Archetype names from the author (2026-09-23): Harry is The Writer.
-    expect(byId.get('harry')?.name).toBe('The Writer');
+    // Archetype names from the author (2026-09-23).
     expect(byId.get('xo')?.name).toBe('The 1st AD');
     expect(byId.get('veil')?.name).toBe('The Psychic');
 
     // Only Ronald's concept is written; the rest render no paragraph at all.
     expect(byId.get('ronald')?.concept).not.toBe('');
-    for (const id of ['harry', 'mimi', 'xo', 'veil']) {
+    for (const id of ['mimi', 'xo', 'veil']) {
       expect(byId.get(id)?.concept, `${id} has no concept yet`).toBe('');
     }
     // Nobody's pockets are written yet, so nobody shows a pockets list.
@@ -663,10 +660,10 @@ describe('public/data/crawlers.json', () => {
     expect(roster.todo?.length ?? 0).toBeGreaterThanOrEqual(5);
   });
 
-  /** The one section that is fully authored: all five, verbatim (011 R2). */
+  /** The one section that is fully authored: all four, verbatim (011 R2). */
   it('carries a real entry achievement for every crawler', () => {
     const roster = validateCrawlers(crawlersRaw);
-    expect(roster.crawlers).toHaveLength(5);
+    expect(roster.crawlers).toHaveLength(4);
     for (const crawler of roster.crawlers) {
       const entry = crawler.entryAchievement;
       expect(entry, `${crawler.id} has an entry achievement`).toBeDefined();
@@ -746,10 +743,10 @@ describe('content/status/*.json', () => {
 
   /*
    * The feature's invariant, proved on the shipped data: one card per aired
-   * episode for everyone, whether the author wrote three cards (harry), one
+   * episode for everyone, whether the author wrote three cards (mimi), one
    * (xo) or none at all (veil).
    */
-  it('compiles to exactly one card per aired episode, for all five', () => {
+  it('compiles to exactly one card per aired episode, for all four', () => {
     for (const crawler of validateCrawlers(crawlersRaw).crawlers) {
       const parsed = parseAuthored(readJson(resolve(contentDir, `${crawler.id}.json`)), crawler.id);
       const file = compileDossier({

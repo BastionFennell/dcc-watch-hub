@@ -180,31 +180,31 @@ describe('convert(scripts/samples/ep1.csv)', () => {
   it('maps a rank row to one crawler, with no scope', () => {
     const ranks = result.episode?.events.filter((event) => event.type === 'rank') ?? [];
     expect(ranks).toHaveLength(2);
-    expect(ranks[0]).toEqual({ t: 124, type: 'rank', actor: 'harry', rank: 8890 });
+    expect(ranks[0]).toEqual({ t: 124, type: 'rank', actor: 'ronald', rank: 8890 });
     expect(ranks[1]).toEqual({ t: 190, type: 'rank', actor: 'xo', rank: 4188 });
     for (const rank of ranks) expect(rank).not.toHaveProperty('scope');
   });
 
   it('maps the v2 rows: skill, class and hotlist', () => {
     const skill = result.episode?.events.find(
-      (event) => event.type === 'skill' && event.actor === 'harry',
+      (event) => event.type === 'skill' && event.actor === 'ronald',
     );
     expect(skill).toMatchObject({
       type: 'skill',
-      actor: 'harry',
+      actor: 'ronald',
       name: 'Powerful Strike',
       rank: 1,
       desc: 'Learned on a doorframe.',
     });
 
     const classed = result.episode?.events.find((event) => event.type === 'class');
-    expect(classed).toMatchObject({ type: 'class', actor: 'harry', class: 'Compensated Anarchist' });
+    expect(classed).toMatchObject({ type: 'class', actor: 'ronald', class: 'Compensated Anarchist' });
 
     const hotlists = result.episode?.events.filter((event) => event.type === 'hotlist') ?? [];
     expect(hotlists).toHaveLength(2);
-    expect(hotlists[0]).toMatchObject({ actor: 'harry', add: ['The Hoarder'], remove: [] });
+    expect(hotlists[0]).toMatchObject({ actor: 'ronald', add: ['The Hoarder'], remove: [] });
     expect(hotlists[1]).toMatchObject({
-      actor: 'harry',
+      actor: 'ronald',
       add: ['Bronze Box Runner'],
       remove: ['The Hoarder'],
     });
@@ -215,7 +215,7 @@ describe('convert(scripts/samples/ep1.csv)', () => {
     expect(equips).toHaveLength(3);
     expect(equips[0]).toMatchObject({
       type: 'equip',
-      actor: 'harry',
+      actor: 'ronald',
       slot: 'hands',
       item: 'Enchanted Crowbar',
     });
@@ -225,23 +225,23 @@ describe('convert(scripts/samples/ep1.csv)', () => {
     expect(unequips).toHaveLength(1);
     expect(unequips[0]).toMatchObject({
       type: 'unequip',
-      actor: 'harry',
+      actor: 'ronald',
       slot: 'hands',
       item: 'Enchanted Crowbar',
     });
   });
 
   it('passes the optional crawler sheet fields through untouched', () => {
-    const harry = result.episode?.initialState.party.find((crawler) => crawler.id === 'harry');
-    expect(harry).toMatchObject({
-      race: 'Human-ish',
-      pronouns: 'he/them',
-      crawlerNumber: '1651655',
-      stats: { str: 3, int: 6, con: 5, dex: 2, cha: 4 },
+    const xo = result.episode?.initialState.party.find((crawler) => crawler.id === 'xo');
+    expect(xo).toMatchObject({
+      race: 'Human',
+      pronouns: 'He/Them',
+      crawlerNumber: '5,211,046',
+      stats: { str: 4, int: 5, con: 6, dex: 3, cha: 2 },
       hotlist: [],
     });
     // 008: the sheet's full skills table rides along unchanged.
-    expect(harry?.skills).toContainEqual({ name: 'Soul Collector (Fabricate Ending)', rank: 3 });
+    expect(xo?.skills).toContainEqual({ name: 'Tactics', rank: 3 });
   });
 
   it('maps the npc rows, parsing action[:fact,fact] out of field2 (FR-601)', () => {
@@ -277,7 +277,7 @@ describe('convert(scripts/samples/ep1.csv)', () => {
       (event) => event.type === 'achievement' && event.title === 'Gate Crasher',
     );
     expect(achievement).toMatchObject({
-      actor: 'harry',
+      actor: 'ronald',
       desc: 'Killed 10 mobs with a door, and once with the frame.',
     });
     const reveal = result.episode?.events.find((event) => event.type === 'map_reveal');
@@ -316,7 +316,7 @@ describe('convert(scripts/samples/ep1-broken.csv)', () => {
     expect(passed).toBeDefined();
     expect((passed as { raw: Record<string, unknown> }).raw).toMatchObject({
       type: 'mystery_type',
-      actor: 'harry',
+      actor: 'ronald',
       field1: 'glimmer',
       field2: '3',
     });
@@ -452,9 +452,9 @@ describe('rowToEvent', () => {
 
   it('warns about an impossible one-step drop', () => {
     const context = rowCtx();
-    rowToEvent(sheetRow({ type: 'hp', actor: 'harry', field1: '22', field2: '2' }), context);
+    rowToEvent(sheetRow({ type: 'hp', actor: 'ronald', field1: '22', field2: '2' }), context);
     const result = rowToEvent(
-      sheetRow({ type: 'hp', actor: 'harry', field1: '0', field2: '2' }),
+      sheetRow({ type: 'hp', actor: 'ronald', field1: '0', field2: '2' }),
       context,
     );
     expect(result.warnings.some((w) => w.includes('more than max'))).toBe(true);
@@ -466,35 +466,35 @@ describe('rowToEvent', () => {
   });
 
   it('errors on a skill row with no name', () => {
-    const result = rowToEvent(sheetRow({ type: 'skill', actor: 'harry', field2: '2' }), rowCtx());
+    const result = rowToEvent(sheetRow({ type: 'skill', actor: 'ronald', field2: '2' }), rowCtx());
     expect(result.errors).toEqual(['empty required field: name (field1) on skill']);
     expect(result.event).toBeNull();
   });
 
   it('accepts a skill row without a rank', () => {
     const result = rowToEvent(
-      sheetRow({ type: 'skill', actor: 'harry', field1: 'Crowbar Work' }),
+      sheetRow({ type: 'skill', actor: 'ronald', field1: 'Crowbar Work' }),
       rowCtx(),
     );
     expect(result.errors).toEqual([]);
-    expect(result.event).toEqual({ t: 10, type: 'skill', actor: 'harry', name: 'Crowbar Work' });
+    expect(result.event).toEqual({ t: 10, type: 'skill', actor: 'ronald', name: 'Crowbar Work' });
   });
 
   it('errors on a class row with no class', () => {
-    const result = rowToEvent(sheetRow({ type: 'class', actor: 'harry' }), rowCtx());
+    const result = rowToEvent(sheetRow({ type: 'class', actor: 'ronald' }), rowCtx());
     expect(result.errors).toEqual(['empty required field: class (field1) on class']);
     expect(result.event).toBeNull();
   });
 
   it('splits both hotlist lists', () => {
     const result = rowToEvent(
-      sheetRow({ type: 'hotlist', actor: 'harry', field1: 'A; B', field2: 'C' }),
+      sheetRow({ type: 'hotlist', actor: 'ronald', field1: 'A; B', field2: 'C' }),
       rowCtx(),
     );
     expect(result.event).toEqual({
       t: 10,
       type: 'hotlist',
-      actor: 'harry',
+      actor: 'ronald',
       add: ['A', 'B'],
       remove: ['C'],
     });
@@ -509,15 +509,15 @@ describe('rowToEvent', () => {
   it('maps an equip row and errors without an item', () => {
     expect(
       rowToEvent(
-        sheetRow({ type: 'equip', actor: 'harry', field1: 'torso', field2: 'Patched Jacket' }),
+        sheetRow({ type: 'equip', actor: 'ronald', field1: 'torso', field2: 'Patched Jacket' }),
         rowCtx(),
       ),
     ).toMatchObject({
-      event: { t: 10, type: 'equip', actor: 'harry', slot: 'torso', item: 'Patched Jacket' },
+      event: { t: 10, type: 'equip', actor: 'ronald', slot: 'torso', item: 'Patched Jacket' },
       errors: [],
     });
     const missing = rowToEvent(
-      sheetRow({ type: 'equip', actor: 'harry', field1: 'torso' }),
+      sheetRow({ type: 'equip', actor: 'ronald', field1: 'torso' }),
       rowCtx(),
     );
     expect(missing.errors).toEqual(['empty required field: item (field2) on equip']);
@@ -526,17 +526,17 @@ describe('rowToEvent', () => {
 
   it('maps an unequip row with and without its item', () => {
     expect(
-      rowToEvent(sheetRow({ type: 'unequip', actor: 'harry', field1: 'hands' }), rowCtx()).event,
-    ).toEqual({ t: 10, type: 'unequip', actor: 'harry', slot: 'hands' });
+      rowToEvent(sheetRow({ type: 'unequip', actor: 'ronald', field1: 'hands' }), rowCtx()).event,
+    ).toEqual({ t: 10, type: 'unequip', actor: 'ronald', slot: 'hands' });
     expect(
       rowToEvent(
-        sheetRow({ type: 'unequip', actor: 'harry', field1: 'accessory', field2: 'Lucky Rabbit Foot' }),
+        sheetRow({ type: 'unequip', actor: 'ronald', field1: 'accessory', field2: 'Lucky Rabbit Foot' }),
         rowCtx(),
       ).event,
     ).toEqual({
       t: 10,
       type: 'unequip',
-      actor: 'harry',
+      actor: 'ronald',
       slot: 'accessory',
       item: 'Lucky Rabbit Foot',
     });
@@ -544,18 +544,18 @@ describe('rowToEvent', () => {
 
   it('warns when an accessory unequip names no item, and still maps the row', () => {
     const result = rowToEvent(
-      sheetRow({ type: 'unequip', actor: 'harry', field1: 'accessory' }),
+      sheetRow({ type: 'unequip', actor: 'ronald', field1: 'accessory' }),
       rowCtx(),
     );
     expect(result.warnings.some((w) => w.includes('accessory with no item'))).toBe(true);
     expect(result.errors).toEqual([]);
-    expect(result.event).toEqual({ t: 10, type: 'unequip', actor: 'harry', slot: 'accessory' });
+    expect(result.event).toEqual({ t: 10, type: 'unequip', actor: 'ronald', slot: 'accessory' });
   });
 
   it('errors on an unknown gear slot in either direction', () => {
     for (const type of ['equip', 'unequip']) {
       const result = rowToEvent(
-        sheetRow({ type, actor: 'harry', field1: 'cape', field2: 'Velvet Cloak' }),
+        sheetRow({ type, actor: 'ronald', field1: 'cape', field2: 'Velvet Cloak' }),
         rowCtx(),
       );
       expect(result.errors).toEqual([
@@ -579,7 +579,7 @@ describe('rowToEvent', () => {
       rowToEvent(
         sheetRow({
           type: 'npc',
-          actor: 'harry',
+          actor: 'ronald',
           field1: 'the-hoarder',
           field2: 'update: lair , weakness',
           field3: 'It cannot see red.',
@@ -593,7 +593,7 @@ describe('rowToEvent', () => {
       action: 'update',
       unlock: ['lair', 'weakness'],
       note: 'It cannot see red.',
-      actor: 'harry',
+      actor: 'ronald',
     });
   });
 

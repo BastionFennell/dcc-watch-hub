@@ -3,85 +3,6 @@
   "initialState": {
     "party": [
       {
-        "id": "harry",
-        "name": "Harold \"Harry\" Wallace",
-        "handle": "Harry",
-        "player": "Bobby",
-        "level": 1,
-        "hp": {
-          "current": 10,
-          "max": 10
-        },
-        "portrait": "/img/crawlers/harry.png",
-        "class": null,
-        "inventory": [
-          "Netbook w satchel case",
-          "Handheld retro emulator",
-          "Bag of weed/vape",
-          "Dumpy clothes"
-        ],
-        "rank": null,
-        "race": "Human-ish",
-        "pronouns": "he/them",
-        "crawlerNumber": "1651655",
-        "stats": {
-          "str": 3,
-          "int": 6,
-          "con": 5,
-          "dex": 2,
-          "cha": 4
-        },
-        "mana": {
-          "current": 6,
-          "max": 6
-        },
-        "hotlist": [],
-        "skills": [
-          {
-            "name": "Streetwise",
-            "rank": 1
-          },
-          {
-            "name": "Stealth",
-            "rank": 1
-          },
-          {
-            "name": "Investigation",
-            "rank": 1
-          },
-          {
-            "name": "Fabricate",
-            "rank": 1
-          },
-          {
-            "name": "Deception",
-            "rank": 3
-          },
-          {
-            "name": "Performance (writing)",
-            "rank": 3
-          },
-          {
-            "name": "Determine Value",
-            "rank": 2
-          },
-          {
-            "name": "Perception",
-            "rank": 2
-          },
-          {
-            "name": "Soul Collector (Fabricate Ending)",
-            "rank": 3
-          },
-          {
-            "name": "Unarmed",
-            "rank": 3
-          }
-        ],
-        "gear": {},
-        "art": "/img/crawlers/harry-art.png"
-      },
-      {
         "id": "mimi",
         "name": "Mimi Rivers",
         "handle": "Crawler Mimi",
@@ -493,14 +414,14 @@
     {
       "t": 72,
       "type": "loot",
-      "actor": "harry",
+      "actor": "ronald",
       "item": "Enchanted Crowbar",
       "source": "Bronze Adventurer Box"
     },
     {
       "t": 78,
       "type": "equip",
-      "actor": "harry",
+      "actor": "ronald",
       "slot": "hands",
       "item": "Enchanted Crowbar"
     },
@@ -516,7 +437,7 @@
     {
       "t": 105,
       "type": "hp",
-      "actor": "harry",
+      "actor": "ronald",
       "current": 6,
       "max": 10
     },
@@ -580,7 +501,7 @@
     {
       "t": 154,
       "type": "achievement",
-      "actor": "harry",
+      "actor": "ronald",
       "title": "Gate Crasher",
       "desc": "Killed 10 mobs with a door."
     },
@@ -615,7 +536,7 @@
     {
       "t": 179,
       "type": "level_up",
-      "actor": "harry",
+      "actor": "ronald",
       "level": 2
     },
     {
@@ -693,7 +614,7 @@
     {
       "t": 240,
       "type": "class",
-      "actor": "harry",
+      "actor": "veil",
       "class": "Compensated Anarchist"
     },
     {
@@ -719,7 +640,7 @@
     {
       "t": 260,
       "type": "rank",
-      "actor": "harry",
+      "actor": "veil",
       "rank": 8890
     },
     {
@@ -746,7 +667,7 @@
     {
       "t": 290,
       "type": "hotlist",
-      "actor": "harry",
+      "actor": "veil",
       "add": [
         "The Hoarder"
       ],
@@ -755,7 +676,7 @@
     {
       "t": 297,
       "type": "hp",
-      "actor": "harry",
+      "actor": "ronald",
       "current": 2,
       "max": 10
     },
@@ -833,7 +754,7 @@
     {
       "t": 394,
       "type": "hp",
-      "actor": "harry",
+      "actor": "ronald",
       "current": 9,
       "max": 10
     },
@@ -847,7 +768,7 @@
     {
       "t": 410,
       "type": "rank",
-      "actor": "harry",
+      "actor": "veil",
       "rank": 7215
     },
     {
@@ -878,7 +799,7 @@
     {
       "t": 461,
       "type": "inventory",
-      "actor": "harry",
+      "actor": "ronald",
       "add": [
         "Torch"
       ],
@@ -889,14 +810,14 @@
     {
       "t": 463,
       "type": "unequip",
-      "actor": "harry",
+      "actor": "ronald",
       "slot": "hands",
       "item": "Enchanted Crowbar"
     },
     {
       "t": 465,
       "type": "equip",
-      "actor": "harry",
+      "actor": "ronald",
       "slot": "hands",
       "item": "Torch"
     },
@@ -944,7 +865,7 @@
     {
       "t": 520,
       "type": "rank",
-      "actor": "harry",
+      "actor": "veil",
       "rank": 6402
     },
     {
@@ -971,7 +892,7 @@
     {
       "t": 550,
       "type": "hotlist",
-      "actor": "harry",
+      "actor": "veil",
       "add": [
         "Bronze Box Runner"
       ],
@@ -987,7 +908,7 @@
     {
       "t": 572,
       "type": "hotlist",
-      "actor": "harry",
+      "actor": "veil",
       "add": [
         "The Hoarder",
         "The Doorway",

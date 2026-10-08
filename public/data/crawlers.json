@@ -3,34 +3,11 @@
     "Confirm the handles: they are all \"Dungeon Crawler {first name}\" placeholders today.",
     "concept: one or two lines per crawler from the character docs (only ronald's is real; the rest are empty and render nothing).",
     "pockets: what was in their pockets when the world ended, one line per item, from the character docs (empty today, renders nothing).",
-    "player.pronouns, player.bio (two sentences) and player.links for all five.",
+    "player.pronouns, player.bio (two sentences) and player.links for all four.",
     "player.bust: a photo of the real person, if they want one on the page.",
     "show.json: trailerYoutubeId, the real premiereAt / hubLiveAt dates, and links.tiktok / links.bluesky / links.instagram."
   ],
   "crawlers": [
-    {
-      "id": "harry",
-      "name": "The Writer",
-      "characterName": "Harold \"Harry\" Wallace",
-      "handle": "Dungeon Crawler Harry",
-      "player": {
-        "name": "Bobby"
-      },
-      "concept": "",
-      "pockets": [],
-      "entryAchievement": {
-        "title": "Better Living Through Chemistry",
-        "text": "You entered the Dungeon carrying enough assorted pharmaceuticals to make both a pharmacist and a narcotics officer deeply uncomfortable. Prescription pills. Over the counter medication. Recreational substances. You weren't prepared for the apocalypse. You were prepared for Tuesday.",
-        "box": "Gold Junkie Box",
-        "item": "Field Testing Kit",
-        "reward": "You've been awarded a Gold Junkie Box. Inside: a Field Testing Kit. It works as a Tier 0 alchemy table for simple alchemical tasks and has one special talent: it turns mundane drugs into Dungeon Drugs. We assume you'll find a use for that."
-      },
-      "art": {
-        "bust": "/img/crawlers/harry.png",
-        "full": "/img/crawlers/harry-art.png"
-      },
-      "pronouns": "he/them"
-    },
     {
       "id": "mimi",
       "name": "The Actress",
