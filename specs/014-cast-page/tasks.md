@@ -292,3 +292,19 @@ render (`lulu-edit-375.png`). Both edits reverted; `git diff --stat public/data`
 
 **Left over**: the hydration fallback on marketing pages, chunk CSS for JavaScript-off readers,
 and the hub's 1 px tooltip overflow at 320 px (all above, all from before 014).
+
+## Follow-up fixes (2026-11-18, same branch)
+
+Two of the leftovers above are fixed; the notes above describe the state before these commits.
+
+- **Hydration fallback** (`fix(site): load a prerendered route's chunks before hydrating`):
+  `src/main.tsx` awaits `preloadRoute(route)` before `hydrateRoot`. Measured on `vite preview`:
+  `<main>` on `/cast` and `/community` used to empty at about 45 ms and refill at about 280 ms; it
+  is now never emptied.
+- **Chunk CSS** (`fix(site): link each prerendered route's stylesheets in its HTML`): the client
+  build writes a Vite manifest, `scripts/prerender.mjs` (`assetsFor`) links the route's
+  stylesheets and preloads its chunks, and `scripts/postbuild.mjs` deletes the manifest. Measured
+  at 375 px on all six route shapes, scripts on and off: styled, no duplicate stylesheet links, no
+  console errors, no sideways scroll; `/cast/#danny` lands at 64 px in both modes.
+
+Still left over: the hub's 1-4 px tooltip overflow on `/ep/1` below 325 px.

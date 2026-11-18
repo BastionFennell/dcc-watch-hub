@@ -148,6 +148,13 @@ shared link and not a byte of the front door is downloaded. The prerenderer reso
 before it renders (`src/site/pages/lazy.tsx` explains the two-state wrapper), because
 `renderToString` writes a Suspense fallback and never comes back.
 
+Two things keep a prerendered page whole in the browser. The prerenderer reads Vite's manifest and
+links each route's own stylesheets (and preloads its chunks) in the HTML, so the page is styled
+before any script runs, and stays styled with scripts off (`assetsFor` in `scripts/prerender.mjs`).
+And `src/main.tsx` loads the route's chunks before it hydrates (`src/site/pages/preloadRoute.ts`),
+because a page that suspends mid-hydration loses its server markup until the chunk arrives. A new
+marketing route needs a line in both `PAGE_MODULES` and `preloadRoute`; a test checks the first.
+
 ### The data behind it
 
 **`public/data/show.json`** - the hub's file, with the front door's fields added:

@@ -16,7 +16,8 @@
  *  3. prerender - real HTML for the marketing routes, with the data embedded.
  *  4. OG images - needs a system Chrome; skipped with a warning without one.
  *  5. `sitemap.xml` + `robots.txt`, from the prerenderer's own route list.
- *  6. `dist/server` is deleted: it is the SSR bundle, and nothing serves it.
+ *  6. `dist/server` and `dist/.vite` are deleted: the SSR bundle and the Vite
+ *     manifest the prerenderer read are build tools, and nothing serves them.
  */
 import { access, copyFile, rm } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
@@ -65,4 +66,5 @@ run('sitemap', [resolve(root, 'scripts/sitemap.mjs')]);
 
 // 6. The SSR bundle is a build tool, not a page.
 await rm(resolve(dist, 'server'), { recursive: true, force: true });
-console.log('postbuild: removed dist/server');
+await rm(resolve(dist, '.vite'), { recursive: true, force: true });
+console.log('postbuild: removed dist/server and dist/.vite');
