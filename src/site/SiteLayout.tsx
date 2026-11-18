@@ -11,6 +11,7 @@
 import { Outlet } from 'react-router';
 import { CrawlersProvider } from '../data/CrawlersContext';
 import type { Embedded } from '../data/types';
+import styles from './SiteLayout.module.css';
 
 export interface SiteLayoutProps {
   /** As everywhere else: the browser reads the page, the server is told. */
@@ -20,7 +21,10 @@ export interface SiteLayoutProps {
 export function SiteLayout({ embedded }: SiteLayoutProps) {
   return (
     <CrawlersProvider embedded={embedded}>
-      <Outlet />
+      {/* The front door's look lives on this wrapper (see the stylesheet). */}
+      <div className={styles.site}>
+        <Outlet />
+      </div>
     </CrawlersProvider>
   );
 }

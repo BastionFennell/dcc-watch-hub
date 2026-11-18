@@ -25,24 +25,42 @@
   min-width: 0;
 }
 
+/* A gold label: dark ink on the action colour, never gold ink on the canvas. */
 .eyebrow {
+  align-self: flex-start;
+  padding: 5px 10px;
+  background: var(--action, transparent);
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
-  letter-spacing: 0.16em;
+  font-weight: 800;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--system-pill-fg);
+  color: var(--action-ink, var(--system-pill-fg));
 }
 
 .pageTitle {
   /* 28 px on a phone: a page title has to outrank the 16 px lead under it. */
   font-size: var(--text-display);
-  font-weight: 700;
-  line-height: 1.15;
+  font-weight: 900;
+  line-height: 1.1;
+  text-transform: uppercase;
 }
 
 .sectionTitle {
   font-size: var(--text-lg);
-  font-weight: 600;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* The gold square that opens every section heading. */
+.sectionTitle::before {
+  content: '';
+  display: inline-block;
+  width: 0.62em;
+  height: 0.62em;
+  margin-right: 0.6em;
+  background: var(--action, var(--brand-2));
 }
 
 .lead {
@@ -94,9 +112,6 @@
     font-size: 40px;
   }
 
-  .sectionTitle {
-    font-size: var(--text-xl);
-  }
 
   .roster {
     grid-template-columns: repeat(4, minmax(0, 1fr));

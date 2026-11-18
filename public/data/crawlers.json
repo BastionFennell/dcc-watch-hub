@@ -25,6 +25,7 @@
         "full": "/img/crawlers/mimi-art.png",
         "lineup": "/img/crawlers/mimi-lineup.webp"
       },
+      "backdrop": "#a81f5c",
       "pronouns": "she/her"
     },
     {
@@ -46,6 +47,7 @@
         "full": "/img/crawlers/ronald-art.png",
         "lineup": "/img/crawlers/ronald-lineup.webp"
       },
+      "backdrop": "#0f8a86",
       "pronouns": "he/him"
     },
     {
@@ -67,6 +69,7 @@
         "full": "/img/crawlers/xo-art.png",
         "lineup": "/img/crawlers/xo-lineup.webp"
       },
+      "backdrop": "#2553c4",
       "pronouns": "he/them"
     },
     {
@@ -88,6 +91,7 @@
         "full": "/img/crawlers/veil-art.png",
         "lineup": "/img/crawlers/veil-lineup.webp"
       },
+      "backdrop": "#d1921c",
       "pronouns": "she/they"
     }
   ]

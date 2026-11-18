@@ -19,9 +19,12 @@
 
 .tagline {
   font-size: 30px;
-  font-weight: 700;
-  line-height: 1.12;
-  letter-spacing: -0.01em;
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1.04;
+  letter-spacing: -0.005em;
+  text-transform: uppercase;
+  text-shadow: 3px 3px 0 var(--brand-2);
   overflow-wrap: anywhere;
 }
 
@@ -39,11 +42,13 @@
   min-height: 44px;
   min-width: 44px;
   padding: 0 var(--space-7);
-  border: var(--border-hairline-2);
+  border: 1px solid var(--brand-line);
   border-radius: var(--radius-md);
-  color: var(--brand-fg);
+  color: var(--text);
   font-size: var(--text-md);
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
@@ -69,9 +74,21 @@
   align-items: center;
   gap: var(--space-6);
   padding: var(--space-7);
-  background: var(--brand-deep);
-  border: 1px solid var(--brand);
+  background: var(--show, var(--brand-deep));
+  border: 1px solid var(--brand-line);
   border-radius: var(--radius-lg);
+  box-shadow: 6px 6px 0 var(--action, transparent);
+  /* Room for the offset shadow, so it never touches the page edge on a phone. */
+  margin-right: 6px;
+}
+
+.discord p {
+  color: #efe6ff;
+}
+
+.discord a {
+  color: #fff;
+  border-color: rgb(255 255 255 / 45%);
 }
 
 .discordText {
@@ -87,17 +104,25 @@
   justify-content: center;
   min-height: 44px;
   padding: 0 var(--space-7);
-  background: var(--brand-2);
-  border: 1px solid var(--brand-line);
+  background: var(--action, var(--brand-2));
+  border: 1px solid var(--action, var(--brand-line));
   border-radius: var(--radius-md);
-  color: var(--brand-fg-2);
+  box-shadow: 4px 4px 0 var(--action-ink, transparent);
+  color: var(--action-ink, var(--brand-fg-2));
   font-size: var(--text-md);
-  font-weight: 600;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
+.discord a.discordCta {
+  color: var(--action-ink, var(--brand-fg-2));
+  border-color: var(--action, var(--brand-line));
+}
+
 .discordCta:hover {
-  background: var(--brand);
+  filter: brightness(1.08);
 }
 
 .discordSocial {
@@ -119,7 +144,7 @@
   }
 
   .tagline {
-    font-size: 44px;
+    font-size: 42px;
   }
 
   .feature {

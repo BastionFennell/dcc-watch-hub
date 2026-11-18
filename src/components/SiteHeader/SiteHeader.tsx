@@ -49,7 +49,11 @@ export function SiteHeader({ show, current }: SiteHeaderProps) {
   const season = show && current ? seasonOf(show, current.id) : 1;
 
   return (
-    <header className={styles.header} data-scrolled={scrolled ? '' : undefined}>
+    <header
+      className={styles.header}
+      data-scrolled={scrolled ? '' : undefined}
+      data-surface={hubRoute ? 'hub' : 'site'}
+    >
       <Link to="/" className={styles.brand}>
         <img
           className={styles.mark}

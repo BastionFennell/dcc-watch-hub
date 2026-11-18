@@ -16,12 +16,12 @@
  * `<article id>` is the `/cast#<id>` anchor; its `scroll-margin-top` keeps the
  * card clear of the sticky header on arrival.
  */
-import { Link } from "react-router";
-import type { CastMember, CrawlerProfile } from "../../data/types";
-import { siteCopy } from "../copy";
-import { asset } from "../media";
-import { CastLinks } from "./CastLinks";
-import styles from "./CastCard.module.css";
+import { Link } from 'react-router';
+import type { CastMember, CrawlerProfile } from '../../data/types';
+import { siteCopy } from '../copy';
+import { asset } from '../media';
+import { CastLinks } from './CastLinks';
+import styles from './CastCard.module.css';
 
 export interface CastCardProps {
   member: CastMember;
@@ -55,7 +55,7 @@ export function CastCard({ member, profile, eager = false }: CastCardProps) {
         alt={member.name}
         width={480}
         height={480}
-        loading={eager ? "eager" : "lazy"}
+        loading={eager ? 'eager' : 'lazy'}
       />
 
       <div className={styles.head}>
@@ -74,10 +74,7 @@ export function CastCard({ member, profile, eager = false }: CastCardProps) {
             </p>
           ))}
           {hasLinks ? (
-            <CastLinks
-              links={member.links}
-              label={siteCopy.castLinksLabel(member.name)}
-            />
+            <CastLinks links={member.links} label={siteCopy.castLinksLabel(member.name)} />
           ) : null}
         </div>
       ) : null}

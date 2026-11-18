@@ -18,6 +18,12 @@
   transition: height 200ms ease;
 }
 
+/* On the front door the header matches that surface: deeper, with a gold rule. */
+.header[data-surface='site'] {
+  background: #06060f;
+  border-bottom: 2px solid #ffc247;
+}
+
 .header[data-scrolled] {
   height: var(--header-h-compact);
 }

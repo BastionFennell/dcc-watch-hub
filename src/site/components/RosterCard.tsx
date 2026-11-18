@@ -6,13 +6,15 @@
  * The three renders differ by `data-variant` on one root element and share
  * every token, class and piece of layout logic below it.
  */
-import { Link } from "react-router";
-import type { CrawlerProfile } from "../../data/types";
-import { asset } from "../media";
-import { siteCopy } from "../copy";
-import styles from "./RosterCard.module.css";
+import { Link } from 'react-router';
+import type { CrawlerProfile } from '../../data/types';
+import { asset } from '../media';
+import { siteCopy } from '../copy';
+import { backdropStyle } from '../backdrop';
+import backdrop from '../backdrop.module.css';
+import styles from './RosterCard.module.css';
 
-export type RosterCardVariant = "card" | "hero" | "og";
+export type RosterCardVariant = 'card' | 'hero' | 'og';
 
 export interface RosterCardProps {
   profile: CrawlerProfile;
@@ -35,21 +37,16 @@ export interface RosterCardProps {
  * here would answer the question before anyone asked it, for every crawler, on
  * a page a stranger can arrive at from a search result.
  */
-export function RosterCard({
-  profile,
-  variant,
-  hook,
-  href,
-  figure = false,
-}: RosterCardProps) {
+export function RosterCard({ profile, variant, hook, href, figure = false }: RosterCardProps) {
   const bust = asset(profile.art.bust);
   const full = asset(profile.art.full ?? profile.art.bust);
 
-  if (variant === "og") {
+  if (variant === 'og') {
     return (
       <div className={styles.root} data-variant="og">
         <img
-          className={styles.ogArt}
+          className={`${styles.ogArt} ${backdrop.backdrop}`}
+          style={backdropStyle(profile)}
           src={full}
           alt=""
           width={420}
@@ -60,25 +57,17 @@ export function RosterCard({
           <p className={styles.ogName}>{profile.name}</p>
           <p className={styles.ogCharacter}>{profile.characterName}</p>
           <p className={styles.ogHandle}>{profile.handle}</p>
-          {hook === undefined || hook === "" ? null : (
-            <p className={styles.ogHook}>{hook}</p>
-          )}
+          {hook === undefined || hook === '' ? null : <p className={styles.ogHook}>{hook}</p>}
         </div>
         <div className={styles.ogMark}>
-          <img
-            src={asset("/img/dcc-mark.svg")}
-            alt=""
-            width={32}
-            height={32}
-            loading="eager"
-          />
+          <img src={asset('/img/dcc-mark.svg')} alt="" width={32} height={32} loading="eager" />
           <span>{siteCopy.siteName}</span>
         </div>
       </div>
     );
   }
 
-  if (variant === "hero") {
+  if (variant === 'hero') {
     return (
       <div className={styles.root} data-variant="hero">
         <img
@@ -102,13 +91,12 @@ export function RosterCard({
       className={styles.root}
       data-variant="card"
       to={href ?? `/crawlers/${profile.id}`}
+      style={backdropStyle(profile)}
     >
       {figure ? (
-        <span className={styles.cardFigure}>
+        <span className={`${styles.cardFigure} ${backdrop.backdrop}`}>
           <img
-            src={asset(
-              profile.art.lineup ?? profile.art.full ?? profile.art.bust,
-            )}
+            src={asset(profile.art.lineup ?? profile.art.full ?? profile.art.bust)}
             alt=""
             /* On /crawlers these four are the page, and above the fold. */
             loading="eager"
@@ -116,7 +104,7 @@ export function RosterCard({
         </span>
       ) : (
         <img
-          className={styles.cardArt}
+          className={`${styles.cardArt} ${backdrop.backdrop}`}
           src={bust}
           alt=""
           /* Roster cards sit below the fold on every page that uses them, and a

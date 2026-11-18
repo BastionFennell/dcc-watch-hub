@@ -67,6 +67,11 @@
               }
             }
           },
+          "backdrop": {
+            "comment": "The crawler's own colour behind their art.",
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          },
           "og": { "type": "string", "pattern": "^/.+[.](png|jpg|jpeg|webp)$" }
         }
       }

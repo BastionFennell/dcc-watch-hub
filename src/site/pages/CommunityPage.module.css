@@ -47,8 +47,10 @@
   align-items: center;
   gap: var(--space-7);
   padding: 24px;
-  background: var(--brand-deep);
-  border: 1px solid rgb(120 113 202 / 35%); /* --brand-line */
+  background: var(--show, var(--brand-deep));
+  border: 1px solid var(--brand-line);
+  box-shadow: 6px 6px 0 var(--action, transparent);
+  margin-right: 6px;
   border-radius: var(--radius-lg);
   min-width: 0;
 }
@@ -61,7 +63,7 @@
 }
 
 .discordBody {
-  color: var(--brand-fg);
+  color: #efe6ff;
   font-size: 15px;
   line-height: 1.55;
 }
@@ -74,19 +76,22 @@
   width: 100%;
   min-height: 46px;
   padding: 0 var(--space-8);
-  border: 1px solid var(--brand-line);
+  border: 1px solid var(--action, var(--brand-line));
   border-radius: var(--radius-md);
-  background: var(--brand-2);
-  color: var(--brand-fg-2);
+  background: var(--action, var(--brand-2));
+  box-shadow: 4px 4px 0 var(--action-ink, transparent);
+  color: var(--action-ink, var(--brand-fg-2));
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   text-align: center;
   white-space: nowrap;
 }
 
 .big:hover {
-  background: var(--brand);
-  color: var(--brand-fg-2);
+  filter: brightness(1.08);
+  color: var(--action-ink, var(--brand-fg-2));
 }
 
 /* The global ring is --brand-line, which is the fill's own hue: this one shows. */
