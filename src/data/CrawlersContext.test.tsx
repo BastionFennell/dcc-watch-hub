@@ -43,7 +43,7 @@ function embed(payload: unknown): void {
 }
 
 function Probe() {
-  const { profiles, status, loading, error, cast } = useCrawlers();
+  const { profiles, status, loading, error, cast, castSeeded } = useCrawlers();
   return (
     <ul>
       <li data-testid="loading">{String(loading)}</li>
@@ -53,6 +53,7 @@ function Probe() {
         {status === null ? 'none' : Object.keys(status.crawlers).join(',')}
       </li>
       <li data-testid="cast">{cast.map((member) => member.id).join(',')}</li>
+      <li data-testid="castSeeded">{String(castSeeded)}</li>
     </ul>
   );
 }
@@ -89,6 +90,8 @@ describe('CrawlersProvider (seeded)', () => {
     expect(screen.getByTestId('profiles')).toHaveTextContent('stuntman,harry');
     expect(screen.getByTestId('status')).toHaveTextContent('stuntman,harry');
     expect(screen.getByTestId('cast')).toHaveTextContent('danny,marcus,voice');
+    // The cast page reads this to leave a native fragment jump alone (T1419).
+    expect(screen.getByTestId('castSeeded')).toHaveTextContent('true');
     expect(asked).toEqual([]);
   });
 
@@ -163,6 +166,7 @@ describe('CrawlersProvider (seeded)', () => {
     await waitFor(() => expect(screen.getByTestId('cast')).toHaveTextContent('danny,marcus,voice'));
     expect(asked).toHaveLength(1);
     expect(asked[0]).toMatch(/\/data\/cast\.json$/);
+    expect(screen.getByTestId('castSeeded')).toHaveTextContent('false');
   });
 });
 
@@ -181,6 +185,8 @@ describe('CrawlersProvider (fetched)', () => {
     expect(asked.some((url) => url.includes('status.json'))).toBe(true);
     await waitFor(() => expect(screen.getByTestId('cast')).toHaveTextContent('danny,marcus,voice'));
     expect(asked.some((url) => url.includes('cast.json'))).toBe(true);
+    // Fetched, not seeded: a client-side arrival, so the cast page does the scroll.
+    expect(screen.getByTestId('castSeeded')).toHaveTextContent('false');
   });
 
   /* A deploy with no cast.json: no cards, no credit, and no error either. */

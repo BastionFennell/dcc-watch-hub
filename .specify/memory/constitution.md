@@ -1,4 +1,7 @@
 <!--
+Sync Impact 1.5.2 (2026-11-17): PATCH - Principle VIII's route list gains `/cast` (the cast page,
+feature 014) and its first bullet names `cast.json` beside `show.json` and `crawlers.json`. No rule
+changes. CLAUDE.md already points at 014.
 Sync Impact 1.5.1 (2026-09-25): PATCH - reveal store dropped: the dossier keeps reveal state in
 memory for the page visit only, so the 1.5.0 storage exception is reverted and the storage rule
 reads "playhead and viewer preferences only" again. Principle VIII's "Absence is never a signal"
@@ -149,11 +152,11 @@ is governed by Principles I, II, IV, and VI, and by these rules of its own:
 
 ### VIII. The Front Door Is the Same Product
 
-Marketing routes (`/`, `/watch`, `/crawlers`, `/crawlers/:id`, `/community`) are the hub's
-front door, not a second site:
+Marketing routes (`/`, `/watch`, `/crawlers`, `/crawlers/:id`, `/cast`, `/community`) are the
+hub's front door, not a second site:
 
-- **Same tokens, header, and data.** They read `show.json` and `crawlers.json`; they never fork
-  the design system. The System-box callout is reserved for things the System "announces".
+- **Same tokens, header, and data.** They read `show.json`, `crawlers.json` and `cast.json`; they
+  never fork the design system. The System-box callout is reserved for things the System "announces".
 - **Static and prerendered.** Each marketing route ships real HTML with per-route title, description,
   canonical, and OpenGraph tags, and a generated `/og/*.png`. Hub routes stay client-rendered.
 - **Build-time tooling may use devDependencies** (a renderer, a headless browser) as long as nothing
@@ -207,4 +210,4 @@ Compliance is reviewed at every plan (Constitution Check gate) and at implementa
 (acceptance checklist). Use `CLAUDE.md` for runtime development guidance and pointers to the
 active plan.
 
-**Version**: 1.5.1 | **Ratified**: 2026-09-14 | **Last Amended**: 2026-09-25
+**Version**: 1.5.2 | **Ratified**: 2026-09-14 | **Last Amended**: 2026-11-17

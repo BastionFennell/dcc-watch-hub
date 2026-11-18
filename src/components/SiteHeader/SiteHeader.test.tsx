@@ -29,7 +29,7 @@ describe('isHubRoute', () => {
     for (const path of ['/ep/1', '/ep/12?t=30', '/codex', '/registry', '/studio', '/studio/ep/1']) {
       expect(isHubRoute(path)).toBe(true);
     }
-    for (const path of ['/', '/watch', '/crawlers', '/crawlers/harry', '/community']) {
+    for (const path of ['/', '/watch', '/crawlers', '/crawlers/harry', '/cast', '/community']) {
       expect(isHubRoute(path)).toBe(false);
     }
   });
@@ -47,23 +47,46 @@ describe('SiteHeader', () => {
       'href',
       '/crawlers',
     );
+    expect(within(banner).getByRole('link', { name: siteCopy.navCast })).toHaveAttribute(
+      'href',
+      '/cast',
+    );
     expect(within(banner).getByRole('link', { name: siteCopy.navCommunity })).toHaveAttribute(
       'href',
       '/community',
     );
+    // Cast sits between Crawlers and Community (014 FR-002).
+    const nav = within(banner).getByRole('navigation', { name: copy.siteNavLabel });
+    expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual([
+      siteCopy.navWatch,
+      siteCopy.navCrawlers,
+      siteCopy.navCast,
+      siteCopy.navCommunity,
+    ]);
   });
 
   it('carries the same site nav on a hub route', () => {
     renderHeader('/ep/1');
     const banner = screen.getByRole('banner');
-    for (const name of [siteCopy.navWatch, siteCopy.navCrawlers, siteCopy.navCommunity]) {
+    for (const name of [
+      siteCopy.navWatch,
+      siteCopy.navCrawlers,
+      siteCopy.navCast,
+      siteCopy.navCommunity,
+    ]) {
       expect(within(banner).getByRole('link', { name })).toBeInTheDocument();
     }
   });
 
   it('marks the current section', () => {
-    renderHeader('/crawlers');
+    const { unmount } = renderHeader('/crawlers');
     expect(screen.getByRole('link', { name: siteCopy.navCrawlers })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    unmount();
+    renderHeader('/cast');
+    expect(screen.getByRole('link', { name: siteCopy.navCast })).toHaveAttribute(
       'aria-current',
       'page',
     );

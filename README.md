@@ -125,7 +125,7 @@ with a populated feed and no network.
 ## The front door
 
 `/` is no longer the episode list. Since feature 011 the site opens with a marketing front door -
-five static, prerendered routes whose job is to convert a stranger in ten seconds - and the hub
+six static, prerendered routes whose job is to convert a stranger in ten seconds - and the hub
 (`/ep/:id`, `/codex`, `/studio/**`) is what they lead into. Same header, same tokens, same
 `show.json`: a visitor should not be able to tell where "site" ends and "viewer" begins
 (constitution VIII).
@@ -135,10 +135,11 @@ five static, prerendered routes whose job is to convert a stranger in ten second
 | `/` | Hero (tagline, pitch, the gated CTA pair, a click-to-play trailer), the four roster cards, a "New to Dungeon Crawler Carl?" System box, the Discord strip with the cadence, the footer |
 | `/watch` | Every episode grouped by floor, oldest first (floors ascending, episodes ascending inside a floor - 011 revision 3), each row with its still, runtime, spoiler-safe summary and gated CTA. A "Jump to latest" button under the heading scrolls to the newest row (`id="ep-{id}"`, marked `LATEST`) and focuses its link; a "Back to top" link closes the list. **This is the old `/` archive.** |
 | `/crawlers` | The roster grid (2 columns at 375 px, 4 across on a laptop). Status filter chips appear only when more than one status exists |
-| `/crawlers/:id` | One crawler (redesigned in 011 revision 2): a portrait / text hero with the archetype, the name, the handle, the "Played by" credit and one "Start at Episode 1" CTA, then whichever of concept, pockets and the entry achievement have anything in them (the achievement carries no section label of its own), then the prev/next bar. No floor, no level, no "alive" pill - and no placeholders |
+| `/crawlers/:id` | One crawler (redesigned in 011 revision 2): a portrait / text hero with the archetype, the name, the handle, the "Played by" credit (since 014: the player's headshot and their name, linking to their `/cast` card) and one "Start at Episode 1" CTA, then whichever of concept, pockets and the entry achievement have anything in them (the achievement carries no section label of its own), then the prev/next bar. No floor, no level, no "alive" pill - and no placeholders |
+| `/cast` | The real people behind the show (014): one card per person, in `cast.json` order - headshot, name, role, pronouns, then their bio and links when they have any. Each card is `/cast#<id>`. See [The cast page](#the-cast-page-014) |
 | `/community` | The single link every social bio points at: Discord first, the platform row, the cadence, and one paragraph on how to help |
 
-All five are prerendered to real HTML at build time (`dist/watch/index.html`, and so on), so a
+All six are prerendered to real HTML at build time (`dist/watch/index.html`, and so on), so a
 scraper that runs no JavaScript still gets the page, its `<title>`, its description and its
 OpenGraph card. Hub routes stay client-rendered and are not in the sitemap.
 
@@ -172,13 +173,16 @@ crawler id (`mimi`, `ronald`, `xo`, `veil`) so the live status line can join on 
 | `name` | The archetype ("The Stuntman") |
 | `characterName` | The character ("Ronald Hudson") |
 | `handle` | "Dungeon Crawler Ronald" |
-| `player` | `{ name, pronouns?, bio?, bust?, links? }` - the real person, kept short |
 | `concept` | One or two lines from the character doc |
 | `pockets` | A list: what was in their pockets when the world ended |
 | `entryAchievement` | `{ title, text, box?, item? }` - the System's words, verbatim. This is the page's centrepiece |
 | `art` | `{ bust, full? }` - `bust` is the 192 px roster square, `full` the crawler page hero |
 | `og` | Optional. Defaults to the generated `/og/crawler-{id}.png` |
 | `status` | `alive \| dead \| fused \| unknown`, **authored by hand**. Death is never inferred from an event log |
+
+The roster says nothing about the people who play it: since 014 a crawler has no `player`. Each
+player lives in `public/data/cast.json` and names the crawler they play - see
+[The cast page](#the-cast-page-014).
 
 **`dist/data/status.json`** (generated, never committed) - `{ generatedAt, episodeId, crawlers, appearances }`.
 `scripts/build-status.ts` runs the hub reducer to the end of the newest episode past its
@@ -240,7 +244,7 @@ Three custom events, all from `src/site/analytics.ts`:
 | Event | Props | Fired when |
 |---|---|---|
 | `hub_open` | `{ episode }` | A gated CTA pointing at `/ep/:id` is clicked |
-| `outbound` | `{ to, episode? }` | A link leaves the site: YouTube, Discord, TikTok, Bluesky, Instagram |
+| `outbound` | `{ to, episode? }` | A link leaves the site: YouTube, Discord, TikTok, Bluesky, Instagram, or a cast member's link hub (`to: 'links'`) |
 | `crawler_view` | `{ crawler }` | A crawler page mounts |
 
 ### The crawler dossier - "Where are they now?" (012)
@@ -331,6 +335,55 @@ A deploy with no aired episode yet - or a crawler whose file has not landed - re
 and one line, "The System files its first report after Episode 1." No panel, no rows, nothing to
 count. `dossierFor(id) === null` is that state, and it is never a statement about anyone.
 
+### The cast page (014)
+
+`/cast` introduces the real people behind the show - the four players and the voice of the System -
+one card each. Everything on a card comes from **`public/data/cast.json`**; the page's own words
+(title, lead, "Plays …") are in `src/site/copy.ts`. Changing a person never needs a code change.
+
+```json
+{
+  "id": "madio",
+  "name": "Madio",
+  "pronouns": "he/him",
+  "crawlerId": "ronald",
+  "bio": ["First paragraph.", "Second paragraph."],
+  "photo": { "card": "/img/cast/madio.webp", "credit": "/img/cast/madio-sm.webp" },
+  "links": [{ "kind": "links", "url": "https://beacons.ai/madiotu" }]
+}
+```
+
+| Field | What it is |
+|---|---|
+| `id` | Lowercase slug. The card's address: `/cast#madio` |
+| `name` | The short name the site uses; it heads the card and is the photo's alt text |
+| `pronouns` | Optional, slash form (`she/they`) |
+| `crawlerId` | The crawler they play. The role line reads "Plays {character name}" and links to the crawler page, whose "Played by" credit links back here |
+| `role` | For someone who plays no crawler ("The System AI"); plain text. Exactly one of `crawlerId` / `role` |
+| `bio` | Paragraphs, one string each. `[]` = not written yet, and the card simply has no bio |
+| `photo` | `card` (480 x 480, shown at up to 200 px) and `credit` (96 x 96, the 40 px crawler-page headshot) |
+| `links` | In display order. `[]` = no link row at all |
+
+How to:
+
+- **Add a bio**: put each paragraph in the member's `bio` array, as written (first person stays
+  first person).
+- **Add a link**: append `{ "kind": "instagram", "url": "https://..." }` to `links`. Kinds are
+  `youtube`, `discord`, `tiktok`, `bluesky`, `instagram`, and `links` for a link hub or a personal
+  site (its pill reads "Links"). Addresses must be `https://`. Links open in a new tab with
+  `rel="noopener"` and count as `outbound` clicks.
+- **Add or replace a photo**: crop square around the face, then ship two WebP files,
+  `public/img/cast/<id>.webp` at 480 x 480 (**at most 45 kB**) and `<id>-sm.webp` at 96 x 96 (**at
+  most 8 kB**). `cwebp -q 80` gets there; lower `-q` if a file is over. `cwebp` strips EXIF and
+  GPS by default - keep it that way.
+- **Reorder**: the array order is the page order.
+
+Then run **`npm run lint:cast`** (also part of `npm test` and `prebuild`). It fails, naming the
+member, on a duplicate or non-slug id, both or neither of `crawlerId` / `role`, a crawler that does
+not exist, a crawler with no player or two, a missing or over-budget photo, an unknown link kind, a
+non-`https` address, pronouns not in slash form, or an empty bio paragraph. In the browser the page
+is lenient instead: a bad member or link is dropped with a console warning, never a blank page.
+
 ### Author to fill
 
 `public/data/crawlers.json` carries its own list in a top-level `"todo"` array, reproduced here:
@@ -338,17 +391,19 @@ count. `dossierFor(id) === null` is that state, and it is never a statement abou
 1. Confirm the handles - they are all "Dungeon Crawler {first name}" placeholders today.
 2. `concept`: one or two lines per crawler from the character docs (only Ronald's is written).
 3. `pockets`: what was in their pockets when the world ended, one line per item (none written yet).
-4. `player.pronouns`, `player.bio` (two sentences) and `player.links` for all four.
-5. `player.bust`: a photo of the real person, if they want one on the page.
-6. `show.json`: `trailerYoutubeId`, the real `premiereAt` / `hubLiveAt` dates, and
+4. `show.json`: `trailerYoutubeId`, the real `premiereAt` / `hubLiveAt` dates, and
    `links.tiktok` / `links.bluesky` / `links.instagram`.
+
+The people (bios, links, photos) are no longer on this list: they live in `public/data/cast.json`,
+which carries its own `"todo"` (Lulu's and Bastion's bios and links, Sarah's preferred link). See
+[The cast page](#the-cast-page-014).
 
 And outside the data files:
 
-7. The domain. `VITE_SITE_URL` defaults to `https://dungeoncrawlcast.com`; registering it is not
+5. The domain. `VITE_SITE_URL` defaults to `https://dungeoncrawlcast.com`; registering it is not
    something this repo can do.
-8. The Plausible site, if analytics is wanted (`VITE_PLAUSIBLE_DOMAIN`).
-9. Point every social bio at `/community`, which is the URL that page exists for.
+6. The Plausible site, if analytics is wanted (`VITE_PLAUSIBLE_DOMAIN`).
+7. Point every social bio at `/community`, which is the URL that page exists for.
 
 `entryAchievement` is done: all four are transcribed verbatim from the author's notes, with the
 `box`, the `item` and the `reward` paragraph the System read out.

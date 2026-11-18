@@ -1,6 +1,7 @@
 /**
  * `/crawlers/:id` - one crawler, and the player behind them (011 §3.4, R2).
- * Since 014 the player is only named here: who they are lives on `/cast`.
+ * Since 014 the player is only named here, with a face and a link: who they
+ * are lives on their `/cast` card.
  *
  * Revision 2's two rules shape the whole page. **Empty renders nothing**: a
  * section whose data the author has not written yet prints no heading, no
@@ -29,7 +30,7 @@ import { GatedCta } from '../components/GatedCta';
 import { SiteFooter } from '../components/SiteFooter';
 import type { ShowLinks } from '../../data/types';
 import { firstEpisode } from '../gate';
-import { playerOf } from '../cast';
+import { castAnchor, playerOf } from '../cast';
 import page from './page.module.css';
 import styles from './CrawlerPage.module.css';
 
@@ -119,11 +120,26 @@ export function CrawlerPage() {
             </p>
           </div>
 
+          {/*
+           * 014: a face and a name, and the name leads to the card. The photo
+           * is `alt=""` because the name is right beside it, and eager because
+           * the credit is above the fold.
+           */}
           {player === undefined ? null : (
             <div className={styles.credit}>
+              <img
+                className={styles.creditPhoto}
+                src={asset(player.photo.credit)}
+                alt=""
+                width={40}
+                height={40}
+                loading="eager"
+              />
               <p className={styles.creditLine}>
                 <span className={styles.creditPrefix}>{siteCopy.playedBy} </span>
-                <span className={styles.playerName}>{player.name}</span>
+                <Link className={styles.playerName} to={castAnchor(player.id)}>
+                  {player.name}
+                </Link>
               </p>
             </div>
           )}

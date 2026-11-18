@@ -1,0 +1,112 @@
+/*
+ * One cast card (014). Phone: the 96 px headshot beside name, role and
+ * pronouns, with the bio and links running the card's full width under both.
+ * 640 px up: a 200 px photo column on the left and every line of text to its
+ * right. Cards are never forced to one height - a bio of five lines and a card
+ * with none both look finished.
+ */
+.card {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  grid-template-areas: 'photo head' 'body body';
+  align-items: center;
+  column-gap: var(--space-7);
+  /*
+   * No row gap: a card with no bio and no links has an empty body row, and a
+   * gap above it would pad the bottom of the card twice. The body carries its
+   * own space instead, so it only exists when the body does.
+   */
+  row-gap: 0;
+  padding: var(--space-7);
+  background: var(--panel);
+  border: var(--border-hairline);
+  border-radius: var(--radius-lg);
+  min-width: 0;
+  /*
+   * `/cast#<id>` lands clear of the sticky header: its tall 48 px state, not
+   * the compact one, because a cold load arrives before anything has scrolled.
+   */
+  scroll-margin-top: calc(var(--header-h) + var(--space-7));
+}
+
+.photo {
+  grid-area: photo;
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  /* What shows while the photo loads, or if it never does. */
+  background: var(--brand-deep);
+}
+
+.head {
+  grid-area: head;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.name {
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.role {
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-body);
+}
+
+.roleLink {
+  color: var(--brand-fg);
+}
+
+.roleLink:hover {
+  color: var(--brand-fg-2);
+}
+
+.pronouns {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--ink-muted);
+}
+
+.body {
+  grid-area: body;
+  margin-top: var(--space-7);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+.bio {
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--ink-body);
+}
+
+/* The pills get a little more air than a paragraph break. */
+.body > .bio + ul {
+  margin-top: var(--space-3);
+}
+
+/* -------------------------------------------------------------- 640 px up */
+
+@media (min-width: 640px) {
+  .card {
+    grid-template-columns: 200px minmax(0, 1fr);
+    grid-template-areas: 'photo head' 'photo body';
+    grid-template-rows: auto 1fr;
+    align-items: start;
+    column-gap: var(--space-8);
+    padding: var(--space-8);
+  }
+}

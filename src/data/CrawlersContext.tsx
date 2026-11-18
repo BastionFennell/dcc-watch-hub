@@ -55,6 +55,13 @@ export interface CrawlersContextValue {
    * the cast page shows no cards and a crawler page shows no credit.
    */
   cast: CastMember[];
+  /**
+   * `true` when `cast` came from the prerender payload rather than a fetch,
+   * for the whole visit. The cast page reads it with the history entry: on the
+   * entry the document was loaded with, a seeded `/cast` already had its cards
+   * in the HTML, so the browser made any `/cast#id` jump itself.
+   */
+  castSeeded: boolean;
 }
 
 const CrawlersContext = createContext<CrawlersContextValue>({
@@ -64,6 +71,7 @@ const CrawlersContext = createContext<CrawlersContextValue>({
   error: null,
   dossierFor: () => null,
   cast: [],
+  castSeeded: false,
 });
 
 interface Seed {
@@ -112,6 +120,7 @@ export function CrawlersProvider({ children, embedded }: CrawlersProviderProps) 
   const [loading, setLoading] = useState(seeded === null);
   const [error, setError] = useState<Error | null>(null);
   const [cast, setCast] = useState<CastMember[]>(seeded?.cast ?? []);
+  const castSeeded = seeded !== null && seeded.cast !== null;
   const [dossiers, setDossiers] = useState<Record<string, DossierFile | null>>(
     seeded?.dossiers ?? {},
   );
@@ -191,7 +200,7 @@ export function CrawlersProvider({ children, embedded }: CrawlersProviderProps) 
   );
 
   return (
-    <CrawlersContext.Provider value={{ profiles, status, loading, error, dossierFor, cast }}>
+    <CrawlersContext.Provider value={{ profiles, status, loading, error, dossierFor, cast, castSeeded }}>
       {children}
     </CrawlersContext.Provider>
   );

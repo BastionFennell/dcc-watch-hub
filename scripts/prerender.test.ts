@@ -41,7 +41,9 @@ beforeAll(async () => {
 });
 
 describe('routesFor', () => {
-  it('is the four static routes plus one page per crawler', () => {
+  it('is the five static routes plus one page per crawler', () => {
+    // 014: /cast sits between the roster and /community, in nav order.
+    expect(STATIC_ROUTES).toEqual(['/', '/watch', '/crawlers', '/cast', '/community']);
     expect(routesFor(makeCrawlers())).toEqual([
       ...STATIC_ROUTES,
       '/crawlers/stuntman',
@@ -168,7 +170,9 @@ describe('the cast in a prerendered page', () => {
 
   it('credits the player in the server HTML and carries the cast in the payload', () => {
     const page = crawlerPage(makeCast());
-    expect(page).toMatch(/Played by\s*(<!-- -->)?\s*<\/span><span[^>]*>Danny</);
+    expect(page).toMatch(/Played by\s*(<!-- -->)?\s*<\/span><a[^>]*href="\/cast#danny"[^>]*>Danny</);
+    // 014 T1420: the headshot is in the server's HTML too, sized before it loads.
+    expect(page).toMatch(/<img[^>]*src="\/img\/cast\/danny-sm\.webp"[^>]*width="40"/);
     const payload = page
       .split('<script id="__DCC__" type="application/json">')[1]
       .split('</script>')[0];

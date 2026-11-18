@@ -96,12 +96,23 @@
 
 /* ------------------------------------------------------------ the credit */
 
+/* One row: the player's headshot, then "Played by" and their name (014). */
 .credit {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+  align-items: center;
+  gap: var(--space-5);
   padding-top: var(--space-7);
   border-top: var(--border-hairline);
+}
+
+.creditPhoto {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  /* What shows while the photo loads, or if it never does. */
+  background: var(--brand-deep);
 }
 
 .creditLine {
@@ -113,15 +124,21 @@
   color: var(--ink-muted);
 }
 
+/*
+ * The name is the link to the card: still the brightest thing in the line, with
+ * a quiet underline so it reads as somewhere to go, brightening on hover.
+ */
 .playerName {
   font-weight: 600;
   color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: var(--hairline-2);
+  text-underline-offset: 3px;
 }
 
-.creditDetail {
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--ink-muted);
+.playerName:hover {
+  color: var(--brand-fg-2);
+  text-decoration-color: var(--brand-line);
 }
 
 /* ----------------------------------------------------------- the content */

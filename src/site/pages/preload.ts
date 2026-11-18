@@ -12,6 +12,7 @@
  * import's commit.
  */
 import {
+  CastPage,
   CommunityPage,
   CrawlerPage,
   CrawlersPage,
@@ -33,6 +34,7 @@ const PRELOADABLE: { preload: () => Promise<void> }[] = [
   WatchPage,
   CrawlersPage,
   CrawlerPage,
+  CastPage,
   CommunityPage,
 ];
 

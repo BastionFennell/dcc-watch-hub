@@ -1,7 +1,7 @@
 /*
  * The shell every marketing page shares (011 §6). One column at 375 px with a
  * 16 px gutter, widening to a centred 1040 px measure from 900 px. Imported by
- * all five pages so the front door has one rhythm rather than five.
+ * every page so the front door has one rhythm rather than six.
  *
  * The measure is `--site-measure` (011 R2), shared with `SiteFooter` so the
  * footer's links start on the same pixel as the paragraph above them.

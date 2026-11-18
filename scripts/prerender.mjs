@@ -19,7 +19,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 /** The static routes every build prerenders, in sitemap order. */
-export const STATIC_ROUTES = ['/', '/watch', '/crawlers', '/community'];
+export const STATIC_ROUTES = ['/', '/watch', '/crawlers', '/cast', '/community'];
 
 /** `/crawlers/mimi` -> `mimi`; anything else -> `null`. */
 export function crawlerIdIn(route) {

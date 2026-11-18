@@ -1,5 +1,5 @@
 /**
- * The front door's five pages, one lazy chunk each (011 T1125).
+ * The front door's pages, one lazy chunk each (011 T1125; /cast since 014).
  *
  * Two consumers want the same pages on different terms:
  *
@@ -52,6 +52,7 @@ export const HomePage = sitePage(() => import('./HomePage'));
 export const WatchPage = sitePage(() => import('./WatchPage'));
 export const CrawlersPage = sitePage(() => import('./CrawlersPage'));
 export const CrawlerPage = sitePage(() => import('./CrawlerPage'));
+export const CastPage = sitePage(() => import('./CastPage'));
 export const CommunityPage = sitePage(() => import('./CommunityPage'));
 /** Never prerendered, so never preloaded: only a headless browser opens it. */
 export const OgRoutes = sitePage(() => import('./og/OgRoutes'));

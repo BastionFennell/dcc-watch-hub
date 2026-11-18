@@ -34,9 +34,11 @@ function ShowLinks({ show, className }: { show: Show; className: string }) {
  * shrinking once the page scrolls so the stage stays dominant.
  *
  * One header across the hub and the front door (011, constitution VIII). The
- * site nav - Watch / Crawlers / Community - is on every route; the hub's own
- * controls (the episode-context slot, the Codex link, the show channels) appear
- * only on a hub route, where a viewer is actually inside the broadcast.
+ * site nav - Watch / Crawlers / Cast / Community (Cast since 014) - is on every
+ * route; the hub's own controls (the episode-context slot, the Codex link, the
+ * show channels) appear only on a hub route, where a viewer is actually inside
+ * the broadcast. Four plain words fit a 320 px phone on one line, so there is
+ * no menu button: the phone block below only tightens their padding.
  */
 export function SiteHeader({ show, current }: SiteHeaderProps) {
   const episodePath = useEpisodePath();
@@ -91,6 +93,9 @@ export function SiteHeader({ show, current }: SiteHeaderProps) {
           </NavLink>
           <NavLink to="/crawlers" className={styles.siteLink}>
             {copy.navCrawlers}
+          </NavLink>
+          <NavLink to="/cast" className={styles.siteLink}>
+            {copy.navCast}
           </NavLink>
           <NavLink to="/community" className={styles.siteLink}>
             {copy.navCommunity}
