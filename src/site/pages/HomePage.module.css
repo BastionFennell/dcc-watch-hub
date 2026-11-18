@@ -1,7 +1,7 @@
 /*
  * The hero is one column at 375 px - eyebrow, headline, pitch, both CTAs, then
- * the video - which puts the buttons above the fold on a 375x667 screen before
- * the embed pushes anything down (011 §6). Two columns from 900 px.
+ * the lineup - which puts the buttons above the fold on a 375x667 screen before
+ * the art pushes anything down (011 §6). Two columns from 900 px.
  */
 .hero {
   display: flex;
@@ -56,20 +56,52 @@
   min-width: 0;
 }
 
-.strips {
+/* The video and the newcomer box share a row from 900 px; stacked below it. */
+.feature {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-7);
 }
 
 .discord {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-6);
   padding: var(--space-7);
   background: var(--brand-deep);
   border: 1px solid var(--brand);
   border-radius: var(--radius-lg);
+}
+
+.discordText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.discordCta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 var(--space-7);
+  background: var(--brand-2);
+  border: 1px solid var(--brand-line);
+  border-radius: var(--radius-md);
+  color: var(--brand-fg-2);
+  font-size: var(--text-md);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.discordCta:hover {
+  background: var(--brand);
+}
+
+.discordSocial {
+  min-width: 0;
 }
 
 .cadence {
@@ -83,16 +115,23 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     align-items: center;
-    gap: var(--space-9);
+    gap: var(--space-8);
   }
 
   .tagline {
     font-size: 44px;
   }
 
-  .strips {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    /* Both strips share the row's height (author, 2026-09-25). */
+  .feature {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
     align-items: stretch;
+  }
+
+  .discord {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .discordSocial {
+    grid-column: 1 / -1;
   }
 }

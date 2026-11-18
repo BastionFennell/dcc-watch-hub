@@ -92,6 +92,7 @@ function toCrawlerProfile(raw: unknown): CrawlerProfile | null {
   if (bust === null || bust === '') return null;
 
   const full = isRecord(raw.art) ? toString_(raw.art.full) : null;
+  const lineup = isRecord(raw.art) ? toString_(raw.art.lineup) : null;
   const og = toString_(raw.og);
   const entryAchievement = toEntryAchievement(raw.entryAchievement, id);
 
@@ -104,7 +105,11 @@ function toCrawlerProfile(raw: unknown): CrawlerProfile | null {
     concept,
     pockets: toNonEmptyStringList(raw.pockets),
     ...(entryAchievement === undefined ? {} : { entryAchievement }),
-    art: { bust, ...(full === null || full === '' ? {} : { full }) },
+    art: {
+      bust,
+      ...(full === null || full === '' ? {} : { full }),
+      ...(lineup === null || lineup === '' ? {} : { lineup }),
+    },
     ...(og === null || og === '' ? {} : { og }),
   };
 }

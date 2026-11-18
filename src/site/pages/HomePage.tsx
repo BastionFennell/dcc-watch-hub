@@ -1,8 +1,9 @@
 /**
  * `/` - convert a stranger in ten seconds (011 §3.1).
  *
- * Order, top to bottom and identical on a phone: hero, latest episode, the
- * roster, the two strips, the footer. Everything time-dependent takes `now`
+ * Order, top to bottom and identical on a phone: hero (words, then the
+ * crawlers standing together), the video beside the newcomer box, latest
+ * episode, the roster, the Discord strip, the footer. Everything time-dependent takes `now`
  * from `useNow`, seeded with the build's own clock, so the prerendered HTML and
  * the first client render agree before the real clock takes over.
  */
@@ -17,6 +18,7 @@ import { trackCta, trackOutbound } from '../analytics';
 import { youtubeThumb } from '../media';
 import { EpisodeRow } from '../components/EpisodeRow';
 import { GatedCta } from '../components/GatedCta';
+import { HeroLineup } from '../components/HeroLineup';
 import { RosterCard } from '../components/RosterCard';
 import { SiteFooter } from '../components/SiteFooter';
 import { SocialRow } from '../components/SocialRow';
@@ -92,11 +94,30 @@ export function HomePage() {
             </div>
           ) : null}
         </div>
+        <HeroLineup profiles={profiles} />
+      </section>
+
+      <section className={styles.feature}>
         {embedId === '' ? null : (
           <div className={styles.heroMedia}>
             <TrailerEmbed youtubeId={embedId} title={show?.title ?? siteCopy.siteName} />
           </div>
         )}
+        <SystemBox title={siteCopy.newcomerTitle}>
+          <p>{siteCopy.newcomerBody}</p>
+          {show === null ? null : (
+            <p>
+              <a
+                href={show.links.youtube}
+                target="_blank"
+                rel="noopener"
+                onClick={() => trackOutbound('youtube')}
+              >
+                {siteCopy.newcomerLink}
+              </a>
+            </p>
+          )}
+        </SystemBox>
       </section>
 
       {/*
@@ -128,33 +149,30 @@ export function HomePage() {
         </ul>
       </section>
 
-      <section className={styles.strips}>
-        <SystemBox title={siteCopy.newcomerTitle}>
-          <p>{siteCopy.newcomerBody}</p>
-          {show === null ? null : (
-            <p>
-              <a
-                href={show.links.youtube}
-                target="_blank"
-                rel="noopener"
-                onClick={() => trackOutbound('youtube')}
-              >
-                {siteCopy.newcomerLink}
-              </a>
-            </p>
-          )}
-        </SystemBox>
-
-        <div className={styles.discord}>
-          <h2 className={page.sectionTitle}>{siteCopy.discordTitle}</h2>
+      <section className={styles.discord} aria-labelledby="discord">
+        <div className={styles.discordText}>
+          <h2 className={page.sectionTitle} id="discord">
+            {siteCopy.discordTitle}
+          </h2>
           <p className={page.lead}>{siteCopy.discordBody}</p>
-          {show === null ? null : (
-            <>
-              <p className={styles.cadence}>{show.cadence}</p>
-              <SocialRow links={show.links} />
-            </>
-          )}
+          {show === null ? null : <p className={styles.cadence}>{show.cadence}</p>}
         </div>
+        {show === null ? null : (
+          <>
+            <a
+              className={styles.discordCta}
+              href={show.links.discord}
+              target="_blank"
+              rel="noopener"
+              onClick={() => trackOutbound('discord')}
+            >
+              {siteCopy.discordCta}
+            </a>
+            <div className={styles.discordSocial}>
+              <SocialRow links={show.links} />
+            </div>
+          </>
+        )}
       </section>
 
       <SiteFooter />

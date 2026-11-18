@@ -59,7 +59,12 @@
             "additionalProperties": false,
             "properties": {
               "bust": { "type": "string", "pattern": "^/.+$" },
-              "full": { "type": "string", "pattern": "^/.+$" }
+              "full": { "type": "string", "pattern": "^/.+$" },
+              "lineup": {
+                "comment": "The full figure trimmed to its bounds, for the home hero's group shot.",
+                "type": "string",
+                "pattern": "^/.+$"
+              }
             }
           },
           "og": { "type": "string", "pattern": "^/.+[.](png|jpg|jpeg|webp)$" }

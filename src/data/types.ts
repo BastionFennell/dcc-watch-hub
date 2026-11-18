@@ -117,7 +117,8 @@ export interface CrawlerProfile {
   /** "What was in their pockets when the world ended", one item per line. */
   pockets: string[];
   entryAchievement?: CrawlerEntryAchievement;
-  art: { bust: string; full?: string };
+  /** `lineup` is the trimmed full figure the home hero stands side by side. */
+  art: { bust: string; full?: string; lineup?: string };
   og?: string;
   /*
    * No `status` field (012): a crawler's condition is not a property of the
