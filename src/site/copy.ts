@@ -20,6 +20,7 @@ export const siteCopy = {
   siteNavLabel: copy.siteNavLabel,
   navWatch: copy.navWatch,
   navCrawlers: copy.navCrawlers,
+  navCast: copy.navCast,
   navCommunity: copy.navCommunity,
 
   // The gated call to action (011 §2.1). Before `hubLiveAt` the only place to
@@ -189,6 +190,11 @@ export const siteCopy = {
     tiktok: 'TikTok',
     bluesky: 'Bluesky',
     instagram: 'Instagram',
+    /** Named link hubs a cast member may use (014). */
+    linktree: 'Linktree',
+    beacons: 'Beacons',
+    /** Any other link hub or personal site (014): one pill, whatever is behind it. */
+    links: 'Links',
   } as const,
 
   // --- media
@@ -206,4 +212,19 @@ export const siteCopy = {
     concept === '' ? `${name} - ${archetype} on Dungeon Crawl Cast.` : `${name}. ${concept}`,
   communityDescription:
     'Discord, YouTube and everywhere else Dungeon Crawl Cast turns up, plus how often new crawls land.',
+
+  /* ------------------------------------------------------ the cast (014) */
+  /*
+   * The page's own words. Bios are data (`cast.json`), not copy: these are only
+   * the frame around them, in the site's plain voice - nobody here is being
+   * announced, so the System says nothing on this page.
+   */
+  castTitle: 'The cast',
+  castLead: 'The people behind the crawlers, and the voice of the System.',
+  castDescription:
+    'Meet the cast of Dungeon Crawl Cast: the four players behind the crawlers and the voice of the System.',
+  /** A player's role line; the character's name and nothing about their fate. */
+  castPlays: (characterName: string) => `Plays ${characterName}`,
+  /** Names one card's link list, so five lists on one page are told apart. */
+  castLinksLabel: (name: string) => `${name}'s links`,
 } as const;

@@ -7,6 +7,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, screen } from '@testing-library/react';
+import { CastPage } from './pages/CastPage';
 import { CommunityPage } from './pages/CommunityPage';
 import { CrawlerPage } from './pages/CrawlerPage';
 import { HomePage } from './pages/HomePage';
@@ -73,6 +74,13 @@ describe('analytics wiring', () => {
     renderSite(<CommunityPage />, { path: '/community' });
     fireEvent.click(screen.getByRole('link', { name: siteCopy.discordCta }));
     expect(calls).toEqual([['outbound', { props: { to: 'discord' } }]]);
+  });
+
+  /* 014: a cast member's pill is an outbound click like any other, named by its kind. */
+  it('counts a cast link on /cast', () => {
+    renderSite(<CastPage />, { path: '/cast' });
+    fireEvent.click(screen.getByRole('link', { name: siteCopy.platform.links }));
+    expect(calls).toEqual([['outbound', { props: { to: 'links' } }]]);
   });
 
   it('counts a crawler page as one crawler_view on mount', () => {

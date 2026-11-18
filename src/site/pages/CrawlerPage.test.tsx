@@ -10,6 +10,7 @@
  * as much a requirement as what it does with a filled one.
  */
 import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { CrawlerPage } from './CrawlerPage';
@@ -17,13 +18,14 @@ import { siteCopy } from '../copy';
 import { copy } from '../../copy';
 import { renderSite } from '../../test/renderSite';
 import {
+  makeCast,
   makeCrawlers,
   makeDossier,
   makeEpisodeRaw,
   makeShow,
   makeStatus,
 } from '../../test/fixtures';
-import type { CrawlerRoster } from '../../data/types';
+import type { CastFile, CrawlerRoster } from '../../data/types';
 
 const [stuntman] = makeCrawlers().crawlers;
 
@@ -74,7 +76,71 @@ describe('CrawlerPage hero', () => {
     const prefix = screen.getByText(`${siteCopy.playedBy}`, { exact: false });
     expect(prefix).toBeInTheDocument();
     expect(prefix.closest('p')).toHaveTextContent(`${siteCopy.playedBy} Danny`);
-    expect(screen.getByText('he/him · Two sentences about Danny.')).toBeInTheDocument();
+  });
+
+  /* 014: the credit names the player and nothing more; the rest lives on /cast. */
+  it("takes the credit from cast.json and shows none of the player's bio or links", () => {
+    renderCrawler();
+    expect(screen.queryByText('Two sentences about Danny.', { exact: false })).toBeNull();
+    expect(document.body.textContent).not.toContain('he/him ·');
+    expect(document.querySelector('a[href^="https://www.instagram.com/danny"]')).toBeNull();
+    expect(document.querySelector('a[href^="https://linktr.ee/danny"]')).toBeNull();
+  });
+
+  /* 014: a face beside the name, and the name leads to that person's card. */
+  it("gives each fixture crawler its player's name, headshot and /cast anchor", () => {
+    const expected: [string, string, string][] = [
+      ['stuntman', 'Danny', 'danny'],
+      ['harry', 'Marcus', 'marcus'],
+    ];
+    for (const [crawlerId, name, castId] of expected) {
+      renderCrawler(crawlerId);
+      const line = screen.getByText(siteCopy.playedBy, { exact: false }).closest('p');
+      expect(line).toHaveTextContent(`${siteCopy.playedBy} ${name}`);
+      expect(screen.getByRole('link', { name })).toHaveAttribute('href', `/cast#${castId}`);
+      const credit = line?.parentElement;
+      const photo = credit?.querySelector('img');
+      expect(photo).toHaveAttribute('src', `/img/cast/${castId}-sm.webp`);
+      // Decorative: the name is right beside it, so a reader hears it once.
+      expect(photo).toHaveAttribute('alt', '');
+      expect(photo).toHaveAttribute('width', '40');
+      expect(photo).toHaveAttribute('height', '40');
+      expect(photo).toHaveAttribute('loading', 'eager');
+      // Only the photo and the line: no pronouns, bio or link row under them.
+      expect(credit?.children).toHaveLength(2);
+      expect(credit?.querySelector('ul')).toBeNull();
+      cleanup();
+    }
+  });
+
+  it('credits the player of each crawler, and nobody for a crawler nobody plays', () => {
+    renderCrawler('harry');
+    expect(screen.getByText(siteCopy.playedBy, { exact: false }).closest('p')).toHaveTextContent(
+      `${siteCopy.playedBy} Marcus`,
+    );
+    cleanup();
+
+    const cast: CastFile = { cast: makeCast().cast.filter((member) => member.id !== 'marcus') };
+    renderSite(<CrawlerPage />, { path: '/crawlers/harry', routePath: '/crawlers/:id', cast });
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Harold Wallace');
+    expect(screen.queryByText(siteCopy.playedBy, { exact: false })).toBeNull();
+    expect(document.querySelector('img[src*="/img/cast/"]')).toBeNull();
+  });
+
+  /* The real files: Ronald is still played by Madio after the data moved. */
+  it('still says "Played by Madio" on the real /crawlers/ronald', () => {
+    const data = (name: string): unknown =>
+      JSON.parse(readFileSync(resolve(__dirname, '../../../public/data', name), 'utf8'));
+    renderSite(<CrawlerPage />, {
+      path: '/crawlers/ronald',
+      routePath: '/crawlers/:id',
+      crawlers: data('crawlers.json') as CrawlerRoster,
+      cast: data('cast.json') as CastFile,
+    });
+    expect(screen.getByText(siteCopy.playedBy, { exact: false }).closest('p')).toHaveTextContent(
+      `${siteCopy.playedBy} Madio`,
+    );
+    expect(screen.getByRole('link', { name: 'Madio' })).toHaveAttribute('href', '/cast#madio');
   });
 
   /*

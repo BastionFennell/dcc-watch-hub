@@ -18,9 +18,10 @@ import {
   isSpellRegistry,
   validateSpells,
 } from './validate';
-import { validateCrawlers, validateDossier, validateStatus } from './roster';
+import { validateCast, validateCrawlers, validateDossier, validateStatus } from './roster';
 import type { AnyEvent } from './types';
 import {
+  makeCast,
   makeCrawlers,
   makeDossier,
   makeEpisode,
@@ -972,11 +973,10 @@ describe('validateCrawlers', () => {
         roster.crawlers[0],
         { ...roster.crawlers[1], art: {} },
         { ...roster.crawlers[1], id: 'nameless', name: '' },
-        { ...roster.crawlers[1], id: 'unplayed', player: {} },
       ],
     };
     expect(validateCrawlers(broken).crawlers.map((c) => c.id)).toEqual(['stuntman']);
-    expect(warn).toHaveBeenCalledTimes(3);
+    expect(warn).toHaveBeenCalledTimes(2);
     warn.mockRestore();
   });
 
@@ -1007,14 +1007,18 @@ describe('validateCrawlers', () => {
     warn.mockRestore();
   });
 
-  it('drops a malformed player link but keeps the player', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  /* 014: the player moved to cast.json, so a crawler needs none to be kept. */
+  it('keeps a crawler with no player field', () => {
     const [first] = makeCrawlers().crawlers;
-    const roster = validateCrawlers({
-      crawlers: [{ ...first, player: { ...first.player, links: { bluesky: 'x', broken: null } } }],
-    });
-    expect(roster.crawlers[0].player.links).toEqual({ bluesky: 'x' });
-    warn.mockRestore();
+    expect(first).not.toHaveProperty('player');
+    expect(validateCrawlers({ crawlers: [first] }).crawlers).toEqual([first]);
+  });
+
+  it('ignores a leftover player object rather than carrying it', () => {
+    const [first] = makeCrawlers().crawlers;
+    const roster = validateCrawlers({ crawlers: [{ ...first, player: { name: 'Lulu' } }] });
+    expect(roster.crawlers).toHaveLength(1);
+    expect(roster.crawlers[0]).not.toHaveProperty('player');
   });
 
   it('drops an entry achievement with no text, keeping the crawler', () => {
@@ -1025,6 +1029,113 @@ describe('validateCrawlers', () => {
     });
     expect(roster.crawlers).toHaveLength(1);
     expect(roster.crawlers[0].entryAchievement).toBeUndefined();
+    warn.mockRestore();
+  });
+});
+
+/* ---------------------------------------------------- the cast (014) */
+
+describe('validateCast', () => {
+  /** The fixture cast with its first member patched. */
+  function castWith(patch: Record<string, unknown>): unknown {
+    const file = makeCast();
+    return { ...file, cast: [{ ...file.cast[0], ...patch }, ...file.cast.slice(1)] };
+  }
+
+  it('keeps a well-formed cast verbatim, in file order', () => {
+    const file = makeCast();
+    expect(validateCast(file)).toEqual(file);
+    expect(validateCast({ ...file, todo: ['Bios', '', 3] }).todo).toEqual(['Bios']);
+  });
+
+  it('never throws on rubbish: an empty cast instead', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(validateCast(null)).toEqual({ cast: [] });
+    expect(validateCast('nope')).toEqual({ cast: [] });
+    expect(validateCast({ cast: {} })).toEqual({ cast: [] });
+    expect(warn).toHaveBeenCalledTimes(3);
+    warn.mockRestore();
+  });
+
+  it('drops a member whose id is not a slug, naming it', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const ids = validateCast(castWith({ id: 'Danny M' })).cast.map((m) => m.id);
+    expect(ids).toEqual(['marcus', 'voice']);
+    expect(warn.mock.calls.flat().join(' ')).toContain('Danny M');
+    warn.mockRestore();
+  });
+
+  it('drops the later of two members with one id, keeping the first', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const file = makeCast();
+    const out = validateCast({ cast: [...file.cast, { ...file.cast[2], name: 'Impostor' }] });
+    expect(out.cast.map((m) => m.name)).toEqual(['Danny', 'Marcus', 'Vera']);
+    expect(warn.mock.calls.flat().join(' ')).toContain('"voice"');
+    warn.mockRestore();
+  });
+
+  it('drops a member with no name', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(validateCast(castWith({ name: '' })).cast.map((m) => m.id)).toEqual(['marcus', 'voice']);
+    expect(warn.mock.calls.flat().join(' ')).toContain('"danny"');
+    warn.mockRestore();
+  });
+
+  it('drops a member missing either photo', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(validateCast(castWith({ photo: { card: '/a.webp' } })).cast).toHaveLength(2);
+    expect(validateCast(castWith({ photo: undefined })).cast).toHaveLength(2);
+    expect(warn.mock.calls.flat().join(' ')).toContain('"danny"');
+    warn.mockRestore();
+  });
+
+  it('keeps the crawlerId when both it and a role are set, and warns', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const [danny] = validateCast(castWith({ role: 'Producer' })).cast;
+    expect(danny.crawlerId).toBe('stuntman');
+    expect(danny).not.toHaveProperty('role');
+    expect(warn.mock.calls.flat().join(' ')).toContain('"danny"');
+    warn.mockRestore();
+  });
+
+  it('drops a member with neither a crawlerId nor a role', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const ids = validateCast(castWith({ crawlerId: undefined })).cast.map((m) => m.id);
+    expect(ids).toEqual(['marcus', 'voice']);
+    expect(warn.mock.calls.flat().join(' ')).toContain('"danny"');
+    warn.mockRestore();
+  });
+
+  it('does not check the crawlerId against a roster (it may still be loading)', () => {
+    const [danny] = validateCast(castWith({ crawlerId: 'nobody' })).cast;
+    expect(danny.crawlerId).toBe('nobody');
+  });
+
+  it('keeps pronouns exactly as written', () => {
+    const [danny] = validateCast(castWith({ pronouns: 'He / Him' })).cast;
+    expect(danny.pronouns).toBe('He / Him');
+  });
+
+  it('drops empty bio paragraphs, keeping the rest in order', () => {
+    const [danny] = validateCast(castWith({ bio: ['One.', '', 7, 'Two.'] })).cast;
+    expect(danny.bio).toEqual(['One.', 'Two.']);
+  });
+
+  it('drops a link with an unknown kind or a non-https address, keeping the rest', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const [danny] = validateCast(
+      castWith({
+        links: [
+          { kind: 'myspace', url: 'https://myspace.com/danny' },
+          { kind: 'links', url: 'http://linktr.ee/danny' },
+          { kind: 'links', url: 'https://linktr.ee/danny' },
+          'https://example.com',
+        ],
+      }),
+    ).cast;
+    expect(danny.links).toEqual([{ kind: 'links', url: 'https://linktr.ee/danny' }]);
+    expect(warn).toHaveBeenCalledTimes(3);
+    expect(warn.mock.calls.flat().join(' ')).toContain('"danny"');
     warn.mockRestore();
   });
 });

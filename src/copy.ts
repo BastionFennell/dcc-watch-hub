@@ -172,6 +172,7 @@ export const copy = {
   siteNavLabel: 'Site',
   navWatch: 'Watch',
   navCrawlers: 'Crawlers',
+  navCast: 'Cast',
   navCommunity: 'Community',
   archiveLoading: 'The System is retrieving the broadcast archive.',
 

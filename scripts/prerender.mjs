@@ -19,7 +19,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 /** The static routes every build prerenders, in sitemap order. */
-export const STATIC_ROUTES = ['/', '/watch', '/crawlers', '/community'];
+export const STATIC_ROUTES = ['/', '/watch', '/crawlers', '/cast', '/community'];
 
 /** `/crawlers/mimi` -> `mimi`; anything else -> `null`. */
 export function crawlerIdIn(route) {
@@ -35,6 +35,67 @@ export function routesFor(crawlers) {
   return [...STATIC_ROUTES, ...ids.map((id) => `/crawlers/${id}`)];
 }
 
+/** The layout chunk every marketing route mounts under. */
+const LAYOUT_MODULE = 'src/site/SiteLayout.tsx';
+
+/** Each static route's page module, as the Vite manifest keys it. */
+export const PAGE_MODULES = {
+  '/': 'src/site/pages/HomePage.tsx',
+  '/watch': 'src/site/pages/WatchPage.tsx',
+  '/crawlers': 'src/site/pages/CrawlersPage.tsx',
+  '/cast': 'src/site/pages/CastPage.tsx',
+  '/community': 'src/site/pages/CommunityPage.tsx',
+};
+const CRAWLER_PAGE_MODULE = 'src/site/pages/CrawlerPage.tsx';
+
+/** The source modules one route is made of: the layout, then its page. */
+export function modulesFor(route) {
+  const page = PAGE_MODULES[route] ?? (crawlerIdIn(route) === null ? null : CRAWLER_PAGE_MODULE);
+  return page === null ? [] : [LAYOUT_MODULE, page];
+}
+
+/**
+ * The stylesheets and chunks one route needs beyond the entry's own, read off
+ * the Vite manifest (`dist/.vite/manifest.json`).
+ *
+ * The marketing pages are lazy chunks, and a lazy chunk's CSS is only linked
+ * when its script runs. Left alone, a prerendered page paints unstyled until
+ * hydration - and stays unstyled for a reader with scripts off. Walking the
+ * chunk's static imports here lets `injectPage` link all of it in the HTML.
+ *
+ * Dependencies first, so the page's own rules come last, as they do when Vite
+ * loads the chunk itself. The entry is skipped: the template already links it.
+ * No manifest, or a module it does not know, is no extra assets - the page
+ * then behaves as it did before this existed.
+ */
+export function assetsFor(manifest, route) {
+  const styles = [];
+  const scripts = [];
+  if (manifest === null || typeof manifest !== 'object') return { styles, scripts };
+  const seen = new Set();
+  const visit = (key) => {
+    if (seen.has(key)) return;
+    seen.add(key);
+    const chunk = manifest[key];
+    if (chunk === undefined || chunk.isEntry === true) return;
+    for (const dependency of chunk.imports ?? []) visit(dependency);
+    for (const css of chunk.css ?? []) if (!styles.includes(css)) styles.push(css);
+    if (typeof chunk.file === 'string' && chunk.file.endsWith('.js')) scripts.push(chunk.file);
+  };
+  for (const module of modulesFor(route)) visit(module);
+  return { styles, scripts };
+}
+
+/**
+ * The deploy base, read off the template's own entry stylesheet, so the links
+ * `injectPage` adds are spelled exactly as Vite spells its own - which is also
+ * what lets Vite's chunk loader recognise them and not link the CSS twice.
+ */
+export function assetPrefix(template) {
+  const match = /<link\b[^>]*href="([^"]*)assets\/[^"]+\.css"/i.exec(template);
+  return match === null ? '/' : match[1];
+}
+
 /**
  * The payload, as a `<script>` element. Only `<` has to go: that is what makes
  * `</script>` and `<!--` dangerous, and a JSON reader puts it straight back.
@@ -48,8 +109,26 @@ export function embedScript(data) {
  * One page: the template with this route's head, markup and payload in it.
  * Pure, so the interesting half of this script is testable without a build.
  */
-export function injectPage(template, { head, html, data }) {
+export function injectPage(template, { head, html, data, assets }) {
   let page = template;
+
+  /*
+   * The route's own stylesheets, and a preload for each of its chunks, at the
+   * end of the head: after the entry's stylesheet, as they would land if the
+   * chunk linked them itself (see `assetsFor`).
+   */
+  const prefix = assetPrefix(template);
+  const links = [
+    ...(assets?.styles ?? []).map(
+      (file) => `<link rel="stylesheet" crossorigin href="${prefix}${file}">`,
+    ),
+    ...(assets?.scripts ?? []).map(
+      (file) => `<link rel="modulepreload" crossorigin href="${prefix}${file}">`,
+    ),
+  ];
+  if (links.length > 0) {
+    page = page.replace('</head>', () => `${links.map((link) => `  ${link}\n`).join('')}  </head>`);
+  }
 
   /*
    * The template's own title and description are the shell's placeholders (they
@@ -94,6 +173,16 @@ async function main() {
   const crawlers = await readJson(resolve(root, 'public/data/crawlers.json'), { crawlers: [] });
   // Generated a step earlier; `null` is legal (no episode is published yet).
   const status = await readJson(resolve(dist, 'data/status.json'), null);
+  /*
+   * 014: the cast rides on every route, whole - the cast page needs all of it
+   * and each crawler page its player's credit, and at about 2.5 kB splitting
+   * it per route is not worth a second code path. No file is an empty cast.
+   */
+  const cast = await readJson(resolve(root, 'public/data/cast.json'), { cast: [] });
+  // Written by the client build (`build.manifest`); without it the pages are
+  // still correct, only styled a moment later.
+  const manifest = await readJson(resolve(dist, '.vite/manifest.json'), null);
+  if (manifest === null) console.warn('prerender: no Vite manifest; page stylesheets are not linked.');
 
   const routes = routesFor(crawlers);
   for (const route of routes) {
@@ -107,9 +196,9 @@ async function main() {
     const id = crawlerIdIn(route);
     const dossier =
       id === null ? null : await readJson(resolve(root, `public/data/dossier/${id}.json`), null);
-    const data = { route, show, crawlers, status, dossier };
+    const data = { route, show, crawlers, status, dossier, cast };
     const { html, head } = render(route, data);
-    const page = injectPage(template, { head, html, data });
+    const page = injectPage(template, { head, html, data, assets: assetsFor(manifest, route) });
     const out = outputPath(dist, route);
     await mkdir(dirname(out), { recursive: true });
     await writeFile(out, page);

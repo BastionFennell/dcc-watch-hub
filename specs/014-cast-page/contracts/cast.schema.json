@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://dcc-watch-hub/contracts/cast.schema.json",
+  "title": "Cast (014: the cast page)",
+  "comment": "public/data/cast.json. Authored. The only place a real person is described; crawlers.json no longer carries a player. Array order is display order on /cast. Cross-file rules (crawlerId exists, one member per crawler, photo files exist) are in scripts/cast.ts, not here.",
+  "type": "object",
+  "required": ["cast"],
+  "additionalProperties": false,
+  "properties": {
+    "todo": {
+      "comment": "What the author still has to fill in. Rendered nowhere.",
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "cast": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "bio", "photo", "links"],
+        "additionalProperties": false,
+        "oneOf": [
+          { "required": ["crawlerId"], "not": { "required": ["role"] } },
+          { "required": ["role"], "not": { "required": ["crawlerId"] } }
+        ],
+        "properties": {
+          "id": {
+            "comment": "The /cast#id anchor. Changing it breaks links people have shared.",
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "name": { "type": "string", "minLength": 1 },
+          "pronouns": {
+            "comment": "Slash form: she/her, she/they.",
+            "type": "string",
+            "pattern": "^[a-z]+(/[a-z]+)+$"
+          },
+          "crawlerId": {
+            "comment": "The crawler this person plays; the role line is derived from it.",
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "role": {
+            "comment": "Authored role for someone who plays no crawler.",
+            "type": "string",
+            "minLength": 1
+          },
+          "bio": {
+            "comment": "Paragraphs, in the person's own words. Empty means not written yet: the card renders nothing in its place.",
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "photo": {
+            "type": "object",
+            "required": ["card", "credit"],
+            "additionalProperties": false,
+            "properties": {
+              "card": { "comment": "480x480, <= 45 kB.", "type": "string", "pattern": "^/.+$" },
+              "credit": { "comment": "96x96, <= 8 kB.", "type": "string", "pattern": "^/.+$" }
+            }
+          },
+          "links": {
+            "comment": "Rendered in this order. 'linktree' and 'beacons' are named link hubs; 'links' is any other hub or personal site.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["kind", "url"],
+              "additionalProperties": false,
+              "properties": {
+                "kind": { "enum": ["youtube", "discord", "tiktok", "bluesky", "instagram", "linktree", "beacons", "links"] },
+                "url": { "type": "string", "pattern": "^https://.+" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

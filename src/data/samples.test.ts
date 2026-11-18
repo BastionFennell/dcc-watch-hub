@@ -25,7 +25,7 @@ import {
   normalizeRegistry,
   validateSpells,
 } from './validate';
-import { validateCrawlers } from './roster';
+import { validateCast, validateCrawlers } from './roster';
 import {
   airedEpisodes,
   compileDossier,
@@ -52,7 +52,9 @@ const episodeSchemaPath = resolve(root, 'specs/009-mana/contracts/episode.schema
 // optional social links, and per episode premiereAt / hubLiveAt / summary /
 // ogImage) and adds the crawler roster's own schema.
 const showSchemaPath = resolve(root, 'specs/011-front-door/contracts/show.schema.json');
+// 014 amends the roster schema (no `player`) and adds the cast's own.
 const crawlersSchemaPath = resolve(root, 'specs/011-front-door/contracts/crawlers.schema.json');
+const castSchemaPath = resolve(root, 'specs/014-cast-page/contracts/cast.schema.json');
 const spellsSchemaPath = resolve(root, 'specs/008-real-crawlers/contracts/spells.schema.json');
 const dataDir = resolve(root, 'public/data');
 
@@ -68,6 +70,7 @@ const validateEpisode = ajv.compile(readJson(episodeSchemaPath) as object);
 const validateRegistry = ajv.compile(readJson(resolve(contracts, 'npcs.schema.json')) as object);
 const validateSpellSchema = ajv.compile(readJson(spellsSchemaPath) as object);
 const validateCrawlerSchema = ajv.compile(readJson(crawlersSchemaPath) as object);
+const validateCastSchema = ajv.compile(readJson(castSchemaPath) as object);
 
 const showRaw = readJson(resolve(dataDir, 'show.json'));
 
@@ -620,7 +623,6 @@ describe('public/data/crawlers.json', () => {
       const hub = party.find((entry) => entry.id === crawler.id);
       expect(crawler.art.bust, crawler.id).toBe(hub?.portrait);
       expect(crawler.art.full, crawler.id).toBe(hub?.art);
-      expect(crawler.player.name, crawler.id).toBe(hub?.player);
       expect(crawler.characterName, crawler.id).toBe(hub?.name);
     }
   });
@@ -657,7 +659,9 @@ describe('public/data/crawlers.json', () => {
     for (const crawler of roster.crawlers) {
       expect(crawler.pockets, `${crawler.id} has no pockets yet`).toEqual([]);
     }
-    expect(roster.todo?.length ?? 0).toBeGreaterThanOrEqual(5);
+    // 014 moved the two player.* lines to cast.json's own list.
+    expect(roster.todo?.length ?? 0).toBeGreaterThanOrEqual(4);
+    expect(JSON.stringify(crawlersRaw)).not.toMatch(/"player/);
   });
 
   /** The one section that is fully authored: all four, verbatim (011 R2). */
@@ -682,6 +686,38 @@ describe('public/data/crawlers.json', () => {
   /** Nothing anywhere in the roster file says "coming soon" (011 R2). */
   it('ships no "coming soon" copy at all', () => {
     expect(JSON.stringify(crawlersRaw)).not.toMatch(/coming soon/i);
+  });
+});
+
+/* ----------------------------------------------------- 014: the cast */
+
+const castRaw = readJson(resolve(dataDir, 'cast.json'));
+
+describe('public/data/cast.json', () => {
+  it('validates against contracts/cast.schema.json', () => {
+    const ok = validateCastSchema(castRaw);
+    expect(validateCastSchema.errors ?? []).toEqual([]);
+    expect(ok).toBe(true);
+  });
+
+  it('passes the runtime guard with nothing dropped, in the authored order', () => {
+    const { cast } = validateCast(castRaw);
+    expect(cast.map((member) => member.id)).toEqual(['lulu', 'madio', 'danny', 'sarah', 'bastion']);
+  });
+
+  /*
+   * The hub's party rail names each player from the episode file (FR-012
+   * leaves that alone), so the two must agree: whoever cast.json says plays a
+   * crawler is the name the hub already prints under them.
+   */
+  it('names the same player for each crawler as the hub party does', () => {
+    const { cast } = validateCast(castRaw);
+    const party = normalizeEpisode(readJson(resolve(dataDir, 'ep1.json'))).initialState.party;
+    for (const crawler of validateCrawlers(crawlersRaw).crawlers) {
+      const player = cast.find((member) => member.crawlerId === crawler.id);
+      const hub = party.find((entry) => entry.id === crawler.id);
+      expect(player?.name, crawler.id).toBe(hub?.player);
+    }
   });
 });
 

@@ -23,6 +23,7 @@
  * defeated hoarder) - all past t = 100, so every earlier feed count still holds.
  */
 import type {
+  CastFile,
   Crawler,
   CrawlerRoster,
   DossierFile,
@@ -359,7 +360,6 @@ export function makeCrawlers(): CrawlerRoster {
         characterName: 'Ronald Hudson',
         handle: 'Dungeon Crawler Ronald',
         pronouns: 'he/him',
-        player: { name: 'Danny', pronouns: 'he/him', bio: 'Two sentences about Danny.' },
         concept: 'Thrill-seeking stunt performer.',
         pockets: ['A roll of gaffer tape', 'Half a protein bar'],
         entryAchievement: {
@@ -379,10 +379,51 @@ export function makeCrawlers(): CrawlerRoster {
         pronouns: 'she/her',
         // The unwritten crawler: every optional field empty, so a test can ask
         // what the page renders when the author has not filled it in (011 R2).
-        player: { name: 'Marcus' },
         concept: '',
         pockets: [],
         art: { bust: '/img/crawlers/harry.svg' },
+      },
+    ],
+  };
+}
+
+/**
+ * The cast behind the roster above (014), one of each shape a card has to
+ * handle: a player with a bio and two links (the second a repeatable generic
+ * kind), a player the author has written nothing about yet, and someone who
+ * plays no crawler and carries an authored role instead.
+ */
+export function makeCast(): CastFile {
+  return {
+    cast: [
+      {
+        id: 'danny',
+        name: 'Danny',
+        pronouns: 'he/him',
+        crawlerId: 'stuntman',
+        bio: ['Two sentences about Danny.', 'And a second paragraph.'],
+        photo: { card: '/img/cast/danny.webp', credit: '/img/cast/danny-sm.webp' },
+        links: [
+          { kind: 'instagram', url: 'https://www.instagram.com/danny' },
+          { kind: 'links', url: 'https://linktr.ee/danny' },
+        ],
+      },
+      {
+        id: 'marcus',
+        name: 'Marcus',
+        crawlerId: 'harry',
+        bio: [],
+        photo: { card: '/img/cast/marcus.webp', credit: '/img/cast/marcus-sm.webp' },
+        links: [],
+      },
+      {
+        id: 'voice',
+        name: 'Vera',
+        pronouns: 'she/her',
+        role: 'The System AI',
+        bio: [],
+        photo: { card: '/img/cast/voice.webp', credit: '/img/cast/voice-sm.webp' },
+        links: [],
       },
     ],
   };

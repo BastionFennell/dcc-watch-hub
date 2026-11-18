@@ -2,13 +2,14 @@
 /**
  * The roster provider has two jobs and they must not overlap: seed from the
  * prerenderer's `__DCC__` script when the page carries one (no fetch at all),
- * fetch otherwise. The status file is allowed to be missing either way.
+ * fetch otherwise. The status file is allowed to be missing either way, and
+ * so (014) is the cast file.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { CrawlersProvider, useCrawlers } from './CrawlersContext';
 import { EMBEDDED_ID } from './load';
-import { makeCrawlers, makeDossier, makeShow, makeStatus } from '../test/fixtures';
+import { makeCast, makeCrawlers, makeDossier, makeShow, makeStatus } from '../test/fixtures';
 
 function json(body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -17,12 +18,17 @@ function json(body: unknown): Response {
   });
 }
 
-function stubFetch(crawlers: () => Response, status: () => Response): string[] {
+function stubFetch(
+  crawlers: () => Response,
+  status: () => Response,
+  cast: () => Response = () => json(makeCast()),
+): string[] {
   const asked: string[] = [];
   vi.stubGlobal('fetch', (input: RequestInfo | URL) => {
     const url = String(input);
     asked.push(url);
     if (url.includes('status.json')) return Promise.resolve(status());
+    if (url.includes('cast.json')) return Promise.resolve(cast());
     return Promise.resolve(crawlers());
   });
   return asked;
@@ -37,7 +43,7 @@ function embed(payload: unknown): void {
 }
 
 function Probe() {
-  const { profiles, status, loading, error } = useCrawlers();
+  const { profiles, status, loading, error, cast, castSeeded } = useCrawlers();
   return (
     <ul>
       <li data-testid="loading">{String(loading)}</li>
@@ -46,6 +52,8 @@ function Probe() {
       <li data-testid="status">
         {status === null ? 'none' : Object.keys(status.crawlers).join(',')}
       </li>
+      <li data-testid="cast">{cast.map((member) => member.id).join(',')}</li>
+      <li data-testid="castSeeded">{String(castSeeded)}</li>
     </ul>
   );
 }
@@ -69,12 +77,21 @@ describe('CrawlersProvider (seeded)', () => {
       () => json(makeCrawlers()),
       () => json(makeStatus()),
     );
-    embed({ route: '/crawlers', show: makeShow(), crawlers: makeCrawlers(), status: makeStatus() });
+    embed({
+      route: '/crawlers',
+      show: makeShow(),
+      crawlers: makeCrawlers(),
+      status: makeStatus(),
+      cast: makeCast(),
+    });
     mount();
     // Synchronous: no `waitFor`, because there is nothing to wait for.
     expect(screen.getByTestId('loading')).toHaveTextContent('false');
     expect(screen.getByTestId('profiles')).toHaveTextContent('stuntman,harry');
     expect(screen.getByTestId('status')).toHaveTextContent('stuntman,harry');
+    expect(screen.getByTestId('cast')).toHaveTextContent('danny,marcus,voice');
+    // The cast page reads this to leave a native fragment jump alone (T1419).
+    expect(screen.getByTestId('castSeeded')).toHaveTextContent('true');
     expect(asked).toEqual([]);
   });
 
@@ -83,7 +100,13 @@ describe('CrawlersProvider (seeded)', () => {
       () => json(makeCrawlers()),
       () => json(makeStatus()),
     );
-    embed({ route: '/crawlers', show: makeShow(), crawlers: makeCrawlers(), status: null });
+    embed({
+      route: '/crawlers',
+      show: makeShow(),
+      crawlers: makeCrawlers(),
+      status: null,
+      cast: makeCast(),
+    });
     mount();
     expect(screen.getByTestId('profiles')).toHaveTextContent('stuntman,harry');
     expect(screen.getByTestId('status')).toHaveTextContent('none');
@@ -102,10 +125,48 @@ describe('CrawlersProvider (seeded)', () => {
       show: makeShow(),
       crawlers: { crawlers: [roster.crawlers[0], { id: 'broken' }] },
       status: null,
+      cast: makeCast(),
     });
     mount();
     expect(screen.getByTestId('profiles')).toHaveTextContent('stuntman');
     warn.mockRestore();
+  });
+
+  /* 014: an embedded cast is validated like a fetched one, and fetches nothing. */
+  it('seeds the cast from the payload, dropping a malformed member', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const asked = stubFetch(
+      () => json(makeCrawlers()),
+      () => json(makeStatus()),
+    );
+    const file = makeCast();
+    embed({
+      route: '/cast',
+      show: makeShow(),
+      crawlers: makeCrawlers(),
+      status: null,
+      cast: { cast: [...file.cast, { id: 'broken' }] },
+    });
+    mount();
+    expect(screen.getByTestId('cast')).toHaveTextContent('danny,marcus,voice');
+    expect(asked).toEqual([]);
+    warn.mockRestore();
+  });
+
+  /* A payload written before 014 has the roster but no cast key: fetch just that. */
+  it('fetches only the cast when the payload predates it', async () => {
+    const asked = stubFetch(
+      () => json(makeCrawlers()),
+      () => json(makeStatus()),
+    );
+    embed({ route: '/crawlers', show: makeShow(), crawlers: makeCrawlers(), status: null });
+    mount();
+    expect(screen.getByTestId('profiles')).toHaveTextContent('stuntman,harry');
+    expect(screen.getByTestId('loading')).toHaveTextContent('false');
+    await waitFor(() => expect(screen.getByTestId('cast')).toHaveTextContent('danny,marcus,voice'));
+    expect(asked).toHaveLength(1);
+    expect(asked[0]).toMatch(/\/data\/cast\.json$/);
+    expect(screen.getByTestId('castSeeded')).toHaveTextContent('false');
   });
 });
 
@@ -122,6 +183,25 @@ describe('CrawlersProvider (fetched)', () => {
     expect(screen.getByTestId('status')).toHaveTextContent('stuntman,harry');
     expect(asked.some((url) => url.includes('crawlers.json'))).toBe(true);
     expect(asked.some((url) => url.includes('status.json'))).toBe(true);
+    await waitFor(() => expect(screen.getByTestId('cast')).toHaveTextContent('danny,marcus,voice'));
+    expect(asked.some((url) => url.includes('cast.json'))).toBe(true);
+    // Fetched, not seeded: a client-side arrival, so the cast page does the scroll.
+    expect(screen.getByTestId('castSeeded')).toHaveTextContent('false');
+  });
+
+  /* A deploy with no cast.json: no cards, no credit, and no error either. */
+  it('keeps an empty cast, and no error, when the cast file 404s', async () => {
+    const asked = stubFetch(
+      () => json(makeCrawlers()),
+      () => json(makeStatus()),
+      () => new Response('nope', { status: 404, statusText: 'Not Found' }),
+    );
+    mount();
+    await waitFor(() => expect(screen.getByTestId('loading')).toHaveTextContent('false'));
+    await waitFor(() => expect(asked.some((url) => url.includes('cast.json'))).toBe(true));
+    expect(screen.getByTestId('profiles')).toHaveTextContent('stuntman,harry');
+    expect(screen.getByTestId('cast')).toHaveTextContent('');
+    expect(screen.getByTestId('error')).toHaveTextContent('none');
   });
 
   /* dev: nothing has generated dist/data/status.json, and that is fine. */
@@ -183,6 +263,7 @@ describe('CrawlersProvider dossierFor', () => {
       crawlers: makeCrawlers(),
       status: null,
       dossier: makeDossier('stuntman'),
+      cast: makeCast(),
     });
     mountDossier('stuntman');
     // No waitFor: the locked rows are in the server's HTML already.
@@ -205,6 +286,7 @@ describe('CrawlersProvider dossierFor', () => {
       crawlers: makeCrawlers(),
       status: null,
       dossier: makeDossier('stuntman'),
+      cast: makeCast(),
     });
     mountDossier('harry');
 
@@ -238,6 +320,7 @@ describe('CrawlersProvider dossierFor', () => {
       crawlers: makeCrawlers(),
       status: null,
       dossier: { id: 'stuntman', updates: 'nope' },
+      cast: makeCast(),
     });
     mountDossier('stuntman');
     expect(screen.getByTestId('dossier')).toHaveTextContent('none');

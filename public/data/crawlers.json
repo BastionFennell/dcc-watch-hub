@@ -3,8 +3,6 @@
     "Confirm the handles: they are all \"Dungeon Crawler {first name}\" placeholders today.",
     "concept: one or two lines per crawler from the character docs (only ronald's is real; the rest are empty and render nothing).",
     "pockets: what was in their pockets when the world ended, one line per item, from the character docs (empty today, renders nothing).",
-    "player.pronouns, player.bio (two sentences) and player.links for all four.",
-    "player.bust: a photo of the real person, if they want one on the page.",
     "show.json: trailerYoutubeId, the real premiereAt / hubLiveAt dates, and links.tiktok / links.bluesky / links.instagram."
   ],
   "crawlers": [
@@ -13,9 +11,6 @@
       "name": "The Actress",
       "characterName": "Mimi Rivers",
       "handle": "Dungeon Crawler Mimi",
-      "player": {
-        "name": "Lulu"
-      },
       "concept": "",
       "pockets": [],
       "entryAchievement": {
@@ -36,9 +31,6 @@
       "name": "The Stuntman",
       "characterName": "Ronald Hudson",
       "handle": "Dungeon Crawler Ronald",
-      "player": {
-        "name": "Madio"
-      },
       "concept": "Thrill-seeking stunt performer - bombastic, flashy, does everything the showy way.",
       "pockets": [],
       "entryAchievement": {
@@ -59,9 +51,6 @@
       "name": "The 1st AD",
       "characterName": "Xavier \"X.O.\" Ortiz",
       "handle": "Dungeon Crawler X.O.",
-      "player": {
-        "name": "Danny"
-      },
       "concept": "",
       "pockets": [],
       "entryAchievement": {
@@ -82,9 +71,6 @@
       "name": "The Psychic",
       "characterName": "Veil Ravencrest",
       "handle": "Dungeon Crawler Veil",
-      "player": {
-        "name": "Sarah"
-      },
       "concept": "",
       "pockets": [],
       "entryAchievement": {

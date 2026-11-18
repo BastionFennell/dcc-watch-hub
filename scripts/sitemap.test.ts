@@ -23,7 +23,7 @@ describe('canonicalBase', () => {
 });
 
 describe('buildSitemap', () => {
-  const routes = ['/', '/watch', '/crawlers', '/crawlers/harry'];
+  const routes = ['/', '/watch', '/crawlers', '/cast', '/crawlers/harry'];
 
   it('lists every route under the base, in order', () => {
     const xml = buildSitemap(routes, 'https://dungeoncrawlcast.com');
@@ -31,6 +31,7 @@ describe('buildSitemap', () => {
       '  <url><loc>https://dungeoncrawlcast.com/</loc></url>',
       '  <url><loc>https://dungeoncrawlcast.com/watch</loc></url>',
       '  <url><loc>https://dungeoncrawlcast.com/crawlers</loc></url>',
+      '  <url><loc>https://dungeoncrawlcast.com/cast</loc></url>',
       '  <url><loc>https://dungeoncrawlcast.com/crawlers/harry</loc></url>',
     ]);
   });

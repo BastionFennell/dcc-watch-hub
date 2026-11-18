@@ -11,6 +11,7 @@ import { App } from './App';
 import { copy } from './copy';
 import { siteCopy } from './site/copy';
 import {
+  makeCast,
   makeCrawlers,
   makeEpisodeRaw,
   makeRegistry,
@@ -32,13 +33,15 @@ function stubFetch({ withoutRegistry = false }: { withoutRegistry?: boolean } = 
       ? showFixture(withoutRegistry)
       : url.includes('crawlers.json')
         ? makeCrawlers()
-        : url.includes('status.json')
-          ? makeStatus()
-          : url.includes('npcs.json')
-            ? makeRegistry()
-            : url.includes('spells.json')
-              ? makeSpells()
-              : makeEpisodeRaw(1);
+        : url.includes('cast.json')
+          ? makeCast()
+          : url.includes('status.json')
+            ? makeStatus()
+            : url.includes('npcs.json')
+              ? makeRegistry()
+              : url.includes('spells.json')
+                ? makeSpells()
+                : makeEpisodeRaw(1);
     return Promise.resolve(
       new Response(JSON.stringify(body), {
         status: 200,

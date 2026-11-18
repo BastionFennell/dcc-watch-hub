@@ -3,8 +3,14 @@
  * bundle returns has to land in the template where the browser expects it.
  * The script itself (disk, the built bundle) is exercised by the build in Wave C.
  */
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import {
+  PAGE_MODULES,
+  assetPrefix,
+  assetsFor,
+  modulesFor,
   STATIC_ROUTES,
   crawlerIdIn,
   embedScript,
@@ -13,7 +19,7 @@ import {
   routesFor,
 } from './prerender.mjs';
 import { ready, render } from '../src/entry-server';
-import { makeCrawlers, makeDossier, makeShow, makeStatus } from '../src/test/fixtures';
+import { makeCast, makeCrawlers, makeDossier, makeShow, makeStatus } from '../src/test/fixtures';
 
 /** Every collected tag carries the marker the browser strips at boot. */
 const M = ' data-dcc-head';
@@ -41,7 +47,9 @@ beforeAll(async () => {
 });
 
 describe('routesFor', () => {
-  it('is the four static routes plus one page per crawler', () => {
+  it('is the five static routes plus one page per crawler', () => {
+    // 014: /cast sits between the roster and /community, in nav order.
+    expect(STATIC_ROUTES).toEqual(['/', '/watch', '/crawlers', '/cast', '/community']);
     expect(routesFor(makeCrawlers())).toEqual([
       ...STATIC_ROUTES,
       '/crawlers/stuntman',
@@ -150,6 +158,39 @@ describe('a prerendered page', () => {
   });
 });
 
+/* ------------------------------------------------- the cast, prerendered (014) */
+
+describe('the cast in a prerendered page', () => {
+  function crawlerPage(cast: unknown) {
+    const route = '/crawlers/stuntman';
+    const data = {
+      route,
+      show: makeShow(),
+      crawlers: makeCrawlers(),
+      status: makeStatus(),
+      dossier: makeDossier('stuntman'),
+      ...(cast === undefined ? {} : { cast }),
+    };
+    return injectPage(TEMPLATE, { ...render(route, data), data });
+  }
+
+  it('credits the player in the server HTML and carries the cast in the payload', () => {
+    const page = crawlerPage(makeCast());
+    expect(page).toMatch(/Played by\s*(<!-- -->)?\s*<\/span><a[^>]*href="\/cast#danny"[^>]*>Danny</);
+    // 014 T1420: the headshot is in the server's HTML too, sized before it loads.
+    expect(page).toMatch(/<img[^>]*src="\/img\/cast\/danny-sm\.webp"[^>]*width="40"/);
+    const payload = page
+      .split('<script id="__DCC__" type="application/json">')[1]
+      .split('</script>')[0];
+    expect(JSON.parse(payload).cast).toEqual(makeCast());
+  });
+
+  it('renders no credit at all when the payload carries no cast', () => {
+    expect(crawlerPage({ cast: [] })).not.toContain('Played by');
+    expect(crawlerPage(undefined)).not.toContain('Played by');
+  });
+});
+
 /* ------------------------------------------------- the dossier, prerendered */
 
 /**
@@ -205,5 +246,101 @@ describe('the crawler dossier in a prerendered page', () => {
       .split(b.profile.id)
       .join(a.profile.id);
     expect(swapped).toBe(panelOf(a.html));
+  });
+});
+
+/* ------------------------------------------------ route assets (014 fix) */
+
+/** The shape Vite writes: a page chunk, a shared chunk with CSS, the entry. */
+const MANIFEST = {
+  'index.html': { file: 'assets/index-abc.js', css: ['assets/index-abc.css'], isEntry: true },
+  'src/site/SiteLayout.tsx': { file: 'assets/SiteLayout-1.js', imports: ['index.html', '_ctx.js'] },
+  '_ctx.js': { file: 'assets/ctx-1.js', imports: ['index.html'] },
+  '_page.module.js': { file: 'assets/page.module-1.js', css: ['assets/page-1.css'] },
+  'src/site/pages/CastPage.tsx': {
+    file: 'assets/CastPage-1.js',
+    css: ['assets/CastPage-1.css'],
+    imports: ['index.html', '_ctx.js', '_page.module.js'],
+  },
+  'src/site/pages/CrawlerPage.tsx': {
+    file: 'assets/CrawlerPage-1.js',
+    css: ['assets/CrawlerPage-1.css'],
+    imports: ['_page.module.js'],
+  },
+};
+
+describe('assetsFor', () => {
+  it("collects a route's stylesheets and chunks, dependencies first, without the entry", () => {
+    expect(assetsFor(MANIFEST, '/cast')).toEqual({
+      styles: ['assets/page-1.css', 'assets/CastPage-1.css'],
+      scripts: [
+        'assets/ctx-1.js',
+        'assets/SiteLayout-1.js',
+        'assets/page.module-1.js',
+        'assets/CastPage-1.js',
+      ],
+    });
+  });
+
+  it("gives every crawler page the crawler page's assets", () => {
+    expect(assetsFor(MANIFEST, '/crawlers/mimi').styles).toEqual([
+      'assets/page-1.css',
+      'assets/CrawlerPage-1.css',
+    ]);
+  });
+
+  it('is empty without a manifest, for an unknown route, or for a module the manifest lacks', () => {
+    const none = { styles: [], scripts: [] };
+    expect(assetsFor(null, '/cast')).toEqual(none);
+    expect(assetsFor(MANIFEST, '/ep/3')).toEqual(none);
+    expect(assetsFor({}, '/cast')).toEqual(none);
+  });
+
+  it('names a real source file for every static route', () => {
+    for (const route of STATIC_ROUTES) {
+      const modules = modulesFor(route);
+      expect(modules, route).toHaveLength(2);
+      for (const module of modules) expect(existsSync(resolve(module)), module).toBe(true);
+    }
+    expect(Object.keys(PAGE_MODULES).sort()).toEqual([...STATIC_ROUTES].sort());
+    expect(existsSync(resolve(modulesFor('/crawlers/mimi')[1]))).toBe(true);
+  });
+});
+
+describe('injectPage with route assets', () => {
+  const data = { route: '/cast', show: makeShow(), crawlers: makeCrawlers(), status: null };
+  const BASED = TEMPLATE.replace(
+    '</head>',
+    '  <link rel="stylesheet" crossorigin href="/dcc-watch-hub/assets/index-abc.css">\n  </head>',
+  );
+
+  it('reads the deploy base off the entry stylesheet', () => {
+    expect(assetPrefix(BASED)).toBe('/dcc-watch-hub/');
+    expect(assetPrefix(TEMPLATE)).toBe('/');
+  });
+
+  it('links the stylesheets and preloads the chunks at the end of the head', () => {
+    const page = injectPage(BASED, {
+      head: '<title>T</title>',
+      html: '<p>hi</p>',
+      data,
+      assets: assetsFor(MANIFEST, '/cast'),
+    });
+    const head = page.slice(0, page.indexOf('</head>'));
+    expect(head).toContain(
+      '<link rel="stylesheet" crossorigin href="/dcc-watch-hub/assets/CastPage-1.css">',
+    );
+    expect(head).toContain(
+      '<link rel="modulepreload" crossorigin href="/dcc-watch-hub/assets/CastPage-1.js">',
+    );
+    // After the entry stylesheet, and shared rules before the page's own.
+    expect(head.indexOf('index-abc.css')).toBeLessThan(head.indexOf('page-1.css'));
+    expect(head.indexOf('page-1.css')).toBeLessThan(head.indexOf('CastPage-1.css'));
+  });
+
+  it('adds nothing when the route has no assets', () => {
+    const plain = injectPage(TEMPLATE, { head: '<title>T</title>', html: '', data });
+    expect(plain).not.toContain('modulepreload');
+    expect(plain.match(/rel="stylesheet"/g)).toBeNull();
   });
 });

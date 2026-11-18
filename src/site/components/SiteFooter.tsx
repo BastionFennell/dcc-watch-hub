@@ -1,5 +1,5 @@
 /**
- * The front door's footer (011 §3.1): the same three links as the header, the
+ * The front door's footer (011 §3.1): the same four links as the header, the
  * disclaimer the show is required to carry, and a copyright line with no year
  * in it - a year read from the clock would differ between the prerendered HTML
  * and the first client render, and this is not worth a hydration mismatch.
@@ -17,6 +17,9 @@ export function SiteFooter() {
         </Link>
         <Link className={styles.link} to="/crawlers">
           {siteCopy.navCrawlers}
+        </Link>
+        <Link className={styles.link} to="/cast">
+          {siteCopy.navCast}
         </Link>
         <Link className={styles.link} to="/community">
           {siteCopy.navCommunity}

@@ -29,6 +29,13 @@ export default defineConfig({
      * the dynamic import runs, which is exactly what the Studio wants anyway.
      */
     modulePreload: { polyfill: false },
+    /*
+     * The prerenderer reads this to link each route's own stylesheets and
+     * chunks into its HTML (scripts/prerender.mjs, `assetsFor`), so a
+     * prerendered page is styled before a line of script has run.
+     * `scripts/postbuild.mjs` deletes it again: it is a build tool, not a page.
+     */
+    manifest: true,
   },
   test: {
     environment: 'node',

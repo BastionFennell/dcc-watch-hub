@@ -1,0 +1,91 @@
+{
+  "todo": [
+    "Lulu's bio and links.",
+    "Bastion's bio and links.",
+    "Sarah's preferred link (Instagram is a stand-in)."
+  ],
+  "cast": [
+    {
+      "id": "lulu",
+      "name": "Lulu",
+      "pronouns": "she/her",
+      "crawlerId": "mimi",
+      "bio": [],
+      "photo": {
+        "card": "/img/cast/lulu.webp",
+        "credit": "/img/cast/lulu-sm.webp"
+      },
+      "links": []
+    },
+    {
+      "id": "madio",
+      "name": "Madio",
+      "pronouns": "he/him",
+      "crawlerId": "ronald",
+      "bio": [
+        "La Madio is a writer and performer originally from Oakland, CA, now based out of Atlanta. His passion for TTRPGs began during his time studying creative writing at UCLA. Since then he's launched Dice Pile, a TTRPG blog over on Substack, and began taking on roles within the actual play sphere. Notably, he works as a team member with Dungeon Dropouts and here on Dungeon Crawl Cast. When he's not working on projects you can likely find him diving into a new book or playing through his backlog of games."
+      ],
+      "photo": {
+        "card": "/img/cast/madio.webp",
+        "credit": "/img/cast/madio-sm.webp"
+      },
+      "links": [
+        {
+          "kind": "beacons",
+          "url": "https://beacons.ai/madiotu"
+        }
+      ]
+    },
+    {
+      "id": "danny",
+      "name": "Danny",
+      "pronouns": "he/him",
+      "crawlerId": "xo",
+      "bio": [
+        "Danny Mendoza is a Miami-based director, producer, and actor whose career spans 2-3 decades in broadcast television, film, theatre, and most recently in the Actual Play space. With foundational training from NYU's Tisch School of the Arts, Old Vic New Voices, the Upright Citizens Brigade, and the Labyrinth Theatre Company, Danny brings a cinematic and collaborative lens to his part of the Dungeon Crawl Cast. At the table, he champions a \"play to lift\" philosophy, prioritizing comprehensive safety, community care, and anti-authoritarian storytelling. Danny serves as the founder of Miami Story Center, a Founder among many at Streaming Rainbow, and Creative Director at Many-Faced Plays."
+      ],
+      "photo": {
+        "card": "/img/cast/danny.webp",
+        "credit": "/img/cast/danny-sm.webp"
+      },
+      "links": [
+        {
+          "kind": "linktree",
+          "url": "https://linktr.ee/dannyrmendoza"
+        }
+      ]
+    },
+    {
+      "id": "sarah",
+      "name": "Sarah",
+      "pronouns": "she/they",
+      "crawlerId": "veil",
+      "bio": [
+        "Hi there! I hail from the beautiful Puget Sound region in Washington State and I have a background in graphic design and voice acting, and I'm currently venturing into creative writing! Although I daylight as a corporate drone, my passions lie in art and creativity in any form.",
+        "I fell in love with TTRPGs when I realized that they inherently thrive on an intersection of human creativity. Art, creative writing, music, worldbuilding, theater and so much more can be explored and expressed in a fun and safe environment with your favorite people... while rolling math rocks! Seriously, what's not to love?"
+      ],
+      "photo": {
+        "card": "/img/cast/sarah.webp",
+        "credit": "/img/cast/sarah-sm.webp"
+      },
+      "links": [
+        {
+          "kind": "instagram",
+          "url": "https://www.instagram.com/sarahthegeeky"
+        }
+      ]
+    },
+    {
+      "id": "bastion",
+      "name": "Bastion",
+      "pronouns": "he/him",
+      "role": "The System AI",
+      "bio": [],
+      "photo": {
+        "card": "/img/cast/bastion.webp",
+        "credit": "/img/cast/bastion-sm.webp"
+      },
+      "links": []
+    }
+  ]
+}

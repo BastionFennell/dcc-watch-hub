@@ -17,6 +17,7 @@ import { NotFoundPage } from './pages/NotFoundPage';
  * prerenderer can still render them synchronously.
  */
 import {
+  CastPage,
   CommunityPage,
   CrawlerPage,
   CrawlersPage,
@@ -87,6 +88,7 @@ function AppShell({ embedded }: AppProps) {
               <Route path="/watch" element={<WatchPage />} />
               <Route path="/crawlers" element={<CrawlersPage />} />
               <Route path="/crawlers/:id" element={<CrawlerPage />} />
+              <Route path="/cast" element={<CastPage />} />
               <Route path="/community" element={<CommunityPage />} />
               {/*
                 `/_og/*`: the share-image frames `scripts/og.mjs` screenshots

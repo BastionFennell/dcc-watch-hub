@@ -84,6 +84,7 @@ describe('SiteFooter', () => {
       'href',
       '/crawlers',
     );
+    expect(screen.getByRole('link', { name: siteCopy.navCast })).toHaveAttribute('href', '/cast');
     expect(screen.getByRole('link', { name: siteCopy.navCommunity })).toHaveAttribute(
       'href',
       '/community',

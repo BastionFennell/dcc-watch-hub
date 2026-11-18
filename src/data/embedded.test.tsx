@@ -5,7 +5,7 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { EMBEDDED_ID, readEmbedded } from './load';
-import { makeCrawlers, makeDossier, makeShow, makeStatus } from '../test/fixtures';
+import { makeCast, makeCrawlers, makeDossier, makeShow, makeStatus } from '../test/fixtures';
 
 function embed(text: string): void {
   const script = document.createElement('script');
@@ -51,6 +51,17 @@ describe('readEmbedded', () => {
       }),
     );
     expect(readEmbedded()?.dossier).toEqual(makeDossier('stuntman'));
+  });
+
+  /* 014: the cast rides on every route, unread; absent means a pre-014 payload. */
+  it('hands the cast through unread, and keeps an absent cast absent', () => {
+    const base = { route: '/cast', show: makeShow(), crawlers: makeCrawlers(), status: null };
+    embed(JSON.stringify({ ...base, cast: makeCast() }));
+    expect(readEmbedded()?.cast).toEqual(makeCast());
+    document.getElementById(EMBEDDED_ID)?.remove();
+
+    embed(JSON.stringify(base));
+    expect(readEmbedded()).not.toHaveProperty('cast');
   });
 
   it('reads a pre-012 payload, and every non-crawler route, as no dossier', () => {

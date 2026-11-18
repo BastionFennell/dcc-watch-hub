@@ -1,5 +1,7 @@
 /**
  * `/crawlers/:id` - one crawler, and the player behind them (011 §3.4, R2).
+ * Since 014 the player is only named here, with a face and a link: who they
+ * are lives on their `/cast` card.
  *
  * Revision 2's two rules shape the whole page. **Empty renders nothing**: a
  * section whose data the author has not written yet prints no heading, no
@@ -26,9 +28,9 @@ import { Dossier } from '../components/Dossier/Dossier';
 import { EntryAchievement } from '../components/EntryAchievement';
 import { GatedCta } from '../components/GatedCta';
 import { SiteFooter } from '../components/SiteFooter';
-import { SocialRow } from '../components/SocialRow';
 import type { ShowLinks } from '../../data/types';
 import { firstEpisode } from '../gate';
+import { castAnchor, playerOf } from '../cast';
 import page from './page.module.css';
 import styles from './CrawlerPage.module.css';
 
@@ -38,7 +40,7 @@ const NO_LINKS: ShowLinks = { youtube: '', discord: '' };
 export function CrawlerPage() {
   const { id = '' } = useParams();
   const { show } = useShow();
-  const { profiles, status, loading, dossierFor } = useCrawlers();
+  const { profiles, status, loading, dossierFor, cast } = useCrawlers();
   const now = useNow(60_000, Date.parse(status?.generatedAt ?? '') || Date.now());
 
   const index = profiles.findIndex((profile) => profile.id === id);
@@ -61,10 +63,11 @@ export function CrawlerPage() {
   const prev = index > 0 ? profiles[index - 1] : undefined;
   const next = index < profiles.length - 1 ? profiles[index + 1] : undefined;
   const achievement = profile.entryAchievement;
-  const { player } = profile;
+  // 014: `cast.json` names the crawler, not the other way round. Nobody
+  // claiming this one (no cast file yet) costs the credit, not the page.
+  const player = playerOf(cast, profile.id);
   const links = show?.links ?? NO_LINKS;
   const opener = show === null ? undefined : (firstEpisode(show) ?? undefined);
-  const detail = [player.pronouns, player.bio].filter((part) => part !== undefined).join(' · ');
 
   return (
     <div className={`${page.page} ${styles.page}`}>
@@ -117,16 +120,29 @@ export function CrawlerPage() {
             </p>
           </div>
 
-          <div className={styles.credit}>
-            <p className={styles.creditLine}>
-              <span className={styles.creditPrefix}>{siteCopy.playedBy} </span>
-              <span className={styles.playerName}>{player.name}</span>
-            </p>
-            {detail === '' ? null : <p className={styles.creditDetail}>{detail}</p>}
-            {player.links === undefined ? null : (
-              <SocialRow links={{ ...NO_LINKS, ...player.links }} />
-            )}
-          </div>
+          {/*
+           * 014: a face and a name, and the name leads to the card. The photo
+           * is `alt=""` because the name is right beside it, and eager because
+           * the credit is above the fold.
+           */}
+          {player === undefined ? null : (
+            <div className={styles.credit}>
+              <img
+                className={styles.creditPhoto}
+                src={asset(player.photo.credit)}
+                alt=""
+                width={40}
+                height={40}
+                loading="eager"
+              />
+              <p className={styles.creditLine}>
+                <span className={styles.creditPrefix}>{siteCopy.playedBy} </span>
+                <Link className={styles.playerName} to={castAnchor(player.id)}>
+                  {player.name}
+                </Link>
+              </p>
+            </div>
+          )}
 
           {profile.concept === '' ? null : <p className={styles.concept}>{profile.concept}</p>}
 

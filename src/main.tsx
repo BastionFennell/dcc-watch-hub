@@ -4,8 +4,9 @@ import { BrowserRouter } from 'react-router';
 import './styles/tokens.css';
 import './styles/global.css';
 import { App } from './App';
-import { clearPrerenderedHead, shouldHydrate } from './boot';
+import { clearPrerenderedHead, normalizePath, shouldHydrate } from './boot';
 import { readEmbedded } from './data/load';
+import { preloadRoute } from './site/pages/preloadRoute';
 
 const container = document.getElementById('root');
 if (!container) throw new Error('#root is missing from index.html');
@@ -44,8 +45,14 @@ if (import.meta.env.VITE_PLAUSIBLE_DOMAIN) {
  */
 clearPrerenderedHead(document);
 
-if (shouldHydrate(embedded, window.location.pathname, base)) {
-  hydrateRoot(container, tree);
+if (embedded !== null && shouldHydrate(embedded, window.location.pathname, base)) {
+  /*
+   * The route's lazy chunks first, so hydration never meets a suspended page
+   * (see `preloadRoute`). A chunk that fails to load must not leave the page
+   * inert: hydrate anyway and let the boundary recover the old way.
+   */
+  const hydrate = () => hydrateRoot(container, tree);
+  preloadRoute(normalizePath(embedded.route)).then(hydrate, hydrate);
 } else {
   createRoot(container).render(tree);
 }

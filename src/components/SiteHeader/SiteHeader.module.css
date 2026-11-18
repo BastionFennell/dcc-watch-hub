@@ -299,6 +299,21 @@
   border-top: var(--border-hairline);
 }
 
+/*
+ * Just past the phone breakpoint (014). The title and pill come back at 641 px
+ * and, on a hub route, so do the Codex link and the show channels - with four
+ * nav items that ran the right cluster up to 46 px past the edge until 738 px
+ * (measured). Tighter nav links could not buy that back: the grid splits the
+ * shortfall between the brand and the right cluster, so even no padding at all
+ * left 25 px over. The pill is decoration the phone already drops, so it waits
+ * until there is room for it. No menu button.
+ */
+@media (min-width: 641px) and (max-width: 760px) {
+  .pill {
+    display: none;
+  }
+}
+
 /* ------------------------------------------------------------------ phone */
 
 @media (max-width: 640px) {
