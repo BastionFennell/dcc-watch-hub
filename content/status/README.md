@@ -56,6 +56,10 @@ and the page still fills. That is a legal, shipping state, not a TODO.
 | `level`    | an integer, or `null` to derive it from the hub reducer at the end of the episode. |
 | `condition`| `alive` or `deceased`. Sticky: never back to `alive`.                            |
 
+Most bodies should say plainly what happened. Three habits make the cards read alike when every
+one uses them: a punchline on the last sentence, a "not X, it is Y" turn, and a noun repeated as
+the next sentence's subject ("It has a quota. The quota is..."). Use them rarely.
+
 A health-bar chip is written in **HB slots**, not hit points: the bar is ten slots, so it reads
 `2/10 HB`, never `4/20 HB` (author, 2026-09-25; see specs/003-crawler-record/spec.md,
 Revision 3).
