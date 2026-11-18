@@ -39,7 +39,7 @@ export const siteCopy = {
   // --- home sections
   latestEpisodeTitle: 'Latest episode',
   meetTheCrawlersTitle: 'Meet the crawlers',
-  meetTheCrawlersLead: 'They were a film crew until the world ended on a Tuesday.',
+  meetTheCrawlersLead: 'They were a film crew until the world ended.',
   newcomerTitle: 'New to Dungeon Crawler Carl?',
   newcomerBody:
     'It\'s a book series about an apocalyptic game show with a cat who takes it personally. You don\'t need to have read a word of it to watch this.',
