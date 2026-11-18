@@ -94,7 +94,7 @@ describe('public/data/show.json', () => {
 
   it('carries the marketing copy the home page renders', () => {
     const show = showRaw as Show;
-    expect(show.tagline).toBe('Earth got cancelled. They got renewed.');
+    expect(show.tagline).toBe('Came for the movie. Stayed for the show.');
     expect(show.pitch).toBeTruthy();
     expect(show.cadence).toBeTruthy();
     // No trailer has been cut yet, so `trailerYoutubeId` is deliberately absent

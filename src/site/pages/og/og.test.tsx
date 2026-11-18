@@ -90,13 +90,15 @@ describe('OgEpisodePage', () => {
 });
 
 describe('OgSitePage', () => {
-  it('frames the mark, the tagline and the pitch', () => {
+  it('frames the label, the tagline and the mark', () => {
     const { container } = renderSite(<OgSitePage />, { path: '/_og/site' });
     expect(container.querySelector('[data-og-frame]')).not.toBeNull();
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
       'Heart and chaos in the World Dungeon.',
     );
-    expect(screen.getByText(/Five people from a film crew/)).toBeInTheDocument();
+    expect(screen.getByText(siteCopy.heroEyebrow)).toBeInTheDocument();
+    // The pitch is the page's description; the picture leaves it out.
+    expect(screen.queryByText(/Five people from a film crew/)).not.toBeInTheDocument();
   });
 
   it('loads its art eagerly, so the renderer sees it before network idle', () => {

@@ -14,6 +14,7 @@ import { ctaFor, firstEpisode, newestEpisode } from '../gate';
 import { useNow } from '../useNow';
 import { Seo } from '../seo';
 import { siteCopy } from '../copy';
+import { taglineRows } from '../tagline';
 import { trackCta, trackOutbound } from '../analytics';
 import { youtubeThumb } from '../media';
 import { EpisodeRow } from '../components/EpisodeRow';
@@ -55,7 +56,13 @@ export function HomePage() {
       <section className={styles.hero}>
         <div className={styles.heroText}>
           <p className={page.eyebrow}>{siteCopy.heroEyebrow}</p>
-          <h1 className={styles.tagline}>{show?.tagline ?? siteCopy.defaultTitle}</h1>
+          <h1 className={styles.tagline}>
+            {taglineRows(show?.tagline ?? siteCopy.defaultTitle).map((row, index) => (
+              <span key={index} className={styles.taglineRow}>
+                {row}{' '}
+              </span>
+            ))}
+          </h1>
           <p className={page.lead}>{show?.pitch ?? siteCopy.defaultDescription}</p>
           {show !== null && opener !== null ? (
             <div className={styles.ctas}>
