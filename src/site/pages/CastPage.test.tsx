@@ -103,8 +103,8 @@ describe('CastPage', () => {
   it('draws the link pills with the right label, address and safety rule', () => {
     renderCast();
     const expected: [string, string, string][] = [
-      ['madio', siteCopy.platform.links, 'https://beacons.ai/madiotu'],
-      ['danny', siteCopy.platform.links, 'https://linktr.ee/dannyrmendoza'],
+      ['madio', siteCopy.platform.beacons, 'https://beacons.ai/madiotu'],
+      ['danny', siteCopy.platform.linktree, 'https://linktr.ee/dannyrmendoza'],
       ['sarah', siteCopy.platform.instagram, 'https://www.instagram.com/sarahthegeeky'],
     ];
     for (const [id, label, href] of expected) {

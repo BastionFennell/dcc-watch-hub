@@ -103,7 +103,7 @@ describe('lintCast', () => {
 
   it('rejects a link of an unknown kind', () => {
     expect(lint((cast) => void (cast[0].links = [{ kind: 'myspace', url: 'https://x.y' }]))).toEqual(
-      ['danny: links[0]: kind "myspace" is not one of youtube, discord, tiktok, bluesky, instagram, links.'],
+      ['danny: links[0]: kind "myspace" is not one of youtube, discord, tiktok, bluesky, instagram, linktree, beacons, links.'],
     );
   });
 

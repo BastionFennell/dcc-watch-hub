@@ -28,7 +28,7 @@ By hand, at 375 px and 1440 px:
 Edit `public/data/cast.json`:
 - **A bio**: put each paragraph in the member's `bio` array.
 - **A link**: add `{ "kind": "instagram", "url": "https://..." }` to `links`. Kinds: `youtube`,
-  `discord`, `tiktok`, `bluesky`, `instagram`, or `links` for a link hub or personal site.
+  `discord`, `tiktok`, `bluesky`, `instagram`, `linktree`, `beacons`, or `links` for any other link hub or personal site.
 - **Order**: reorder the array.
 - **A photo**: replace `public/img/cast/<id>.webp` (480x480) and `<id>-sm.webp` (96x96).
 

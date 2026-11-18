@@ -244,7 +244,7 @@ Three custom events, all from `src/site/analytics.ts`:
 | Event | Props | Fired when |
 |---|---|---|
 | `hub_open` | `{ episode }` | A gated CTA pointing at `/ep/:id` is clicked |
-| `outbound` | `{ to, episode? }` | A link leaves the site: YouTube, Discord, TikTok, Bluesky, Instagram, or a cast member's link hub (`to: 'links'`) |
+| `outbound` | `{ to, episode? }` | A link leaves the site: YouTube, Discord, TikTok, Bluesky, Instagram, or a cast member's link hub (`to: 'linktree'`, `'beacons'` or `'links'`) |
 | `crawler_view` | `{ crawler }` | A crawler page mounts |
 
 ### The crawler dossier - "Where are they now?" (012)
@@ -349,7 +349,7 @@ one card each. Everything on a card comes from **`public/data/cast.json`**; the 
   "crawlerId": "ronald",
   "bio": ["First paragraph.", "Second paragraph."],
   "photo": { "card": "/img/cast/madio.webp", "credit": "/img/cast/madio-sm.webp" },
-  "links": [{ "kind": "links", "url": "https://beacons.ai/madiotu" }]
+  "links": [{ "kind": "beacons", "url": "https://beacons.ai/madiotu" }]
 }
 ```
 
@@ -369,7 +369,7 @@ How to:
 - **Add a bio**: put each paragraph in the member's `bio` array, as written (first person stays
   first person).
 - **Add a link**: append `{ "kind": "instagram", "url": "https://..." }` to `links`. Kinds are
-  `youtube`, `discord`, `tiktok`, `bluesky`, `instagram`, and `links` for a link hub or a personal
+  `youtube`, `discord`, `tiktok`, `bluesky`, `instagram`, `linktree`, `beacons` and `links` for a link hub or a personal
   site (its pill reads "Links"). Addresses must be `https://`. Links open in a new tab with
   `rel="noopener"` and count as `outbound` clicks.
 - **Add or replace a photo**: crop square around the face, then ship two WebP files,

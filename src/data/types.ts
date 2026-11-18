@@ -135,13 +135,15 @@ export interface CrawlerRoster {
 
 /* ------------------------------------------------- the cast (014) */
 
-/** The platforms a cast link may name: the show's five, plus a generic hub/site. */
+/** The platforms a cast link may name: the show's five, two named link hubs, plus a generic hub/site. */
 export const CAST_LINK_KINDS = [
   'youtube',
   'discord',
   'tiktok',
   'bluesky',
   'instagram',
+  'linktree',
+  'beacons',
   'links',
 ] as const;
 export type CastLinkKind = (typeof CAST_LINK_KINDS)[number];

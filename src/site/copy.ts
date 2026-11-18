@@ -190,7 +190,10 @@ export const siteCopy = {
     tiktok: 'TikTok',
     bluesky: 'Bluesky',
     instagram: 'Instagram',
-    /** A cast member's link hub or personal site (014): one pill, whatever is behind it. */
+    /** Named link hubs a cast member may use (014). */
+    linktree: 'Linktree',
+    beacons: 'Beacons',
+    /** Any other link hub or personal site (014): one pill, whatever is behind it. */
     links: 'Links',
   } as const,
 

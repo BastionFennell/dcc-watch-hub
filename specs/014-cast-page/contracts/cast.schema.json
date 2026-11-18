@@ -60,14 +60,14 @@
             }
           },
           "links": {
-            "comment": "Rendered in this order. 'links' is a link hub or personal site.",
+            "comment": "Rendered in this order. 'linktree' and 'beacons' are named link hubs; 'links' is any other hub or personal site.",
             "type": "array",
             "items": {
               "type": "object",
               "required": ["kind", "url"],
               "additionalProperties": false,
               "properties": {
-                "kind": { "enum": ["youtube", "discord", "tiktok", "bluesky", "instagram", "links"] },
+                "kind": { "enum": ["youtube", "discord", "tiktok", "bluesky", "instagram", "linktree", "beacons", "links"] },
                 "url": { "type": "string", "pattern": "^https://.+" }
               }
             }
