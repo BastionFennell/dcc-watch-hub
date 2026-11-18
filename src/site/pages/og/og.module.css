@@ -66,28 +66,65 @@
 
 .site {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 28px;
   width: 1200px;
   height: 630px;
-  padding: 96px;
-  border-left: 8px solid var(--brand-2);
+  border-top: 8px solid var(--action, var(--brand-2));
+  background:
+    radial-gradient(rgb(255 255 255 / 5%) 2px, transparent 2.3px) 0 0 / 18px 18px,
+    linear-gradient(118deg, transparent 0 44%, rgb(143 77 255 / 26%) 44% 78%, transparent 78%),
+    radial-gradient(ellipse 80% 70% at 50% 0, #22104f, transparent 70%),
+    var(--canvas);
+}
+
+.siteText {
+  position: absolute;
+  z-index: 2;
+  top: 60px;
+  bottom: 52px;
+  left: 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* The mark sits at the foot of the frame, under the headline's column. */
+.siteText .mark {
+  margin-top: auto;
+}
+
+.siteLabel {
+  align-self: flex-start;
+  padding: 8px 14px;
+  background: var(--action, var(--brand-2));
+  color: var(--action-ink, var(--text));
+  font-family: var(--font-mono);
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .siteTagline {
-  font-size: 76px;
-  font-weight: 700;
-  line-height: 1.08;
-  max-width: 1000px;
+  /* Two rows clear the crawlers' heads; a longer tagline wraps inside 1060 px. */
+  font-size: 56px;
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1.04;
+  text-transform: uppercase;
+  text-shadow: 5px 5px 0 var(--brand-2);
+  max-width: 1060px;
 }
 
-.sitePitch {
-  font-size: 30px;
-  line-height: 1.4;
-  color: var(--text-2);
-  max-width: 900px;
+.siteTaglineRow {
+  display: block;
+}
+
+.siteLineup {
+  position: absolute;
+  z-index: 1;
+  right: 36px;
+  bottom: 30px;
+  width: 560px;
 }
 
 /* -------------------------------------------------------------- shared */
