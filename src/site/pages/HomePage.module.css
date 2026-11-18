@@ -18,7 +18,11 @@
 }
 
 .tagline {
-  font-size: 30px;
+  /*
+   * Sized so each row of the tagline holds one line from 320 px up; a longer
+   * tagline, or a wider system font, simply wraps.
+   */
+  font-size: clamp(22px, 7vw, 28px);
   font-weight: 900;
   font-style: italic;
   line-height: 1.04;
@@ -26,6 +30,10 @@
   text-transform: uppercase;
   text-shadow: 3px 3px 0 var(--brand-2);
   overflow-wrap: anywhere;
+}
+
+.taglineRow {
+  display: block;
 }
 
 .ctas {
@@ -144,7 +152,7 @@
   }
 
   .tagline {
-    font-size: 42px;
+    font-size: clamp(29px, 3.3vw, 35px);
   }
 
   .feature {

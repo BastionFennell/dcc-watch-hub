@@ -27,6 +27,18 @@ import { TrailerEmbed } from '../components/TrailerEmbed';
 import page from './page.module.css';
 import styles from './HomePage.module.css';
 
+/**
+ * A tagline of several sentences is set one sentence to a row, and at display
+ * size the rows drop their closing full stops: "Came for the movie" over
+ * "Stayed for the show". A single sentence is left exactly as written. The
+ * string itself stays whole in `show.json`, where the page title and the share
+ * image read it as a sentence.
+ */
+function taglineRows(tagline: string): string[] {
+  const rows = tagline.split(/(?<=[.!?])\s+/).filter((row) => row !== '');
+  return rows.length > 1 ? rows.map((row) => row.replace(/\.$/, '')) : rows;
+}
+
 export function HomePage() {
   const { show } = useShow();
   const { profiles, status } = useCrawlers();
@@ -55,7 +67,13 @@ export function HomePage() {
       <section className={styles.hero}>
         <div className={styles.heroText}>
           <p className={page.eyebrow}>{siteCopy.heroEyebrow}</p>
-          <h1 className={styles.tagline}>{show?.tagline ?? siteCopy.defaultTitle}</h1>
+          <h1 className={styles.tagline}>
+            {taglineRows(show?.tagline ?? siteCopy.defaultTitle).map((row, index) => (
+              <span key={index} className={styles.taglineRow}>
+                {row}{' '}
+              </span>
+            ))}
+          </h1>
           <p className={page.lead}>{show?.pitch ?? siteCopy.defaultDescription}</p>
           {show !== null && opener !== null ? (
             <div className={styles.ctas}>
