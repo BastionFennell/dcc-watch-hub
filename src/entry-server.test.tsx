@@ -38,7 +38,7 @@ describe('stripHoistedHead', () => {
 describe('render', () => {
   it('renders the NotFound page for an unknown route', () => {
     const { html } = render('/nope', data('/nope'));
-    expect(html).toContain('No such recap episode exists in the archive.');
+    expect(html).toContain('The System has no record of this page.');
     // Nothing React hoists survives into the body; the head carries it instead.
     expect(html.startsWith('<title>')).toBe(false);
     expect(html).not.toContain('<link rel="canonical"');

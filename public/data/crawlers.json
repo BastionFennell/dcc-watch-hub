@@ -22,8 +22,10 @@
       },
       "art": {
         "bust": "/img/crawlers/mimi.png",
-        "full": "/img/crawlers/mimi-art.png"
+        "full": "/img/crawlers/mimi-art.png",
+        "lineup": "/img/crawlers/mimi-lineup.webp"
       },
+      "backdrop": "#a81f5c",
       "pronouns": "she/her"
     },
     {
@@ -42,8 +44,10 @@
       },
       "art": {
         "bust": "/img/crawlers/ronald.png",
-        "full": "/img/crawlers/ronald-art.png"
+        "full": "/img/crawlers/ronald-art.png",
+        "lineup": "/img/crawlers/ronald-lineup.webp"
       },
+      "backdrop": "#0f8a86",
       "pronouns": "he/him"
     },
     {
@@ -62,8 +66,10 @@
       },
       "art": {
         "bust": "/img/crawlers/xo.png",
-        "full": "/img/crawlers/xo-art.png"
+        "full": "/img/crawlers/xo-art.png",
+        "lineup": "/img/crawlers/xo-lineup.webp"
       },
+      "backdrop": "#2553c4",
       "pronouns": "he/them"
     },
     {
@@ -82,8 +88,10 @@
       },
       "art": {
         "bust": "/img/crawlers/veil.png",
-        "full": "/img/crawlers/veil-art.png"
+        "full": "/img/crawlers/veil-art.png",
+        "lineup": "/img/crawlers/veil-lineup.webp"
       },
+      "backdrop": "#d1921c",
       "pronouns": "she/they"
     }
   ]

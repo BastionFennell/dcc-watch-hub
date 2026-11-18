@@ -29,19 +29,27 @@
 .portrait {
   grid-area: art;
   width: 100%;
-  max-width: 280px;
-  border-radius: 14px;
-  border: var(--border-hairline);
-  background: var(--brand-deep);
-  box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
+  /* Centred on a phone: a left-aligned 280 px card left a dead strip beside it. */
+  max-width: 320px;
+  justify-self: center;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--brand-line);
+  box-shadow: 8px 8px 0 var(--brand-2);
 }
 
 .ctaCell {
   grid-area: cta;
   display: flex;
   min-width: 0;
-  /* A full-bleed button on a phone reads as a banner; 280 px reads as a button. */
-  max-width: 280px;
+  /* The portrait's width, so the two read as one column on a phone as well. */
+  width: 100%;
+  max-width: 320px;
+  justify-self: center;
+}
+
+/* The button fills the cell, so it is exactly as wide as the portrait. */
+.ctaCell > * {
+  width: 100%;
 }
 
 .text {
@@ -64,18 +72,22 @@
 }
 
 .eyebrow {
+  align-self: flex-start;
+  padding: 5px 10px;
+  background: var(--action, transparent);
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.16em;
+  font-weight: 800;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--brand-fg);
+  color: var(--action-ink, var(--brand-fg));
 }
 
 .name {
   font-size: var(--text-display);
-  font-weight: 650;
+  font-weight: 900;
   line-height: 1.1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
   color: var(--text);
   overflow-wrap: anywhere;
 }

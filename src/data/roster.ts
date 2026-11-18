@@ -92,7 +92,12 @@ function toCrawlerProfile(raw: unknown): CrawlerProfile | null {
   if (bust === null || bust === '') return null;
 
   const full = isRecord(raw.art) ? toString_(raw.art.full) : null;
+  const lineup = isRecord(raw.art) ? toString_(raw.art.lineup) : null;
   const og = toString_(raw.og);
+  const backdropRaw = toString_(raw.backdrop);
+  /* A hex and nothing else: the value goes straight into a style attribute. */
+  const backdrop =
+    backdropRaw !== null && /^#[0-9a-f]{6}$/i.test(backdropRaw) ? backdropRaw : null;
   const entryAchievement = toEntryAchievement(raw.entryAchievement, id);
 
   return {
@@ -104,7 +109,12 @@ function toCrawlerProfile(raw: unknown): CrawlerProfile | null {
     concept,
     pockets: toNonEmptyStringList(raw.pockets),
     ...(entryAchievement === undefined ? {} : { entryAchievement }),
-    art: { bust, ...(full === null || full === '' ? {} : { full }) },
+    art: {
+      bust,
+      ...(full === null || full === '' ? {} : { full }),
+      ...(lineup === null || lineup === '' ? {} : { lineup }),
+    },
+    ...(backdrop === null ? {} : { backdrop }),
     ...(og === null || og === '' ? {} : { og }),
   };
 }

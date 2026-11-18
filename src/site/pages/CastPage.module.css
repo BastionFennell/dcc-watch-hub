@@ -1,7 +1,6 @@
 /*
- * `/cast` (014). The same reading column as `/community`: the shell gives the
- * page its measure, this file gives it one 720 px column inside that measure,
- * so the head, every card and the footer share one left edge.
+ * `/cast` (014). One column at the shell's own measure, so the head, every
+ * card and the footer share one left edge with every other page.
  *
  * The shell's own 32 px gap is turned off; 24 px between blocks, 16 px
  * between cards.
@@ -15,8 +14,6 @@
   flex-direction: column;
   gap: var(--space-8);
   width: 100%;
-  max-width: 720px;
-  margin-inline: auto;
   min-width: 0;
 }
 

@@ -5,7 +5,24 @@
   gap: var(--space-3);
   min-width: 0;
   padding: var(--space-7);
-  background: var(--system-bg);
+  background-color: var(--system-bg);
+  /* Corner brackets: the System's boxes read as a projection, and only they do. */
+  background-image:
+    linear-gradient(var(--system-bracket, transparent), var(--system-bracket, transparent)),
+    linear-gradient(var(--system-bracket, transparent), var(--system-bracket, transparent)),
+    linear-gradient(var(--system-bracket, transparent), var(--system-bracket, transparent)),
+    linear-gradient(var(--system-bracket, transparent), var(--system-bracket, transparent));
+  background-size:
+    16px 2px,
+    2px 16px,
+    16px 2px,
+    2px 16px;
+  background-position:
+    0 0,
+    0 0,
+    100% 100%,
+    100% 100%;
+  background-repeat: no-repeat;
   color: var(--system-fg);
   border: 1px solid var(--system-pill-border);
   border-radius: var(--radius-lg);

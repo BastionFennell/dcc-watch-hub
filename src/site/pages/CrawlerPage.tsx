@@ -32,6 +32,8 @@ import type { ShowLinks } from '../../data/types';
 import { firstEpisode } from '../gate';
 import { castAnchor, playerOf } from '../cast';
 import page from './page.module.css';
+import backdrop from '../backdrop.module.css';
+import { backdropStyle } from '../backdrop';
 import styles from './CrawlerPage.module.css';
 
 const NO_LINKS: ShowLinks = { youtube: '', discord: '' };
@@ -85,7 +87,8 @@ export function CrawlerPage() {
 
       <article className={styles.hero}>
         <img
-          className={styles.portrait}
+          className={`${styles.portrait} ${backdrop.backdrop}`}
+          style={backdropStyle(profile)}
           src={asset(profile.art.full ?? profile.art.bust)}
           alt={profile.characterName}
           /* Above the fold on its own page, so it is never deferred (T1124). */
@@ -101,7 +104,7 @@ export function CrawlerPage() {
               episode={opener}
               now={now}
               links={links}
-              quiet
+              primary
               label={siteCopy.startAtEpisodeOne}
               onTrack={(cta) => trackCta(cta, opener.id)}
             />

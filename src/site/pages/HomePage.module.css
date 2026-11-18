@@ -1,7 +1,7 @@
 /*
  * The hero is one column at 375 px - eyebrow, headline, pitch, both CTAs, then
- * the video - which puts the buttons above the fold on a 375x667 screen before
- * the embed pushes anything down (011 §6). Two columns from 900 px.
+ * the lineup - which puts the buttons above the fold on a 375x667 screen before
+ * the art pushes anything down (011 §6). Two columns from 900 px.
  */
 .hero {
   display: flex;
@@ -19,9 +19,12 @@
 
 .tagline {
   font-size: 30px;
-  font-weight: 700;
-  line-height: 1.12;
-  letter-spacing: -0.01em;
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1.04;
+  letter-spacing: -0.005em;
+  text-transform: uppercase;
+  text-shadow: 3px 3px 0 var(--brand-2);
   overflow-wrap: anywhere;
 }
 
@@ -39,11 +42,13 @@
   min-height: 44px;
   min-width: 44px;
   padding: 0 var(--space-7);
-  border: var(--border-hairline-2);
+  border: 1px solid var(--brand-line);
   border-radius: var(--radius-md);
-  color: var(--brand-fg);
+  color: var(--text);
   font-size: var(--text-md);
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
@@ -56,20 +61,72 @@
   min-width: 0;
 }
 
-.strips {
+/* The video and the newcomer box share a row from 900 px; stacked below it. */
+.feature {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-7);
 }
 
 .discord {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-6);
+  padding: var(--space-7);
+  background: var(--show, var(--brand-deep));
+  border: 1px solid var(--brand-line);
+  border-radius: var(--radius-lg);
+  box-shadow: 6px 6px 0 var(--action, transparent);
+  /* Room for the offset shadow, so it never touches the page edge on a phone. */
+  margin-right: 6px;
+}
+
+.discord p {
+  color: #efe6ff;
+}
+
+.discord a {
+  color: #fff;
+  border-color: rgb(255 255 255 / 45%);
+}
+
+.discordText {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
-  padding: var(--space-7);
-  background: var(--brand-deep);
-  border: 1px solid var(--brand);
-  border-radius: var(--radius-lg);
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.discordCta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 var(--space-7);
+  background: var(--action, var(--brand-2));
+  border: 1px solid var(--action, var(--brand-line));
+  border-radius: var(--radius-md);
+  box-shadow: 4px 4px 0 var(--action-ink, transparent);
+  color: var(--action-ink, var(--brand-fg-2));
+  font-size: var(--text-md);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.discord a.discordCta {
+  color: var(--action-ink, var(--brand-fg-2));
+  border-color: var(--action, var(--brand-line));
+}
+
+.discordCta:hover {
+  filter: brightness(1.08);
+}
+
+.discordSocial {
+  min-width: 0;
 }
 
 .cadence {
@@ -83,16 +140,23 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     align-items: center;
-    gap: var(--space-9);
+    gap: var(--space-8);
   }
 
   .tagline {
-    font-size: 44px;
+    font-size: 42px;
   }
 
-  .strips {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    /* Both strips share the row's height (author, 2026-09-25). */
+  .feature {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
     align-items: stretch;
+  }
+
+  .discord {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .discordSocial {
+    grid-column: 1 / -1;
   }
 }

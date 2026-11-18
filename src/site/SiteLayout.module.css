@@ -1,0 +1,58 @@
+/*
+ * The front door's look ("Headliner"): the System's interface from the viewer,
+ * carrying a game show's colours. Three colours with one job each -
+ *
+ *   violet  the show itself (the Discord block, glows, borders)
+ *   blue    the System speaking (its boxes keep their corner brackets)
+ *   gold    something to press, or a label - always a fill under dark ink,
+ *           never the colour of text on the dark canvas
+ *
+ * The tokens are the shared names from `styles/tokens.css`, re-valued for
+ * everything under this wrapper. The viewer is outside it and keeps its own
+ * values until it is restyled on purpose.
+ */
+.site {
+  --canvas: #0a0a17;
+  --panel: #121226;
+  --panel-deep: #06060f;
+  --hairline: #25254a;
+  --hairline-2: #3a3a72;
+
+  --text: #f3f1ff;
+  --text-2: #b9b6d6;
+  --text-3: #8683a8;
+  --ink-body: #cfcce8;
+  --ink-muted: #8683a8;
+
+  --brand: #6a2fd6;
+  --brand-2: #8f4dff;
+  --brand-deep: #1c1245;
+  --brand-fg: #d9c8ff;
+  --brand-fg-2: #fff;
+  --brand-line: #a678ff;
+
+  --system-bg: #0b3f7a;
+  --system-pill-fg: #7fd4ff;
+  --system-pill-border: #2a6fc0;
+  --system-bracket: #7fd4ff;
+
+  /* Gold is the action colour; `--action-ink` is the only ink that goes on it. */
+  --action: #ffc247;
+  --action-ink: #14102a;
+  --action-shadow: 4px 4px 0 var(--brand-2);
+  --show: #5b24c9;
+  --hard-shadow: 5px 5px 0 var(--panel-deep);
+
+  --radius-md: 2px;
+  --radius-lg: 3px;
+  --radius-xl: 3px;
+
+  min-height: calc(100vh - var(--header-h));
+  color: var(--text);
+  background:
+    radial-gradient(rgb(255 255 255 / 4.5%) 1.6px, transparent 1.8px) 0 0 / 14px 14px,
+    linear-gradient(118deg, transparent 0 46%, rgb(143 77 255 / 22%) 46% 72%, transparent 72%) 0 0 /
+      100% 640px no-repeat,
+    radial-gradient(ellipse 80% 50% at 50% 0, #22104f, transparent 70%) 0 0 / 100% 1100px no-repeat,
+    var(--canvas);
+}

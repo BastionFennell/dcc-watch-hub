@@ -39,10 +39,10 @@ export const siteCopy = {
   // --- home sections
   latestEpisodeTitle: 'Latest episode',
   meetTheCrawlersTitle: 'Meet the crawlers',
-  meetTheCrawlersLead: 'Four people from the same film crew, and one very bad Tuesday.',
+  meetTheCrawlersLead: 'They were a film crew until the world ended on a Tuesday.',
   newcomerTitle: 'New to Dungeon Crawler Carl?',
   newcomerBody:
-    'It is a book series about an apocalyptic game show with a cat who takes it personally. You do not need to have read a word of it to watch this.',
+    'It\'s a book series about an apocalyptic game show with a cat who takes it personally. You don\'t need to have read a word of it to watch this.',
   newcomerLink: 'Start with the primer on YouTube',
   discordTitle: 'Join the Discord',
   discordBody: 'Talk episodes, swap theories, and meet other crawlers.',
@@ -74,7 +74,7 @@ export const siteCopy = {
 
   // --- /crawlers
   crawlersTitle: 'The crawlers',
-  crawlersLead: 'Four contestants, one production company, no exit.',
+  crawlersLead: 'The actress, the stuntman, the first AD and the psychic from one film crew are now contestants in the World Dungeon.',
   /*
    * 012 removed the status filter chips, the status pill and the live line.
    * Every word they used to print said something about a crawler's condition,

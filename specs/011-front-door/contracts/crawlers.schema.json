@@ -59,8 +59,18 @@
             "additionalProperties": false,
             "properties": {
               "bust": { "type": "string", "pattern": "^/.+$" },
-              "full": { "type": "string", "pattern": "^/.+$" }
+              "full": { "type": "string", "pattern": "^/.+$" },
+              "lineup": {
+                "comment": "The full figure trimmed to its bounds, for the home hero's group shot.",
+                "type": "string",
+                "pattern": "^/.+$"
+              }
             }
+          },
+          "backdrop": {
+            "comment": "The crawler's own colour behind their art.",
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
           },
           "og": { "type": "string", "pattern": "^/.+[.](png|jpg|jpeg|webp)$" }
         }

@@ -44,7 +44,11 @@ export function CastCard({ member, profile, eager = false }: CastCardProps) {
   const hasLinks = member.links.length > 0;
 
   return (
-    <article className={styles.card} id={member.id}>
+    <article
+      className={styles.card}
+      id={member.id}
+      data-compact={hasBio || hasLinks ? undefined : true}
+    >
       <img
         className={styles.photo}
         src={asset(member.photo.card)}

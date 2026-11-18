@@ -1,0 +1,17 @@
+/*
+ * What a crawler stands in front of, wherever their art appears: a two-tone
+ * sunburst rising from the floor in their own colour (`--backdrop`, from
+ * `crawlers.json`), a light halftone over it, and a glow at their feet.
+ * Without a colour it falls back to the brand's deep violet.
+ */
+.backdrop {
+  --bd: var(--backdrop, var(--brand-deep));
+  background:
+    radial-gradient(rgb(0 0 0 / 14%) 1.4px, transparent 1.6px) 0 0 / 9px 9px,
+    radial-gradient(ellipse 70% 55% at 50% 100%, rgb(255 255 255 / 38%), transparent 70%),
+    repeating-conic-gradient(
+      from -4.5deg at 50% 100%,
+      var(--bd) 0 9deg,
+      color-mix(in srgb, var(--bd) 82%, #000) 9deg 18deg
+    );
+}
