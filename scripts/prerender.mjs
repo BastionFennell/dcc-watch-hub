@@ -94,6 +94,12 @@ async function main() {
   const crawlers = await readJson(resolve(root, 'public/data/crawlers.json'), { crawlers: [] });
   // Generated a step earlier; `null` is legal (no episode is published yet).
   const status = await readJson(resolve(dist, 'data/status.json'), null);
+  /*
+   * 014: the cast rides on every route, whole - the cast page needs all of it
+   * and each crawler page its player's credit, and at about 2.5 kB splitting
+   * it per route is not worth a second code path. No file is an empty cast.
+   */
+  const cast = await readJson(resolve(root, 'public/data/cast.json'), { cast: [] });
 
   const routes = routesFor(crawlers);
   for (const route of routes) {
@@ -107,7 +113,7 @@ async function main() {
     const id = crawlerIdIn(route);
     const dossier =
       id === null ? null : await readJson(resolve(root, `public/data/dossier/${id}.json`), null);
-    const data = { route, show, crawlers, status, dossier };
+    const data = { route, show, crawlers, status, dossier, cast };
     const { html, head } = render(route, data);
     const page = injectPage(template, { head, html, data });
     const out = outputPath(dist, route);

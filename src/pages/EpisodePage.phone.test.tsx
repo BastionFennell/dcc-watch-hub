@@ -18,6 +18,7 @@ import { copy } from '../copy';
 import { resumeKey } from '../playback/resume';
 import { __fakeSources } from '../components/VideoStage/FakeStage';
 import {
+  makeCast,
   makeCrawlers,
   makeEpisodeRaw,
   makeRegistry,
@@ -44,8 +45,17 @@ function stubFetch(withRegistry = true) {
         }),
       );
     }
-    // 011: <App> mounts the roster provider, so these two are fetched on every
-    // route. Answered properly here so the hub tests stay free of validator noise.
+    // 011: <App> mounts the roster provider, so these are fetched on every
+    // route (014 adds the cast). Answered properly here so the hub tests stay
+    // free of validator noise.
+    if (url.includes('cast.json')) {
+      return Promise.resolve(
+        new Response(JSON.stringify(makeCast()), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
+    }
     if (url.includes('crawlers.json')) {
       return Promise.resolve(
         new Response(JSON.stringify(makeCrawlers()), {

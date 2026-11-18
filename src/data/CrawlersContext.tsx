@@ -1,7 +1,7 @@
 /**
  * The front door's roster (011): the authored `crawlers.json` and the
  * build-time `status.json`, loaded once for every marketing page - plus, since
- * 012, the compiled per-crawler dossier.
+ * 012, the compiled per-crawler dossier, and since 014 the authored cast.
  *
  * The third React binding in `src/data`, on the same terms as the other two:
  * the ESLint `no-restricted-imports` guard covers the pure `src/data/**\/*.ts`
@@ -14,12 +14,14 @@
  */
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import type { CrawlerProfile, DossierFile, Embedded, StatusFile } from './types';
+import type { CastMember, CrawlerProfile, DossierFile, Embedded, StatusFile } from './types';
 import { readEmbedded } from './load';
 import {
+  fetchCast,
   fetchCrawlers,
   fetchDossier,
   fetchStatus,
+  validateCast,
   validateCrawlers,
   validateDossier,
   validateStatus,
@@ -47,6 +49,12 @@ export interface CrawlersContextValue {
    * under the reader.
    */
   dossierFor: (id: string) => DossierFile | null;
+  /**
+   * The real people on the show (014), in `cast.json` order. Empty until the
+   * file lands, and for a deploy that ships none - which is never an error:
+   * the cast page shows no cards and a crawler page shows no credit.
+   */
+  cast: CastMember[];
 }
 
 const CrawlersContext = createContext<CrawlersContextValue>({
@@ -55,12 +63,15 @@ const CrawlersContext = createContext<CrawlersContextValue>({
   loading: true,
   error: null,
   dossierFor: () => null,
+  cast: [],
 });
 
 interface Seed {
   profiles: CrawlerProfile[];
   status: StatusFile | null;
   dossiers: Record<string, DossierFile | null>;
+  /** `null` for a payload written before 014, which carries no cast: fetch it. */
+  cast: CastMember[] | null;
 }
 
 /** The embedded roster, or `null` when this page carries none. */
@@ -81,6 +92,7 @@ function seedCrawlers(embedded: Embedded | null): Seed | null {
     profiles: validateCrawlers(embedded.crawlers).crawlers,
     status: embedded.status === null ? null : validateStatus(embedded.status),
     dossiers: dossier === null || dossier.id === '' ? {} : { [dossier.id]: dossier },
+    cast: embedded.cast === undefined ? null : validateCast(embedded.cast).cast,
   };
 }
 
@@ -99,6 +111,7 @@ export function CrawlersProvider({ children, embedded }: CrawlersProviderProps) 
   const [status, setStatus] = useState<StatusFile | null>(seeded?.status ?? null);
   const [loading, setLoading] = useState(seeded === null);
   const [error, setError] = useState<Error | null>(null);
+  const [cast, setCast] = useState<CastMember[]>(seeded?.cast ?? []);
   const [dossiers, setDossiers] = useState<Record<string, DossierFile | null>>(
     seeded?.dossiers ?? {},
   );
@@ -110,8 +123,24 @@ export function CrawlersProvider({ children, embedded }: CrawlersProviderProps) 
   const requested = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    if (seeded !== null) return;
+    if (seeded !== null && seeded.cast !== null) return;
     let live = true;
+
+    /*
+     * The cast rides along with the roster, and on its own when an older
+     * payload carried the roster but no cast. `fetchCast` never rejects: a
+     * missing file is an empty cast, not an error.
+     */
+    void fetchCast().then((file) => {
+      if (live) setCast(file.cast);
+    });
+
+    if (seeded !== null) {
+      return () => {
+        live = false;
+      };
+    }
+
     setLoading(true);
     setError(null);
 
@@ -162,7 +191,7 @@ export function CrawlersProvider({ children, embedded }: CrawlersProviderProps) 
   );
 
   return (
-    <CrawlersContext.Provider value={{ profiles, status, loading, error, dossierFor }}>
+    <CrawlersContext.Provider value={{ profiles, status, loading, error, dossierFor, cast }}>
       {children}
     </CrawlersContext.Provider>
   );

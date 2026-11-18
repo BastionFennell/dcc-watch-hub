@@ -7,7 +7,7 @@ Every phase ends with `npm run typecheck && npm run lint && npm test` green.
 
 ## Phase 1 - Setup (assets)
 
-- [ ] T1401 Prepare the ten photos in `public/img/cast/` per research R3. For each of `lulu`
+- [X] T1401 Prepare the ten photos in `public/img/cast/` per research R3. For each of `lulu`
   (`~/Downloads/img_1_1791845091930.jpg`), `madio` (`20261003_163615.jpg`), `danny`
   (`IMG_0575.jpg`), `sarah` (`IMG_5919.jpg`), `bastion` (`Bastion_and_Margruite_Edited-0092.jpg`):
   copy the source to the scratchpad, crop a square around the face with `sips` (face centred, eyes
@@ -20,25 +20,25 @@ Every phase ends with `npm run typecheck && npm run lint && npm test` green.
 
 ## Phase 2 - Foundational (data; blocks every story)
 
-- [ ] T1402 `src/data/types.ts`: add `CAST_LINK_KINDS`, `CastLinkKind`, `CastLink`, `CastMember`,
+- [X] T1402 `src/data/types.ts`: add `CAST_LINK_KINDS`, `CastLinkKind`, `CastLink`, `CastMember`,
   `CastFile` exactly as in data-model.md; add `cast?: unknown` to `Embedded`; delete
   `CrawlerPlayer` and `CrawlerProfile.player`.
-- [ ] T1403 [P] `specs/011-front-door/contracts/crawlers.schema.json`: remove `player` from
+- [X] T1403 [P] `specs/011-front-door/contracts/crawlers.schema.json`: remove `player` from
   `required` and `properties`; extend the top `comment` with "Amended by 014: the player moved to
   cast.json".
-- [ ] T1404 [P] Author `public/data/cast.json` per data-model.md: order lulu, madio, danny, sarah,
+- [X] T1404 [P] Author `public/data/cast.json` per data-model.md: order lulu, madio, danny, sarah,
   bastion; names, pronouns, `crawlerId` (mimi, ronald, xo, veil) / `role` ("The System AI"),
   photo paths from T1401, links from the spec's FR-014 table; bios copied character for character
   from spec FR-014 (Madio one paragraph, Sarah two, Danny one, Lulu and Bastion `[]`); `todo`
   as in data-model.md. In `public/data/crawlers.json` remove every `player` object and the two
   `player.*` todo lines.
-- [ ] T1405 `src/data/roster.ts`: delete `toPlayer` and the player requirement in
+- [X] T1405 `src/data/roster.ts`: delete `toPlayer` and the player requirement in
   `toCrawlerProfile`; add `validateCast(raw): CastFile` (lenient, never throws, rules in the
   data-model "Runtime" column, `console.warn` naming the member id) and `fetchCast()` (URL
   `/data/cast.json` via `joinBase(siteBaseUrl(), ...)`; fetch failure, non-OK or bad JSON ->
   `{ cast: [] }`, like `fetchStatus`). Tests in `src/data/validate.test.ts` beside the
   `validateCrawlers` ones: each lenient rule, plus "a crawler with no player field is kept".
-- [ ] T1406 [P] `scripts/cast.ts`: pure `lintCast(castRaw, crawlersRaw, fileSize): string[]`
+- [X] T1406 [P] `scripts/cast.ts`: pure `lintCast(castRaw, crawlersRaw, fileSize): string[]`
   implementing every row of the data-model "Lint" column, including the photo budgets (the third
   argument is a `fileSize(path): number | null` probe: `null` = missing, card > 45 kB or credit
   > 8 kB = error, so a later photo swap cannot break SC-005 silently); each message starts with the member id
@@ -46,22 +46,22 @@ Every phase ends with `npm run typecheck && npm run lint && npm test` green.
   one failing case per rule, a clean case, and a test that runs it over the real
   `public/data/cast.json` + `crawlers.json` with `statSync` sizes under `public/` and expects `[]`
   (so it needs T1401 and T1404 done).
-- [ ] T1407 `scripts/lint-cast.ts` (tsx entry: read both files, run `lintCast`, print each error
+- [X] T1407 `scripts/lint-cast.ts` (tsx entry: read both files, run `lintCast`, print each error
   to stderr, `process.exit(1)` if any). `package.json`: add `"lint:cast": "tsx scripts/lint-cast.ts"`
   and change `prebuild` to `tsx scripts/build-dossier.ts && tsx scripts/lint-cast.ts`.
-- [ ] T1408 [P] `src/data/samples.test.ts`: validate `public/data/cast.json` against
+- [X] T1408 [P] `src/data/samples.test.ts`: validate `public/data/cast.json` against
   `specs/014-cast-page/contracts/cast.schema.json` with the existing ajv setup; keep the
   crawlers-schema test passing against the amended schema.
-- [ ] T1409 `src/site/cast.ts` (pure): `playerOf(cast, crawlerId)` and `castAnchor(id)` returning
+- [X] T1409 `src/site/cast.ts` (pure): `playerOf(cast, crawlerId)` and `castAnchor(id)` returning
   `/cast#<id>`; `src/site/cast.test.ts`.
-- [ ] T1410 `src/data/CrawlersContext.tsx`: add `cast: CastMember[]` to the context value (default
+- [X] T1410 `src/data/CrawlersContext.tsx`: add `cast: CastMember[]` to the context value (default
   `[]`); seed it from `embedded.cast` through `validateCast` when the payload has it, otherwise
   `fetchCast()` in the same effect that fetches the roster (a payload with crawlers but no `cast`
   key, i.e. pre-014, also fetches). `scripts/prerender.mjs`: read `public/data/cast.json`
   (fallback `{ cast: [] }`) and add `cast` to every route's `data`. Update
   `src/data/CrawlersContext.test.tsx` (seeded: no fetch; unseeded: fetches `cast.json`; 404: empty
   cast, no error) and `scripts/prerender.test.ts`.
-- [ ] T1411 Keep the tree compiling and honest after T1402: in `src/site/pages/CrawlerPage.tsx`
+- [X] T1411 Keep the tree compiling and honest after T1402: in `src/site/pages/CrawlerPage.tsx`
   take the player from `playerOf(cast, profile.id)`, render the existing credit line with the name
   only, and render no credit block at all when there is no player; delete the `detail` line and
   the player `SocialRow`. Update `src/test/fixtures.ts` (drop `player` from crawler fixtures, add

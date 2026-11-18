@@ -12,8 +12,8 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { vi } from 'vitest';
 import { ShowProvider } from '../data/ShowContext';
 import { CrawlersProvider } from '../data/CrawlersContext';
-import type { CrawlerRoster, DossierFile, Show, StatusFile } from '../data/types';
-import { makeCrawlers, makeDossier, makeShow, makeStatus } from './fixtures';
+import type { CastFile, CrawlerRoster, DossierFile, Show, StatusFile } from '../data/types';
+import { makeCast, makeCrawlers, makeDossier, makeShow, makeStatus } from './fixtures';
 
 export interface RenderSiteOptions {
   /** The route to mount at; also the payload's `route`. */
@@ -27,6 +27,11 @@ export interface RenderSiteOptions {
    * pass `null` for the launch state (a deploy with no cards yet).
    */
   dossier?: DossierFile | null;
+  /**
+   * 014: the cast the payload carries, on every route. Defaults to
+   * `makeCast()`; pass `{ cast: [] }` for a deploy that ships no cast.
+   */
+  cast?: CastFile;
   /** Epoch ms the clock is pinned to for this render. */
   now?: number;
   /**
@@ -53,6 +58,7 @@ export function renderSite(ui: ReactNode, options: RenderSiteOptions = {}) {
     crawlers = makeCrawlers(),
     status = makeStatus(),
     dossier = dossierIn(path),
+    cast = makeCast(),
     now,
     routePath,
   } = options;
@@ -62,7 +68,7 @@ export function renderSite(ui: ReactNode, options: RenderSiteOptions = {}) {
     vi.setSystemTime(now);
   }
 
-  const embedded = { route: path, show, crawlers, status, dossier };
+  const embedded = { route: path, show, crawlers, status, dossier, cast };
   const element =
     routePath === undefined ? ui : <Routes><Route path={routePath} element={ui} /></Routes>;
 

@@ -82,16 +82,6 @@ export interface Show {
 
 /* ------------------------------------------------- front door (011) */
 
-/** The real person behind a crawler. Everything but the name is optional. */
-export interface CrawlerPlayer {
-  name: string;
-  pronouns?: string;
-  bio?: string;
-  /** Photo of the player, if they want one on the page. */
-  bust?: string;
-  links?: Record<string, string>;
-}
-
 /** The System text the crawler entered the dungeon with. */
 export interface CrawlerEntryAchievement {
   title: string;
@@ -118,7 +108,11 @@ export interface CrawlerProfile {
   handle: string;
   /** The character's pronouns as on the sheet ("she/they"); drives the dossier heading (012). */
   pronouns?: string;
-  player: CrawlerPlayer;
+  /*
+   * No `player` field (014): a crawler says nothing about the person who plays
+   * them. `cast.json` points the other way - a member names their crawler - so
+   * the fact lives in one place and the two files cannot disagree.
+   */
   concept: string;
   /** "What was in their pockets when the world ended", one item per line. */
   pockets: string[];
@@ -136,6 +130,50 @@ export interface CrawlerProfile {
 /** The whole `crawlers.json` file. `todo` is the author's fill-in list. */
 export interface CrawlerRoster {
   crawlers: CrawlerProfile[];
+  todo?: string[];
+}
+
+/* ------------------------------------------------- the cast (014) */
+
+/** The platforms a cast link may name: the show's five, plus a generic hub/site. */
+export const CAST_LINK_KINDS = [
+  'youtube',
+  'discord',
+  'tiktok',
+  'bluesky',
+  'instagram',
+  'links',
+] as const;
+export type CastLinkKind = (typeof CAST_LINK_KINDS)[number];
+
+/** One of a cast member's links. Rendered in authored order; a kind may repeat. */
+export interface CastLink {
+  kind: CastLinkKind;
+  url: string;
+}
+
+/** A real person on the show. Exactly one of `crawlerId` / `role` is set. */
+export interface CastMember {
+  /** A slug; the `/cast#id` anchor. Changing it breaks links people have shared. */
+  id: string;
+  name: string;
+  /** Slash form: "she/they". */
+  pronouns?: string;
+  /** The crawler they play; the role line is derived from it. */
+  crawlerId?: string;
+  /** Authored, for someone who plays no crawler ("The System AI"). */
+  role?: string;
+  /** Paragraphs, in their own words. `[]` means not written yet, and renders nothing. */
+  bio: string[];
+  /** Leading-slash paths: a 480x480 card photo and a 96x96 crawler-page credit photo. */
+  photo: { card: string; credit: string };
+  /** Authored order; `[]` means none. */
+  links: CastLink[];
+}
+
+/** The whole `cast.json` file. Array order is display order on `/cast`. */
+export interface CastFile {
+  cast: CastMember[];
   todo?: string[];
 }
 
@@ -258,6 +296,11 @@ export interface Embedded {
    * on every other route and on a payload written before 012.
    */
   dossier?: DossierFile | null;
+  /**
+   * 014: the raw `cast.json`, on every route. `unknown` for the same reason as
+   * `crawlers`; absent on a payload written before 014, which then fetches.
+   */
+  cast?: unknown;
 }
 
 /* -------------------------------------------------------------- registry */

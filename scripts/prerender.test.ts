@@ -13,7 +13,7 @@ import {
   routesFor,
 } from './prerender.mjs';
 import { ready, render } from '../src/entry-server';
-import { makeCrawlers, makeDossier, makeShow, makeStatus } from '../src/test/fixtures';
+import { makeCast, makeCrawlers, makeDossier, makeShow, makeStatus } from '../src/test/fixtures';
 
 /** Every collected tag carries the marker the browser strips at boot. */
 const M = ' data-dcc-head';
@@ -147,6 +147,37 @@ describe('a prerendered page', () => {
     const rootAt = page.indexOf('<div id="root">');
     expect(page.indexOf(`<link${M} rel="canonical"`)).toBeLessThan(rootAt);
     expect(page.slice(rootAt).includes('<title>')).toBe(false);
+  });
+});
+
+/* ------------------------------------------------- the cast, prerendered (014) */
+
+describe('the cast in a prerendered page', () => {
+  function crawlerPage(cast: unknown) {
+    const route = '/crawlers/stuntman';
+    const data = {
+      route,
+      show: makeShow(),
+      crawlers: makeCrawlers(),
+      status: makeStatus(),
+      dossier: makeDossier('stuntman'),
+      ...(cast === undefined ? {} : { cast }),
+    };
+    return injectPage(TEMPLATE, { ...render(route, data), data });
+  }
+
+  it('credits the player in the server HTML and carries the cast in the payload', () => {
+    const page = crawlerPage(makeCast());
+    expect(page).toMatch(/Played by\s*(<!-- -->)?\s*<\/span><span[^>]*>Danny</);
+    const payload = page
+      .split('<script id="__DCC__" type="application/json">')[1]
+      .split('</script>')[0];
+    expect(JSON.parse(payload).cast).toEqual(makeCast());
+  });
+
+  it('renders no credit at all when the payload carries no cast', () => {
+    expect(crawlerPage({ cast: [] })).not.toContain('Played by');
+    expect(crawlerPage(undefined)).not.toContain('Played by');
   });
 });
 

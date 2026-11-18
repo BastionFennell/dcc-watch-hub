@@ -1,6 +1,7 @@
 /**
  * The front door's data layer (011): `crawlers.json` and the generated
- * `status.json`, validated and fetched.
+ * `status.json`, validated and fetched - plus the compiled dossier (012) and
+ * `cast.json` (014).
  *
  * Its own module rather than a section of `validate.ts` and `load.ts` for one
  * reason worth stating: the hub ships as one entry chunk and the marketing
@@ -13,9 +14,12 @@
  * costs the live line.
  */
 import type {
+  CastFile,
+  CastLink,
+  CastLinkKind,
+  CastMember,
   CrawlerCondition,
   CrawlerEntryAchievement,
-  CrawlerPlayer,
   CrawlerProfile,
   CrawlerRoster,
   CrawlerStatus,
@@ -25,48 +29,14 @@ import type {
   Hp,
   StatusFile,
 } from './types';
-import { CRAWLER_CONDITIONS, DOSSIER_KINDS } from './types';
+import { CAST_LINK_KINDS, CRAWLER_CONDITIONS, DOSSIER_KINDS } from './types';
 import { isRecord, toNonEmptyStringList, toNumber, toString_ } from './validate';
 import { fetchJson, joinBase, siteBaseUrl } from './load';
 
 const CRAWLERS_URL = '/data/crawlers.json';
 const STATUS_URL = '/data/status.json';
 const DOSSIER_URL = '/data/dossier';
-
-/** `{ name, ... }`. A player with no name is not a player, so the crawler falls. */
-function toPlayer(x: unknown, crawlerId: string): CrawlerPlayer | null {
-  if (!isRecord(x)) return null;
-  const name = toString_(x.name);
-  if (name === null || name === '') return null;
-
-  const pronouns = toString_(x.pronouns);
-  const bio = toString_(x.bio);
-  const bust = toString_(x.bust);
-
-  let links: Record<string, string> | undefined;
-  if (isRecord(x.links)) {
-    const pairs: Record<string, string> = {};
-    for (const [key, value] of Object.entries(x.links)) {
-      const href = toString_(value);
-      if (href === null || href === '') {
-        console.warn(`Crawler "${crawlerId}": dropping malformed player link "${key}".`);
-        continue;
-      }
-      pairs[key] = href;
-    }
-    if (Object.keys(pairs).length > 0) links = pairs;
-  } else if (x.links !== undefined) {
-    console.warn(`Crawler "${crawlerId}": dropping malformed player "links".`);
-  }
-
-  return {
-    name,
-    ...(pronouns === null || pronouns === '' ? {} : { pronouns }),
-    ...(bio === null || bio === '' ? {} : { bio }),
-    ...(bust === null || bust === '' ? {} : { bust }),
-    ...(links === undefined ? {} : { links }),
-  };
-}
+const CAST_URL = '/data/cast.json';
 
 /** The whole block is dropped when the title or the text is missing. */
 function toEntryAchievement(x: unknown, crawlerId: string): CrawlerEntryAchievement | undefined {
@@ -110,13 +80,15 @@ function toCrawlerProfile(raw: unknown): CrawlerProfile | null {
    * the crawler.
    */
   const concept = toString_(raw.concept) ?? '';
-  const player = toPlayer(raw.player, id);
+  /*
+   * No player (014): who plays this crawler is `cast.json`'s business, and a
+   * roster file that still carries a `player` object simply has it ignored.
+   */
   const bust = isRecord(raw.art) ? toString_(raw.art.bust) : null;
 
   if (name === null || name === '') return null;
   if (characterName === null || characterName === '') return null;
   if (handle === null || handle === '') return null;
-  if (player === null) return null;
   if (bust === null || bust === '') return null;
 
   const full = isRecord(raw.art) ? toString_(raw.art.full) : null;
@@ -129,7 +101,6 @@ function toCrawlerProfile(raw: unknown): CrawlerProfile | null {
     characterName,
     handle,
     ...(pronouns === null || pronouns === '' ? {} : { pronouns }),
-    player,
     concept,
     pockets: toNonEmptyStringList(raw.pockets),
     ...(entryAchievement === undefined ? {} : { entryAchievement }),
@@ -238,6 +209,134 @@ function toAppearances(raw: Record<string, unknown>): Record<string, number[]> {
  */
 export async function fetchCrawlers(): Promise<CrawlerRoster> {
   return validateCrawlers(await fetchJson(joinBase(siteBaseUrl(), CRAWLERS_URL)));
+}
+
+/* -------------------------------------------------- the cast (014) */
+
+const SLUG = /^[a-z0-9-]+$/;
+
+/** A known kind and an `https://` address, or `null` (the link is dropped). */
+function toCastLink(x: unknown): CastLink | null {
+  if (!isRecord(x)) return null;
+  const kind = toString_(x.kind);
+  const url = toString_(x.url);
+  if (kind === null || !(CAST_LINK_KINDS as readonly string[]).includes(kind)) return null;
+  if (url === null || !url.startsWith('https://')) return null;
+  return { kind: kind as CastLinkKind, url };
+}
+
+/**
+ * One member, or `null` when they are missing something no card can invent:
+ * an id, a name, both photos, or any way to say what they do on the show.
+ */
+function toCastMember(raw: unknown): CastMember | null {
+  if (!isRecord(raw)) return null;
+  const id = toString_(raw.id);
+  if (id === null || !SLUG.test(id)) return null;
+
+  const name = toString_(raw.name);
+  const card = isRecord(raw.photo) ? toString_(raw.photo.card) : null;
+  const credit = isRecord(raw.photo) ? toString_(raw.photo.credit) : null;
+  if (name === null || name === '') return null;
+  if (card === null || credit === null) {
+    console.warn(`Cast "${id}": dropping a member with no card or credit photo.`);
+    return null;
+  }
+
+  /*
+   * Exactly one of the two, by the contract. Both is an authoring slip the lint
+   * catches; at runtime the crawler wins, because it is the one other pages
+   * join on. Neither leaves the card with no role line at all, so it falls.
+   */
+  const crawlerId = toString_(raw.crawlerId);
+  const role = toString_(raw.role);
+  const hasCrawler = crawlerId !== null && crawlerId !== '';
+  const hasRole = role !== null && role !== '';
+  if (!hasCrawler && !hasRole) {
+    console.warn(`Cast "${id}": dropping a member with neither a crawlerId nor a role.`);
+    return null;
+  }
+  if (hasCrawler && hasRole) {
+    console.warn(`Cast "${id}": both crawlerId and role are set; keeping the crawlerId.`);
+  }
+
+  const links: CastLink[] = [];
+  if (Array.isArray(raw.links)) {
+    for (const item of raw.links as unknown[]) {
+      const link = toCastLink(item);
+      if (link === null) {
+        console.warn(`Cast "${id}": dropping a malformed link.`);
+        continue;
+      }
+      links.push(link);
+    }
+  } else if (raw.links !== undefined) {
+    console.warn(`Cast "${id}": dropping malformed "links".`);
+  }
+
+  const pronouns = toString_(raw.pronouns);
+  return {
+    id,
+    name,
+    ...(pronouns === null || pronouns === '' ? {} : { pronouns }),
+    ...(hasCrawler ? { crawlerId } : { role: role as string }),
+    // Empty paragraphs are dropped rather than rendered as blank lines.
+    bio: toNonEmptyStringList(raw.bio),
+    photo: { card, credit },
+    links,
+  };
+}
+
+/**
+ * `cast.json` (014). Lenient like every loader here: a malformed member costs
+ * that person, a malformed link costs that link, and an unusable file costs the
+ * cast rather than the page. Whether `crawlerId` names a real crawler is not
+ * checked - the roster may still be loading - and is the build lint's job
+ * (`scripts/cast.ts`). This function never throws.
+ */
+export function validateCast(raw: unknown): CastFile {
+  if (!isRecord(raw) || !Array.isArray(raw.cast)) {
+    console.warn('Cast: the cast file does not match the schema; using an empty cast.');
+    return { cast: [] };
+  }
+  const cast: CastMember[] = [];
+  const seen = new Set<string>();
+  for (const item of raw.cast as unknown[]) {
+    const member = toCastMember(item);
+    if (member === null) {
+      const id = isRecord(item) ? toString_(item.id) : null;
+      console.warn(`Cast: dropping a malformed member${id === null ? '' : ` "${id}"`}.`);
+      continue;
+    }
+    if (seen.has(member.id)) {
+      console.warn(`Cast: dropping duplicate member "${member.id}".`);
+      continue;
+    }
+    seen.add(member.id);
+    cast.push(member);
+  }
+  const todo = toNonEmptyStringList(raw.todo);
+  return { cast, ...(todo.length === 0 ? {} : { todo }) };
+}
+
+/**
+ * The authored cast, or an empty one. Like `fetchStatus`, nothing here is
+ * fatal: no file means no cast cards and no crawler-page credit, not an error.
+ */
+export async function fetchCast(): Promise<CastFile> {
+  const url = joinBase(siteBaseUrl(), CAST_URL);
+  let response: Response;
+  try {
+    response = await fetch(url);
+  } catch {
+    return { cast: [] };
+  }
+  if (!response.ok) return { cast: [] };
+  try {
+    return validateCast((await response.json()) as unknown);
+  } catch {
+    return { cast: [] };
+  }
 }
 
 /* ----------------------------------------------- the dossier (012) */

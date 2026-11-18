@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://dcc-watch-hub/contracts/crawlers.schema.json",
   "title": "Crawler roster (011: the front door)",
-  "comment": "public/data/crawlers.json. Authored, never generated: the live numbers (level, HP, floor) come from the build-time status.json. Amended by 012: the 'status' field is gone - a crawler's condition is authored per episode in content/status/<id>.json and reaches a reader only inside a card they have chosen to reveal, never as a property of the roster.",
+  "comment": "public/data/crawlers.json. Authored, never generated: the live numbers (level, HP, floor) come from the build-time status.json. Amended by 012: the 'status' field is gone - a crawler's condition is authored per episode in content/status/<id>.json and reaches a reader only inside a card they have chosen to reveal, never as a property of the roster. Amended by 014: the player moved to cast.json (specs/014-cast-page/contracts/cast.schema.json); a crawler no longer describes the person who plays them.",
   "type": "object",
   "required": ["crawlers"],
   "additionalProperties": false,
@@ -17,7 +17,7 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "name", "characterName", "handle", "player", "concept", "pockets", "art"],
+        "required": ["id", "name", "characterName", "handle", "concept", "pockets", "art"],
         "additionalProperties": false,
         "properties": {
           "id": {
@@ -29,21 +29,6 @@
           "characterName": { "type": "string", "minLength": 1 },
           "handle": { "type": "string", "minLength": 1 },
           "pronouns": { "type": "string", "minLength": 1 },
-          "player": {
-            "type": "object",
-            "required": ["name"],
-            "additionalProperties": false,
-            "properties": {
-              "name": { "type": "string", "minLength": 1 },
-              "pronouns": { "type": "string", "minLength": 1 },
-              "bio": { "type": "string", "minLength": 1 },
-              "bust": { "type": "string", "pattern": "^/.+$" },
-              "links": {
-                "type": "object",
-                "additionalProperties": { "type": "string", "minLength": 1 }
-              }
-            }
-          },
           "concept": {
             "comment": "Empty is a real state: the page renders nothing rather than a placeholder (011 R2).",
             "type": "string"

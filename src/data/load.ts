@@ -126,5 +126,8 @@ export function readEmbedded(): Embedded | null {
     status: (record.status ?? null) as Embedded['status'],
     // 012: present only on /crawlers/:id, and validated in CrawlersContext.
     dossier: (record.dossier ?? null) as Embedded['dossier'],
+    // 014: unread like `crawlers`. Absent stays absent: a payload written
+    // before 014 carries no cast, and CrawlersContext then fetches it.
+    ...(record.cast === undefined ? {} : { cast: record.cast }),
   };
 }
