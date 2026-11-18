@@ -1,7 +1,7 @@
 /*
  * `/community` (011 §3.5). The shell gives the page the shared measure; this
- * file gives it one reading column inside that measure, so the card, the
- * tiles, the paragraph and the footer all start and end on the same pixel.
+ * file stacks one column at that measure, so the card, the tiles and the
+ * footer share one left edge with every other page.
  *
  * The shell's own 32 px gap is turned off: the rhythm here is 24 px between
  * blocks and 8 px from a heading to what it introduces, and nothing else.
@@ -15,8 +15,6 @@
   flex-direction: column;
   gap: var(--space-8);
   width: 100%;
-  max-width: 720px;
-  margin-inline: auto;
   min-width: 0;
 }
 
@@ -139,7 +137,8 @@
 }
 
 .supportBody {
-  max-width: none;
+  /* The column is the page's full measure now; prose still wants a reading width. */
+  max-width: 68ch;
   color: var(--ink-body);
   font-size: 16px;
   line-height: 28px;

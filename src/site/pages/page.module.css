@@ -34,7 +34,8 @@
 }
 
 .pageTitle {
-  font-size: var(--text-xl);
+  /* 28 px on a phone: a page title has to outrank the 16 px lead under it. */
+  font-size: var(--text-display);
   font-weight: 700;
   line-height: 1.15;
 }

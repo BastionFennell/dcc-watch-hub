@@ -35,7 +35,7 @@ export function CrawlersPage() {
       <ul className={page.roster}>
         {profiles.map((profile) => (
           <li key={profile.id}>
-            <RosterCard profile={profile} variant="card" />
+            <RosterCard profile={profile} variant="card" figure />
           </li>
         ))}
       </ul>

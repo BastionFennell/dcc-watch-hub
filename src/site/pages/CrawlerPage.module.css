@@ -29,7 +29,9 @@
 .portrait {
   grid-area: art;
   width: 100%;
-  max-width: 280px;
+  /* Centred on a phone: a left-aligned 280 px card left a dead strip beside it. */
+  max-width: 320px;
+  justify-self: center;
   border-radius: 14px;
   border: var(--border-hairline);
   background: var(--brand-deep);
@@ -40,8 +42,15 @@
   grid-area: cta;
   display: flex;
   min-width: 0;
-  /* A full-bleed button on a phone reads as a banner; 280 px reads as a button. */
-  max-width: 280px;
+  /* The portrait's width, so the two read as one column on a phone as well. */
+  width: 100%;
+  max-width: 320px;
+  justify-self: center;
+}
+
+/* The button fills the cell, so it is exactly as wide as the portrait. */
+.ctaCell > * {
+  width: 100%;
 }
 
 .text {

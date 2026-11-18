@@ -75,9 +75,11 @@ export const copy = {
   feedUnavailable: 'Feed unavailable. The System is recalibrating.',
   archiveUnavailable: 'The broadcast archive is unreachable. The System is recalibrating.',
   retry: 'Request the archive again',
-  notFoundTitle: 'No such recap episode exists in the archive.',
+  notFoundTitle: 'The System has no record of this page.',
   notFoundBody:
-    'The System has no record of that broadcast. It may never have been cleared for transmission.',
+    'It may have moved, or it may never have been cleared for transmission.',
+  /** The 404's second way out, beside the archive link. */
+  notFoundHome: 'Back to the front page',
 
   /** Feed sentence templates. The System narrates; it does not label. */
   feedText: {

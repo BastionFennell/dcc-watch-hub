@@ -88,6 +88,7 @@
 }
 
 .bio {
+  max-width: 68ch;
   font-size: 16px;
   line-height: 1.65;
   color: var(--ink-body);
@@ -108,5 +109,17 @@
     align-items: start;
     column-gap: var(--space-8);
     padding: var(--space-8);
+  }
+
+  /*
+   * No bio and no links yet: a 200 px photo beside two lines of text reads as
+   * a card with something missing, so the photo steps down and the text
+   * centres on it.
+   */
+  .card[data-compact] {
+    grid-template-columns: 112px minmax(0, 1fr);
+    grid-template-areas: 'photo head';
+    grid-template-rows: auto;
+    align-items: center;
   }
 }

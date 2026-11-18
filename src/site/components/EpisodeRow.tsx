@@ -20,6 +20,8 @@ export interface EpisodeRowProps {
   anchorId?: string;
   /** The newest episode in the archive: marked, and jumped to (011 R3). */
   latest?: boolean;
+  /** Drops the floor from the meta line, for a list already grouped by floor. */
+  hideFloor?: boolean;
   /** Handed to the archive so its jump control can scroll and focus this row. */
   rowRef?: Ref<HTMLElement>;
 }
@@ -30,6 +32,7 @@ export function EpisodeRow({
   links,
   anchorId,
   latest = false,
+  hideFloor = false,
   rowRef,
 }: EpisodeRowProps) {
   const locked = !hubLive(episode, now);
@@ -54,8 +57,12 @@ export function EpisodeRow({
       <div className={styles.body}>
         <p className={styles.meta}>
           <span>{siteCopy.episodeLabel(episode.id)}</span>
-          <span className={styles.dot}>·</span>
-          <span>{siteCopy.floorLabel(episode.floor)}</span>
+          {hideFloor ? null : (
+            <>
+              <span className={styles.dot}>·</span>
+              <span>{siteCopy.floorLabel(episode.floor)}</span>
+            </>
+          )}
           <span className={styles.dot}>·</span>
           <span className={styles.duration}>{formatDuration(episode.durationSec)}</span>
           {latest ? <span className={styles.latest}>{siteCopy.latestChip}</span> : null}

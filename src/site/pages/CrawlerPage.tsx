@@ -101,7 +101,7 @@ export function CrawlerPage() {
               episode={opener}
               now={now}
               links={links}
-              quiet
+              primary
               label={siteCopy.startAtEpisodeOne}
               onTrack={(cta) => trackCta(cta, opener.id)}
             />

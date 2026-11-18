@@ -55,7 +55,9 @@ describe('app shell', () => {
         <App />
       </MemoryRouter>,
     );
-    expect(screen.getByText(copy.systemFeedPill)).toBeInTheDocument();
+    expect(screen.getByRole('banner')).toBeInTheDocument();
+    // The pill belongs to the viewer; the front door's header leaves it out.
+    expect(screen.queryByText(copy.systemFeedPill)).not.toBeInTheDocument();
     expect(screen.getByRole('main')).toBeInTheDocument();
   });
 

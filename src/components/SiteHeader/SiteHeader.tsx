@@ -59,10 +59,14 @@ export function SiteHeader({ show, current }: SiteHeaderProps) {
           height={22}
         />
         <span className={styles.title}>{copy.siteTitle}</span>
-        <span className={styles.pill}>
-          <IconBroadcast />
-          {copy.systemFeedPill}
-        </span>
+        {/* The pill says where you are inside the viewer; on the front door a
+            stranger has not met the System yet, so it stays out of the way. */}
+        {hubRoute ? (
+          <span className={styles.pill}>
+            <IconBroadcast />
+            {copy.systemFeedPill}
+          </span>
+        ) : null}
       </Link>
 
       <div className={styles.center}>

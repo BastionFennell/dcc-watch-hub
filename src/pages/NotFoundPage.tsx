@@ -1,8 +1,8 @@
 import { Suspense } from 'react';
 import { Link, useLocation } from 'react-router';
-import { SystemNotice } from '../components/SystemNotice/SystemNotice';
 import { HubHead } from '../site/pages/lazy';
 import { copy } from '../copy';
+import styles from './NotFoundPage.module.css';
 
 /**
  * The System's shrug (FR-053), and since 011 the site's 404 as well: an unknown
@@ -14,18 +14,24 @@ export function NotFoundPage() {
   const { pathname } = useLocation();
 
   return (
-    <section style={{ maxWidth: 640, margin: '0 auto', padding: 'var(--space-7)' }}>
+    <section className={styles.page}>
       <Suspense fallback={null}>
         <HubHead kind="notFound" path={pathname} />
       </Suspense>
-      <SystemNotice>
-        <p>{copy.notFoundTitle}</p>
-        <p style={{ marginTop: 'var(--space-3)' }}>{copy.notFoundBody}</p>
-        <p style={{ marginTop: 'var(--space-4)' }}>
+      <div className={styles.box}>
+        <span className={styles.tag}>{copy.systemTag}</span>
+        <h1 className={styles.title}>{copy.notFoundTitle}</h1>
+        <p className={styles.body}>{copy.notFoundBody}</p>
+        <p className={styles.actions}>
           {/* The archive moved to `/watch` when `/` became the front door (011 §1). */}
-          <Link to="/watch">{copy.returnToArchive}</Link>
+          <Link className={styles.action} data-primary to="/watch">
+            {copy.returnToArchive}
+          </Link>
+          <Link className={styles.action} to="/">
+            {copy.notFoundHome}
+          </Link>
         </p>
-      </SystemNotice>
+      </div>
     </section>
   );
 }

@@ -111,6 +111,8 @@ export function WatchPage() {
                     episode={episode}
                     now={now}
                     links={show?.links ?? { youtube: '', discord: '' }}
+                    /* The rows sit under their floor's own heading here. */
+                    hideFloor
                     {...(isLatest
                       ? /* The row a deep link addresses: `/watch#ep-3`. */
                         { anchorId: `ep-${episode.id}`, latest: true, rowRef: latestRef }

@@ -6,13 +6,13 @@
  * The three renders differ by `data-variant` on one root element and share
  * every token, class and piece of layout logic below it.
  */
-import { Link } from 'react-router';
-import type { CrawlerProfile } from '../../data/types';
-import { asset } from '../media';
-import { siteCopy } from '../copy';
-import styles from './RosterCard.module.css';
+import { Link } from "react-router";
+import type { CrawlerProfile } from "../../data/types";
+import { asset } from "../media";
+import { siteCopy } from "../copy";
+import styles from "./RosterCard.module.css";
 
-export type RosterCardVariant = 'card' | 'hero' | 'og';
+export type RosterCardVariant = "card" | "hero" | "og";
 
 export interface RosterCardProps {
   profile: CrawlerProfile;
@@ -21,6 +21,11 @@ export interface RosterCardProps {
   hook?: string;
   /** Overrides the card's link target. Ignored by the other two variants. */
   href?: string;
+  /**
+   * The card shows the whole figure instead of the bust. For `/crawlers`,
+   * where the roster is the page and not a strip on the way past.
+   */
+  figure?: boolean;
 }
 
 /*
@@ -30,23 +35,38 @@ export interface RosterCardProps {
  * here would answer the question before anyone asked it, for every crawler, on
  * a page a stranger can arrive at from a search result.
  */
-export function RosterCard({ profile, variant, hook, href }: RosterCardProps) {
+export function RosterCard({
+  profile,
+  variant,
+  hook,
+  href,
+  figure = false,
+}: RosterCardProps) {
   const bust = asset(profile.art.bust);
   const full = asset(profile.art.full ?? profile.art.bust);
 
-  if (variant === 'og') {
+  if (variant === "og") {
     return (
       <div className={styles.root} data-variant="og">
-        <img className={styles.ogArt} src={full} alt="" width={420} height={520} loading="eager" />
+        <img
+          className={styles.ogArt}
+          src={full}
+          alt=""
+          width={420}
+          height={520}
+          loading="eager"
+        />
         <div className={styles.ogText}>
           <p className={styles.ogName}>{profile.name}</p>
           <p className={styles.ogCharacter}>{profile.characterName}</p>
           <p className={styles.ogHandle}>{profile.handle}</p>
-          {hook === undefined || hook === '' ? null : <p className={styles.ogHook}>{hook}</p>}
+          {hook === undefined || hook === "" ? null : (
+            <p className={styles.ogHook}>{hook}</p>
+          )}
         </div>
         <div className={styles.ogMark}>
           <img
-            src={asset('/img/dcc-mark.svg')}
+            src={asset("/img/dcc-mark.svg")}
             alt=""
             width={32}
             height={32}
@@ -58,7 +78,7 @@ export function RosterCard({ profile, variant, hook, href }: RosterCardProps) {
     );
   }
 
-  if (variant === 'hero') {
+  if (variant === "hero") {
     return (
       <div className={styles.root} data-variant="hero">
         <img
@@ -78,19 +98,36 @@ export function RosterCard({ profile, variant, hook, href }: RosterCardProps) {
   }
 
   return (
-    <Link className={styles.root} data-variant="card" to={href ?? `/crawlers/${profile.id}`}>
-      <img
-        className={styles.cardArt}
-        src={bust}
-        alt=""
-        /* Roster cards sit below the fold on every page that uses them, and a
+    <Link
+      className={styles.root}
+      data-variant="card"
+      to={href ?? `/crawlers/${profile.id}`}
+    >
+      {figure ? (
+        <span className={styles.cardFigure}>
+          <img
+            src={asset(
+              profile.art.lineup ?? profile.art.full ?? profile.art.bust,
+            )}
+            alt=""
+            /* On /crawlers these four are the page, and above the fold. */
+            loading="eager"
+          />
+        </span>
+      ) : (
+        <img
+          className={styles.cardArt}
+          src={bust}
+          alt=""
+          /* Roster cards sit below the fold on every page that uses them, and a
            browser that fetches them anyway must not take bandwidth from the
            hero, which is the page's Largest Contentful Paint. */
-        loading="lazy"
-        fetchPriority="low"
-        width={192}
-        height={192}
-      />
+          loading="lazy"
+          fetchPriority="low"
+          width={192}
+          height={192}
+        />
+      )}
       <span className={styles.cardText}>
         <span className={styles.cardName}>{profile.name}</span>
         <span className={styles.cardCharacter}>{profile.characterName}</span>

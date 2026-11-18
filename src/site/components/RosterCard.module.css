@@ -73,6 +73,42 @@
   background: var(--brand-deep);
 }
 
+/* The whole figure, standing in a 3:4 panel with a floor glow under it. */
+.cardFigure {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  aspect-ratio: 3 / 4;
+  padding: var(--space-5) var(--space-4) var(--space-4);
+  border-radius: var(--radius-md);
+  background:
+    radial-gradient(ellipse 70% 45% at 50% 100%, rgb(120 113 202 / 45%), transparent 75%),
+    var(--brand-deep);
+  overflow: hidden;
+}
+
+.cardFigure img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 40%));
+  transition: transform 180ms ease;
+}
+
+.root[data-variant='card']:hover .cardFigure img {
+  transform: translateY(-2%) scale(1.02);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cardFigure img {
+    transition: none;
+  }
+
+  .root[data-variant='card']:hover .cardFigure img {
+    transform: none;
+  }
+}
+
 .cardText {
   display: flex;
   flex-direction: column;
